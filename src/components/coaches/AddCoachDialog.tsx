@@ -11,6 +11,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AddCoachDialogProps {
   open: boolean;
@@ -54,8 +55,8 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
         clinicId: clinicId
       });
       
-      // Check if we're authenticated
-      const { data: sessionData } = await CoachService.supabase.auth.getSession();
+      // Check if we're authenticated using the direct supabase import
+      const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session) {
         setErrorDetails("You are not logged in. Please log in to add a coach.");
         setShowErrorDialog(true);
