@@ -10,12 +10,23 @@ export type Clinic = {
   phone: string | null;
   status: 'active' | 'inactive';
   createdAt: string;
-  // New fields
+  // Address fields
   streetAddress: string | null;
   city: string | null;
   state: string | null;
   zip: string | null;
   primaryContact: string | null;
+  // Billing fields
+  billingContactName: string | null;
+  billingEmail: string | null;
+  billingPhone: string | null;
+  billingAddress: string | null;
+  billingCity: string | null;
+  billingState: string | null;
+  billingZip: string | null;
+  paymentMethod: string | null;
+  subscriptionTier: string | null;
+  subscriptionStatus: string | null;
 };
 
 export const ClinicService = {
@@ -41,13 +52,67 @@ export const ClinicService = {
         city: clinic.city,
         state: clinic.state,
         zip: clinic.zip,
-        primaryContact: clinic.primary_contact
+        primaryContact: clinic.primary_contact,
+        // Map the new billing fields
+        billingContactName: clinic.billing_contact_name,
+        billingEmail: clinic.billing_email,
+        billingPhone: clinic.billing_phone,
+        billingAddress: clinic.billing_address,
+        billingCity: clinic.billing_city,
+        billingState: clinic.billing_state,
+        billingZip: clinic.billing_zip,
+        paymentMethod: clinic.payment_method,
+        subscriptionTier: clinic.subscription_tier,
+        subscriptionStatus: clinic.subscription_status
       }));
     } catch (error) {
       console.error('Error fetching clinics:', error);
       toast.error('Failed to fetch clinics.');
       // Return mock data as fallback
       return getMockClinics();
+    }
+  },
+
+  // Get a single clinic by ID
+  async getClinic(id: string): Promise<Clinic | null> {
+    try {
+      const { data, error } = await supabase
+        .from('clinics')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        name: data.name,
+        location: data.location || '',
+        email: data.email,
+        phone: data.phone,
+        status: (data.status || 'active') as 'active' | 'inactive',
+        createdAt: data.created_at,
+        streetAddress: data.street_address,
+        city: data.city,
+        state: data.state,
+        zip: data.zip,
+        primaryContact: data.primary_contact,
+        // Map the new billing fields
+        billingContactName: data.billing_contact_name,
+        billingEmail: data.billing_email,
+        billingPhone: data.billing_phone,
+        billingAddress: data.billing_address,
+        billingCity: data.billing_city,
+        billingState: data.billing_state,
+        billingZip: data.billing_zip,
+        paymentMethod: data.payment_method,
+        subscriptionTier: data.subscription_tier,
+        subscriptionStatus: data.subscription_status
+      };
+    } catch (error) {
+      console.error('Error fetching clinic:', error);
+      toast.error('Failed to fetch clinic details.');
+      return null;
     }
   },
 
@@ -62,6 +127,16 @@ export const ClinicService = {
     state?: string;
     zip?: string;
     primaryContact?: string;
+    billingContactName?: string;
+    billingEmail?: string;
+    billingPhone?: string;
+    billingAddress?: string;
+    billingCity?: string;
+    billingState?: string;
+    billingZip?: string;
+    paymentMethod?: string;
+    subscriptionTier?: string;
+    subscriptionStatus?: string;
   }): Promise<Clinic | null> {
     try {
       const { data, error } = await supabase
@@ -76,7 +151,17 @@ export const ClinicService = {
           city: clinic.city || null,
           state: clinic.state || null,
           zip: clinic.zip || null,
-          primary_contact: clinic.primaryContact || null
+          primary_contact: clinic.primaryContact || null,
+          billing_contact_name: clinic.billingContactName || null,
+          billing_email: clinic.billingEmail || null,
+          billing_phone: clinic.billingPhone || null,
+          billing_address: clinic.billingAddress || null,
+          billing_city: clinic.billingCity || null,
+          billing_state: clinic.billingState || null,
+          billing_zip: clinic.billingZip || null,
+          payment_method: clinic.paymentMethod || null,
+          subscription_tier: clinic.subscriptionTier || null,
+          subscription_status: clinic.subscriptionStatus || 'active'
         })
         .select()
         .single();
@@ -95,7 +180,17 @@ export const ClinicService = {
         city: data.city,
         state: data.state,
         zip: data.zip,
-        primaryContact: data.primary_contact
+        primaryContact: data.primary_contact,
+        billingContactName: data.billing_contact_name,
+        billingEmail: data.billing_email,
+        billingPhone: data.billing_phone,
+        billingAddress: data.billing_address,
+        billingCity: data.billing_city,
+        billingState: data.billing_state,
+        billingZip: data.billing_zip,
+        paymentMethod: data.payment_method,
+        subscriptionTier: data.subscription_tier,
+        subscriptionStatus: data.subscription_status
       };
     } catch (error) {
       console.error('Error adding clinic:', error);
@@ -117,6 +212,46 @@ export const ClinicService = {
       if (updates.primaryContact !== undefined) {
         dbUpdates.primary_contact = updates.primaryContact;
         delete dbUpdates.primaryContact;
+      }
+      if (updates.billingContactName !== undefined) {
+        dbUpdates.billing_contact_name = updates.billingContactName;
+        delete dbUpdates.billingContactName;
+      }
+      if (updates.billingEmail !== undefined) {
+        dbUpdates.billing_email = updates.billingEmail;
+        delete dbUpdates.billingEmail;
+      }
+      if (updates.billingPhone !== undefined) {
+        dbUpdates.billing_phone = updates.billingPhone;
+        delete dbUpdates.billingPhone;
+      }
+      if (updates.billingAddress !== undefined) {
+        dbUpdates.billing_address = updates.billingAddress;
+        delete dbUpdates.billingAddress;
+      }
+      if (updates.billingCity !== undefined) {
+        dbUpdates.billing_city = updates.billingCity;
+        delete dbUpdates.billingCity;
+      }
+      if (updates.billingState !== undefined) {
+        dbUpdates.billing_state = updates.billingState;
+        delete dbUpdates.billingState;
+      }
+      if (updates.billingZip !== undefined) {
+        dbUpdates.billing_zip = updates.billingZip;
+        delete dbUpdates.billingZip;
+      }
+      if (updates.paymentMethod !== undefined) {
+        dbUpdates.payment_method = updates.paymentMethod;
+        delete dbUpdates.paymentMethod;
+      }
+      if (updates.subscriptionTier !== undefined) {
+        dbUpdates.subscription_tier = updates.subscriptionTier;
+        delete dbUpdates.subscriptionTier;
+      }
+      if (updates.subscriptionStatus !== undefined) {
+        dbUpdates.subscription_status = updates.subscriptionStatus;
+        delete dbUpdates.subscriptionStatus;
       }
       
       const { data, error } = await supabase
@@ -140,7 +275,17 @@ export const ClinicService = {
         city: data.city,
         state: data.state,
         zip: data.zip,
-        primaryContact: data.primary_contact
+        primaryContact: data.primary_contact,
+        billingContactName: data.billing_contact_name,
+        billingEmail: data.billing_email,
+        billingPhone: data.billing_phone,
+        billingAddress: data.billing_address,
+        billingCity: data.billing_city,
+        billingState: data.billing_state,
+        billingZip: data.billing_zip,
+        paymentMethod: data.payment_method,
+        subscriptionTier: data.subscription_tier,
+        subscriptionStatus: data.subscription_status
       };
     } catch (error) {
       console.error('Error updating clinic:', error);
@@ -181,7 +326,17 @@ export const getMockClinics = (): Clinic[] => [
     city: 'New York',
     state: 'NY',
     zip: '10001',
-    primaryContact: 'John Smith'
+    primaryContact: 'John Smith',
+    billingContactName: 'Jane Smith',
+    billingEmail: 'billing@wellness.com',
+    billingPhone: '(555) 123-9999',
+    billingAddress: '123 Main St',
+    billingCity: 'New York',
+    billingState: 'NY',
+    billingZip: '10001',
+    paymentMethod: 'Credit Card',
+    subscriptionTier: 'Premium',
+    subscriptionStatus: 'active'
   },
   { 
     id: '2',
@@ -195,7 +350,17 @@ export const getMockClinics = (): Clinic[] => [
     city: 'Los Angeles',
     state: 'CA',
     zip: '90001',
-    primaryContact: 'Jane Doe'
+    primaryContact: 'Jane Doe',
+    billingContactName: 'Bob Johnson',
+    billingEmail: 'billing@practicenaturals.com',
+    billingPhone: '(555) 234-9999',
+    billingAddress: '456 Boulevard Ave',
+    billingCity: 'Los Angeles',
+    billingState: 'CA',
+    billingZip: '90001',
+    paymentMethod: 'Bank Transfer',
+    subscriptionTier: 'Standard',
+    subscriptionStatus: 'active'
   },
   { 
     id: '3',
@@ -209,7 +374,17 @@ export const getMockClinics = (): Clinic[] => [
     city: 'Chicago',
     state: 'IL',
     zip: '60601',
-    primaryContact: 'Mike Johnson'
+    primaryContact: 'Mike Johnson',
+    billingContactName: 'Sarah Wilson',
+    billingEmail: 'billing@healthpartners.com',
+    billingPhone: '(555) 345-9999',
+    billingAddress: '789 Health Way',
+    billingCity: 'Chicago',
+    billingState: 'IL',
+    billingZip: '60601',
+    paymentMethod: 'Credit Card',
+    subscriptionTier: 'Basic',
+    subscriptionStatus: 'active'
   }
 ];
 

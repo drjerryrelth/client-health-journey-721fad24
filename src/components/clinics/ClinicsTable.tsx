@@ -18,7 +18,7 @@ interface Clinic {
 
 interface ClinicsTableProps {
   clinics: Clinic[];
-  onClinicSelect: (clinic: {id: string, name: string}) => void;
+  onClinicSelect: (clinicId: string) => void;
   getStatusColor: (status: string) => string;
 }
 
@@ -37,40 +37,48 @@ const ClinicsTable = ({ clinics, onClinicSelect, getStatusColor }: ClinicsTableP
           </TableRow>
         </TableHeader>
         <TableBody>
-          {clinics.map((clinic) => (
-            <TableRow key={clinic.id} className="hover:bg-gray-50">
-              <TableCell>
-                <div className="flex items-center space-x-3">
-                  <div className="bg-primary-100 h-10 w-10 rounded-full flex items-center justify-center">
-                    <Building className="h-5 w-5 text-primary-700" />
-                  </div>
-                  <div className="font-medium">{clinic.name}</div>
-                </div>
-              </TableCell>
-              <TableCell>{clinic.coaches}</TableCell>
-              <TableCell>{clinic.clients}</TableCell>
-              <TableCell>
-                {clinic.city && clinic.state 
-                  ? `${clinic.city}, ${clinic.state}`
-                  : clinic.location}
-              </TableCell>
-              <TableCell>
-                <Badge className={getStatusColor(clinic.status)} variant="outline">
-                  {clinic.status.charAt(0).toUpperCase() + clinic.status.slice(1)}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Button 
-                  variant="ghost" 
-                  className="flex items-center"
-                  onClick={() => onClinicSelect({id: clinic.id, name: clinic.name})}
-                >
-                  <span className="mr-1">Manage Coaches</span>
-                  <ChevronRight size={16} />
-                </Button>
+          {clinics.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                No clinics found. Add a clinic to get started.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            clinics.map((clinic) => (
+              <TableRow key={clinic.id} className="hover:bg-gray-50">
+                <TableCell>
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-primary-100 h-10 w-10 rounded-full flex items-center justify-center">
+                      <Building className="h-5 w-5 text-primary-700" />
+                    </div>
+                    <div className="font-medium">{clinic.name}</div>
+                  </div>
+                </TableCell>
+                <TableCell>{clinic.coaches}</TableCell>
+                <TableCell>{clinic.clients}</TableCell>
+                <TableCell>
+                  {clinic.city && clinic.state 
+                    ? `${clinic.city}, ${clinic.state}`
+                    : clinic.location}
+                </TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(clinic.status)} variant="outline">
+                    {clinic.status.charAt(0).toUpperCase() + clinic.status.slice(1)}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center"
+                    onClick={() => onClinicSelect(clinic.id)}
+                  >
+                    <span className="mr-1">Manage</span>
+                    <ChevronRight size={16} />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

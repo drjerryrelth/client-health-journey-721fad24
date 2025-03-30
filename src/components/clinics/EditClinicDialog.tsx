@@ -1,23 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import ClinicService from '@/services/clinic-service';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import ClinicService, { Clinic } from '@/services/clinic-service';
 
-interface AddClinicDialogProps {
+interface EditClinicDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onClinicAdded?: () => void;
+  clinicId: string;
+  onClinicUpdated?: () => void;
 }
 
-const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogProps) => {
+const EditClinicDialog = ({ open, onOpenChange, clinicId, onClinicUpdated }: EditClinicDialogProps) => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('general');
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [clinic, setClinic] = useState<Clinic | null>(null);
+  const [activeTab, setActiveTab] = useState('general');
   
   // General info
   const [clinicName, setClinicName] = useState('');
@@ -29,6 +32,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
   const [state, setState] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [primaryContact, setPrimaryContact] = useState('');
+  const [status, setStatus] = useState('active');
   
   // Billing info
   const [billingContactName, setBillingContactName] = useState('');
@@ -40,64 +44,106 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
   const [billingZip, setBillingZip] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [subscriptionTier, setSubscriptionTier] = useState('');
+  const [subscriptionStatus, setSubscriptionStatus] = useState('active');
 
-  const handleSubmitClinic = async () => {
-    if (!clinicName || !clinicLocation) {
+  useEffect(() => {
+    if (open && clinicId) {
+      fetchClinicDetails();
+    }
+  }, [open, clinicId]);
+
+  const fetchClinicDetails = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedClinic = await ClinicService.getClinic(clinicId);
+      if (fetchedClinic) {
+        setClinic(fetchedClinic);
+        
+        // Set general info
+        setClinicName(fetchedClinic.name || '');
+        setClinicLocation(fetchedClinic.location || '');
+        setClinicEmail(fetchedClinic.email || '');
+        setClinicPhone(fetchedClinic.phone || '');
+        setStreetAddress(fetchedClinic.streetAddress || '');
+        setCity(fetchedClinic.city || '');
+        setState(fetchedClinic.state || '');
+        setZipCode(fetchedClinic.zip || '');
+        setPrimaryContact(fetchedClinic.primaryContact || '');
+        setStatus(fetchedClinic.status || 'active');
+        
+        // Set billing info
+        setBillingContactName(fetchedClinic.billingContactName || '');
+        setBillingEmail(fetchedClinic.billingEmail || '');
+        setBillingPhone(fetchedClinic.billingPhone || '');
+        setBillingAddress(fetchedClinic.billingAddress || '');
+        setBillingCity(fetchedClinic.billingCity || '');
+        setBillingState(fetchedClinic.billingState || '');
+        setBillingZip(fetchedClinic.billingZip || '');
+        setPaymentMethod(fetchedClinic.paymentMethod || '');
+        setSubscriptionTier(fetchedClinic.subscriptionTier || '');
+        setSubscriptionStatus(fetchedClinic.subscriptionStatus || 'active');
+      }
+    } catch (error) {
+      console.error('Error fetching clinic details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch clinic details.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!clinicName) {
       toast({
         title: "Missing Information",
-        description: "Please provide clinic name and location.",
+        description: "Please provide clinic name.",
         variant: "destructive"
       });
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      const newClinic = await ClinicService.addClinic({
+      const updatedClinic = await ClinicService.updateClinic(clinicId, {
         name: clinicName,
         location: clinicLocation,
-        email: clinicEmail || undefined,
-        phone: clinicPhone || undefined,
-        streetAddress: streetAddress || undefined,
-        city: city || undefined,
-        state: state || undefined,
-        zip: zipCode || undefined,
-        primaryContact: primaryContact || undefined,
-        billingContactName: billingContactName || undefined,
-        billingEmail: billingEmail || undefined,
-        billingPhone: billingPhone || undefined,
-        billingAddress: billingAddress || undefined,
-        billingCity: billingCity || undefined,
-        billingState: billingState || undefined,
-        billingZip: billingZip || undefined,
-        paymentMethod: paymentMethod || undefined,
-        subscriptionTier: subscriptionTier || undefined
+        email: clinicEmail || null,
+        phone: clinicPhone || null,
+        status: status as 'active' | 'inactive',
+        streetAddress: streetAddress || null,
+        city: city || null,
+        state: state || null,
+        zip: zipCode || null,
+        primaryContact: primaryContact || null,
+        billingContactName: billingContactName || null,
+        billingEmail: billingEmail || null,
+        billingPhone: billingPhone || null,
+        billingAddress: billingAddress || null,
+        billingCity: billingCity || null,
+        billingState: billingState || null,
+        billingZip: billingZip || null,
+        paymentMethod: paymentMethod || null,
+        subscriptionTier: subscriptionTier || null,
+        subscriptionStatus: subscriptionStatus as 'active' | 'inactive' || null
       });
 
-      if (newClinic) {
+      if (updatedClinic) {
         toast({
-          title: "Clinic Added",
-          description: `${clinicName} has been added successfully.`
+          title: "Clinic Updated",
+          description: `${clinicName} has been updated successfully.`
         });
         
-        // Reset form and close dialog
-        resetForm();
         onOpenChange(false);
-        
-        // Notify parent component to refresh clinic list
-        if (onClinicAdded) onClinicAdded();
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to add clinic. Please try again.",
-          variant: "destructive"
-        });
+        if (onClinicUpdated) onClinicUpdated();
       }
     } catch (error) {
-      console.error("Error adding clinic:", error);
+      console.error('Error updating clinic:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "Failed to update clinic.",
         variant: "destructive"
       });
     } finally {
@@ -105,38 +151,25 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
     }
   };
 
-  const resetForm = () => {
-    setClinicName('');
-    setClinicLocation('');
-    setClinicEmail('');
-    setClinicPhone('');
-    setStreetAddress('');
-    setCity('');
-    setState('');
-    setZipCode('');
-    setPrimaryContact('');
-    setBillingContactName('');
-    setBillingEmail('');
-    setBillingPhone('');
-    setBillingAddress('');
-    setBillingCity('');
-    setBillingState('');
-    setBillingZip('');
-    setPaymentMethod('');
-    setSubscriptionTier('');
-    setActiveTab('general');
-  };
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) resetForm();
-      onOpenChange(newOpen);
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Clinic</DialogTitle>
+          <DialogTitle>Edit Clinic</DialogTitle>
           <DialogDescription>
-            Add a new clinic to your organization. You'll be able to manage its coaches and programs later.
+            Update clinic information including billing details.
           </DialogDescription>
         </DialogHeader>
         
@@ -156,6 +189,19 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                   onChange={(e) => setClinicName(e.target.value)} 
                   className="col-span-3" 
                 />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="clinic-status" className="text-right">Status</Label>
+                <select 
+                  id="clinic-status"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
               </div>
               
               <div className="grid grid-cols-4 items-center gap-4">
@@ -349,6 +395,21 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                   <option value="Enterprise">Enterprise</option>
                 </select>
               </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="subscription-status" className="text-right">Subscription Status</Label>
+                <select
+                  id="subscription-status"
+                  value={subscriptionStatus}
+                  onChange={(e) => setSubscriptionStatus(e.target.value)}
+                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                >
+                  <option value="active">Active</option>
+                  <option value="trial">Trial</option>
+                  <option value="past_due">Past Due</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
@@ -364,10 +425,10 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
           </Button>
           <Button 
             type="button" 
-            onClick={handleSubmitClinic}
+            onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Adding...' : 'Add Clinic'}
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -375,4 +436,4 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
   );
 };
 
-export default AddClinicDialog;
+export default EditClinicDialog;

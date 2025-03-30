@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, ArrowLeft, UserPlus } from 'lucide-react';
+import { PlusCircle, ArrowLeft, UserPlus, Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Coach, CoachService, getMockCoaches } from '@/services/coach-service';
 import CoachList from '@/components/coaches/CoachList';
@@ -11,16 +13,22 @@ import AddCoachDialog from '@/components/coaches/AddCoachDialog';
 import EditCoachDialog from '@/components/coaches/EditCoachDialog';
 import ReassignClientsDialog from '@/components/coaches/ReassignClientsDialog';
 import ClinicService, { Clinic } from '@/services/clinic-service';
+import EditClinicDialog from '@/components/clinics/EditClinicDialog';
+import ClinicDetailsTab from '@/components/clinics/ClinicDetailsTab';
+import ResetPasswordDialog from '@/components/auth/ResetPasswordDialog';
 
 const ClinicsPage = () => {
   const { toast } = useToast();
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedClinic, setSelectedClinic] = useState<{id: string, name: string} | null>(null);
+  const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+  const [activeClinicTab, setActiveClinicTab] = useState('coaches');
   const [showAddCoachDialog, setShowAddCoachDialog] = useState(false);
   const [showEditCoachDialog, setShowEditCoachDialog] = useState(false);
   const [showReassignDialog, setShowReassignDialog] = useState(false);
   const [showAddClinicDialog, setShowAddClinicDialog] = useState(false);
+  const [showEditClinicDialog, setShowEditClinicDialog] = useState(false);
+  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [replacementCoachId, setReplacementCoachId] = useState<string>('');
   
@@ -56,12 +64,35 @@ const ClinicsPage = () => {
     }
   };
 
-  const handleClinicSelect = (clinic: {id: string, name: string}) => {
-    setSelectedClinic(clinic);
+  const handleClinicSelect = async (clinicId: string) => {
+    try {
+      setLoading(true);
+      const clinicDetails = await ClinicService.getClinic(clinicId);
+      
+      if (clinicDetails) {
+        setSelectedClinic(clinicDetails);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to fetch clinic details.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching clinic details:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch clinic details.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackToAllClinics = () => {
     setSelectedClinic(null);
+    setActiveClinicTab('coaches');
   };
 
   const handleAddCoach = () => {
@@ -153,6 +184,16 @@ const ClinicsPage = () => {
     setShowAddClinicDialog(true);
   };
 
+  const handleEditClinic = () => {
+    if (selectedClinic) {
+      setShowEditClinicDialog(true);
+    }
+  };
+
+  const handleOpenResetPassword = () => {
+    setShowResetPasswordDialog(true);
+  };
+
   const availableCoaches = selectedClinic && selectedCoach
     ? getMockCoaches()
         .filter(coach => coach.clinicId === selectedClinic.id && coach.id !== selectedCoach.id)
@@ -189,25 +230,53 @@ const ClinicsPage = () => {
             <ArrowLeft size={18} />
             <span>Back to All Clinics</span>
           </Button>
-          <h1 className="text-2xl font-bold text-gray-900">{selectedClinic.name} - Coaches</h1>
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-bold text-gray-900">{selectedClinic.name}</h1>
+            <div className="flex items-center mt-1">
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedClinic.status)}`}>
+                {selectedClinic.status.toUpperCase()}
+              </span>
+              {selectedClinic.subscriptionTier && (
+                <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                  {selectedClinic.subscriptionTier.toUpperCase()}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Coaches at {selectedClinic.name}</CardTitle>
-            <Button onClick={handleAddCoach} className="flex items-center gap-2">
-              <UserPlus size={18} />
-              <span>Add Coach</span>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <CoachList 
-              clinicId={selectedClinic.id} 
-              onEdit={handleEditCoach}
-              onDelete={handleDeleteCoach}
+        <Tabs value={activeClinicTab} onValueChange={setActiveClinicTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="coaches">Coaches</TabsTrigger>
+            <TabsTrigger value="details">Clinic Details</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="coaches">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Coaches at {selectedClinic.name}</CardTitle>
+                <Button onClick={handleAddCoach} className="flex items-center gap-2">
+                  <UserPlus size={18} />
+                  <span>Add Coach</span>
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <CoachList 
+                  clinicId={selectedClinic.id} 
+                  onEdit={handleEditCoach}
+                  onDelete={handleDeleteCoach}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="details">
+            <ClinicDetailsTab 
+              clinic={selectedClinic}
+              onEditClick={handleEditClinic} 
             />
-          </CardContent>
-        </Card>
+          </TabsContent>
+        </Tabs>
 
         <AddCoachDialog 
           open={showAddCoachDialog} 
@@ -236,18 +305,38 @@ const ClinicsPage = () => {
           setReplacementCoachId={setReplacementCoachId}
           onReassignAndDelete={handleReassignAndDelete}
         />
+
+        <EditClinicDialog 
+          open={showEditClinicDialog} 
+          onOpenChange={setShowEditClinicDialog} 
+          clinicId={selectedClinic.id}
+          onClinicUpdated={() => {
+            // Re-fetch the clinic details
+            handleClinicSelect(selectedClinic.id);
+          }}
+        />
       </div>
     );
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Clinics</h1>
-        <Button onClick={handleAddClinic} className="flex items-center gap-2">
-          <PlusCircle size={18} />
-          <span>Add Clinic</span>
-        </Button>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Clinics</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage clinics, their coaches, and billing information.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={handleOpenResetPassword} variant="outline">
+            Reset Password
+          </Button>
+          <Button onClick={handleAddClinic} className="flex items-center gap-2">
+            <Building size={18} />
+            <span>Add Clinic</span>
+          </Button>
+        </div>
       </div>
       
       <Card>
@@ -267,6 +356,11 @@ const ClinicsPage = () => {
         open={showAddClinicDialog} 
         onOpenChange={setShowAddClinicDialog}
         onClinicAdded={fetchClinics}
+      />
+      
+      <ResetPasswordDialog 
+        open={showResetPasswordDialog}
+        onOpenChange={setShowResetPasswordDialog}
       />
     </div>
   );

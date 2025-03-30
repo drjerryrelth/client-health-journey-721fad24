@@ -170,6 +170,13 @@ export type Database = {
       }
       clinics: {
         Row: {
+          billing_address: string | null
+          billing_city: string | null
+          billing_contact_name: string | null
+          billing_email: string | null
+          billing_phone: string | null
+          billing_state: string | null
+          billing_zip: string | null
           city: string | null
           created_at: string | null
           email: string | null
@@ -177,6 +184,7 @@ export type Database = {
           location: string | null
           logo: string | null
           name: string
+          payment_method: string | null
           phone: string | null
           primary_color: string | null
           primary_contact: string | null
@@ -184,9 +192,18 @@ export type Database = {
           state: string | null
           status: string | null
           street_address: string | null
+          subscription_status: string | null
+          subscription_tier: string | null
           zip: string | null
         }
         Insert: {
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_contact_name?: string | null
+          billing_email?: string | null
+          billing_phone?: string | null
+          billing_state?: string | null
+          billing_zip?: string | null
           city?: string | null
           created_at?: string | null
           email?: string | null
@@ -194,6 +211,7 @@ export type Database = {
           location?: string | null
           logo?: string | null
           name: string
+          payment_method?: string | null
           phone?: string | null
           primary_color?: string | null
           primary_contact?: string | null
@@ -201,9 +219,18 @@ export type Database = {
           state?: string | null
           status?: string | null
           street_address?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
           zip?: string | null
         }
         Update: {
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_contact_name?: string | null
+          billing_email?: string | null
+          billing_phone?: string | null
+          billing_state?: string | null
+          billing_zip?: string | null
           city?: string | null
           created_at?: string | null
           email?: string | null
@@ -211,6 +238,7 @@ export type Database = {
           location?: string | null
           logo?: string | null
           name?: string
+          payment_method?: string | null
           phone?: string | null
           primary_color?: string | null
           primary_contact?: string | null
@@ -218,6 +246,8 @@ export type Database = {
           state?: string | null
           status?: string | null
           street_address?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
           zip?: string | null
         }
         Relationships: []
