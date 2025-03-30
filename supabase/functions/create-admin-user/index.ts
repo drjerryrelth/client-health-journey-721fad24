@@ -24,11 +24,15 @@ serve(async (req) => {
     const { action } = requestData;
 
     // Handle different actions
-    if (action === 'delete') {
-      return await handleDeleteUser(requestData);
-    } else {
-      // Default action is to create a user
-      return await handleCreateUser(requestData);
+    switch (action) {
+      case 'delete':
+        return await handleDeleteUser(requestData);
+      case 'list':
+        return await handleListUsers();
+      case 'create':
+      default:
+        // Default action is to create a user
+        return await handleCreateUser(requestData);
     }
   } catch (error) {
     console.error("Unexpected error:", error);
@@ -38,6 +42,31 @@ serve(async (req) => {
     );
   }
 });
+
+async function handleListUsers() {
+  console.log("Listing all admin users");
+  
+  // Fetch all admin users
+  const { data, error } = await supabase
+    .from('admin_users')
+    .select('*')
+    .order('full_name');
+  
+  if (error) {
+    console.error("Error fetching admin users:", error);
+    return new Response(
+      JSON.stringify({ error: `Failed to fetch admin users: ${error.message}` }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+    );
+  }
+  
+  console.log(`Found ${data?.length || 0} admin users`);
+  
+  return new Response(
+    JSON.stringify(data || []),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+  );
+}
 
 async function handleCreateUser(requestData) {
   const { email, password, fullName, role } = requestData;

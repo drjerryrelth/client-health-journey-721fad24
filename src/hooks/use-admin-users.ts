@@ -10,6 +10,8 @@ export const useAdminUsersQuery = () => {
   return useQuery({
     queryKey: ['adminUsers'],
     queryFn: () => AdminUserService.getAllAdminUsers(),
+    staleTime: 1000, // Very short stale time to refresh more often
+    refetchOnWindowFocus: true
   });
 };
 
@@ -41,10 +43,8 @@ export const useCreateAdminUserMutation = () => {
     onSuccess: (data) => {
       console.log('Admin user created successfully:', data);
       
-      // Explicitly invalidate and refetch the admin users query
+      // Force an immediate refetch to get the latest data
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
-      // Force a refetch to ensure the latest data
-      queryClient.refetchQueries({ queryKey: ['adminUsers'] });
       
       // Use sonner toast for more visible notification
       sonnerToast.success('Admin user created', {

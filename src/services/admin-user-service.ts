@@ -8,10 +8,10 @@ export const AdminUserService = {
    */
   async getAllAdminUsers(): Promise<AdminUser[]> {
     console.log('Fetching all admin users');
-    const { data, error } = await supabase
-      .from('admin_users')
-      .select('*')
-      .order('full_name');
+    // Use service role key through edge function to bypass RLS
+    const { data, error } = await supabase.functions.invoke('create-admin-user', {
+      body: { action: 'list' }
+    });
     
     if (error) {
       console.error('Error fetching admin users:', error);
@@ -54,6 +54,7 @@ export const AdminUserService = {
       // Call our edge function instead of using client-side admin API
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
         body: {
+          action: 'create',
           email: userData.email,
           password: userData.password,
           fullName: userData.fullName,

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Pencil, Trash2, AlertCircle } from 'lucide-react';
+import { UserPlus, Pencil, Trash2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +11,7 @@ import { AddAdminUserDialog } from '@/components/admin/AddAdminUserDialog';
 import { EditAdminUserDialog } from '@/components/admin/EditAdminUserDialog';
 import { useAdminUsersQuery, useDeleteAdminUserMutation } from '@/hooks/use-admin-users';
 import { Badge } from '@/components/ui/badge';
+import { toast as sonnerToast } from 'sonner';
 
 const AdminUsersPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -19,13 +20,13 @@ const AdminUsersPage = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   
-  const { data: adminUsers, isLoading, isError, refetch } = useAdminUsersQuery();
+  const { data: adminUsers, isLoading, isError, refetch, isFetching } = useAdminUsersQuery();
   const deleteAdminUser = useDeleteAdminUserMutation();
 
-  // Refresh data when component mounts or after dialog closes
+  // Refresh data when component mounts
   useEffect(() => {
     refetch();
-  }, [refetch, isAddDialogOpen, isEditDialogOpen]);
+  }, [refetch]);
 
   const handleAdd = () => {
     setIsAddDialogOpen(true);
@@ -47,6 +48,7 @@ const AdminUsersPage = () => {
         await deleteAdminUser.mutateAsync(selectedUserId);
         // Explicitly refetch after delete
         await refetch();
+        sonnerToast.success('Admin user deleted successfully');
       } catch (error) {
         // Error handled by mutation hook
         console.error('Error deleting admin user:', error);
@@ -60,31 +62,44 @@ const AdminUsersPage = () => {
   const handleAddDialogClose = (open: boolean) => {
     setIsAddDialogOpen(open);
     if (!open) {
-      // Small delay to ensure database has time to update
-      setTimeout(() => {
-        refetch();
-      }, 500);
+      // Immediate refetch when dialog closes
+      refetch();
     }
   };
 
   const handleEditDialogClose = (open: boolean) => {
     setIsEditDialogOpen(open);
     if (!open) {
-      // Small delay to ensure database has time to update
-      setTimeout(() => {
-        refetch();
-      }, 500);
+      // Immediate refetch when dialog closes
+      refetch();
     }
+  };
+
+  const handleManualRefresh = () => {
+    refetch();
+    sonnerToast.info('Refreshing admin users list...');
   };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Admin Users</h1>
-        <Button onClick={handleAdd} className="flex items-center gap-2">
-          <UserPlus size={16} />
-          <span>Add Admin User</span>
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={handleManualRefresh} 
+            variant="outline" 
+            size="icon"
+            disabled={isFetching}
+            className="flex items-center justify-center"
+            title="Refresh list"
+          >
+            <RefreshCw size={16} className={isFetching ? "animate-spin" : ""} />
+          </Button>
+          <Button onClick={handleAdd} className="flex items-center gap-2">
+            <UserPlus size={16} />
+            <span>Add Admin User</span>
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -122,7 +137,7 @@ const AdminUsersPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {isLoading || isFetching ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     Loading admin users...
