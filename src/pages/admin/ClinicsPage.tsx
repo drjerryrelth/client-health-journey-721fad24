@@ -1,21 +1,18 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { PlusCircle, Building, ChevronRight, ArrowLeft, UserPlus, Edit2, Trash2 } from 'lucide-react';
+import { PlusCircle, ArrowLeft, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Coach, getMockCoaches } from '@/services/coach-service';
 import CoachList from '@/components/coaches/CoachList';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getMockCoaches, Coach } from '@/services/coach-service';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import AddClinicDialog from '@/components/clinics/AddClinicDialog';
+import ClinicsTable from '@/components/clinics/ClinicsTable';
+import AddCoachDialog from '@/components/coaches/AddCoachDialog';
+import EditCoachDialog from '@/components/coaches/EditCoachDialog';
+import ReassignClientsDialog from '@/components/coaches/ReassignClientsDialog';
 
 const ClinicsPage = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedClinic, setSelectedClinic] = useState<{id: string, name: string} | null>(null);
   const [showAddCoachDialog, setShowAddCoachDialog] = useState(false);
@@ -25,15 +22,6 @@ const ClinicsPage = () => {
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [replacementCoachId, setReplacementCoachId] = useState<string>('');
   
-  const [coachName, setCoachName] = useState('');
-  const [coachEmail, setCoachEmail] = useState('');
-  const [coachPhone, setCoachPhone] = useState('');
-  
-  const [clinicName, setClinicName] = useState('');
-  const [clinicLocation, setClinicLocation] = useState('');
-  const [clinicEmail, setClinicEmail] = useState('');
-  const [clinicPhone, setClinicPhone] = useState('');
-
   const clinics = [
     { 
       id: '1',
@@ -65,28 +53,6 @@ const ClinicsPage = () => {
     setShowAddClinicDialog(true);
   };
 
-  const handleSubmitClinic = () => {
-    if (!clinicName || !clinicLocation) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide clinic name and location.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    toast({
-      title: "Clinic Added",
-      description: `${clinicName} has been added successfully.`
-    });
-    
-    setClinicName('');
-    setClinicLocation('');
-    setClinicEmail('');
-    setClinicPhone('');
-    setShowAddClinicDialog(false);
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -112,9 +78,6 @@ const ClinicsPage = () => {
 
   const handleEditCoach = (coach: Coach) => {
     setSelectedCoach(coach);
-    setCoachName(coach.name);
-    setCoachEmail(coach.email);
-    setCoachPhone(coach.phone || '');
     setShowEditCoachDialog(true);
   };
 
@@ -162,49 +125,6 @@ const ClinicsPage = () => {
     setReplacementCoachId('');
   };
 
-  const handleSubmitAddCoach = () => {
-    if (!coachName || !coachEmail) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide name and email for the coach.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    toast({
-      title: "Coach Added",
-      description: `${coachName} has been added to ${selectedClinic?.name}.`
-    });
-    
-    setShowAddCoachDialog(false);
-    setCoachName('');
-    setCoachEmail('');
-    setCoachPhone('');
-  };
-
-  const handleSubmitEditCoach = () => {
-    if (!coachName || !coachEmail) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide name and email for the coach.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    toast({
-      title: "Coach Updated",
-      description: `${coachName}'s information has been updated.`
-    });
-    
-    setShowEditCoachDialog(false);
-    setSelectedCoach(null);
-    setCoachName('');
-    setCoachEmail('');
-    setCoachPhone('');
-  };
-
   const availableCoaches = selectedClinic && selectedCoach
     ? getMockCoaches()
         .filter(coach => coach.clinicId === selectedClinic.id && coach.id !== selectedCoach.id)
@@ -242,180 +162,29 @@ const ClinicsPage = () => {
           </CardContent>
         </Card>
 
-        <Dialog open={showAddCoachDialog} onOpenChange={setShowAddCoachDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Coach</DialogTitle>
-              <DialogDescription>
-                Add a new coach to {selectedClinic.name}. They will receive an email invitation to set up their account.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input 
-                  id="name" 
-                  value={coachName} 
-                  onChange={(e) => setCoachName(e.target.value)} 
-                  className="col-span-3" 
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
-                  Email
-                </Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  value={coachEmail} 
-                  onChange={(e) => setCoachEmail(e.target.value)} 
-                  className="col-span-3" 
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="phone" className="text-right">
-                  Phone
-                </Label>
-                <Input 
-                  id="phone" 
-                  type="tel" 
-                  value={coachPhone} 
-                  onChange={(e) => setCoachPhone(e.target.value)} 
-                  className="col-span-3" 
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowAddCoachDialog(false)}>
-                Cancel
-              </Button>
-              <Button type="button" onClick={handleSubmitAddCoach}>
-                Add Coach
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Dialogs */}
+        <AddCoachDialog 
+          open={showAddCoachDialog} 
+          onOpenChange={setShowAddCoachDialog} 
+          clinicName={selectedClinic.name} 
+        />
 
-        <Dialog open={showEditCoachDialog} onOpenChange={setShowEditCoachDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Coach</DialogTitle>
-              <DialogDescription>
-                Update coach information for {selectedClinic.name}.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name" className="text-right">
-                  Name
-                </Label>
-                <Input 
-                  id="edit-name" 
-                  value={coachName} 
-                  onChange={(e) => setCoachName(e.target.value)} 
-                  className="col-span-3" 
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-email" className="text-right">
-                  Email
-                </Label>
-                <Input 
-                  id="edit-email" 
-                  type="email" 
-                  value={coachEmail} 
-                  onChange={(e) => setCoachEmail(e.target.value)} 
-                  className="col-span-3" 
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-phone" className="text-right">
-                  Phone
-                </Label>
-                <Input 
-                  id="edit-phone" 
-                  type="tel" 
-                  value={coachPhone} 
-                  onChange={(e) => setCoachPhone(e.target.value)} 
-                  className="col-span-3" 
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowEditCoachDialog(false)}>
-                Cancel
-              </Button>
-              <Button type="button" onClick={handleSubmitEditCoach}>
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <EditCoachDialog 
+          open={showEditCoachDialog} 
+          onOpenChange={setShowEditCoachDialog} 
+          coach={selectedCoach} 
+          clinicName={selectedClinic.name} 
+        />
 
-        <AlertDialog open={showReassignDialog} onOpenChange={setShowReassignDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Reassign Clients</AlertDialogTitle>
-              <AlertDialogDescription>
-                {selectedCoach?.name} has {selectedCoach?.clients} client{selectedCoach?.clients !== 1 ? 's' : ''}. 
-                Please select another coach to reassign these clients to before removing {selectedCoach?.name}.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            
-            <div className="py-4">
-              <Label htmlFor="replacement-coach" className="block mb-2">
-                Select Replacement Coach
-              </Label>
-              <Select onValueChange={setReplacementCoachId} value={replacementCoachId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a coach" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableCoaches.length > 0 ? (
-                    availableCoaches.map(coach => (
-                      <SelectItem key={coach.id} value={coach.id}>
-                        {coach.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="none" disabled>No other coaches available</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              
-              {availableCoaches.length === 0 && (
-                <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 rounded border border-yellow-200">
-                  <p className="text-sm">
-                    There are no other coaches available in this clinic. Add another coach first, 
-                    or transfer clients to a different clinic before removing this coach.
-                  </p>
-                </div>
-              )}
-            </div>
-            
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => {
-                setShowReassignDialog(false);
-                setReplacementCoachId('');
-              }}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleReassignAndDelete}
-                className="bg-red-600 hover:bg-red-700"
-                disabled={!replacementCoachId || availableCoaches.length === 0}
-              >
-                Reassign & Remove
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ReassignClientsDialog 
+          open={showReassignDialog}
+          onOpenChange={setShowReassignDialog}
+          selectedCoach={selectedCoach}
+          availableCoaches={availableCoaches}
+          replacementCoachId={replacementCoachId}
+          setReplacementCoachId={setReplacementCoachId}
+          onReassignAndDelete={handleReassignAndDelete}
+        />
       </div>
     );
   }
@@ -435,123 +204,16 @@ const ClinicsPage = () => {
           <CardTitle>All Clinics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Clinic</TableHead>
-                  <TableHead>Coaches</TableHead>
-                  <TableHead>Clients</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {clinics.map((clinic) => (
-                  <TableRow key={clinic.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <div className="bg-primary-100 h-10 w-10 rounded-full flex items-center justify-center">
-                          <Building className="h-5 w-5 text-primary-700" />
-                        </div>
-                        <div className="font-medium">{clinic.name}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{clinic.coaches}</TableCell>
-                    <TableCell>{clinic.clients}</TableCell>
-                    <TableCell>{clinic.location}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(clinic.status)} variant="outline">
-                        {clinic.status.charAt(0).toUpperCase() + clinic.status.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        className="flex items-center"
-                        onClick={() => handleClinicSelect({id: clinic.id, name: clinic.name})}
-                      >
-                        <span className="mr-1">Manage Coaches</span>
-                        <ChevronRight size={16} />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <ClinicsTable 
+            clinics={clinics}
+            onClinicSelect={handleClinicSelect}
+            getStatusColor={getStatusColor}
+          />
         </CardContent>
       </Card>
 
-      <Dialog open={showAddClinicDialog} onOpenChange={setShowAddClinicDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Clinic</DialogTitle>
-            <DialogDescription>
-              Add a new clinic to your organization. You'll be able to manage its coaches and programs later.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="clinic-name" className="text-right">
-                Name
-              </Label>
-              <Input 
-                id="clinic-name" 
-                value={clinicName} 
-                onChange={(e) => setClinicName(e.target.value)} 
-                className="col-span-3" 
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">
-                Location
-              </Label>
-              <Input 
-                id="location" 
-                value={clinicLocation} 
-                onChange={(e) => setClinicLocation(e.target.value)} 
-                className="col-span-3" 
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="clinic-email" className="text-right">
-                Email
-              </Label>
-              <Input 
-                id="clinic-email" 
-                type="email" 
-                value={clinicEmail} 
-                onChange={(e) => setClinicEmail(e.target.value)} 
-                className="col-span-3" 
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="clinic-phone" className="text-right">
-                Phone
-              </Label>
-              <Input 
-                id="clinic-phone" 
-                type="tel" 
-                value={clinicPhone} 
-                onChange={(e) => setClinicPhone(e.target.value)} 
-                className="col-span-3" 
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setShowAddClinicDialog(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleSubmitClinic}>
-              Add Clinic
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Add Clinic Dialog */}
+      <AddClinicDialog open={showAddClinicDialog} onOpenChange={setShowAddClinicDialog} />
     </div>
   );
 };
