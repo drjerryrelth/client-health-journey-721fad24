@@ -1,29 +1,18 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { User as SupabaseUser, AuthError } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { UserRole } from '@/types';
-
-interface UserData {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  clinicId?: string;
-}
-
-interface AuthContextType {
-  user: UserData | null;
-  supabaseUser: SupabaseUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  hasRole: (role: UserRole | UserRole[]) => boolean;
-  signUp: (email: string, password: string, userData: { full_name: string; role: string }) => Promise<void>;
-}
+import { UserData, AuthContextType } from '@/types/auth';
+import { useToast } from '@/hooks/use-toast';
+import { fetchUserProfile } from '@/hooks/use-user-profile';
+import { 
+  loginWithEmail, 
+  signUpWithEmail, 
+  logoutUser, 
+  getCurrentSession,
+  setupAuthListener 
+} from '@/services/auth-service';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -45,47 +34,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      console.log('Fetching user profile for ID:', userId);
-
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (profileError) {
-        console.error('Error fetching user profile:', profileError);
-        return null;
-      }
-
-      if (profileData) {
-        console.log('Profile data retrieved:', profileData);
-        return {
-          id: profileData.id,
-          name: profileData.full_name,
-          email: profileData.email,
-          role: profileData.role as UserRole,
-          clinicId: profileData.clinic_id,
-        };
-      }
-
-      console.warn('No profile data found for user ID:', userId);
-      return null;
-    } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
-      return null;
-    }
-  };
-
   useEffect(() => {
     const initialSession = async () => {
       setIsLoading(true);
       
       try {
         console.log('Checking initial session');
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await getCurrentSession();
         
         if (error) {
           throw error;
@@ -102,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(userData);
           } else {
             console.warn('No user data found, signing out');
-            await supabase.auth.signOut();
+            await logoutUser();
             setSupabaseUser(null);
           }
         } else {
@@ -122,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initialSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: authListener } = setupAuthListener(async (event, session) => {
       console.log('Auth state changed:', event);
       
       if (event === 'SIGNED_IN' && session?.user) {
@@ -163,67 +118,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      console.log('Attempting login with email:', email);
-      
-      // Check if this is a demo login
-      const isDemoLogin = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
-      if (isDemoLogin) {
-        console.log('This is a demo login attempt');
-      }
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        console.error('Login error details:', error);
-        
-        // Provide more specific error messages based on error code
-        let errorMessage = 'Invalid email or password';
-        
-        if (error.message.includes('Invalid login')) {
-          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-        } else if (error.message.includes('rate limited')) {
-          errorMessage = 'Too many login attempts. Please try again later.';
-        } else if (error.message.includes('Email not confirmed')) {
-          // For demo purposes, we'll handle this case specially
-          if (isDemoLogin) {
-            errorMessage = 'Demo account email requires confirmation. Please try again.';
-          } else {
-            errorMessage = 'Please check your email and confirm your account before logging in.';
-          }
-        }
-        
-        toast({
-          title: 'Login failed',
-          description: errorMessage,
-          variant: 'destructive',
-        });
-        
-        throw error;
-      }
-      
-      if (!data.user) {
-        console.error('No user returned from login');
-        throw new Error('No user returned from login');
-      }
-      
-      console.log('Login successful');
+      await loginWithEmail(email, password);
       return Promise.resolve();
     } catch (error: any) {
       console.error('Login error:', error);
       
-      // Error is already handled above, but catch any unexpected errors
-      if (error instanceof AuthError) {
-        // Already handled above
-      } else {
-        toast({
-          title: 'Login failed',
-          description: error.message || 'An unexpected error occurred',
-          variant: 'destructive',
-        });
+      // Provide specific error messages based on error code
+      let errorMessage = 'Invalid email or password';
+      
+      if (error.message.includes('Invalid login')) {
+        errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (error.message.includes('rate limited')) {
+        errorMessage = 'Too many login attempts. Please try again later.';
+      } else if (error.message.includes('Email not confirmed')) {
+        // For demo purposes, we'll handle this case specially
+        const isDemoLogin = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
+        if (isDemoLogin) {
+          errorMessage = 'Demo account email requires confirmation. Please try again.';
+        } else {
+          errorMessage = 'Please check your email and confirm your account before logging in.';
+        }
       }
+      
+      toast({
+        title: 'Login failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
       
       return Promise.reject(error);
     } finally {
@@ -235,68 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      console.log('Attempting to create account with email:', email);
+      await signUpWithEmail(email, password, userData);
       
-      // First check if the user already exists by trying to sign in
-      try {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        // If login succeeds, user already exists
-        if (!signInError) {
-          console.log('User already exists, no need to sign up');
-          return;
-        }
-      } catch (signInError) {
-        // Continue with signup if login failed
-        console.log('User does not exist, continuing with signup');
-      }
-      
-      console.log('Creating new account');
-      
-      // Sign up the user with autoconfirm option for demo accounts
       const isDemoAccount = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
-      
-      const options = {
-        data: {
-          full_name: userData.full_name,
-          role: userData.role,
-        }
-      };
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options
-      });
-      
-      if (error) {
-        console.error('Sign up error:', error);
-        throw error;
-      }
-      
-      if (!data.user) {
-        throw new Error('No user returned from signup');
-      }
-      
-      console.log('User created, creating profile record');
-      
-      // Create profile record manually to ensure it exists even if the trigger fails
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        id: data.user.id,
-        full_name: userData.full_name,
-        email: email,
-        role: userData.role,
-      });
-      
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        // Continue anyway since the user was created
-      }
-      
-      console.log('Account created successfully');
       
       if (isDemoAccount) {
         toast({
@@ -330,8 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      console.log('Logging out user');
-      await supabase.auth.signOut();
+      await logoutUser();
     } catch (error) {
       console.error('Error signing out:', error);
       toast({
