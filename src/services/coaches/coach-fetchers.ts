@@ -76,7 +76,13 @@ export async function getAllCoaches(): Promise<Coach[]> {
     
     console.log('[CoachService] Using auth token for coaches request:', authToken ? 'Token available' : 'Token missing');
     
+    if (!authToken) {
+      console.error('[CoachService] Auth token is missing or invalid');
+      throw new Error('Valid authentication token required');
+    }
+
     // Use Edge Function to fetch all coaches (admin only)
+    console.log('[CoachService] Calling get-all-coaches edge function');
     const { data, error } = await supabase.functions.invoke('get-all-coaches', {
       headers: {
         Authorization: `Bearer ${authToken}`
@@ -84,12 +90,17 @@ export async function getAllCoaches(): Promise<Coach[]> {
     });
     
     if (error) {
-      console.error('[CoachService] Error fetching all coaches:', error);
+      console.error('[CoachService] Error from edge function:', error);
       throw error;
     }
     
-    console.log('[CoachService] Fetched coaches data:', data);
+    console.log('[CoachService] Edge function response:', data);
     
+    if (!data) {
+      console.error('[CoachService] Edge function returned no data');
+      throw new Error('No data received from server');
+    }
+
     if (!Array.isArray(data)) {
       console.error('[CoachService] Invalid data format, expected array:', data);
       // Fall back to mock data if we can't get data from the server

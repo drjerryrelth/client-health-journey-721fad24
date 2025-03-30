@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Building, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -33,14 +33,17 @@ const CoachesPage = () => {
       setCoaches(allCoaches);
       
       if (allCoaches.length === 0) {
-        console.warn('CoachesPage: No coaches were returned. Using mock data as fallback.');
+        console.warn('CoachesPage: No coaches were returned');
+        toast.info('No coaches found in the database');
+      } else {
+        toast.success(`Successfully loaded ${allCoaches.length} coaches`);
       }
       
       setLoading(false);
     } catch (err) {
       console.error("CoachesPage: Error fetching coaches:", err);
       setError("Failed to load coaches. Please try again.");
-      setErrorDetails(err instanceof Error ? err.message : JSON.stringify(err, null, 2));
+      setErrorDetails(err instanceof Error ? err.message : String(err));
       setLoading(false);
     }
   };
@@ -92,7 +95,10 @@ const CoachesPage = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle>Coaches</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Coaches</span>
+            {coaches.length > 0 && <Badge variant="outline" className="ml-2 bg-primary-50 text-primary-700">{coaches.length} Total</Badge>}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -105,21 +111,26 @@ const CoachesPage = () => {
           ) : error ? (
             <div className="flex justify-center py-8">
               <div className="text-center">
-                <p className="text-red-500">{error}</p>
+                <AlertCircle size={24} className="text-red-500 mx-auto mb-2" />
+                <p className="text-red-500 font-medium mb-2">{error}</p>
                 <div className="flex gap-2 justify-center mt-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={handleRefresh}
+                    className="flex items-center gap-1"
                   >
-                    Try Again
+                    <RefreshCw size={14} />
+                    <span>Try Again</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleShowError}
+                    className="flex items-center gap-1"
                   >
-                    Show Details
+                    <AlertCircle size={14} />
+                    <span>Show Details</span>
                   </Button>
                 </div>
               </div>
@@ -165,7 +176,7 @@ const CoachesPage = () => {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-4 text-gray-500">
-                        No coaches found
+                        No coaches found in the system. Please add coaches to clinics to see them here.
                       </TableCell>
                     </TableRow>
                   )}
