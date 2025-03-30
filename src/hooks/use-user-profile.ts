@@ -7,6 +7,15 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
   console.log('Fetching user profile for ID:', userId);
   
   try {
+    // First, get the user's email from auth
+    const { data: userData } = await supabase.auth.getUser();
+    const email = userData?.user?.email;
+    
+    if (!email) {
+      console.error('Could not retrieve user email');
+      return null;
+    }
+    
     // Attempt to get the user profile from the profiles table
     const { data: profile, error } = await supabase
       .from('profiles')
@@ -15,47 +24,45 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       .single();
     
     if (error) {
-      console.error('Error fetching user profile:', error);
-      
-      // Check if this is a demo login and handle specially
-      const { data: userData } = await supabase.auth.getUser();
-      const email = userData?.user?.email;
+      console.log('Profile not found in database, creating fallback profile');
       
       // List of demo emails
-      const demoEmails = ['drrelth@contourlight.com', 'support@practicenaturals.cm', 'drjerryrelth@gmail.com'];
+      const demoEmails = {
+        admin: 'drrelth@contourlight.com',
+        coach: 'support@practicenaturals.com', // Fixed email typo
+        client: 'drjerryrelth@gmail.com'
+      };
       
-      if (email && demoEmails.includes(email)) {
-        console.log('Demo account detected, creating fallback profile data');
-        
-        // Determine role based on email
-        let userRole: UserRole;
-        let userName: string;
-        
-        if (email === 'drrelth@contourlight.com') {
-          userRole = 'admin';
-          userName = 'Admin User';
-        } else if (email === 'support@practicenaturals.cm') {
-          userRole = 'coach';
-          userName = 'Coach User';
-        } else if (email === 'drjerryrelth@gmail.com') {
-          userRole = 'client';
-          userName = 'Client User';
-        } else {
-          // Default fallback
-          userRole = 'admin';
-          userName = 'Demo User';
-        }
-        
-        // Create a fallback profile object
-        const demoProfile: UserData = {
-          id: userId,
-          name: userName,
-          email: email,
-          role: userRole,
-        };
-        
-        // Try to insert the profile into the database
-        await supabase
+      // Determine role based on email
+      let userRole: UserRole;
+      let userName: string;
+      
+      if (email === demoEmails.admin) {
+        userRole = 'admin';
+        userName = 'Admin User';
+      } else if (email === demoEmails.coach) {
+        userRole = 'coach';
+        userName = 'Coach User';
+      } else if (email === demoEmails.client) {
+        userRole = 'client';
+        userName = 'Client User';
+      } else {
+        // Default fallback
+        userRole = 'admin';
+        userName = 'Demo User';
+      }
+      
+      // Create a fallback profile object
+      const demoProfile: UserData = {
+        id: userId,
+        name: userName,
+        email: email,
+        role: userRole,
+      };
+      
+      try {
+        // Try to insert the profile into the database - this may fail if RLS blocks it
+        const { error: insertError } = await supabase
           .from('profiles')
           .upsert({
             id: userId,
@@ -64,10 +71,17 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
             role: userRole,
           });
         
-        return demoProfile;
+        if (insertError) {
+          console.warn('Could not save profile to database:', insertError.message);
+          // Continue with in-memory profile regardless of database error
+        } else {
+          console.log('Profile created in database successfully');
+        }
+      } catch (insertErr) {
+        console.error('Error during profile insertion:', insertErr);
       }
       
-      return null;
+      return demoProfile;
     }
     
     if (!profile) {
@@ -90,7 +104,7 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       id: profile.id,
       name: profile.full_name,
       email: profile.email,
-      role: userRole, // Now properly typed
+      role: userRole,
       clinicId: profile.clinic_id,
     };
     

@@ -2,7 +2,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { InfoIcon } from 'lucide-react';
 
 interface DemoLoginButtonsProps {
   handleDemoLogin: (type: UserRole, email: string) => Promise<void>;
@@ -13,7 +14,7 @@ const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsPro
   // Define demo emails for each role
   const demoEmails = {
     admin: 'drrelth@contourlight.com',
-    coach: 'support@practicenaturals.cm',
+    coach: 'support@practicenaturals.com', // Fixed the email typo here
     client: 'drjerryrelth@gmail.com'
   };
   
@@ -22,9 +23,11 @@ const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsPro
       <p className="text-sm text-center text-gray-500 mb-4">Demo Account Login</p>
       
       <Alert className="mb-4 bg-yellow-50 border-yellow-200">
+        <InfoIcon className="h-4 w-4 text-yellow-800" />
+        <AlertTitle className="text-yellow-800">Important Note</AlertTitle>
         <AlertDescription className="text-xs text-yellow-800">
-          Using specific emails for each role type. Email confirmation in Supabase is required.
-          If login fails, please check the Supabase dashboard to confirm the email manually.
+          These demo accounts require confirmation in Supabase. After clicking a button, if login fails, 
+          please go to the Supabase Auth dashboard to confirm the email manually or disable email confirmation in the settings.
         </AlertDescription>
       </Alert>
       

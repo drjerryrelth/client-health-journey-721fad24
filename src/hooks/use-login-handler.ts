@@ -33,6 +33,11 @@ export const useLoginHandler = () => {
   const handleDemoLogin = async (type: UserRole, email: string) => {
     setIsSubmitting(true);
     
+    // Fix the coach email if it's the incorrect version
+    if (email === 'support@practicenaturals.cm') {
+      email = 'support@practicenaturals.com';
+    }
+    
     try {
       const password = 'password123'; // Demo password
       let fullName = '';
@@ -64,7 +69,7 @@ export const useLoginHandler = () => {
         if (loginError.message?.includes('Email not confirmed')) {
           toast({
             title: 'Email confirmation required',
-            description: 'For demo accounts, please check the Supabase User Management section to confirm the email manually.',
+            description: 'For demo accounts, please check the Supabase User Management section to confirm the email manually or disable email confirmation in the settings.',
             variant: 'destructive',
           });
           
@@ -77,7 +82,7 @@ export const useLoginHandler = () => {
             
             toast({
               title: 'Demo account created',
-              description: 'Please confirm the email in Supabase User Management to login.',
+              description: 'Please confirm the email in Supabase User Management to login, or disable email confirmation in the settings.',
             });
           } catch (signupError: any) {
             // If the account already exists, this is expected
