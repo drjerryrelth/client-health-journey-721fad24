@@ -6,6 +6,17 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.44.0'
 import { corsHeaders } from '../_shared/cors.ts'
 
+// Define a type for the coach data
+interface CoachData {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  status: string;
+  clinic_id: string;
+  client_count: number;
+}
+
 Deno.serve(async (req) => {
   console.log('Edge function called: get-all-coaches');
   
@@ -70,8 +81,19 @@ Deno.serve(async (req) => {
 
       console.log(`Found ${coaches.length} coaches via RPC function`);
 
+      // Ensure the response data is properly typed
+      const typedCoaches: CoachData[] = coaches.map((coach: any) => ({
+        id: coach.id,
+        name: coach.name,
+        email: coach.email,
+        phone: coach.phone,
+        status: coach.status || 'inactive',
+        clinic_id: coach.clinic_id,
+        client_count: coach.client_count || 0
+      }));
+
       return new Response(
-        JSON.stringify(coaches),
+        JSON.stringify(typedCoaches),
         { 
           headers: { 
             ...corsHeaders, 
@@ -124,12 +146,15 @@ Deno.serve(async (req) => {
         }
         
         coachesWithClientCount.push({
-          ...coach,
-          client_count: clientCount,
-          // Ensure status is valid
+          id: coach.id,
+          name: coach.name,
+          email: coach.email,
+          phone: coach.phone,
           status: (coach.status === 'active' || coach.status === 'inactive') 
             ? coach.status 
-            : "inactive"
+            : "inactive",
+          clinic_id: coach.clinic_id,
+          client_count: clientCount
         });
       }
       

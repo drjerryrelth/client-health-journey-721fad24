@@ -4,6 +4,17 @@ import { Coach } from './types';
 import { toast } from 'sonner';
 import { getMockCoaches } from './mock-data';
 
+// Define a type for the RPC function response
+interface CoachRPCResponse {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  status: string;
+  clinic_id: string;
+  client_count?: number;
+}
+
 // Special service function to get total coach count for admin dashboard
 export async function getCoachCount(): Promise<number> {
   try {
@@ -48,8 +59,8 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
     
     console.log(`[AdminCoachService] Found ${coachesData.length} coaches via RPC`);
     
-    // Process coaches from the RPC function
-    return coachesData.map(coach => ({
+    // Process coaches from the RPC function - properly typed now
+    return (coachesData as CoachRPCResponse[]).map(coach => ({
       id: coach.id,
       name: coach.name,
       email: coach.email,
