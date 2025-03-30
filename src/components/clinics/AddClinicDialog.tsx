@@ -30,9 +30,9 @@ const addClinicSchema = z.object({
   zipCode: z.string().min(1, "ZIP code is required"),
   primaryContact: z.string().min(1, "Primary contact is required"),
   
-  // Billing info - all optional now
+  // Billing info - all optional
   billingContactName: z.string().optional(),
-  billingEmail: z.string().email("Invalid email format").optional(),
+  billingEmail: z.string().optional(), // Changed from email validation to optional string
   billingPhone: z.string().optional(),
   billingAddress: z.string().optional(),
   billingCity: z.string().optional(),
@@ -76,6 +76,8 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
   const handleSubmitClinic = async (values: AddClinicFormValues) => {
     try {
       setIsSubmitting(true);
+      
+      console.log("Form values before submission:", values);
       
       // Create a clean object without undefined values that might cause issues
       const clinicData = {
@@ -313,7 +315,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                         <FormLabel className="text-right">Billing Email</FormLabel>
                         <div className="col-span-3">
                           <FormControl>
-                            <Input {...field} type="email" />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </div>
