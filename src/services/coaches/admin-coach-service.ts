@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Coach } from './types';
 import { toast } from 'sonner';
@@ -9,57 +8,30 @@ export async function getCoachCount(): Promise<number> {
   try {
     console.log('[AdminCoachService] Getting total coach count');
     
-    // First try direct query as it's more reliable for just getting a count
-    try {
-      const { count, error } = await supabase
+    // Use a simple direct query with minimal complexity
+    const { count, error } = await supabase
+      .from('coaches')
+      .select('*', { count: 'exact', head: true });
+    
+    if (error) {
+      console.error('[AdminCoachService] Direct query error:', error);
+      // Try a different approach - count rows by fetching IDs only
+      const { data, error: fetchError } = await supabase
         .from('coaches')
-        .select('id', { count: 'exact', head: true });
+        .select('id');
         
-      if (error) {
-        console.error('[AdminCoachService] Direct query error:', error);
-        throw error;
+      if (fetchError) {
+        console.error('[AdminCoachService] Fallback query also failed:', fetchError);
+        return 0; // Return 0 rather than failing
       }
       
-      console.log(`[AdminCoachService] Found ${count} coaches via direct query`);
-      return count || 0;
-    } catch (directQueryError) {
-      console.error('[AdminCoachService] Direct query failed:', directQueryError);
-      
-      // If direct query fails, try edge function as fallback
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.log('[AdminCoachService] No session, returning 0');
-          return 0;
-        }
-        
-        const { data, error } = await supabase.functions.invoke('get-all-coaches', {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
-        });
-        
-        if (error) {
-          console.error('[AdminCoachService] Edge function error:', error);
-          throw error;
-        }
-        
-        if (Array.isArray(data)) {
-          console.log(`[AdminCoachService] Found ${data.length} coaches from edge function`);
-          return data.length;
-        } else {
-          console.error('[AdminCoachService] Unexpected data format from edge function:', data);
-          throw new Error('Unexpected data format');
-        }
-      } catch (edgeFunctionError) {
-        console.error('[AdminCoachService] Edge function fallback also failed:', edgeFunctionError);
-        throw edgeFunctionError;
-      }
+      return data ? data.length : 0;
     }
+    
+    console.log(`[AdminCoachService] Found ${count} coaches via direct query`);
+    return count || 0;
   } catch (error) {
     console.error('[AdminCoachService] Failed to get coach count:', error);
-    toast.error('Failed to fetch coach count');
-    
     // Return a placeholder value so the UI doesn't break
     return 0;
   }

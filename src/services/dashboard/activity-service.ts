@@ -28,22 +28,16 @@ export async function fetchRecentActivities(limit: number = 5): Promise<Activity
         
       if (checkInsError) {
         console.error('[RecentActivities] Error fetching check-ins:', checkInsError);
-        // We'll continue processing other activity types
       } else if (checkInsData && checkInsData.length > 0) {
         for (const checkIn of checkInsData) {
           try {
             // Get client name
-            const { data: clientData, error: clientError } = await supabase
+            const { data: clientData } = await supabase
               .from('clients')
               .select('name, clinic_id')
               .eq('id', checkIn.client_id)
               .maybeSingle();
               
-            if (clientError) {
-              console.error(`[RecentActivities] Error fetching client for check-in ${checkIn.id}:`, clientError);
-              continue;
-            }
-            
             if (clientData) {
               const timestamp = new Date(checkIn.created_at);
               
@@ -56,7 +50,8 @@ export async function fetchRecentActivities(limit: number = 5): Promise<Activity
               });
             }
           } catch (clientFetchError) {
-            console.error(`[RecentActivities] Unexpected error with check-in ${checkIn.id}:`, clientFetchError);
+            console.error(`[RecentActivities] Error with check-in ${checkIn.id}:`, clientFetchError);
+            // Continue with next check-in
           }
         }
       }
@@ -64,52 +59,52 @@ export async function fetchRecentActivities(limit: number = 5): Promise<Activity
       console.error('[RecentActivities] Error processing check-ins:', checkInsProcessError);
     }
     
-    // Fetch recent coaches added as activities
-    try {
-      const { data: coachesData, error: coachesError } = await supabase
-        .from('coaches')
-        .select('id, name, clinic_id, created_at')
-        .order('created_at', { ascending: false })
-        .limit(Math.floor(limit / 2));  // Use half of the limit for coaches
-        
-      if (coachesError) {
-        console.error('[RecentActivities] Error fetching coaches:', coachesError);
-      } else if (coachesData && coachesData.length > 0) {
-        for (const coach of coachesData) {
-          try {
-            // Get clinic name
-            const { data: clinicData, error: clinicError } = await supabase
-              .from('clinics')
-              .select('name')
-              .eq('id', coach.clinic_id)
-              .maybeSingle();
+    // If we couldn't get check-ins, try to get coach activities as fallback
+    if (activities.length === 0) {
+      try {
+        const { data: coachesData, error: coachesError } = await supabase
+          .from('coaches')
+          .select('id, name, clinic_id, created_at')
+          .order('created_at', { ascending: false })
+          .limit(limit);
+          
+        if (!coachesError && coachesData && coachesData.length > 0) {
+          for (const coach of coachesData) {
+            try {
+              // Get clinic name
+              const { data: clinicData } = await supabase
+                .from('clinics')
+                .select('name')
+                .eq('id', coach.clinic_id)
+                .maybeSingle();
+                
+              const timestamp = new Date(coach.created_at);
               
-            const timestamp = new Date(coach.created_at);
-            
-            activities.push({
-              id: coach.id,
-              type: 'coach_added',
-              description: `${coach.name} was added as a coach${clinicData ? ` to ${clinicData.name}` : ''}`,
-              timestamp: timestamp.toLocaleString(),
-              clinicId: coach.clinic_id
-            });
-          } catch (clinicFetchError) {
-            console.error(`[RecentActivities] Error fetching clinic for coach ${coach.id}:`, clinicFetchError);
-            
-            // Still add the activity, just without the clinic name
-            const timestamp = new Date(coach.created_at);
-            activities.push({
-              id: coach.id,
-              type: 'coach_added',
-              description: `${coach.name} was added as a coach`,
-              timestamp: timestamp.toLocaleString(),
-              clinicId: coach.clinic_id
-            });
+              activities.push({
+                id: coach.id,
+                type: 'coach_added',
+                description: `${coach.name} was added as a coach${clinicData ? ` to ${clinicData.name}` : ''}`,
+                timestamp: timestamp.toLocaleString(),
+                clinicId: coach.clinic_id
+              });
+            } catch (clinicFetchError) {
+              console.error(`[RecentActivities] Error fetching clinic for coach ${coach.id}:`, clinicFetchError);
+              
+              // Still add the activity, just without the clinic name
+              const timestamp = new Date(coach.created_at);
+              activities.push({
+                id: coach.id,
+                type: 'coach_added',
+                description: `${coach.name} was added as a coach`,
+                timestamp: timestamp.toLocaleString(),
+                clinicId: coach.clinic_id
+              });
+            }
           }
         }
+      } catch (coachesProcessError) {
+        console.error('[RecentActivities] Error processing coaches:', coachesProcessError);
       }
-    } catch (coachesProcessError) {
-      console.error('[RecentActivities] Error processing coaches:', coachesProcessError);
     }
     
     // Sort all activities by timestamp (newest first)
@@ -124,9 +119,8 @@ export async function fetchRecentActivities(limit: number = 5): Promise<Activity
     
   } catch (error) {
     console.error('[RecentActivities] Error fetching recent activities:', error);
-    // Instead of throwing and causing the entire request to fail,
-    // we'll return an empty array with a warning
     toast.error("Could not load recent activities");
+    // Return an empty array instead of throwing
     return [];
   }
 }

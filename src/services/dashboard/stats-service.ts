@@ -41,7 +41,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       console.log('[DashboardStats] Coach count:', coachCount);
     } catch (coachCountError) {
       console.error('[DashboardStats] Error fetching coach count:', coachCountError);
-      // We'll continue with coachCount as 0 rather than failing completely
+      // Continue with coachCount as 0 rather than failing completely
     }
     
     // Calculate the date 7 days ago
@@ -50,54 +50,67 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     const lastWeekString = lastWeek.toISOString();
     
     // Fetch weekly activities count (check-ins from the last 7 days)
-    const { count: activitiesCount, error: activitiesError } = await supabase
-      .from('check_ins')
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', lastWeekString);
-      
-    if (activitiesError) {
-      console.error('[DashboardStats] Error fetching activities count:', activitiesError);
-      // Continue execution - don't throw here
+    let activitiesCount = 0;
+    try {
+      const { count, error: activitiesError } = await supabase
+        .from('check_ins')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', lastWeekString);
+        
+      if (activitiesError) {
+        console.error('[DashboardStats] Error fetching activities count:', activitiesError);
+      } else {
+        activitiesCount = count || 0;
+      }
+    } catch (e) {
+      console.error('[DashboardStats] Exception fetching activities count:', e);
+      // Continue with activitiesCount as 0
     }
     
-    console.log('[DashboardStats] Activities count:', activitiesCount || 0);
+    console.log('[DashboardStats] Activities count:', activitiesCount);
     
     // Fetch clinic summary data with coach and client counts
     const clinicsSummary = [];
     
     if (clinics && clinics.length > 0) {
       for (const clinic of clinics) {
-        // Get coach count for this clinic
-        const { count: clinicCoachCount, error: clinicCoachError } = await supabase
-          .from('coaches')
-          .select('id', { count: 'exact', head: true })
-          .eq('clinic_id', clinic.id);
+        try {
+          // Get coach count for this clinic
+          const { count: clinicCoachCount, error: clinicCoachError } = await supabase
+            .from('coaches')
+            .select('id', { count: 'exact', head: true })
+            .eq('clinic_id', clinic.id);
+            
+          if (clinicCoachError) {
+            console.error(`[DashboardStats] Error fetching coaches for clinic ${clinic.id}:`, clinicCoachError);
+            // Continue to next clinic without throwing
+            continue;
+          }
           
-        if (clinicCoachError) {
-          console.error(`[DashboardStats] Error fetching coaches for clinic ${clinic.id}:`, clinicCoachError);
-          // Continue to next clinic without throwing
+          // Get client count for this clinic
+          const { count: clinicClientCount, error: clinicClientError } = await supabase
+            .from('clients')
+            .select('id', { count: 'exact', head: true })
+            .eq('clinic_id', clinic.id);
+            
+          if (clinicClientError) {
+            console.error(`[DashboardStats] Error fetching clients for clinic ${clinic.id}:`, clinicClientError);
+            // Continue to next clinic without throwing
+            continue;
+          }
+          
+          clinicsSummary.push({
+            id: clinic.id,
+            name: clinic.name,
+            coaches: clinicCoachCount || 0,
+            clients: clinicClientCount || 0,
+            status: clinic.status
+          });
+        } catch (e) {
+          console.error(`[DashboardStats] Exception processing clinic ${clinic.id}:`, e);
+          // Skip this clinic and continue with the rest
           continue;
         }
-        
-        // Get client count for this clinic
-        const { count: clinicClientCount, error: clinicClientError } = await supabase
-          .from('clients')
-          .select('id', { count: 'exact', head: true })
-          .eq('clinic_id', clinic.id);
-          
-        if (clinicClientError) {
-          console.error(`[DashboardStats] Error fetching clients for clinic ${clinic.id}:`, clinicClientError);
-          // Continue to next clinic without throwing
-          continue;
-        }
-        
-        clinicsSummary.push({
-          id: clinic.id,
-          name: clinic.name,
-          coaches: clinicCoachCount || 0,
-          clients: clinicClientCount || 0,
-          status: clinic.status
-        });
       }
     }
     
@@ -107,11 +120,18 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     return {
       activeClinicCount: clinics?.length || 0,
       totalCoachCount: coachCount,
-      weeklyActivitiesCount: activitiesCount || 0,
+      weeklyActivitiesCount: activitiesCount,
       clinicsSummary
     };
   } catch (error) {
     console.error('[DashboardStats] Error fetching dashboard stats:', error);
-    throw error;
+    // Instead of throwing the error, return default data to prevent UI from breaking
+    toast.error("Failed to load all dashboard statistics");
+    return {
+      activeClinicCount: 0,
+      totalCoachCount: 0,
+      weeklyActivitiesCount: 0,
+      clinicsSummary: []
+    };
   }
 }
