@@ -21,30 +21,37 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       const { data: userData } = await supabase.auth.getUser();
       const email = userData?.user?.email;
       
-      if (email === 'drrelth@contourlight.com') {
+      // List of demo emails
+      const demoEmails = ['drrelth@contourlight.com', 'support@practicenaturals.cm', 'drjerryrelth@gmail.com'];
+      
+      if (email && demoEmails.includes(email)) {
         console.log('Demo account detected, creating fallback profile data');
         
-        // For demo accounts, create a fallback profile
-        const userMetadata = userData?.user?.user_metadata;
-        const userRoleFromMetadata = userMetadata?.role || 'admin';
-        
-        // Validate and ensure the role is a valid UserRole type
+        // Determine role based on email
         let userRole: UserRole;
-        if (userRoleFromMetadata === 'admin' || userRoleFromMetadata === 'coach' || userRoleFromMetadata === 'client') {
-          userRole = userRoleFromMetadata as UserRole;
-        } else {
-          // Default to admin if the role is not valid
-          userRole = 'admin';
-        }
+        let userName: string;
         
-        const userName = userMetadata?.full_name || 'Demo User';
+        if (email === 'drrelth@contourlight.com') {
+          userRole = 'admin';
+          userName = 'Admin User';
+        } else if (email === 'support@practicenaturals.cm') {
+          userRole = 'coach';
+          userName = 'Coach User';
+        } else if (email === 'drjerryrelth@gmail.com') {
+          userRole = 'client';
+          userName = 'Client User';
+        } else {
+          // Default fallback
+          userRole = 'admin';
+          userName = 'Demo User';
+        }
         
         // Create a fallback profile object
         const demoProfile: UserData = {
           id: userId,
           name: userName,
-          email: 'drrelth@contourlight.com',
-          role: userRole, // Now properly typed
+          email: email,
+          role: userRole,
         };
         
         // Try to insert the profile into the database
@@ -53,7 +60,7 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
           .upsert({
             id: userId,
             full_name: userName,
-            email: 'drrelth@contourlight.com',
+            email: email,
             role: userRole,
           });
         

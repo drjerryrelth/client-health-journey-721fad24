@@ -30,11 +30,10 @@ export const useLoginHandler = () => {
     }
   };
 
-  const handleDemoLogin = async (type: UserRole) => {
+  const handleDemoLogin = async (type: UserRole, email: string) => {
     setIsSubmitting(true);
     
     try {
-      const demoEmail = 'drrelth@contourlight.com'; // Use the specified email for all demo accounts
       const password = 'password123'; // Demo password
       let fullName = '';
       let role = type;
@@ -52,11 +51,11 @@ export const useLoginHandler = () => {
           break;
       }
       
-      console.log(`Attempting demo login as ${type} with email: ${demoEmail}`);
+      console.log(`Attempting demo login as ${type} with email: ${email}`);
       
       try {
         // First try to login directly
-        await login(demoEmail, password);
+        await login(email, password);
         console.log('Demo login successful');
       } catch (loginError: any) {
         console.log('Login failed, attempting to create demo account', loginError);
@@ -71,7 +70,7 @@ export const useLoginHandler = () => {
           
           // Still attempt to create the account if it doesn't exist
           try {
-            await signUp(demoEmail, password, {
+            await signUp(email, password, {
               full_name: fullName,
               role: role
             });
@@ -92,7 +91,7 @@ export const useLoginHandler = () => {
         }
         
         // If login fails for other reasons, try to sign up the demo user first
-        await signUp(demoEmail, password, {
+        await signUp(email, password, {
           full_name: fullName,
           role: role
         });
@@ -100,7 +99,7 @@ export const useLoginHandler = () => {
         console.log('Demo account created, now logging in');
         
         // Now try logging in again
-        await login(demoEmail, password);
+        await login(email, password);
       }
       
       toast({

@@ -6,7 +6,7 @@ export async function loginWithEmail(email: string, password: string) {
   console.log('Attempting login with email:', email);
   
   // Check if this is a demo login
-  const isDemoLogin = email === 'drrelth@contourlight.com';
+  const isDemoLogin = ['drrelth@contourlight.com', 'support@practicenaturals.cm', 'drjerryrelth@gmail.com'].includes(email);
   if (isDemoLogin) {
     console.log('This is a demo login attempt');
   }
@@ -28,16 +28,31 @@ export async function loginWithEmail(email: string, password: string) {
   
   // For demo accounts, ensure the profile exists
   if (isDemoLogin) {
-    await ensureDemoProfileExists(data.user.id);
+    await ensureDemoProfileExists(data.user.id, email);
   }
   
   console.log('Login successful');
   return data;
 }
 
-// New helper function to ensure demo profile exists
-async function ensureDemoProfileExists(userId: string) {
+// Updated helper function to ensure demo profile exists with correct role based on email
+async function ensureDemoProfileExists(userId: string, email: string) {
   console.log('Ensuring demo profile exists for user:', userId);
+  
+  // Determine role based on email
+  let role = 'admin'; // default
+  let fullName = 'Demo User';
+  
+  if (email === 'drrelth@contourlight.com') {
+    role = 'admin';
+    fullName = 'Admin User';
+  } else if (email === 'support@practicenaturals.cm') {
+    role = 'coach';
+    fullName = 'Coach User';
+  } else if (email === 'drjerryrelth@gmail.com') {
+    role = 'client';
+    fullName = 'Client User';
+  }
   
   try {
     // Check if profile exists first
@@ -50,19 +65,14 @@ async function ensureDemoProfileExists(userId: string) {
     if (fetchError || !profile) {
       console.log('Demo profile not found, creating one');
       
-      // Extract role from user metadata if possible
-      const { data: userData } = await supabase.auth.getUser();
-      const userRole = userData?.user?.user_metadata?.role || 'admin';
-      const userName = userData?.user?.user_metadata?.full_name || 'Demo User';
-      
       // Create profile if it doesn't exist
       const { error: insertError } = await supabase
         .from('profiles')
         .insert({
           id: userId,
-          full_name: userName,
-          email: 'drrelth@contourlight.com',
-          role: userRole,
+          full_name: fullName,
+          email: email,
+          role: role,
         });
       
       if (insertError) {
@@ -71,7 +81,23 @@ async function ensureDemoProfileExists(userId: string) {
         console.log('Demo profile created successfully');
       }
     } else {
-      console.log('Demo profile already exists');
+      // Update existing profile to ensure role matches the email
+      if (profile.role !== role) {
+        console.log(`Updating profile role from ${profile.role} to ${role} to match email`);
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ role: role, full_name: fullName })
+          .eq('id', userId);
+        
+        if (updateError) {
+          console.error('Error updating demo profile:', updateError);
+        } else {
+          console.log('Demo profile updated successfully');
+        }
+      } else {
+        console.log('Demo profile already exists with correct role');
+      }
     }
   } catch (error) {
     console.error('Error handling demo profile:', error);
