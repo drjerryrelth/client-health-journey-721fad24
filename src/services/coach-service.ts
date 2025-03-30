@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { checkAuthentication } from './clinics/auth-helper';
@@ -116,14 +117,17 @@ export const CoachService = {
       
       console.log('[Coach Service] Authentication successful, user ID:', session.user.id);
       
-      // Using direct insert with fewer RLS constraints
-      const { data, error } = await supabase.rpc('add_coach', {
-        coach_name: coach.name,
-        coach_email: coach.email,
-        coach_phone: coach.phone,
-        coach_status: coach.status,
-        coach_clinic_id: coach.clinicId
-      });
+      // Using the add_coach RPC function with correct typing
+      const { data, error } = await supabase.rpc(
+        'add_coach', 
+        {
+          coach_name: coach.name,
+          coach_email: coach.email,
+          coach_phone: coach.phone,
+          coach_status: coach.status,
+          coach_clinic_id: coach.clinicId
+        }
+      );
 
       console.log('[Coach Service] RPC response:', { data, error });
 
@@ -133,20 +137,30 @@ export const CoachService = {
         return null;
       }
       
-      if (!data || !data.id) {
+      if (!data) {
         console.error('[Coach Service] Invalid RPC response:', data);
         toast.error('Failed to add coach: Invalid server response');
         return null;
       }
       
+      // Cast the response to the correct type
+      const responseData = data as {
+        id: string;
+        name: string;
+        email: string;
+        phone: string | null;
+        status: string;
+        clinic_id: string;
+      };
+      
       // Construct the return object from the RPC response
       const newCoach: Coach = {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        status: data.status as 'active' | 'inactive',
-        clinicId: data.clinic_id,
+        id: responseData.id,
+        name: responseData.name,
+        email: responseData.email,
+        phone: responseData.phone,
+        status: responseData.status as 'active' | 'inactive',
+        clinicId: responseData.clinic_id,
         clients: 0
       };
       

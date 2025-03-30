@@ -426,6 +426,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_coach: {
+        Args: {
+          coach_name: string
+          coach_email: string
+          coach_phone: string
+          coach_status: string
+          coach_clinic_id: string
+        }
+        Returns: Json
+      }
       create_admin_user: {
         Args: {
           email: string
