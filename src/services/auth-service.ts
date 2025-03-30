@@ -6,7 +6,7 @@ export async function loginWithEmail(email: string, password: string) {
   console.log('Attempting login with email:', email);
   
   // Check if this is a demo login
-  const isDemoLogin = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
+  const isDemoLogin = email === 'drrelth@contourlight.com';
   if (isDemoLogin) {
     console.log('This is a demo login attempt');
   }
@@ -38,7 +38,7 @@ export async function signUpWithEmail(
   console.log('Attempting to create account with email:', email);
   
   // For demo accounts, we need to handle them specially
-  const isDemoAccount = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
+  const isDemoAccount = email === 'drrelth@contourlight.com';
   
   if (isDemoAccount) {
     // Try to sign in first to see if account exists
@@ -135,7 +135,7 @@ export function setupAuthListener(callback: (event: string, session: any) => voi
 
 // New function to bypass email confirmation for demo accounts
 export async function autoConfirmDemoEmail(email: string, password: string) {
-  const isDemoAccount = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
+  const isDemoAccount = email === 'drrelth@contourlight.com';
   
   if (!isDemoAccount) {
     return false;

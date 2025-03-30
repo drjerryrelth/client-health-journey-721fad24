@@ -132,7 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         errorMessage = 'Too many login attempts. Please try again later.';
       } else if (error.message.includes('Email not confirmed')) {
         // For demo purposes, we'll handle this case specially
-        const isDemoLogin = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
+        const isDemoLogin = email === 'drrelth@contourlight.com';
         if (isDemoLogin) {
           errorMessage = 'This demo account requires email confirmation in Supabase. To use the demo account, please go to Supabase User Management and confirm the email manually.';
         } else {
@@ -158,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signUpWithEmail(email, password, userData);
       
-      const isDemoAccount = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
+      const isDemoAccount = email === 'drrelth@contourlight.com';
       
       if (isDemoAccount) {
         toast({

@@ -12,11 +12,12 @@ interface DemoLoginButtonsProps {
 const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsProps) => {
   return (
     <div className="mt-8">
-      <p className="text-sm text-center text-gray-500 mb-4">Demo Accounts</p>
+      <p className="text-sm text-center text-gray-500 mb-4">Demo Account Login</p>
       
       <Alert className="mb-4 bg-yellow-50 border-yellow-200">
         <AlertDescription className="text-xs text-yellow-800">
-          Demo accounts require email confirmation in Supabase. If login fails, please check the Supabase dashboard to confirm the email manually.
+          Using email: drrelth@contourlight.com for demo login. Email confirmation in Supabase is required.
+          If login fails, please check the Supabase dashboard to confirm the email manually.
         </AlertDescription>
       </Alert>
       

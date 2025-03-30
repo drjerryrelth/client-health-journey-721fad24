@@ -34,32 +34,29 @@ export const useLoginHandler = () => {
     setIsSubmitting(true);
     
     try {
-      let email = '';
+      const demoEmail = 'drrelth@contourlight.com'; // Use the specified email for all demo accounts
       const password = 'password123'; // Demo password
       let fullName = '';
       let role = type;
       
-      // Use Gmail domain to ensure email validation succeeds
+      // Set the full name based on role type
       switch (type) {
         case 'admin':
-          email = 'admin.demo@gmail.com';
           fullName = 'Admin User';
           break;
         case 'coach':
-          email = 'coach.demo@gmail.com';
           fullName = 'Coach User';
           break;
         case 'client':
-          email = 'client.demo@gmail.com';
           fullName = 'Client User';
           break;
       }
       
-      console.log(`Attempting demo login as ${type} with email: ${email}`);
+      console.log(`Attempting demo login as ${type} with email: ${demoEmail}`);
       
       try {
         // First try to login directly
-        await login(email, password);
+        await login(demoEmail, password);
         console.log('Demo login successful');
       } catch (loginError: any) {
         console.log('Login failed, attempting to create demo account', loginError);
@@ -74,7 +71,7 @@ export const useLoginHandler = () => {
           
           // Still attempt to create the account if it doesn't exist
           try {
-            await signUp(email, password, {
+            await signUp(demoEmail, password, {
               full_name: fullName,
               role: role
             });
@@ -95,7 +92,7 @@ export const useLoginHandler = () => {
         }
         
         // If login fails for other reasons, try to sign up the demo user first
-        await signUp(email, password, {
+        await signUp(demoEmail, password, {
           full_name: fullName,
           role: role
         });
@@ -103,7 +100,7 @@ export const useLoginHandler = () => {
         console.log('Demo account created, now logging in');
         
         // Now try logging in again
-        await login(email, password);
+        await login(demoEmail, password);
       }
       
       toast({
