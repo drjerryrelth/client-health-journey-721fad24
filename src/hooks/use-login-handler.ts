@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole } from '@/types';
 import { LoginFormValues } from '@/components/auth/login-schema';

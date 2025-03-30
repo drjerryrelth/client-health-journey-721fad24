@@ -1,15 +1,13 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { Weight, LineChart, Pill, CheckCircle, ArrowRight } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 
 const Index = () => {
   const { isAuthenticated, hasRole } = useAuth();
   const navigate = useNavigate();
   
-  // Handle button click with navigate instead of Link for more control
   const handleLoginClick = (e: React.MouseEvent) => {
     e.preventDefault();
     navigate('/login');
@@ -22,7 +20,6 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero section */}
       <header className="bg-gradient-to-r from-primary/90 to-primary px-4 py-16">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center">
@@ -74,13 +71,11 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Features section */}
       <section id="features" className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Key Features</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Features content - kept the same */}
             <div className="bg-white rounded-lg p-6 shadow-md border border-gray-100">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                 <Weight className="h-6 w-6 text-primary" />
@@ -130,7 +125,6 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Footer */}
       <footer className="bg-gray-50 py-8 px-4 border-t border-gray-200">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-4 md:mb-0">

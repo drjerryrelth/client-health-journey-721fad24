@@ -2,7 +2,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import ClientDashboard from './ClientDashboard';
 import ClientMessages from '@/components/client/ClientMessages';
 import ClientResources from '@/components/client/ClientResources';
