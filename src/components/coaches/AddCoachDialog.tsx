@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
+import { useAuth } from '@/context/auth';
 
 interface AddCoachDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const { user } = useAuth();
   
   const form = useForm<CoachFormValues>({
     resolver: zodResolver(coachFormSchema),
@@ -42,6 +44,21 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
       phone: ''
     }
   });
+
+  // Check authentication status when dialog opens
+  useEffect(() => {
+    if (open) {
+      const verifyAuth = async () => {
+        const session = await checkAuthentication();
+        if (!session) {
+          toast.error("You must be logged in to add a coach");
+          onOpenChange(false);
+        }
+      };
+      
+      verifyAuth();
+    }
+  }, [open, onOpenChange]);
 
   const handleSubmitAddCoach = async (values: CoachFormValues) => {
     try {
@@ -55,6 +72,8 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
         clinicId: clinicId
       });
       
+      console.log('Current user:', user);
+      
       // Check if we're authenticated using the authentication helper
       const session = await checkAuthentication();
       if (!session) {
@@ -63,6 +82,8 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
         toast.error("Authentication required to add a coach.");
         return;
       }
+      
+      console.log('Session found:', session);
       
       const newCoach = await CoachService.addCoach({
         name: values.name,

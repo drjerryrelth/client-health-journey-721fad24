@@ -99,15 +99,37 @@ export const CoachService = {
         return null;
       }
       
+      console.log('Authentication successful, proceeding with coach creation');
+      console.log('User ID from session:', session.user.id);
+      
+      // First, get the user's profile to ensure we have a clinic_id match
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('role, clinic_id')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (profileError) {
+        console.error('Error fetching user profile:', profileError);
+        toast.error('Failed to verify user permissions');
+        return null;
+      }
+      
+      console.log('User profile data:', profileData);
+      
+      const coachData = {
+        name: coach.name,
+        email: coach.email,
+        phone: coach.phone,
+        status: coach.status,
+        clinic_id: coach.clinicId
+      };
+      
+      console.log('Sending coach data to Supabase:', coachData);
+      
       const { data, error } = await supabase
         .from('coaches')
-        .insert({
-          name: coach.name,
-          email: coach.email,
-          phone: coach.phone,
-          status: coach.status,
-          clinic_id: coach.clinicId
-        })
+        .insert(coachData)
         .select()
         .single();
 
