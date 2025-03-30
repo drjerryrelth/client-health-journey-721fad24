@@ -11,6 +11,8 @@ interface Clinic {
   coaches: number;
   clients: number;
   location: string;
+  city?: string | null;
+  state?: string | null;
   status: string;
 }
 
@@ -47,7 +49,11 @@ const ClinicsTable = ({ clinics, onClinicSelect, getStatusColor }: ClinicsTableP
               </TableCell>
               <TableCell>{clinic.coaches}</TableCell>
               <TableCell>{clinic.clients}</TableCell>
-              <TableCell>{clinic.location}</TableCell>
+              <TableCell>
+                {clinic.city && clinic.state 
+                  ? `${clinic.city}, ${clinic.state}`
+                  : clinic.location}
+              </TableCell>
               <TableCell>
                 <Badge className={getStatusColor(clinic.status)} variant="outline">
                   {clinic.status.charAt(0).toUpperCase() + clinic.status.slice(1)}

@@ -45,10 +45,6 @@ const ClinicsPage = () => {
     }
   };
 
-  const handleAddClinic = () => {
-    setShowAddClinicDialog(true);
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -158,6 +154,17 @@ const ClinicsPage = () => {
         .filter(coach => coach.clinicId === selectedClinic.id && coach.id !== selectedCoach.id)
     : [];
 
+  const formattedClinics = clinics.map(clinic => ({
+    id: clinic.id,
+    name: clinic.name,
+    location: clinic.location,
+    city: clinic.city,
+    state: clinic.state,
+    status: clinic.status,
+    coaches: 0, // These would be dynamically fetched in a real implementation
+    clients: 0, // These would be dynamically fetched in a real implementation
+  }));
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -198,7 +205,6 @@ const ClinicsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Dialogs */}
         <AddCoachDialog 
           open={showAddCoachDialog} 
           onOpenChange={setShowAddCoachDialog} 
@@ -230,15 +236,6 @@ const ClinicsPage = () => {
     );
   }
 
-  const formattedClinics = clinics.map(clinic => ({
-    id: clinic.id,
-    name: clinic.name,
-    location: clinic.location,
-    status: clinic.status,
-    coaches: 0, // These would be dynamically fetched in a real implementation
-    clients: 0, // These would be dynamically fetched in a real implementation
-  }));
-
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -262,7 +259,6 @@ const ClinicsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Add Clinic Dialog */}
       <AddClinicDialog 
         open={showAddClinicDialog} 
         onOpenChange={setShowAddClinicDialog}

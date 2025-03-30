@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import ClinicService from '@/services/clinic-service';
+import { Textarea } from '@/components/ui/textarea';
 
 interface AddClinicDialogProps {
   open: boolean;
@@ -20,6 +21,13 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
   const [clinicEmail, setClinicEmail] = useState('');
   const [clinicPhone, setClinicPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // New state variables for address details and primary contact
+  const [streetAddress, setStreetAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [primaryContact, setPrimaryContact] = useState('');
 
   const handleSubmitClinic = async () => {
     if (!clinicName || !clinicLocation) {
@@ -37,7 +45,12 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
         name: clinicName,
         location: clinicLocation,
         email: clinicEmail || undefined,
-        phone: clinicPhone || undefined
+        phone: clinicPhone || undefined,
+        streetAddress: streetAddress || undefined,
+        city: city || undefined,
+        state: state || undefined,
+        zip: zipCode || undefined,
+        primaryContact: primaryContact || undefined
       });
 
       if (newClinic) {
@@ -76,6 +89,11 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
     setClinicLocation('');
     setClinicEmail('');
     setClinicPhone('');
+    setStreetAddress('');
+    setCity('');
+    setState('');
+    setZipCode('');
+    setPrimaryContact('');
   };
 
   return (
@@ -83,7 +101,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
       if (!newOpen) resetForm();
       onOpenChange(newOpen);
     }}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Clinic</DialogTitle>
           <DialogDescription>
@@ -103,6 +121,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
               className="col-span-3" 
             />
           </div>
+          
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="location" className="text-right">
               Location
@@ -112,8 +131,71 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
               value={clinicLocation} 
               onChange={(e) => setClinicLocation(e.target.value)} 
               className="col-span-3" 
+              placeholder="General location (e.g. Downtown)"
             />
           </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="primary-contact" className="text-right">
+              Primary Contact
+            </Label>
+            <Input 
+              id="primary-contact" 
+              value={primaryContact} 
+              onChange={(e) => setPrimaryContact(e.target.value)} 
+              className="col-span-3" 
+              placeholder="Main contact person's name"
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="street-address" className="text-right">
+              Street Address
+            </Label>
+            <Input 
+              id="street-address" 
+              value={streetAddress} 
+              onChange={(e) => setStreetAddress(e.target.value)} 
+              className="col-span-3" 
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="city" className="text-right">
+              City
+            </Label>
+            <Input 
+              id="city" 
+              value={city} 
+              onChange={(e) => setCity(e.target.value)} 
+              className="col-span-3" 
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="state" className="text-right">
+              State
+            </Label>
+            <Input 
+              id="state" 
+              value={state} 
+              onChange={(e) => setState(e.target.value)} 
+              className="col-span-3" 
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="zip-code" className="text-right">
+              ZIP Code
+            </Label>
+            <Input 
+              id="zip-code" 
+              value={zipCode} 
+              onChange={(e) => setZipCode(e.target.value)} 
+              className="col-span-3" 
+            />
+          </div>
+          
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="clinic-email" className="text-right">
               Email
@@ -126,6 +208,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
               className="col-span-3" 
             />
           </div>
+          
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="clinic-phone" className="text-right">
               Phone

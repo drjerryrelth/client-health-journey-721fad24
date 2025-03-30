@@ -10,6 +10,12 @@ export type Clinic = {
   phone: string | null;
   status: 'active' | 'inactive';
   createdAt: string;
+  // New fields
+  streetAddress: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  primaryContact: string | null;
 };
 
 export const ClinicService = {
@@ -30,7 +36,12 @@ export const ClinicService = {
         email: clinic.email,
         phone: clinic.phone,
         status: (clinic.status || 'active') as 'active' | 'inactive',
-        createdAt: clinic.created_at
+        createdAt: clinic.created_at,
+        streetAddress: clinic.street_address,
+        city: clinic.city,
+        state: clinic.state,
+        zip: clinic.zip,
+        primaryContact: clinic.primary_contact
       }));
     } catch (error) {
       console.error('Error fetching clinics:', error);
@@ -46,6 +57,11 @@ export const ClinicService = {
     location: string;
     email?: string;
     phone?: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    primaryContact?: string;
   }): Promise<Clinic | null> {
     try {
       const { data, error } = await supabase
@@ -55,7 +71,12 @@ export const ClinicService = {
           location: clinic.location,
           email: clinic.email || null,
           phone: clinic.phone || null,
-          status: 'active'
+          status: 'active',
+          street_address: clinic.streetAddress || null,
+          city: clinic.city || null,
+          state: clinic.state || null,
+          zip: clinic.zip || null,
+          primary_contact: clinic.primaryContact || null
         })
         .select()
         .single();
@@ -69,7 +90,12 @@ export const ClinicService = {
         email: data.email,
         phone: data.phone,
         status: data.status as 'active' | 'inactive',
-        createdAt: data.created_at
+        createdAt: data.created_at,
+        streetAddress: data.street_address,
+        city: data.city,
+        state: data.state,
+        zip: data.zip,
+        primaryContact: data.primary_contact
       };
     } catch (error) {
       console.error('Error adding clinic:', error);
@@ -82,6 +108,16 @@ export const ClinicService = {
   async updateClinic(id: string, updates: Partial<Omit<Clinic, 'id' | 'createdAt'>>): Promise<Clinic | null> {
     try {
       const dbUpdates: any = { ...updates };
+      
+      // Convert camelCase properties to snake_case for the database
+      if (updates.streetAddress !== undefined) {
+        dbUpdates.street_address = updates.streetAddress;
+        delete dbUpdates.streetAddress;
+      }
+      if (updates.primaryContact !== undefined) {
+        dbUpdates.primary_contact = updates.primaryContact;
+        delete dbUpdates.primaryContact;
+      }
       
       const { data, error } = await supabase
         .from('clinics')
@@ -99,7 +135,12 @@ export const ClinicService = {
         email: data.email,
         phone: data.phone,
         status: data.status as 'active' | 'inactive',
-        createdAt: data.created_at
+        createdAt: data.created_at,
+        streetAddress: data.street_address,
+        city: data.city,
+        state: data.state,
+        zip: data.zip,
+        primaryContact: data.primary_contact
       };
     } catch (error) {
       console.error('Error updating clinic:', error);
@@ -135,7 +176,12 @@ export const getMockClinics = (): Clinic[] => [
     email: 'info@wellness.com',
     phone: '(555) 123-4567',
     status: 'active',
-    createdAt: '2023-01-15T00:00:00.000Z'
+    createdAt: '2023-01-15T00:00:00.000Z',
+    streetAddress: '123 Main St',
+    city: 'New York',
+    state: 'NY',
+    zip: '10001',
+    primaryContact: 'John Smith'
   },
   { 
     id: '2',
@@ -144,7 +190,12 @@ export const getMockClinics = (): Clinic[] => [
     email: 'contact@practicenaturals.com',
     phone: '(555) 234-5678',
     status: 'active',
-    createdAt: '2023-02-20T00:00:00.000Z'
+    createdAt: '2023-02-20T00:00:00.000Z',
+    streetAddress: '456 Boulevard Ave',
+    city: 'Los Angeles',
+    state: 'CA',
+    zip: '90001',
+    primaryContact: 'Jane Doe'
   },
   { 
     id: '3',
@@ -153,7 +204,12 @@ export const getMockClinics = (): Clinic[] => [
     email: 'support@healthpartners.com',
     phone: '(555) 345-6789',
     status: 'active',
-    createdAt: '2023-03-05T00:00:00.000Z'
+    createdAt: '2023-03-05T00:00:00.000Z',
+    streetAddress: '789 Health Way',
+    city: 'Chicago',
+    state: 'IL',
+    zip: '60601',
+    primaryContact: 'Mike Johnson'
   }
 ];
 
