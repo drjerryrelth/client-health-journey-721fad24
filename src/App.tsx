@@ -24,7 +24,8 @@ import CheckInsPage from "./pages/admin/CheckInsPage";
 import ProgramsPage from "./pages/admin/ProgramsPage";
 import ReportsPage from "./pages/admin/ReportsPage";
 import SettingsPage from "./pages/admin/SettingsPage";
-import CoachesPage from "./pages/admin/CoachesPage"; // We'll need to create this page
+import CoachesPage from "./pages/admin/CoachesPage";
+import ActivitiesPage from "./pages/admin/ActivitiesPage"; // Import the new activities page
 
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
@@ -56,12 +57,12 @@ const App = () => (
               <Route path="/dashboard" element={<AdminDashboard />} />
               <Route path="/clients" element={<ClientsPage />} />
               <Route path="/clinics" element={<ClinicsPage />} />
-              <Route path="/coaches" element={<CoachesPage />} /> {/* New path for coaches */}
+              <Route path="/coaches" element={<CoachesPage />} />
               <Route path="/programs" element={<ProgramsPage />} />
               <Route path="/check-ins" element={<CheckInsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/activities" element={<Dashboard />} />
+              <Route path="/activities" element={<ActivitiesPage />} /> {/* Update to use the new ActivitiesPage */}
             </Route>
             
             {/* Coach routes */}

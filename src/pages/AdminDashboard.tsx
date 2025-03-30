@@ -24,10 +24,10 @@ const AdminDashboard = () => {
       title: 'Total Coaches', 
       value: 8, 
       icon: <Users className="text-secondary-500" size={24} />,
-      path: '/coaches' // Changed this path to a more appropriate one
+      path: '/coaches'
     },
     { 
-      title: 'Weekly Activities', // Changed from "Weekly Check-ins"
+      title: 'Weekly Activities', 
       value: 52, 
       icon: <Activity className="text-purple-500" size={24} />,
       path: '/activities'
@@ -44,10 +44,6 @@ const AdminDashboard = () => {
   
   const handleViewAllActivities = () => {
     navigate("/activities");
-    toast({
-      title: "Coming Soon",
-      description: "The activities page is under development",
-    });
   };
   
   return (
