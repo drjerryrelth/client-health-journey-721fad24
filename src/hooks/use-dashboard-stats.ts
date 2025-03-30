@@ -173,7 +173,7 @@ async function fetchRecentActivities(limit: number = 5): Promise<ActivityItem[]>
           .from('clients')
           .select('name, clinic_id')
           .eq('id', checkIn.client_id)
-          .single();
+          .maybeSingle();
           
         if (clientError) {
           console.error(`[RecentActivities] Error fetching client for check-in ${checkIn.id}:`, clientError);
@@ -210,7 +210,7 @@ async function fetchRecentActivities(limit: number = 5): Promise<ActivityItem[]>
           .from('clinics')
           .select('name')
           .eq('id', coach.clinic_id)
-          .single();
+          .maybeSingle();
           
         const timestamp = new Date(coach.created_at);
         
