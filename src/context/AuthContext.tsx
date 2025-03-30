@@ -34,64 +34,101 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Initialize auth once on component mount
   useEffect(() => {
+    let isMounted = true;
+    
     const initialSession = async () => {
-      setIsLoading(true);
+      if (!isMounted) return;
       
       try {
         console.log('Checking initial session');
-        const { data: { session }, error } = await getCurrentSession();
         
-        if (error) {
-          throw error;
-        }
+        // Add a timeout to prevent infinite loading
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session check timeout')), 10000)
+        );
         
-        if (session?.user) {
+        // Race between actual session check and timeout
+        const sessionResult = await Promise.race([
+          getCurrentSession(),
+          timeoutPromise
+        ]);
+        
+        if (!isMounted) return;
+        
+        // If we have a session with a user
+        if (sessionResult.data?.session?.user) {
           console.log('Session found, user authenticated');
-          setSupabaseUser(session.user);
+          const sessionUser = sessionResult.data.session.user;
+          setSupabaseUser(sessionUser);
           
-          const userData = await fetchUserProfile(session.user.id);
-          
-          if (userData) {
-            console.log('User data retrieved and set');
-            setUser(userData);
-          } else {
-            console.warn('No user data found, signing out');
-            await logoutUser();
-            setSupabaseUser(null);
+          // Get the user profile
+          try {
+            const userData = await fetchUserProfile(sessionUser.id);
+            
+            if (!isMounted) return;
+            
+            if (userData) {
+              console.log('User data retrieved and set');
+              setUser(userData);
+            } else {
+              console.warn('No user data found, signing out');
+              await logoutUser();
+              setSupabaseUser(null);
+            }
+          } catch (profileError) {
+            console.error('Error fetching user profile:', profileError);
+            // Continue without profile data
           }
         } else {
           console.log('No active session found');
         }
       } catch (error) {
         console.error('Error checking auth session:', error);
+        if (!isMounted) return;
+        
         toast({
           title: 'Authentication Error',
           description: 'There was an error checking your authentication status.',
           variant: 'destructive',
         });
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
-
-    initialSession();
-
-    const { data: authListener } = setupAuthListener(async (event, session) => {
+    
+    // Set up auth state listener first
+    const { data: authListener } = setupAuthListener((event, session) => {
       console.log('Auth state changed:', event);
+      
+      if (!isMounted) return;
       
       if (event === 'SIGNED_IN' && session?.user) {
         console.log('User signed in, getting profile data');
         setSupabaseUser(session.user);
         
-        const userData = await fetchUserProfile(session.user.id);
-        
-        if (userData) {
-          console.log('Setting user data after sign in');
-          setUser(userData);
-        } else {
-          console.warn('No profile found after sign in');
-        }
+        // Use setTimeout to avoid Supabase deadlocks
+        setTimeout(async () => {
+          if (!isMounted) return;
+          
+          try {
+            const userData = await fetchUserProfile(session.user.id);
+            
+            if (!isMounted) return;
+            
+            if (userData) {
+              console.log('Setting user data after sign in');
+              setUser(userData);
+            } else {
+              console.warn('No profile found after sign in');
+            }
+          } catch (error) {
+            console.error('Error fetching profile after sign in:', error);
+          }
+        }, 0);
       } else if (event === 'SIGNED_OUT') {
         console.log('User signed out');
         setUser(null);
@@ -101,15 +138,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('User updated');
         setSupabaseUser(session.user);
         
-        const userData = await fetchUserProfile(session.user.id);
-        
-        if (userData) {
-          setUser(userData);
-        }
+        // Use setTimeout to avoid Supabase deadlocks
+        setTimeout(async () => {
+          if (!isMounted) return;
+          
+          try {
+            const userData = await fetchUserProfile(session.user.id);
+            
+            if (!isMounted) return;
+            
+            if (userData) {
+              setUser(userData);
+            }
+          } catch (error) {
+            console.error('Error fetching profile after user update:', error);
+          }
+        }, 0);
       }
     });
-
+    
+    // Then check for initial session
+    initialSession();
+    
     return () => {
+      isMounted = false;
       authListener.subscription.unsubscribe();
     };
   }, [navigate, toast]);

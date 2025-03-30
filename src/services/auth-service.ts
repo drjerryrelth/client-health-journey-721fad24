@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { AuthError } from '@supabase/supabase-js';
 
 export async function loginWithEmail(email: string, password: string) {
   console.log('Attempting login with email:', email);
@@ -8,7 +7,7 @@ export async function loginWithEmail(email: string, password: string) {
   // Check if this is a demo login
   const demoEmails = {
     admin: 'drrelth@contourlight.com',
-    coach: 'support@practicenaturals.com', // Fixed email typo
+    coach: 'support@practicenaturals.com',
     client: 'drjerryrelth@gmail.com'
   };
   
@@ -17,10 +16,23 @@ export async function loginWithEmail(email: string, password: string) {
     console.log('This is a demo login attempt');
   }
   
-  const { data, error } = await supabase.auth.signInWithPassword({
+  // Add timeout to prevent hanging
+  const loginPromise = supabase.auth.signInWithPassword({
     email,
     password,
   });
+  
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Login timeout')), 10000);
+  });
+  
+  // Race between actual login and timeout
+  const { data, error } = await Promise.race([
+    loginPromise,
+    timeoutPromise.then(() => {
+      throw new Error('Login request timed out');
+    }),
+  ]);
   
   if (error) {
     console.error('Login error details:', error);
@@ -218,14 +230,58 @@ export async function signUpWithEmail(
 
 export async function logoutUser() {
   console.log('Logging out user');
-  return await supabase.auth.signOut();
+  
+  // Add timeout to prevent hanging
+  const logoutPromise = supabase.auth.signOut();
+  
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Logout timeout')), 5000);
+  });
+  
+  try {
+    // Race between actual logout and timeout
+    await Promise.race([
+      logoutPromise,
+      timeoutPromise.then(() => {
+        console.warn('Logout request timed out, forcing client-side logout');
+        // Force client-side logout regardless
+        return { error: null };
+      }),
+    ]);
+    
+    return { error: null };
+  } catch (error) {
+    console.error('Error during logout:', error);
+    // Even if there's an error, we want to clear the local session
+    return { error };
+  }
 }
 
 export async function getCurrentSession() {
-  return await supabase.auth.getSession();
+  // Add timeout to prevent hanging
+  const sessionPromise = supabase.auth.getSession();
+  
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Session check timeout')), 5000);
+  });
+  
+  try {
+    // Race between actual session check and timeout
+    return await Promise.race([
+      sessionPromise,
+      timeoutPromise.then(() => {
+        console.warn('Session check timed out');
+        return { data: { session: null }, error: null };
+      }),
+    ]);
+  } catch (error) {
+    console.error('Error getting current session:', error);
+    return { data: { session: null }, error };
+  }
 }
 
 export function setupAuthListener(callback: (event: string, session: any) => void) {
+  console.log('Setting up auth listener');
   return supabase.auth.onAuthStateChange(callback);
 }
 

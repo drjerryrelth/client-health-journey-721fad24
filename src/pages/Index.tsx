@@ -1,10 +1,25 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Weight, LineChart, Pill, CheckCircle, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
+  const { isAuthenticated, hasRole } = useAuth();
+  const navigate = useNavigate();
+  
+  // Handle button click with navigate instead of Link for more control
+  const handleLoginClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate('/login');
+  };
+  
+  const handleGetStartedClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate('/login');
+  };
+  
   return (
     <div className="min-h-screen bg-white">
       {/* Hero section */}
@@ -20,23 +35,25 @@ const Index = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
-                  asChild
                   size="lg"
                   className="bg-white text-primary hover:bg-gray-100"
+                  onClick={handleLoginClick}
                 >
-                  <Link to="/login">
-                    Log In
-                  </Link>
+                  Log In
                 </Button>
                 <Button
-                  asChild
                   variant="outline"
                   size="lg"
                   className="border-white text-white hover:bg-white/10"
+                  onClick={(e) => {
+                    const element = document.getElementById('features');
+                    if (element) {
+                      e.preventDefault();
+                      element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
                 >
-                  <a href="#features">
-                    Learn More
-                  </a>
+                  Learn More
                 </Button>
               </div>
             </div>
@@ -63,6 +80,7 @@ const Index = () => {
           <h2 className="text-3xl font-bold text-center mb-12">Key Features</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Features content - kept the same */}
             <div className="bg-white rounded-lg p-6 shadow-md border border-gray-100">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                 <Weight className="h-6 w-6 text-primary" />
@@ -105,10 +123,8 @@ const Index = () => {
           </div>
           
           <div className="mt-12 text-center">
-            <Button asChild size="lg" className="gap-2">
-              <Link to="/login">
-                Get Started <ArrowRight className="h-4 w-4" />
-              </Link>
+            <Button size="lg" className="gap-2" onClick={handleGetStartedClick}>
+              Get Started <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </div>

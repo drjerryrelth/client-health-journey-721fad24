@@ -20,7 +20,20 @@ const Login = () => {
     }
   }, [isAuthenticated, isLoading, hasRole, navigate]);
   
-  // Show loading state
+  // Modified to prevent infinite loading - Add a timeout
+  useEffect(() => {
+    // If still loading after 5 seconds, reset loading state to prevent infinite spinner
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.log('Authentication check timeout - resetting loading state');
+        window.location.reload(); // Force reload if stuck in loading state
+      }
+    }, 5000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [isLoading]);
+  
+  // Show loading state, but with a more reliable rendering condition
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
