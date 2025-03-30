@@ -149,6 +149,10 @@ const ClinicsPage = () => {
     setReplacementCoachId('');
   };
 
+  const handleAddClinic = () => {
+    setShowAddClinicDialog(true);
+  };
+
   const availableCoaches = selectedClinic && selectedCoach
     ? getMockCoaches()
         .filter(coach => coach.clinicId === selectedClinic.id && coach.id !== selectedCoach.id)
@@ -161,8 +165,8 @@ const ClinicsPage = () => {
     city: clinic.city,
     state: clinic.state,
     status: clinic.status,
-    coaches: 0, // These would be dynamically fetched in a real implementation
-    clients: 0, // These would be dynamically fetched in a real implementation
+    coaches: 0,
+    clients: 0,
   }));
 
   if (loading) {
