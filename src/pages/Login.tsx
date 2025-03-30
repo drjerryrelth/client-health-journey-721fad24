@@ -1,11 +1,24 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import { useAuth } from '@/context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const { isAuthenticated, hasRole, isLoading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Effect for navigation when auth status changes
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      console.log('User authenticated, redirecting...');
+      if (hasRole('client')) {
+        navigate('/client-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [isAuthenticated, isLoading, hasRole, navigate]);
   
   // Show loading state
   if (isLoading) {
@@ -17,8 +30,9 @@ const Login = () => {
     );
   }
   
-  // Redirect if already logged in
+  // Already logged in - this is a fallback in case the effect doesn't trigger
   if (isAuthenticated) {
+    console.log('Already authenticated, redirecting directly');
     if (hasRole('client')) {
       return <Navigate to="/client-dashboard" replace />;
     } else {

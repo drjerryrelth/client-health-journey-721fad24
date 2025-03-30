@@ -26,8 +26,56 @@ export async function loginWithEmail(email: string, password: string) {
     throw new Error('No user returned from login');
   }
   
+  // For demo accounts, ensure the profile exists
+  if (isDemoLogin) {
+    await ensureDemoProfileExists(data.user.id);
+  }
+  
   console.log('Login successful');
   return data;
+}
+
+// New helper function to ensure demo profile exists
+async function ensureDemoProfileExists(userId: string) {
+  console.log('Ensuring demo profile exists for user:', userId);
+  
+  try {
+    // Check if profile exists first
+    const { data: profile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (fetchError || !profile) {
+      console.log('Demo profile not found, creating one');
+      
+      // Extract role from user metadata if possible
+      const { data: userData } = await supabase.auth.getUser();
+      const userRole = userData?.user?.user_metadata?.role || 'admin';
+      const userName = userData?.user?.user_metadata?.full_name || 'Demo User';
+      
+      // Create profile if it doesn't exist
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          full_name: userName,
+          email: 'drrelth@contourlight.com',
+          role: userRole,
+        });
+      
+      if (insertError) {
+        console.error('Error creating demo profile:', insertError);
+      } else {
+        console.log('Demo profile created successfully');
+      }
+    } else {
+      console.log('Demo profile already exists');
+    }
+  } catch (error) {
+    console.error('Error handling demo profile:', error);
+  }
 }
 
 export async function signUpWithEmail(
