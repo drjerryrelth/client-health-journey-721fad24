@@ -1,4 +1,4 @@
-import supabase from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { CheckIn } from '@/types';
 import { toast } from 'sonner';
 
@@ -6,12 +6,6 @@ export const CheckInService = {
   // Fetch all check-ins for a specific client
   async getClientCheckIns(clientId: string): Promise<CheckIn[]> {
     try {
-      // Check if using development credentials
-      if (!import.meta.env.VITE_SUPABASE_URL) {
-        console.warn('Using development Supabase setup - returning mock data');
-        return mockCheckIns.filter(checkIn => checkIn.clientId === clientId);
-      }
-      
       // Get basic check-in data
       const { data: checkInsData, error: checkInsError } = await supabase
         .from('check_ins')
@@ -63,7 +57,7 @@ export const CheckInService = {
     } catch (error) {
       console.error('Error fetching client check-ins:', error);
       toast.error('Failed to fetch check-ins. Please try again later.');
-      return [];
+      return mockCheckIns.filter(checkIn => checkIn.clientId === clientId);
     }
   },
   
@@ -73,15 +67,6 @@ export const CheckInService = {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
     try {
-      // Check if using development credentials
-      if (!import.meta.env.VITE_SUPABASE_URL) {
-        console.warn('Using development Supabase setup - returning mock data');
-        return mockCheckIns
-          .filter(checkIn => checkIn.clientId === clientId)
-          .filter(checkIn => new Date(checkIn.date) >= sevenDaysAgo)
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      }
-      
       const { data, error } = await supabase
         .from('check_ins')
         .select('*')
@@ -127,13 +112,6 @@ export const CheckInService = {
   // Fetch specific check-in by ID
   async getCheckInById(checkInId: string): Promise<CheckIn | null> {
     try {
-      // Check if using development credentials
-      if (!import.meta.env.VITE_SUPABASE_URL) {
-        console.warn('Using development Supabase setup - returning mock data');
-        const checkIn = mockCheckIns.find(c => c.id === checkInId);
-        return checkIn || null;
-      }
-      
       // Get basic check-in data
       const { data: checkIn, error: checkInError } = await supabase
         .from('check_ins')
@@ -186,18 +164,6 @@ export const CheckInService = {
   // Create a new check-in
   async createCheckIn(checkIn: Omit<CheckIn, 'id'>, photos?: File[]): Promise<CheckIn> {
     try {
-      // Check if using development credentials
-      if (!import.meta.env.VITE_SUPABASE_URL) {
-        console.warn('Using development Supabase setup - returning mock data');
-        // Create a mock check-in with a generated ID
-        const newCheckIn = {
-          id: `mock-${Date.now()}`,
-          ...checkIn,
-          photos: photos ? ['mock-photo-url'] : []
-        };
-        return newCheckIn;
-      }
-      
       // Transform to match database structure
       const { measurements, meals, photos: _, ...restCheckIn } = checkIn;
       
@@ -283,33 +249,6 @@ export const CheckInService = {
   // Update an existing check-in
   async updateCheckIn(checkInId: string, updates: Partial<CheckIn>): Promise<CheckIn> {
     try {
-      // Check if using development credentials
-      if (!import.meta.env.VITE_SUPABASE_URL) {
-        console.warn('Using development Supabase setup - returning mock data');
-        // Find the mock check-in by ID
-        const existingIndex = mockCheckIns.findIndex(c => c.id === checkInId);
-        if (existingIndex === -1) {
-          throw new Error('Check-in not found');
-        }
-        
-        // Create an updated version
-        const updatedCheckIn = {
-          ...mockCheckIns[existingIndex],
-          ...updates,
-          // Handle nested updates if present
-          measurements: updates.measurements ? {
-            ...mockCheckIns[existingIndex].measurements,
-            ...updates.measurements
-          } : mockCheckIns[existingIndex].measurements,
-          meals: updates.meals ? {
-            ...mockCheckIns[existingIndex].meals,
-            ...updates.meals
-          } : mockCheckIns[existingIndex].meals
-        };
-        
-        return updatedCheckIn;
-      }
-      
       // Transform to match database structure
       const { measurements, meals, photos, ...restUpdates } = updates;
       
@@ -384,12 +323,6 @@ export const CheckInService = {
   // Delete a check-in
   async deleteCheckIn(checkInId: string): Promise<void> {
     try {
-      // Check if using development credentials
-      if (!import.meta.env.VITE_SUPABASE_URL) {
-        console.warn('Using development Supabase setup - mock delete operation');
-        return Promise.resolve();
-      }
-      
       // Delete check-in (cascade should handle photos)
       const { error } = await supabase
         .from('check_ins')

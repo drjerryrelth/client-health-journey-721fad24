@@ -1,8 +1,7 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
-import supabase from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole } from '@/types';
 
@@ -43,10 +42,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Function to fetch user profile data from profiles table
   const fetchUserProfile = async (userId: string) => {
     try {
-      // First check if user is in the profiles table with a role
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -75,13 +72,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Check for session on mount and set up auth state listener
   useEffect(() => {
     const initialSession = async () => {
       setIsLoading(true);
       
       try {
-        // Get current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -91,13 +86,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           setSupabaseUser(session.user);
           
-          // Fetch additional user data from profiles table
           const userData = await fetchUserProfile(session.user.id);
           
           if (userData) {
             setUser(userData);
           } else {
-            // If no profile exists, log out the user
             await supabase.auth.signOut();
             setSupabaseUser(null);
           }
@@ -114,15 +107,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Initialize session
     initialSession();
 
-    // Set up auth state change listener
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         setSupabaseUser(session.user);
         
-        // Fetch user profile data
         const userData = await fetchUserProfile(session.user.id);
         
         if (userData) {
@@ -135,7 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (event === 'USER_UPDATED' && session?.user) {
         setSupabaseUser(session.user);
         
-        // Refresh user profile data
         const userData = await fetchUserProfile(session.user.id);
         
         if (userData) {
@@ -144,7 +133,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    // Cleanup auth listener on unmount
     return () => {
       authListener.subscription.unsubscribe();
     };
@@ -167,8 +155,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('No user returned from login');
       }
       
-      // User profile data will be fetched by the auth state change listener
-      
       return Promise.resolve();
     } catch (error: any) {
       console.error('Login error:', error);
@@ -186,7 +172,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       await supabase.auth.signOut();
-      // State will be cleaned up by the auth state change listener
     } catch (error) {
       console.error('Error signing out:', error);
       toast({

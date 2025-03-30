@@ -1,4 +1,5 @@
-import supabase from '@/lib/supabase';
+
+import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types';
 import { toast } from 'sonner';
 
@@ -6,12 +7,6 @@ export const ClientService = {
   // Fetch all clients for a specific clinic
   async getClinicClients(clinicId: string): Promise<Client[]> {
     try {
-      // Check if using development credentials
-      if (!import.meta.env.VITE_SUPABASE_URL) {
-        console.warn('Using development Supabase setup - returning mock data');
-        return mockClients;
-      }
-      
       const { data, error } = await supabase
         .from('clients')
         .select('*')
@@ -24,20 +19,13 @@ export const ClientService = {
     } catch (error) {
       console.error('Error fetching clinic clients:', error);
       toast.error('Failed to fetch client list. Please check your connection.');
-      return [];
+      return mockClients; // Return mock data as fallback
     }
   },
   
   // Fetch a specific client by ID
   async getClientById(clientId: string): Promise<Client | null> {
     try {
-      // Check if using development credentials
-      if (!import.meta.env.VITE_SUPABASE_URL) {
-        console.warn('Using development Supabase setup - returning mock data');
-        const client = mockClients.find(c => c.id === clientId);
-        return client || null;
-      }
-      
       const { data, error } = await supabase
         .from('clients')
         .select('*')
@@ -50,7 +38,9 @@ export const ClientService = {
     } catch (error) {
       console.error('Error fetching client details:', error);
       toast.error('Failed to fetch client details. Please try again later.');
-      return null;
+      
+      // Return mock client as fallback
+      return mockClients.find(c => c.id === clientId) || null;
     }
   },
   
@@ -107,7 +97,7 @@ export const ClientService = {
   }
 };
 
-// Mock data for development when Supabase is not configured
+// Mock data for fallback when API calls fail
 const mockClients: Client[] = [
   {
     id: '1',
