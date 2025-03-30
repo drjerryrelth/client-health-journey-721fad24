@@ -11,16 +11,24 @@ interface CoachFormProps {
   onSubmit: (values: CoachFormValues) => Promise<void>;
   isSubmitting: boolean;
   onCancel: () => void;
+  defaultValues?: CoachFormValues;
+  submitButtonText?: string;
 }
 
-const CoachForm = ({ onSubmit, isSubmitting, onCancel }: CoachFormProps) => {
+const CoachForm = ({ 
+  onSubmit, 
+  isSubmitting, 
+  onCancel, 
+  defaultValues = {
+    name: '',
+    email: '',
+    phone: ''
+  },
+  submitButtonText = "Add Coach"
+}: CoachFormProps) => {
   const form = useForm<CoachFormValues>({
     resolver: zodResolver(coachFormSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: ''
-    }
+    defaultValues
   });
 
   return (
@@ -110,7 +118,7 @@ const CoachForm = ({ onSubmit, isSubmitting, onCancel }: CoachFormProps) => {
             type="submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Adding...' : 'Add Coach'}
+            {isSubmitting ? 'Saving...' : submitButtonText}
           </Button>
         </div>
       </form>
@@ -118,4 +126,5 @@ const CoachForm = ({ onSubmit, isSubmitting, onCancel }: CoachFormProps) => {
   );
 };
 
-export default CoachForm;
+export { CoachForm };
+export type { CoachFormValues };

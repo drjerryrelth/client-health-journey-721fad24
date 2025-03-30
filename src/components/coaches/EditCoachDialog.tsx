@@ -1,11 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Coach } from '@/services/coaches';
+import { Coach, CoachService } from '@/services/coaches';
+import { CoachForm, CoachFormValues } from './CoachForm';
+import ErrorDialog from './ErrorDialog';
 
 interface EditCoachDialogProps {
   open: boolean;
@@ -16,94 +15,88 @@ interface EditCoachDialogProps {
 
 const EditCoachDialog = ({ open, onOpenChange, coach, clinicName }: EditCoachDialogProps) => {
   const { toast } = useToast();
-  const [coachName, setCoachName] = useState('');
-  const [coachEmail, setCoachEmail] = useState('');
-  const [coachPhone, setCoachPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
-  useEffect(() => {
-    if (coach) {
-      setCoachName(coach.name);
-      setCoachEmail(coach.email);
-      setCoachPhone(coach.phone || '');
-    }
-  }, [coach]);
+  // Prepare default values for the form
+  const defaultValues = coach ? {
+    name: coach.name,
+    email: coach.email,
+    phone: coach.phone || ''
+  } : {
+    name: '',
+    email: '',
+    phone: ''
+  };
 
-  const handleSubmitEditCoach = () => {
-    if (!coachName || !coachEmail) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide name and email for the coach.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    toast({
-      title: "Coach Updated",
-      description: `${coachName}'s information has been updated.`
-    });
+  const handleSubmit = async (values: CoachFormValues) => {
+    if (!coach) return;
     
+    try {
+      setIsSubmitting(true);
+      
+      const result = await CoachService.updateCoach(coach.id, {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        clinicId: coach.clinicId,
+        status: coach.status
+      });
+      
+      if (result) {
+        toast({
+          title: "Coach Updated",
+          description: `${values.name}'s information has been updated.`
+        });
+        onOpenChange(false);
+      } else {
+        setError("Failed to update coach information. Please try again.");
+        setShowErrorDialog(true);
+      }
+    } catch (error) {
+      console.error("Error updating coach:", error);
+      setError(error instanceof Error ? error.message : "An unknown error occurred");
+      setShowErrorDialog(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancel = () => {
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Coach</DialogTitle>
-          <DialogDescription>
-            Update coach information for {clinicName}.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-name" className="text-right">
-              Name
-            </Label>
-            <Input 
-              id="edit-name" 
-              value={coachName} 
-              onChange={(e) => setCoachName(e.target.value)} 
-              className="col-span-3" 
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Coach</DialogTitle>
+            <DialogDescription>
+              Update coach information for {clinicName}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {coach && (
+            <CoachForm
+              onSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              onCancel={handleCancel}
+              defaultValues={defaultValues}
+              submitButtonText="Save Changes"
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-email" className="text-right">
-              Email
-            </Label>
-            <Input 
-              id="edit-email" 
-              type="email" 
-              value={coachEmail} 
-              onChange={(e) => setCoachEmail(e.target.value)} 
-              className="col-span-3" 
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-phone" className="text-right">
-              Phone
-            </Label>
-            <Input 
-              id="edit-phone" 
-              type="tel" 
-              value={coachPhone} 
-              onChange={(e) => setCoachPhone(e.target.value)} 
-              className="col-span-3" 
-            />
-          </div>
-        </div>
-        
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleSubmitEditCoach}>
-            Save Changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <ErrorDialog
+        open={showErrorDialog}
+        onOpenChange={setShowErrorDialog}
+        errorDetails={error}
+        title="Update Error"
+      />
+    </>
   );
 };
 
