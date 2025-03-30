@@ -1,8 +1,11 @@
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { toast } from 'sonner';
 
+// Types for the dashboard statistics
 export interface DashboardStats {
   activeClinicCount: number;
   totalCoachCount: number;
@@ -16,268 +19,242 @@ export interface DashboardStats {
   }[];
 }
 
+// Types for activity items
 export interface ActivityItem {
   id: string;
-  type: string;
+  type: 'check_in' | 'clinic_signup' | 'coach_added' | 'message' | string;
   description: string;
   timestamp: string;
-  icon?: React.ReactNode;
+  userId?: string;
+  clinicId?: string;
 }
 
-export const useDashboardStats = () => {
-  return useQuery({
-    queryKey: ['dashboardStats'],
-    queryFn: async (): Promise<DashboardStats> => {
-      try {
-        console.log('Fetching dashboard stats...');
-        
-        // 1. Get active clinics count
-        const { data: clinics, error: clinicsError } = await supabase
-          .from('clinics')
-          .select('*')
-          .eq('status', 'active');
-
-        if (clinicsError) {
-          console.error('Error fetching clinics:', clinicsError);
-          throw clinicsError;
-        }
-        
-        console.log('Active clinics found:', clinics?.length || 0);
-
-        // 2. Get total coaches count
-        const { data: coaches, error: coachesError } = await supabase
-          .from('coaches')
-          .select('*')
-          .eq('status', 'active');
-
-        if (coachesError) {
-          console.error('Error fetching coaches:', coachesError);
-          throw coachesError;
-        }
-        
-        console.log('Active coaches found:', coaches?.length || 0);
-
-        // 3. Get weekly activities (check-ins within last 7 days)
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        const oneWeekAgoStr = oneWeekAgo.toISOString().split('T')[0]; // YYYY-MM-DD
-
-        const { data: recentCheckIns, error: checkInsError } = await supabase
-          .from('check_ins')
-          .select('*')
-          .gte('date', oneWeekAgoStr);
-
-        if (checkInsError) {
-          console.error('Error fetching check-ins:', checkInsError);
-          throw checkInsError;
-        }
-        
-        console.log('Weekly activities found:', recentCheckIns?.length || 0);
-
-        // 4. Get client count per clinic
-        const clinicSummaries = await Promise.all(
-          (clinics || []).map(async (clinic) => {
-            // Get coaches for this clinic
-            const { data: clinicCoaches, error: clinicCoachesError } = await supabase
-              .from('coaches')
-              .select('id')
-              .eq('clinic_id', clinic.id);
-
-            if (clinicCoachesError) {
-              console.error(`Error fetching coaches for clinic ${clinic.id}:`, clinicCoachesError);
-              throw clinicCoachesError;
-            }
-
-            // Get clients for this clinic
-            const { data: clinicClients, error: clinicClientsError } = await supabase
-              .from('clients')
-              .select('id')
-              .eq('clinic_id', clinic.id);
-
-            if (clinicClientsError) {
-              console.error(`Error fetching clients for clinic ${clinic.id}:`, clinicClientsError);
-              throw clinicClientsError;
-            }
-
-            return {
-              id: clinic.id,
-              name: clinic.name,
-              coaches: clinicCoaches?.length || 0,
-              clients: clinicClients?.length || 0,
-              status: clinic.status
-            };
-          })
-        );
-        
-        console.log('Clinic summaries prepared:', clinicSummaries.length);
-
-        return {
-          activeClinicCount: clinics?.length || 0,
-          totalCoachCount: coaches?.length || 0,
-          weeklyActivitiesCount: recentCheckIns?.length || 0,
-          clinicsSummary: clinicSummaries,
-        };
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
-        toast.error('Failed to fetch dashboard statistics');
-        throw error;
-      }
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: 1,
-  });
-};
-
-export const useRecentActivities = (limit: number = 10) => {
-  return useQuery({
-    queryKey: ['recentActivities', limit],
-    queryFn: async (): Promise<ActivityItem[]> => {
-      try {
-        console.log(`Fetching recent activities (limit: ${limit})...`);
-        
-        // Get recent check-ins
-        const { data: checkIns, error: checkInsError } = await supabase
-          .from('check_ins')
-          .select('*, clients(name, clinic_id)')
-          .order('created_at', { ascending: false })
-          .limit(Math.ceil(limit / 2));
-
-        if (checkInsError) {
-          console.error('Error fetching check-ins:', checkInsError);
-          throw checkInsError;
-        }
-        
-        console.log('Check-ins found:', checkIns?.length || 0);
-
-        // Get recent clinic creations
-        const { data: clinics, error: clinicsError } = await supabase
-          .from('clinics')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(Math.ceil(limit / 4));
-
-        if (clinicsError) {
-          console.error('Error fetching clinics:', clinicsError);
-          throw clinicsError;
-        }
-        
-        console.log('Recent clinics found:', clinics?.length || 0);
-
-        // Get recent coach additions
-        const { data: coaches, error: coachesError } = await supabase
-          .from('coaches')
-          .select('*, clinics(name)')
-          .order('created_at', { ascending: false })
-          .limit(Math.ceil(limit / 4));
-
-        if (coachesError) {
-          console.error('Error fetching coaches:', coachesError);
-          throw coachesError;
-        }
-        
-        console.log('Recent coaches found:', coaches?.length || 0);
-
-        // Format check-ins as activities
-        const checkInActivities = (checkIns || []).map(checkIn => {
-          const clientName = checkIn.clients?.name || 'Unknown Client';
-          
-          return {
-            id: `check-in-${checkIn.id}`,
-            type: 'check_in',
-            description: `New check-in received from ${clientName}`,
-            timestamp: formatTimeAgo(checkIn.created_at),
-          };
-        });
-
-        // Format clinic creations as activities
-        const clinicActivities = (clinics || []).map(clinic => {
-          return {
-            id: `clinic-${clinic.id}`,
-            type: 'clinic_signup',
-            description: `New clinic signed up: ${clinic.name}`,
-            timestamp: formatTimeAgo(clinic.created_at),
-          };
-        });
-
-        // Format coach additions as activities
-        const coachActivities = (coaches || []).map(coach => {
-          const clinicName = coach.clinics?.name || 'Unknown Clinic';
-          
-          return {
-            id: `coach-${coach.id}`,
-            type: 'coach_added',
-            description: `Coach ${coach.name} was added to ${clinicName}`,
-            timestamp: formatTimeAgo(coach.created_at),
-          };
-        });
-
-        // Combine and sort all activities by approximate timestamp
-        const allActivities = [
-          ...checkInActivities,
-          ...clinicActivities,
-          ...coachActivities
-        ]
-        // Sort by approximate timestamp (recent first)
-        .sort((a, b) => {
-          // Extract numeric values from timestamps for comparison
-          const timeA = extractTimeValue(a.timestamp);
-          const timeB = extractTimeValue(b.timestamp);
-          return timeA - timeB;
-        })
-        .slice(0, limit);
-        
-        console.log('Total activities prepared:', allActivities.length);
-
-        return allActivities;
-      } catch (error) {
-        console.error('Error fetching recent activities:', error);
-        toast.error('Failed to fetch recent activities');
-        throw error;
-      }
-    },
-    staleTime: 1000 * 60 * 1, // 1 minute
-    retry: 1,
-  });
-};
-
-// Helper functions for timestamp formatting
-function formatTimeAgo(dateStr: string): string {
-  if (!dateStr) return 'unknown time';
+// Function to fetch dashboard statistics
+async function fetchDashboardStats(): Promise<DashboardStats> {
+  console.log('[DashboardStats] Starting to fetch dashboard stats');
   
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) {
-    return 'just now';
-  } else if (diffInSeconds < 3600) {
-    const minutes = Math.floor(diffInSeconds / 60);
-    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
-  } else if (diffInSeconds < 86400) {
-    const hours = Math.floor(diffInSeconds / 3600);
-    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
-  } else if (diffInSeconds < 604800) {
-    const days = Math.floor(diffInSeconds / 86400);
-    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
-  } else {
-    const weeks = Math.floor(diffInSeconds / 604800);
-    return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+  try {
+    // Verify authentication first
+    const session = await checkAuthentication();
+    if (!session) {
+      console.error('[DashboardStats] No authenticated session found');
+      throw new Error('Authentication required to fetch dashboard statistics');
+    }
+    
+    console.log('[DashboardStats] Authentication verified, fetching data');
+    
+    // Fetch active clinics count
+    const { data: clinicsData, error: clinicsError } = await supabase
+      .from('clinics')
+      .select('id, name, status')
+      .eq('status', 'active');
+      
+    if (clinicsError) {
+      console.error('[DashboardStats] Error fetching clinics:', clinicsError);
+      throw clinicsError;
+    }
+    
+    console.log('[DashboardStats] Clinics fetched:', clinicsData?.length || 0);
+    
+    // Fetch total coaches count
+    const { count: coachCount, error: coachError } = await supabase
+      .from('coaches')
+      .select('id', { count: 'exact', head: true });
+      
+    if (coachError) {
+      console.error('[DashboardStats] Error fetching coach count:', coachError);
+      throw coachError;
+    }
+    
+    console.log('[DashboardStats] Coach count:', coachCount);
+    
+    // Calculate the date 7 days ago
+    const lastWeek = new Date();
+    lastWeek.setDate(lastWeek.getDate() - 7);
+    const lastWeekString = lastWeek.toISOString();
+    
+    // Fetch weekly activities count (check-ins from the last 7 days)
+    const { count: activitiesCount, error: activitiesError } = await supabase
+      .from('check_ins')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', lastWeekString);
+      
+    if (activitiesError) {
+      console.error('[DashboardStats] Error fetching activities count:', activitiesError);
+      throw activitiesError;
+    }
+    
+    console.log('[DashboardStats] Activities count:', activitiesCount);
+    
+    // Fetch clinic summary data with coach and client counts
+    const clinicsSummary = [];
+    
+    if (clinicsData) {
+      for (const clinic of clinicsData) {
+        // Get coach count for this clinic
+        const { count: clinicCoachCount, error: clinicCoachError } = await supabase
+          .from('coaches')
+          .select('id', { count: 'exact', head: true })
+          .eq('clinic_id', clinic.id);
+          
+        if (clinicCoachError) {
+          console.error(`[DashboardStats] Error fetching coaches for clinic ${clinic.id}:`, clinicCoachError);
+          continue;
+        }
+        
+        // Get client count for this clinic
+        const { count: clinicClientCount, error: clinicClientError } = await supabase
+          .from('clients')
+          .select('id', { count: 'exact', head: true })
+          .eq('clinic_id', clinic.id);
+          
+        if (clinicClientError) {
+          console.error(`[DashboardStats] Error fetching clients for clinic ${clinic.id}:`, clinicClientError);
+          continue;
+        }
+        
+        clinicsSummary.push({
+          id: clinic.id,
+          name: clinic.name,
+          coaches: clinicCoachCount || 0,
+          clients: clinicClientCount || 0,
+          status: clinic.status
+        });
+      }
+    }
+    
+    console.log('[DashboardStats] Clinics summary:', clinicsSummary);
+    
+    return {
+      activeClinicCount: clinicsData?.length || 0,
+      totalCoachCount: coachCount || 0,
+      weeklyActivitiesCount: activitiesCount || 0,
+      clinicsSummary
+    };
+  } catch (error) {
+    console.error('[DashboardStats] Error fetching dashboard stats:', error);
+    throw error;
   }
 }
 
-function extractTimeValue(timeAgo: string): number {
-  if (timeAgo === 'just now') return 0;
-  if (timeAgo === 'unknown time') return Number.MAX_SAFE_INTEGER;
+// Function to fetch recent activities
+async function fetchRecentActivities(limit: number = 5): Promise<ActivityItem[]> {
+  console.log(`[RecentActivities] Starting to fetch recent activities with limit: ${limit}`);
   
-  const match = timeAgo.match(/(\d+)/);
-  if (!match) return Number.MAX_SAFE_INTEGER;
-  
-  const value = parseInt(match[1]);
-  
-  if (timeAgo.includes('minute')) return value;
-  if (timeAgo.includes('hour')) return value * 60;
-  if (timeAgo.includes('day')) return value * 60 * 24;
-  if (timeAgo.includes('week')) return value * 60 * 24 * 7;
-  
-  return Number.MAX_SAFE_INTEGER;
+  try {
+    const session = await checkAuthentication();
+    if (!session) {
+      console.error('[RecentActivities] No authenticated session found');
+      throw new Error('Authentication required to fetch activities');
+    }
+    
+    console.log('[RecentActivities] Authentication verified, fetching data');
+    
+    // Fetch recent check-ins as activities
+    const { data: checkInsData, error: checkInsError } = await supabase
+      .from('check_ins')
+      .select('id, client_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+      
+    if (checkInsError) {
+      console.error('[RecentActivities] Error fetching check-ins:', checkInsError);
+      throw checkInsError;
+    }
+    
+    // Fetch client names for the check-ins
+    const activities: ActivityItem[] = [];
+    
+    if (checkInsData && checkInsData.length > 0) {
+      for (const checkIn of checkInsData) {
+        // Get client name
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select('name, clinic_id')
+          .eq('id', checkIn.client_id)
+          .single();
+          
+        if (clientError) {
+          console.error(`[RecentActivities] Error fetching client for check-in ${checkIn.id}:`, clientError);
+          continue;
+        }
+        
+        if (clientData) {
+          const timestamp = new Date(checkIn.created_at);
+          
+          activities.push({
+            id: checkIn.id,
+            type: 'check_in',
+            description: `${clientData.name} submitted a check-in`,
+            timestamp: timestamp.toLocaleString(),
+            clinicId: clientData.clinic_id
+          });
+        }
+      }
+    }
+    
+    // Fetch recent coaches added as activities
+    const { data: coachesData, error: coachesError } = await supabase
+      .from('coaches')
+      .select('id, name, clinic_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(Math.floor(limit / 2));  // Use half of the limit for coaches
+      
+    if (coachesError) {
+      console.error('[RecentActivities] Error fetching coaches:', coachesError);
+    } else if (coachesData) {
+      for (const coach of coachesData) {
+        // Get clinic name
+        const { data: clinicData, error: clinicError } = await supabase
+          .from('clinics')
+          .select('name')
+          .eq('id', coach.clinic_id)
+          .single();
+          
+        const timestamp = new Date(coach.created_at);
+        
+        activities.push({
+          id: coach.id,
+          type: 'coach_added',
+          description: `${coach.name} was added as a coach${clinicData ? ` to ${clinicData.name}` : ''}`,
+          timestamp: timestamp.toLocaleString(),
+          clinicId: coach.clinic_id
+        });
+      }
+    }
+    
+    // Sort all activities by timestamp (newest first)
+    activities.sort((a, b) => {
+      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    });
+    
+    // Limit to the requested number
+    const limitedActivities = activities.slice(0, limit);
+    console.log(`[RecentActivities] Returning ${limitedActivities.length} activities`);
+    return limitedActivities;
+    
+  } catch (error) {
+    console.error('[RecentActivities] Error fetching recent activities:', error);
+    throw error;
+  }
+}
+
+// Hook to use dashboard stats
+export function useDashboardStats() {
+  return useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: fetchDashboardStats,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2
+  });
+}
+
+// Hook to use recent activities
+export function useRecentActivities(limit: number = 5) {
+  return useQuery({
+    queryKey: ['recent-activities', limit],
+    queryFn: () => fetchRecentActivities(limit),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    retry: 2
+  });
 }

@@ -15,6 +15,10 @@ const AdminActivitiesPage = () => {
     refetch
   } = useRecentActivities(20); // Get more activities for this dedicated page
 
+  console.log('ActivitiesPage: Current activities data:', activities);
+  console.log('ActivitiesPage: isLoading:', isLoading);
+  console.log('ActivitiesPage: error:', error);
+
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'check_in':
@@ -31,17 +35,39 @@ const AdminActivitiesPage = () => {
   };
 
   const handleRefresh = () => {
+    console.log('ActivitiesPage: Manually refreshing data');
     refetch();
     toast.success("Activities refreshed");
   };
 
   const renderActivitySummary = () => {
-    if (!activities || activities.length === 0) return null;
+    if (!activities || activities.length === 0) {
+      console.log('ActivitiesPage: No activities available for summary');
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Activity Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="py-8 text-center text-gray-500">
+              No activities found to summarize
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    console.log('ActivitiesPage: Rendering activity summary');
 
     // Count activities by type
     const checkIns = activities.filter(a => a.type === 'check_in').length;
     const clinics = activities.filter(a => a.type === 'clinic_signup').length;
     const coaches = activities.filter(a => a.type === 'coach_added').length;
+    const others = activities.filter(a => 
+      a.type !== 'check_in' && 
+      a.type !== 'clinic_signup' && 
+      a.type !== 'coach_added'
+    ).length;
 
     // Calculate total activities
     const totalActivities = activities.length;
@@ -53,18 +79,30 @@ const AdminActivitiesPage = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b">
-              <span className="text-sm">New clinics this month</span>
-              <span className="font-bold">{clinics}</span>
-            </div>
-            <div className="flex justify-between items-center pb-2 border-b">
-              <span className="text-sm">New coaches this month</span>
-              <span className="font-bold">{coaches}</span>
-            </div>
-            <div className="flex justify-between items-center pb-2 border-b">
-              <span className="text-sm">Check-ins this month</span>
-              <span className="font-bold">{checkIns}</span>
-            </div>
+            {clinics > 0 && (
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span className="text-sm">New clinics this month</span>
+                <span className="font-bold">{clinics}</span>
+              </div>
+            )}
+            {coaches > 0 && (
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span className="text-sm">New coaches this month</span>
+                <span className="font-bold">{coaches}</span>
+              </div>
+            )}
+            {checkIns > 0 && (
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span className="text-sm">Check-ins this month</span>
+                <span className="font-bold">{checkIns}</span>
+              </div>
+            )}
+            {others > 0 && (
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span className="text-sm">Other activities</span>
+                <span className="font-bold">{others}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center pb-2 border-b">
               <span className="text-sm">Total activities</span>
               <span className="font-bold">{totalActivities}</span>

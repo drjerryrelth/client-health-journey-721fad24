@@ -22,21 +22,23 @@ const CoachesPage = () => {
 
   const fetchCoaches = async () => {
     try {
+      console.log('CoachesPage: Starting to fetch all coaches');
       setLoading(true);
       setError(null);
       
       // Fetch coaches from all clinics (admin view)
       const allCoaches = await CoachService.getAllCoaches();
       
+      console.log('CoachesPage: Received coaches data:', allCoaches);
       setCoaches(allCoaches);
       
       if (allCoaches.length === 0) {
-        console.warn('No coaches were returned. Using mock data as fallback.');
+        console.warn('CoachesPage: No coaches were returned. Using mock data as fallback.');
       }
       
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching coaches:", err);
+      console.error("CoachesPage: Error fetching coaches:", err);
       setError("Failed to load coaches. Please try again.");
       setErrorDetails(err instanceof Error ? err.message : JSON.stringify(err, null, 2));
       setLoading(false);
@@ -44,6 +46,7 @@ const CoachesPage = () => {
   };
 
   useEffect(() => {
+    console.log('CoachesPage: Component mounted, fetching coaches');
     fetchCoaches();
   }, []);
 

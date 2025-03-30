@@ -10,14 +10,16 @@ import { getMockCoaches } from './mock-data';
  */
 export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
   try {
-    console.log('Fetching coaches for clinic:', clinicId);
+    console.log('[CoachService] Fetching coaches for clinic:', clinicId);
     
     // Check authentication before proceeding
     const session = await checkAuthentication();
     if (!session) {
-      console.error('User not authenticated');
+      console.error('[CoachService] User not authenticated');
       throw new Error('Authentication required to fetch coaches');
     }
+    
+    console.log('[CoachService] Authentication verified, user:', session.user.id);
     
     // Use RPC call to bypass RLS issues
     const { data, error } = await supabase.rpc(
@@ -26,14 +28,14 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
     );
 
     if (error) {
-      console.error('Error fetching coaches:', error);
+      console.error('[CoachService] Error fetching coaches:', error);
       throw error;
     }
     
-    console.log('Fetched coaches data from RPC:', data);
+    console.log('[CoachService] Fetched coaches data from RPC:', data);
     
     if (!Array.isArray(data)) {
-      console.error('Invalid data format, expected array:', data);
+      console.error('[CoachService] Invalid data format, expected array:', data);
       throw new Error('Invalid data format returned from server');
     }
     
@@ -48,7 +50,7 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
       clients: coach.client_count || 0
     }));
   } catch (error) {
-    console.error('Error fetching clinic coaches:', error);
+    console.error('[CoachService] Error fetching clinic coaches:', error);
     toast.error('Failed to fetch coaches. Using mock data as fallback.');
     // Return mock data as fallback
     return getMockCoaches().filter(coach => coach.clinicId === clinicId);
@@ -60,19 +62,19 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
  */
 export async function getAllCoaches(): Promise<Coach[]> {
   try {
-    console.log('Fetching all coaches across clinics');
+    console.log('[CoachService] Starting getAllCoaches call');
     
     // Check authentication before proceeding
     const session = await checkAuthentication();
     if (!session) {
-      console.error('User not authenticated');
+      console.error('[CoachService] User not authenticated');
       throw new Error('Authentication required to fetch coaches');
     }
     
     // Get the auth token
     const authToken = session.access_token;
     
-    console.log('Using auth token for coaches request:', authToken ? 'Token available' : 'Token missing');
+    console.log('[CoachService] Using auth token for coaches request:', authToken ? 'Token available' : 'Token missing');
     
     // Use Edge Function to fetch all coaches (admin only)
     const { data, error } = await supabase.functions.invoke('get-all-coaches', {
@@ -82,20 +84,21 @@ export async function getAllCoaches(): Promise<Coach[]> {
     });
     
     if (error) {
-      console.error('Error fetching all coaches:', error);
+      console.error('[CoachService] Error fetching all coaches:', error);
       throw error;
     }
     
-    console.log('Fetched coaches data:', data);
+    console.log('[CoachService] Fetched coaches data:', data);
     
     if (!Array.isArray(data)) {
-      console.error('Invalid data format, expected array:', data);
+      console.error('[CoachService] Invalid data format, expected array:', data);
       // Fall back to mock data if we can't get data from the server
+      toast.warning('Invalid data format from server. Using mock data.');
       return getMockCoaches();
     }
     
     // Transform and return the coaches data
-    return data.map(coach => ({
+    const coaches = data.map(coach => ({
       id: coach.id,
       name: coach.name,
       email: coach.email,
@@ -104,8 +107,11 @@ export async function getAllCoaches(): Promise<Coach[]> {
       clinicId: coach.clinic_id,
       clients: coach.client_count || 0
     }));
+    
+    console.log('[CoachService] Transformed coaches data:', coaches);
+    return coaches;
   } catch (error) {
-    console.error('Error fetching all coaches:', error);
+    console.error('[CoachService] Error fetching all coaches:', error);
     toast.error('Failed to fetch coaches. Using mock data as fallback.');
     // Return mock data as fallback
     return getMockCoaches();
