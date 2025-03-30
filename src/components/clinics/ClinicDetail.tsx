@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Coach } from '@/services/coaches';
@@ -13,7 +12,7 @@ import ReassignClientsDialog from '@/components/coaches/ReassignClientsDialog';
 import ClinicDetailsTab from '@/components/clinics/ClinicDetailsTab';
 import EditClinicDialog from '@/components/clinics/EditClinicDialog';
 import { useToast } from '@/hooks/use-toast';
-import { CoachService } from '@/services/coaches';
+import { useCoachActions } from '@/hooks/use-coach-actions';
 
 interface ClinicDetailProps {
   clinic: Clinic;
@@ -31,6 +30,12 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [replacementCoachId, setReplacementCoachId] = useState<string>('');
   const [coachListRefreshTrigger, setCoachListRefreshTrigger] = useState(0);
+  
+  // Use our extracted coach actions hook
+  const { handleDeleteCoach, handleReassignAndDelete: reassignAndDelete } = useCoachActions(
+    clinic.name,
+    toast
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -56,39 +61,14 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
     setShowEditCoachDialog(true);
   };
 
-  const handleDeleteCoach = (coach: Coach) => {
+  const handleCoachDelete = (coach: Coach) => {
     if (coach.clients > 0) {
       setSelectedCoach(coach);
       setShowReassignDialog(true);
     } else {
-      toast({
-        title: "Confirm Deletion",
-        description: `Are you sure you want to remove ${coach.name}? This will revoke their access to the system.`,
-        action: (
-          <Button 
-            variant="destructive" 
-            onClick={async () => {
-              try {
-                await CoachService.removeCoachAndReassignClients(coach.id, '');
-                toast({
-                  title: "Coach Removed",
-                  description: `${coach.name} has been removed from ${clinic.name}.`
-                });
-                setCoachListRefreshTrigger(prev => prev + 1);
-              } catch (error) {
-                console.error("Error removing coach:", error);
-                toast({
-                  title: "Error",
-                  description: "Failed to remove coach. Please try again.",
-                  variant: "destructive"
-                });
-              }
-            }}
-          >
-            Delete
-          </Button>
-        ),
-      });
+      handleDeleteCoach(coach);
+      // Refresh the coach list after deletion
+      setTimeout(() => setCoachListRefreshTrigger(prev => prev + 1), 500);
     }
   };
 
@@ -97,45 +77,12 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   };
 
   const handleReassignAndDelete = async () => {
-    if (!selectedCoach || !replacementCoachId) {
-      toast({
-        title: "Selection Required",
-        description: "Please select a coach to reassign clients to.",
-        variant: "destructive"
-      });
-      return;
+    if (selectedCoach) {
+      await reassignAndDelete(selectedCoach.id, replacementCoachId);
+      setShowReassignDialog(false);
+      setReplacementCoachId('');
+      setCoachListRefreshTrigger(prev => prev + 1);
     }
-
-    try {
-      const result = await CoachService.removeCoachAndReassignClients(
-        selectedCoach.id, 
-        replacementCoachId
-      );
-      
-      if (result) {
-        toast({
-          title: "Clients Reassigned and Coach Removed",
-          description: `${selectedCoach.name}'s clients have been reassigned and the coach has been removed from ${clinic.name}.`
-        });
-        setCoachListRefreshTrigger(prev => prev + 1);
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to reassign clients and remove coach.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error reassigning clients:", error);
-      toast({
-        title: "Error",
-        description: "Failed to reassign clients and remove coach.",
-        variant: "destructive"
-      });
-    }
-
-    setShowReassignDialog(false);
-    setReplacementCoachId('');
   };
 
   const availableCoaches = selectedCoach
@@ -182,7 +129,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
             onAddCoach={handleAddCoach}
             refreshTrigger={coachListRefreshTrigger}
             onEditCoach={handleEditCoach}
-            onDeleteCoach={handleDeleteCoach}
+            onDeleteCoach={handleCoachDelete}
           />
         </TabsContent>
         

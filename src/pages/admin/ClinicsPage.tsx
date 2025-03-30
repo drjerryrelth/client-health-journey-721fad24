@@ -8,6 +8,7 @@ import ResetPasswordDialog from '@/components/auth/ResetPasswordDialog';
 import ClinicService, { Clinic } from '@/services/clinic-service';
 import ClinicsOverview from '@/components/clinics/ClinicsOverview';
 import ClinicDetail from '@/components/clinics/ClinicDetail';
+import { useCoachActions } from '@/hooks/use-coach-actions';
 
 const ClinicsPage = () => {
   const { toast } = useToast();
@@ -16,7 +17,12 @@ const ClinicsPage = () => {
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [showAddClinicDialog, setShowAddClinicDialog] = useState(false);
   const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
-  const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
+  
+  // Coach actions from extracted hook
+  const { selectedCoach, handleDeleteCoach, handleReassignAndDelete } = useCoachActions(
+    selectedClinic?.name || '',
+    toast
+  );
 
   useEffect(() => {
     fetchClinics();
@@ -86,78 +92,6 @@ const ClinicsPage = () => {
 
   const handleOpenResetPassword = () => {
     setShowResetPasswordDialog(true);
-  };
-
-  const handleDeleteCoach = (coach: Coach) => {
-    setSelectedCoach(coach);
-    
-    if (coach.clients <= 0) {
-      toast({
-        title: "Confirm Deletion",
-        description: `Are you sure you want to remove ${coach.name}? This will revoke their access to the system.`,
-        action: (
-          <Button 
-            variant="destructive" 
-            onClick={async () => {
-              try {
-                await CoachService.removeCoachAndReassignClients(coach.id, '');
-                toast({
-                  title: "Coach Removed",
-                  description: `${coach.name} has been removed from ${selectedClinic?.name}.`
-                });
-              } catch (error) {
-                console.error("Error removing coach:", error);
-                toast({
-                  title: "Error",
-                  description: "Failed to remove coach. Please try again.",
-                  variant: "destructive"
-                });
-              }
-            }}
-          >
-            Delete
-          </Button>
-        ),
-      });
-    }
-  };
-
-  const handleReassignAndDelete = async (coachId: string, replacementCoachId: string) => {
-    if (!selectedCoach || !replacementCoachId) {
-      toast({
-        title: "Selection Required",
-        description: "Please select a coach to reassign clients to.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const result = await CoachService.removeCoachAndReassignClients(
-        coachId, 
-        replacementCoachId
-      );
-      
-      if (result) {
-        toast({
-          title: "Clients Reassigned and Coach Removed",
-          description: `${selectedCoach.name}'s clients have been reassigned and the coach has been removed from ${selectedClinic?.name}.`
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to reassign clients and remove coach.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error reassigning clients:", error);
-      toast({
-        title: "Error",
-        description: "Failed to reassign clients and remove coach.",
-        variant: "destructive"
-      });
-    }
   };
 
   const formattedClinics = clinics.map(clinic => ({
