@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { User as SupabaseUser } from '@supabase/supabase-js';
+import { User as SupabaseUser, AuthError } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -163,6 +163,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Attempting login with email:', email);
       
+      // Check if this is a demo login
+      const isDemoLogin = ['admin@example.com', 'coach@example.com', 'client@example.com'].includes(email);
+      if (isDemoLogin) {
+        console.log('This is a demo login attempt');
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -170,6 +176,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Login error details:', error);
+        
+        // Provide more specific error messages based on error code
+        let errorMessage = 'Invalid email or password';
+        
+        if (error.message.includes('Invalid login')) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        } else if (error.message.includes('rate limited')) {
+          errorMessage = 'Too many login attempts. Please try again later.';
+        }
+        
+        toast({
+          title: 'Login failed',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+        
         throw error;
       }
       
@@ -182,11 +204,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return Promise.resolve();
     } catch (error: any) {
       console.error('Login error:', error);
-      toast({
-        title: 'Login failed',
-        description: error.message || 'Invalid email or password',
-        variant: 'destructive',
-      });
+      
+      // Error is already handled above, but catch any unexpected errors
+      if (error instanceof AuthError) {
+        // Already handled above
+      } else {
+        toast({
+          title: 'Login failed',
+          description: error.message || 'An unexpected error occurred',
+          variant: 'destructive',
+        });
+      }
+      
       return Promise.reject(error);
     } finally {
       setIsLoading(false);

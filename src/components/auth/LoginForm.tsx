@@ -46,6 +46,7 @@ const LoginForm = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('Attempting login with:', data.email);
       await login(data.email, data.password);
       toast({
         title: 'Login successful',
@@ -91,11 +92,11 @@ const LoginForm = () => {
       });
       
       // Navigation will be handled by the auth state listener
-    } catch (error) {
+    } catch (error: any) {
       console.error('Demo login error:', error);
       toast({
         title: 'Login failed',
-        description: 'An error occurred during demo login',
+        description: 'An error occurred during demo login. Please try again.',
         variant: 'destructive',
       });
     } finally {
