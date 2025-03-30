@@ -45,7 +45,7 @@ const App = () => (
             {/* Admin routes */}
             <Route element={<MainLayout requiredRoles={['admin']} />}>
               <Route path="/dashboard" element={<AdminDashboard />} />
-              <Route path="/coaches" element={<AdminDashboard />} />
+              <Route path="/coaches" element={<Dashboard />} />
               <Route path="/clients" element={<Dashboard />} />
               <Route path="/clinics" element={<Dashboard />} />
               <Route path="/programs" element={<Dashboard />} />

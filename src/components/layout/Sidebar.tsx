@@ -57,8 +57,16 @@ const Sidebar = () => {
   const handleAddClick = () => {
     if (isAdmin) {
       navigate('/add-coach');
+      toast({
+        title: "Coming Soon",
+        description: "The Add Coach feature is under development",
+      });
     } else if (isCoach) {
       navigate('/add-client');
+      toast({
+        title: "Coming Soon",
+        description: "The Add Client feature is under development",
+      });
     }
   };
 

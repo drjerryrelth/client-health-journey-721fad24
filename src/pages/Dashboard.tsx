@@ -14,7 +14,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Mock statistics
+  // Mock statistics with verified paths matching App.tsx routes
   const stats = [
     { title: 'Total Clients', value: 24, icon: <Users className="text-primary-500" size={24} />, path: '/coach/clients' },
     { title: 'Active Programs', value: 3, icon: <List className="text-secondary-500" size={24} />, path: '/coach/programs' },

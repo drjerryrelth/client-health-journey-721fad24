@@ -13,13 +13,37 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Mock statistics for admin
+  // Mock statistics for admin with navigation paths
   const stats = [
-    { title: 'Total Coaches', value: 8, icon: <Users className="text-primary-500" size={24} /> },
-    { title: 'Total Clients', value: 24, icon: <User className="text-secondary-500" size={24} /> },
-    { title: 'Active Clinics', value: 3, icon: <Building className="text-orange-500" size={24} /> },
-    { title: 'Weekly Check-ins', value: 52, icon: <Calendar className="text-purple-500" size={24} /> },
+    { 
+      title: 'Total Coaches', 
+      value: 8, 
+      icon: <Users className="text-primary-500" size={24} />,
+      path: '/coaches'
+    },
+    { 
+      title: 'Total Clients', 
+      value: 24, 
+      icon: <User className="text-secondary-500" size={24} />,
+      path: '/clients'
+    },
+    { 
+      title: 'Active Clinics', 
+      value: 3, 
+      icon: <Building className="text-orange-500" size={24} />,
+      path: '/clinics'
+    },
+    { 
+      title: 'Weekly Check-ins', 
+      value: 52, 
+      icon: <Calendar className="text-purple-500" size={24} />,
+      path: '/check-ins'
+    },
   ];
+  
+  const handleStatClick = (path: string) => {
+    navigate(path);
+  };
   
   const handleManageCoaches = () => {
     navigate("/coaches");
@@ -43,7 +67,11 @@ const AdminDashboard = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
+          <Card 
+            key={index} 
+            className="hover:shadow-md transition-shadow cursor-pointer" 
+            onClick={() => handleStatClick(stat.path)}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
               {stat.icon}
