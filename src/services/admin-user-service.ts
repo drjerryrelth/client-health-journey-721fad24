@@ -50,6 +50,7 @@ export const AdminUserService = {
       console.log('Creating admin user:', userData);
       
       // Call the stored procedure that creates both auth user and admin user
+      // Make sure we're passing the parameters with the exact names expected by the function
       const { data, error } = await supabase
         .rpc('create_admin_user', {
           email: userData.email,
