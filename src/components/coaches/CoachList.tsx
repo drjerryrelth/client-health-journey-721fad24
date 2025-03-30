@@ -13,9 +13,10 @@ interface CoachListProps {
   clinicId?: string;
   onEdit?: (coach: Coach) => void;
   onDelete?: (coach: Coach) => void;
+  refreshTrigger?: number; // Add a refresh trigger prop
 }
 
-const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete }) => {
+const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete, refreshTrigger = 0 }) => {
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -24,7 +25,9 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
       if (clinicId) {
         setIsLoading(true);
         try {
+          console.log('Loading coaches for clinic:', clinicId);
           const coachesData = await CoachService.getClinicCoaches(clinicId);
+          console.log('Coaches loaded:', coachesData);
           setCoaches(coachesData);
         } catch (error) {
           console.error('Error loading coaches:', error);
@@ -38,7 +41,7 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
     };
 
     loadCoaches();
-  }, [clinicId]);
+  }, [clinicId, refreshTrigger]); // Add refreshTrigger to the dependency array
   
   // Apply limit if specified
   const displayedCoaches = limit ? coaches.slice(0, limit) : coaches;

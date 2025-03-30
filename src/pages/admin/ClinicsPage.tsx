@@ -30,11 +30,12 @@ const ClinicsPage = () => {
   const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [replacementCoachId, setReplacementCoachId] = useState<string>('');
-  
+  const [coachListRefreshTrigger, setCoachListRefreshTrigger] = useState(0);
+
   useEffect(() => {
     fetchClinics();
   }, []);
-  
+
   const fetchClinics = async () => {
     setLoading(true);
     try {
@@ -96,6 +97,10 @@ const ClinicsPage = () => {
 
   const handleAddCoach = () => {
     setShowAddCoachDialog(true);
+  };
+
+  const handleCoachAdded = () => {
+    setCoachListRefreshTrigger(prev => prev + 1);
   };
 
   const handleEditCoach = (coach: Coach) => {
@@ -263,6 +268,7 @@ const ClinicsPage = () => {
                   clinicId={selectedClinic.id} 
                   onEdit={handleEditCoach}
                   onDelete={handleDeleteCoach}
+                  refreshTrigger={coachListRefreshTrigger}
                 />
               </CardContent>
             </Card>
@@ -281,10 +287,7 @@ const ClinicsPage = () => {
           onOpenChange={setShowAddCoachDialog} 
           clinicName={selectedClinic.name}
           clinicId={selectedClinic.id}
-          onCoachAdded={() => {
-            // Trigger a refresh of the coach list
-            // The CoachList component handles this internally with its own state
-          }}
+          onCoachAdded={handleCoachAdded}
         />
 
         <EditCoachDialog 
@@ -309,7 +312,6 @@ const ClinicsPage = () => {
           onOpenChange={setShowEditClinicDialog} 
           clinicId={selectedClinic.id}
           onClinicUpdated={() => {
-            // Re-fetch the clinic details
             handleClinicSelect(selectedClinic.id);
           }}
         />

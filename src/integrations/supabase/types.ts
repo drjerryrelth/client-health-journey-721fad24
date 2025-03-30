@@ -445,6 +445,12 @@ export type Database = {
         }
         Returns: string
       }
+      get_clinic_coaches: {
+        Args: {
+          clinic_id_param: string
+        }
+        Returns: Json
+      }
       get_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
