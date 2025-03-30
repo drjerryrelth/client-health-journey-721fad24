@@ -23,6 +23,8 @@ import ClientsPage from "./pages/admin/ClientsPage";
 import ClinicsPage from "./pages/admin/ClinicsPage";
 import CheckInsPage from "./pages/admin/CheckInsPage";
 import ProgramsPage from "./pages/admin/ProgramsPage";
+import ReportsPage from "./pages/admin/ReportsPage";
+import SettingsPage from "./pages/admin/SettingsPage";
 
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
@@ -57,8 +59,8 @@ const App = () => (
               <Route path="/clinics" element={<ClinicsPage />} />
               <Route path="/programs" element={<ProgramsPage />} />
               <Route path="/check-ins" element={<CheckInsPage />} />
-              <Route path="/reports" element={<Dashboard />} />
-              <Route path="/settings" element={<Dashboard />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="/activities" element={<Dashboard />} />
               <Route path="/add-coach" element={<Dashboard />} />
             </Route>
