@@ -17,6 +17,13 @@ import CheckIn from "./pages/CheckIn";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 
+// Admin Pages
+import CoachesPage from "./pages/admin/CoachesPage";
+import ClientsPage from "./pages/admin/ClientsPage";
+import ClinicsPage from "./pages/admin/ClinicsPage";
+import CheckInsPage from "./pages/admin/CheckInsPage";
+import ProgramsPage from "./pages/admin/ProgramsPage";
+
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
 
@@ -45,11 +52,11 @@ const App = () => (
             {/* Admin routes */}
             <Route element={<MainLayout requiredRoles={['admin']} />}>
               <Route path="/dashboard" element={<AdminDashboard />} />
-              <Route path="/coaches" element={<Dashboard />} />
-              <Route path="/clients" element={<Dashboard />} />
-              <Route path="/clinics" element={<Dashboard />} />
-              <Route path="/programs" element={<Dashboard />} />
-              <Route path="/check-ins" element={<Dashboard />} />
+              <Route path="/coaches" element={<CoachesPage />} />
+              <Route path="/clients" element={<ClientsPage />} />
+              <Route path="/clinics" element={<ClinicsPage />} />
+              <Route path="/programs" element={<ProgramsPage />} />
+              <Route path="/check-ins" element={<CheckInsPage />} />
               <Route path="/reports" element={<Dashboard />} />
               <Route path="/settings" element={<Dashboard />} />
               <Route path="/activities" element={<Dashboard />} />
