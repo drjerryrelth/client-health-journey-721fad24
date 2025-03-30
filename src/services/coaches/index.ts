@@ -3,6 +3,7 @@ import { Coach } from './types';
 import { getClinicCoaches, getAllCoaches } from './coach-fetchers';
 import { addCoach, updateCoach, removeCoachAndReassignClients } from './coach-mutations';
 import { getMockCoaches } from './mock-data';
+import { getCoachCount, getAllCoachesForAdmin } from './admin-coach-service';
 
 // Export types
 export type { Coach };
@@ -13,7 +14,9 @@ export const CoachService = {
   getAllCoaches,
   addCoach,
   updateCoach,
-  removeCoachAndReassignClients
+  removeCoachAndReassignClients,
+  getCoachCount,         // Add the admin service functions
+  getAllCoachesForAdmin  // Add the admin service functions
 };
 
 // Export mock data function

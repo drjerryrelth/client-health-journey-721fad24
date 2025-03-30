@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,7 +44,7 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
     
     console.log('[DashboardStats] Authentication verified, fetching data');
     
-    // Fetch active clinics count
+    // Fetch active clinics count and data
     const { data: clinicsData, error: clinicsError } = await supabase
       .from('clinics')
       .select('id, name, status')
@@ -56,9 +57,15 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
     
     console.log('[DashboardStats] Clinics fetched:', clinicsData?.length || 0);
     
-    // Get coach count using our specialized service
-    const coachCount = await getCoachCount();
-    console.log('[DashboardStats] Coach count:', coachCount);
+    // Get coach count using our specialized service with direct database access
+    let coachCount = 0;
+    try {
+      coachCount = await getCoachCount();
+      console.log('[DashboardStats] Coach count:', coachCount);
+    } catch (coachCountError) {
+      console.error('[DashboardStats] Error fetching coach count:', coachCountError);
+      // Continue execution - don't throw here to allow other stats to load
+    }
     
     // Calculate the date 7 days ago
     const lastWeek = new Date();
@@ -73,15 +80,15 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
       
     if (activitiesError) {
       console.error('[DashboardStats] Error fetching activities count:', activitiesError);
-      throw activitiesError;
+      // Continue execution - don't throw
     }
     
-    console.log('[DashboardStats] Activities count:', activitiesCount);
+    console.log('[DashboardStats] Activities count:', activitiesCount || 0);
     
     // Fetch clinic summary data with coach and client counts
     const clinicsSummary = [];
     
-    if (clinicsData) {
+    if (clinicsData && clinicsData.length > 0) {
       for (const clinic of clinicsData) {
         // Get coach count for this clinic
         const { count: clinicCoachCount, error: clinicCoachError } = await supabase
@@ -91,6 +98,7 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
           
         if (clinicCoachError) {
           console.error(`[DashboardStats] Error fetching coaches for clinic ${clinic.id}:`, clinicCoachError);
+          // Continue to next clinic
           continue;
         }
         
@@ -102,6 +110,7 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
           
         if (clinicClientError) {
           console.error(`[DashboardStats] Error fetching clients for clinic ${clinic.id}:`, clinicClientError);
+          // Continue to next clinic
           continue;
         }
         
@@ -237,7 +246,7 @@ export function useDashboardStats() {
     queryKey: ['dashboard-stats'],
     queryFn: fetchDashboardStats,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: 2
+    retry: 3 // Increase retries
   });
 }
 
@@ -247,6 +256,6 @@ export function useRecentActivities(limit: number = 5) {
     queryKey: ['recent-activities', limit],
     queryFn: () => fetchRecentActivities(limit),
     staleTime: 1000 * 60 * 2, // 2 minutes
-    retry: 2
+    retry: 3 // Increase retries
   });
 }
