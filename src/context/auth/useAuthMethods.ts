@@ -1,4 +1,3 @@
-
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
 import { 
@@ -127,6 +126,6 @@ export const useAuthMethods = ({
     login,
     signUp,
     logout,
-    hasRole: (role: UserRole | UserRole[]) => (user: UserData | null = null) => hasRole(role, user)
+    hasRole: (role: UserRole | UserRole[]) => hasRole(role)
   };
 };

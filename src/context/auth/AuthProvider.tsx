@@ -24,8 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     navigate
   });
 
-  // Auth methods - fix the type issue here
-  const { login, logout, signUp, hasRole: hasRoleFn } = useAuthMethods({
+  // Auth methods
+  const { login, logout, signUp, hasRole } = useAuthMethods({
     setIsLoading,
     toast
   });
@@ -44,7 +44,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         logout,
-        hasRole: (role: UserRole | UserRole[]) => hasRoleFn(role),
+        // Fix: Pass the user from state to the hasRole function
+        hasRole: (role: UserRole | UserRole[]) => hasRole(role)(user),
         signUp,
       }}
     >
