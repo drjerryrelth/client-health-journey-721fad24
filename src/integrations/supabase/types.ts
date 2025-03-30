@@ -9,7 +9,279 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      check_in_photos: {
+        Row: {
+          check_in_id: string
+          created_at: string | null
+          id: string
+          photo_type: string
+          photo_url: string
+        }
+        Insert: {
+          check_in_id: string
+          created_at?: string | null
+          id?: string
+          photo_type: string
+          photo_url: string
+        }
+        Update: {
+          check_in_id?: string
+          created_at?: string | null
+          id?: string
+          photo_type?: string
+          photo_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "check_in_photos_check_in_id_fkey"
+            columns: ["check_in_id"]
+            isOneToOne: false
+            referencedRelation: "check_ins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      check_ins: {
+        Row: {
+          arms: number | null
+          breakfast: string | null
+          chest: number | null
+          client_id: string
+          created_at: string | null
+          date: string
+          dinner: string | null
+          energy_score: number | null
+          hips: number | null
+          id: string
+          lunch: string | null
+          mood_score: number | null
+          notes: string | null
+          snacks: string | null
+          thighs: number | null
+          waist: number | null
+          water_intake: number | null
+          weight: number | null
+        }
+        Insert: {
+          arms?: number | null
+          breakfast?: string | null
+          chest?: number | null
+          client_id: string
+          created_at?: string | null
+          date: string
+          dinner?: string | null
+          energy_score?: number | null
+          hips?: number | null
+          id?: string
+          lunch?: string | null
+          mood_score?: number | null
+          notes?: string | null
+          snacks?: string | null
+          thighs?: number | null
+          waist?: number | null
+          water_intake?: number | null
+          weight?: number | null
+        }
+        Update: {
+          arms?: number | null
+          breakfast?: string | null
+          chest?: number | null
+          client_id?: string
+          created_at?: string | null
+          date?: string
+          dinner?: string | null
+          energy_score?: number | null
+          hips?: number | null
+          id?: string
+          lunch?: string | null
+          mood_score?: number | null
+          notes?: string | null
+          snacks?: string | null
+          thighs?: number | null
+          waist?: number | null
+          water_intake?: number | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "check_ins_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          clinic_id: string
+          created_at: string | null
+          email: string
+          id: string
+          last_check_in: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          profile_image: string | null
+          program_id: string | null
+          start_date: string
+          user_id: string | null
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string | null
+          email: string
+          id?: string
+          last_check_in?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          profile_image?: string | null
+          program_id?: string | null
+          start_date: string
+          user_id?: string | null
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          last_check_in?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          profile_image?: string | null
+          program_id?: string | null
+          start_date?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      clinics: {
+        Row: {
+          created_at: string | null
+          id: string
+          logo: string | null
+          name: string
+          primary_color: string | null
+          secondary_color: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          logo?: string | null
+          name: string
+          primary_color?: string | null
+          secondary_color?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          logo?: string | null
+          name?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          clinic_id: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          role: string | null
+        }
+        Insert: {
+          clinic_id?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          role?: string | null
+        }
+        Update: {
+          clinic_id?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
+      programs: {
+        Row: {
+          check_in_frequency: string
+          clinic_id: string
+          created_at: string | null
+          description: string
+          duration: number
+          id: string
+          name: string
+          type: string
+        }
+        Insert: {
+          check_in_frequency: string
+          clinic_id: string
+          created_at?: string | null
+          description: string
+          duration: number
+          id?: string
+          name: string
+          type: string
+        }
+        Update: {
+          check_in_frequency?: string
+          clinic_id?: string
+          created_at?: string | null
+          description?: string
+          duration?: number
+          id?: string
+          name?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      supplements: {
+        Row: {
+          created_at: string | null
+          description: string
+          dosage: string
+          frequency: string
+          id: string
+          name: string
+          program_id: string
+          time_of_day: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          dosage: string
+          frequency: string
+          id?: string
+          name: string
+          program_id: string
+          time_of_day?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          dosage?: string
+          frequency?: string
+          id?: string
+          name?: string
+          program_id?: string
+          time_of_day?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplements_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

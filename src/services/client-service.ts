@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Client } from '@/types';
+import { Client, mapDbClientToClient, mapClientToDbClient } from '@/types';
+import { ClientRow } from '@/types/database';
 import { toast } from 'sonner';
 
 export const ClientService = {
@@ -15,7 +16,7 @@ export const ClientService = {
 
       if (error) throw error;
       
-      return data as Client[];
+      return (data as ClientRow[]).map(mapDbClientToClient);
     } catch (error) {
       console.error('Error fetching clinic clients:', error);
       toast.error('Failed to fetch client list. Please check your connection.');
@@ -34,7 +35,7 @@ export const ClientService = {
 
       if (error) throw error;
       
-      return data as Client;
+      return mapDbClientToClient(data as ClientRow);
     } catch (error) {
       console.error('Error fetching client details:', error);
       toast.error('Failed to fetch client details. Please try again later.');
@@ -47,15 +48,17 @@ export const ClientService = {
   // Create a new client
   async createClient(client: Omit<Client, 'id'>): Promise<Client> {
     try {
+      const dbClient = mapClientToDbClient(client);
+      
       const { data, error } = await supabase
         .from('clients')
-        .insert([client])
+        .insert([dbClient])
         .select()
         .single();
 
       if (error) throw error;
       
-      return data as Client;
+      return mapDbClientToClient(data as ClientRow);
     } catch (error) {
       console.error('Error creating client:', error);
       throw error;
@@ -65,16 +68,30 @@ export const ClientService = {
   // Update an existing client
   async updateClient(clientId: string, updates: Partial<Client>): Promise<Client> {
     try {
+      // Convert any client fields to DB format
+      const dbUpdates: Partial<ClientRow> = {};
+      
+      if (updates.name) dbUpdates.name = updates.name;
+      if (updates.email) dbUpdates.email = updates.email;
+      if ('phone' in updates) dbUpdates.phone = updates.phone || null;
+      if ('programId' in updates) dbUpdates.program_id = updates.programId || null;
+      if (updates.startDate) dbUpdates.start_date = updates.startDate;
+      if ('lastCheckIn' in updates) dbUpdates.last_check_in = updates.lastCheckIn || null;
+      if ('notes' in updates) dbUpdates.notes = updates.notes || null;
+      if ('profileImage' in updates) dbUpdates.profile_image = updates.profileImage || null;
+      if (updates.clinicId) dbUpdates.clinic_id = updates.clinicId;
+      if ('userId' in updates) dbUpdates.user_id = updates.userId || null;
+      
       const { data, error } = await supabase
         .from('clients')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', clientId)
         .select()
         .single();
 
       if (error) throw error;
       
-      return data as Client;
+      return mapDbClientToClient(data as ClientRow);
     } catch (error) {
       console.error('Error updating client:', error);
       throw error;
