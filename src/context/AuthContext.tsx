@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -44,6 +45,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching user profile for ID:', userId);
+
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -56,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (profileData) {
+        console.log('Profile data retrieved:', profileData);
         return {
           id: profileData.id,
           name: profileData.full_name,
@@ -65,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
+      console.warn('No profile data found for user ID:', userId);
       return null;
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
@@ -77,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       try {
+        console.log('Checking initial session');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -84,16 +90,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         if (session?.user) {
+          console.log('Session found, user authenticated');
           setSupabaseUser(session.user);
           
           const userData = await fetchUserProfile(session.user.id);
           
           if (userData) {
+            console.log('User data retrieved and set');
             setUser(userData);
           } else {
+            console.warn('No user data found, signing out');
             await supabase.auth.signOut();
             setSupabaseUser(null);
           }
+        } else {
+          console.log('No active session found');
         }
       } catch (error) {
         console.error('Error checking auth session:', error);
@@ -110,19 +121,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initialSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+      
       if (event === 'SIGNED_IN' && session?.user) {
+        console.log('User signed in, getting profile data');
         setSupabaseUser(session.user);
         
         const userData = await fetchUserProfile(session.user.id);
         
         if (userData) {
+          console.log('Setting user data after sign in');
           setUser(userData);
+        } else {
+          console.warn('No profile found after sign in');
         }
       } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
         setUser(null);
         setSupabaseUser(null);
         navigate('/login');
       } else if (event === 'USER_UPDATED' && session?.user) {
+        console.log('User updated');
         setSupabaseUser(session.user);
         
         const userData = await fetchUserProfile(session.user.id);
@@ -142,19 +161,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
+      console.log('Attempting login with email:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
+        console.error('Login error details:', error);
         throw error;
       }
       
       if (!data.user) {
+        console.error('No user returned from login');
         throw new Error('No user returned from login');
       }
       
+      console.log('Login successful');
       return Promise.resolve();
     } catch (error: any) {
       console.error('Login error:', error);
@@ -171,6 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      console.log('Logging out user');
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);

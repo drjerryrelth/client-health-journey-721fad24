@@ -66,8 +66,9 @@ const LoginForm = () => {
     
     try {
       let email = '';
-      let password = 'password123'; // Demo password
+      const password = 'password123'; // Demo password
       
+      // Use the correct demo accounts that exist in your Supabase instance
       switch (type) {
         case 'admin':
           email = 'admin@example.com';
@@ -80,6 +81,8 @@ const LoginForm = () => {
           break;
       }
       
+      console.log(`Attempting demo login as ${type} with email: ${email}`);
+      
       await login(email, password);
       
       toast({
@@ -89,6 +92,7 @@ const LoginForm = () => {
       
       // Navigation will be handled by the auth state listener
     } catch (error) {
+      console.error('Demo login error:', error);
       toast({
         title: 'Login failed',
         description: 'An error occurred during demo login',
