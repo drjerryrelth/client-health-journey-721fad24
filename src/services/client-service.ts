@@ -1,11 +1,17 @@
-
 import supabase from '@/lib/supabase';
 import { Client } from '@/types';
+import { toast } from 'sonner';
 
 export const ClientService = {
   // Fetch all clients for a specific clinic
   async getClinicClients(clinicId: string): Promise<Client[]> {
     try {
+      // Check if using development credentials
+      if (!import.meta.env.VITE_SUPABASE_URL) {
+        console.warn('Using development Supabase setup - returning mock data');
+        return mockClients;
+      }
+      
       const { data, error } = await supabase
         .from('clients')
         .select('*')
@@ -17,13 +23,21 @@ export const ClientService = {
       return data as Client[];
     } catch (error) {
       console.error('Error fetching clinic clients:', error);
-      throw error;
+      toast.error('Failed to fetch client list. Please check your connection.');
+      return [];
     }
   },
   
   // Fetch a specific client by ID
   async getClientById(clientId: string): Promise<Client | null> {
     try {
+      // Check if using development credentials
+      if (!import.meta.env.VITE_SUPABASE_URL) {
+        console.warn('Using development Supabase setup - returning mock data');
+        const client = mockClients.find(c => c.id === clientId);
+        return client || null;
+      }
+      
       const { data, error } = await supabase
         .from('clients')
         .select('*')
@@ -35,7 +49,8 @@ export const ClientService = {
       return data as Client;
     } catch (error) {
       console.error('Error fetching client details:', error);
-      throw error;
+      toast.error('Failed to fetch client details. Please try again later.');
+      return null;
     }
   },
   
@@ -91,5 +106,32 @@ export const ClientService = {
     }
   }
 };
+
+// Mock data for development when Supabase is not configured
+const mockClients: Client[] = [
+  {
+    id: '1',
+    userId: 'user-1',
+    name: 'Jane Smith',
+    email: 'jane@example.com',
+    phone: '555-123-4567',
+    startDate: '2023-01-15',
+    lastCheckIn: '2023-05-10',
+    notes: 'Regular client with good progress',
+    clinicId: 'clinic-1'
+  },
+  {
+    id: '2',
+    userId: 'user-2',
+    name: 'Michael Johnson',
+    email: 'michael@example.com',
+    phone: '555-987-6543',
+    programId: 'program-1',
+    startDate: '2023-02-20',
+    lastCheckIn: '2023-05-12',
+    notes: 'Following keto program',
+    clinicId: 'clinic-1'
+  }
+];
 
 export default ClientService;
