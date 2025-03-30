@@ -4,7 +4,7 @@ import { useAuth } from '@/context/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Activity, Calendar, Building, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import CoachList from '@/components/coaches/CoachList';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,7 +19,7 @@ const AdminDashboard = () => {
       title: 'Total Coaches', 
       value: 8, 
       icon: <Users className="text-primary-500" size={24} />,
-      path: '/coaches'
+      path: '/clinics'  // Changed to go to clinics since coaches are now under clinics
     },
     { 
       title: 'Total Clients', 
@@ -45,8 +45,8 @@ const AdminDashboard = () => {
     navigate(path);
   };
   
-  const handleManageCoaches = () => {
-    navigate("/coaches");
+  const handleManageClinics = () => {
+    navigate("/clinics");
   };
   
   const handleViewAllActivities = () => {
@@ -87,13 +87,56 @@ const AdminDashboard = () => {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-lg">Active Coaches</CardTitle>
-              <Button onClick={handleManageCoaches} variant="outline" size="sm">
-                Manage Coaches
+              <CardTitle className="text-lg">Active Clinics</CardTitle>
+              <Button onClick={handleManageClinics} variant="outline" size="sm">
+                Manage Clinics
               </Button>
             </CardHeader>
             <CardContent>
-              <CoachList limit={5} />
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b text-sm">
+                      <th className="text-left font-medium py-2">Clinic</th>
+                      <th className="text-left font-medium py-2">Coaches</th>
+                      <th className="text-left font-medium py-2">Clients</th>
+                      <th className="text-left font-medium py-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b hover:bg-gray-50">
+                      <td className="py-3">Wellness Center</td>
+                      <td className="py-3">4</td>
+                      <td className="py-3">18</td>
+                      <td className="py-3">
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                          Active
+                        </span>
+                      </td>
+                    </tr>
+                    <tr className="border-b hover:bg-gray-50">
+                      <td className="py-3">Practice Naturals</td>
+                      <td className="py-3">3</td>
+                      <td className="py-3">12</td>
+                      <td className="py-3">
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                          Active
+                        </span>
+                      </td>
+                    </tr>
+                    <tr className="border-b hover:bg-gray-50">
+                      <td className="py-3">Health Partners</td>
+                      <td className="py-3">2</td>
+                      <td className="py-3">9</td>
+                      <td className="py-3">
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                          Active
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
         </div>

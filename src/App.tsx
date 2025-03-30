@@ -18,7 +18,6 @@ import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 
 // Admin Pages
-import CoachesPage from "./pages/admin/CoachesPage";
 import ClientsPage from "./pages/admin/ClientsPage";
 import ClinicsPage from "./pages/admin/ClinicsPage";
 import CheckInsPage from "./pages/admin/CheckInsPage";
@@ -54,7 +53,6 @@ const App = () => (
             {/* Admin routes */}
             <Route element={<MainLayout requiredRoles={['admin']} />}>
               <Route path="/dashboard" element={<AdminDashboard />} />
-              <Route path="/coaches" element={<CoachesPage />} />
               <Route path="/clients" element={<ClientsPage />} />
               <Route path="/clinics" element={<ClinicsPage />} />
               <Route path="/programs" element={<ProgramsPage />} />

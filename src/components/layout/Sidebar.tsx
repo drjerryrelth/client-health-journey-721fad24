@@ -29,10 +29,10 @@ const Sidebar = () => {
 
   const adminLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
-    { name: 'Coaches', path: '/coaches', icon: <Users size={20} /> },
-    { name: 'Clients', path: '/clients', icon: <User size={20} /> },
     { name: 'Clinics', path: '/clinics', icon: <Building size={20} /> },
+    { name: 'Clients', path: '/clients', icon: <User size={20} /> },
     { name: 'Programs', path: '/programs', icon: <List size={20} /> },
+    { name: 'Check-ins', path: '/check-ins', icon: <Calendar size={20} /> },
     { name: 'Reports', path: '/reports', icon: <FileText size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
