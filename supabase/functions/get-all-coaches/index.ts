@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    if (!coaches) {
+    if (!coaches || coaches.length === 0) {
       console.log('No coaches found in the database');
       return new Response(
         JSON.stringify([]),
@@ -104,8 +104,10 @@ Deno.serve(async (req) => {
       )
     }
 
+    console.log(`Found ${coaches.length} coaches across all clinics`);
+    
     // For each coach, count their clients
-    console.log(`Found ${coaches.length} coaches, calculating client counts...`);
+    console.log(`Calculating client counts for ${coaches.length} coaches...`);
     
     const coachesWithClientCount = await Promise.all(coaches.map(async (coach) => {
       console.log(`Calculating client count for coach ${coach.id}`);
@@ -118,14 +120,18 @@ Deno.serve(async (req) => {
         console.error(`Error counting clients for coach ${coach.id}:`, countError);
         return {
           ...coach,
-          client_count: 0
+          client_count: 0,
+          // Ensure status is 'active' or 'inactive'
+          status: coach.status === 'active' || coach.status === 'inactive' ? coach.status : 'inactive'
         }
       }
 
       console.log(`Coach ${coach.id} has ${count || 0} clients`);
       return {
         ...coach,
-        client_count: count || 0
+        client_count: count || 0,
+        // Ensure status is 'active' or 'inactive'
+        status: coach.status === 'active' || coach.status === 'inactive' ? coach.status : 'inactive'
       }
     }))
 
