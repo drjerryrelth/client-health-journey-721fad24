@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -31,6 +32,14 @@ export const ClinicService = {
   // Fetch all clinics
   async getClinics(): Promise<Clinic[]> {
     try {
+      // First check if user is authenticated
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        console.error('User not authenticated');
+        toast.error('You must be logged in to view clinics');
+        return getMockClinics(); // Fallback to mock data
+      }
+
       const { data, error } = await supabase
         .from('clinics')
         .select('*')
@@ -76,6 +85,14 @@ export const ClinicService = {
   // Get a single clinic by ID
   async getClinic(id: string): Promise<Clinic | null> {
     try {
+      // First check if user is authenticated
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        console.error('User not authenticated');
+        toast.error('You must be logged in to view clinic details');
+        return null;
+      }
+      
       const { data, error } = await supabase
         .from('clinics')
         .select('*')
@@ -149,6 +166,25 @@ export const ClinicService = {
         toast.error('You must be logged in to add a clinic');
         return null;
       }
+
+      // Verify user is admin by checking profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', sessionData.session.user.id)
+        .single();
+
+      if (profileError || !profileData) {
+        console.error('Error getting user profile:', profileError);
+        toast.error('Failed to verify user permissions');
+        return null;
+      }
+
+      if (profileData.role !== 'admin') {
+        console.error('User is not an admin');
+        toast.error('You must be an admin to add a clinic');
+        return null;
+      }
       
       const { data, error } = await supabase
         .from('clinics')
@@ -214,6 +250,14 @@ export const ClinicService = {
   // Update a clinic
   async updateClinic(id: string, updates: Partial<Omit<Clinic, 'id' | 'createdAt'>>): Promise<Clinic | null> {
     try {
+      // Check if user is logged in
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        console.error('User not authenticated');
+        toast.error('You must be logged in to update a clinic');
+        return null;
+      }
+
       const dbUpdates: any = { ...updates };
       
       // Convert camelCase properties to snake_case for the database
@@ -273,7 +317,10 @@ export const ClinicService = {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating clinic:', error);
+        throw error;
+      }
       
       return {
         id: data.id,
@@ -308,12 +355,24 @@ export const ClinicService = {
   // Delete a clinic
   async deleteClinic(id: string): Promise<boolean> {
     try {
+      // Check if user is logged in
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        console.error('User not authenticated');
+        toast.error('You must be logged in to delete a clinic');
+        return false;
+      }
+      
       const { error } = await supabase
         .from('clinics')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting clinic:', error);
+        throw error;
+      }
+      
       return true;
     } catch (error) {
       console.error('Error deleting clinic:', error);
