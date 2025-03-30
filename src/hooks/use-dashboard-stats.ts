@@ -55,7 +55,9 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
       throw clinicsError;
     }
     
-    console.log('[DashboardStats] Clinics fetched:', clinicsData?.length || 0);
+    // Make sure clinicsData is an array
+    const clinics = Array.isArray(clinicsData) ? clinicsData : [];
+    console.log('[DashboardStats] Clinics fetched:', clinics.length || 0);
     
     // Get coach count using our specialized service with direct database access
     let coachCount = 0;
@@ -64,7 +66,7 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
       console.log('[DashboardStats] Coach count:', coachCount);
     } catch (coachCountError) {
       console.error('[DashboardStats] Error fetching coach count:', coachCountError);
-      // Continue execution - don't throw here to allow other stats to load
+      // We'll continue with coachCount as 0 rather than failing completely
     }
     
     // Calculate the date 7 days ago
@@ -80,7 +82,7 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
       
     if (activitiesError) {
       console.error('[DashboardStats] Error fetching activities count:', activitiesError);
-      // Continue execution - don't throw
+      // Continue execution - don't throw here
     }
     
     console.log('[DashboardStats] Activities count:', activitiesCount || 0);
@@ -88,8 +90,8 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
     // Fetch clinic summary data with coach and client counts
     const clinicsSummary = [];
     
-    if (clinicsData && clinicsData.length > 0) {
-      for (const clinic of clinicsData) {
+    if (clinics && clinics.length > 0) {
+      for (const clinic of clinics) {
         // Get coach count for this clinic
         const { count: clinicCoachCount, error: clinicCoachError } = await supabase
           .from('coaches')
@@ -98,7 +100,7 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
           
         if (clinicCoachError) {
           console.error(`[DashboardStats] Error fetching coaches for clinic ${clinic.id}:`, clinicCoachError);
-          // Continue to next clinic
+          // Continue to next clinic without throwing
           continue;
         }
         
@@ -110,7 +112,7 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
           
         if (clinicClientError) {
           console.error(`[DashboardStats] Error fetching clients for clinic ${clinic.id}:`, clinicClientError);
-          // Continue to next clinic
+          // Continue to next clinic without throwing
           continue;
         }
         
@@ -124,10 +126,11 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
       }
     }
     
-    console.log('[DashboardStats] Clinics summary:', clinicsSummary);
+    console.log('[DashboardStats] Clinics summary prepared:', clinicsSummary);
     
+    // Return the complete dashboard stats object
     return {
-      activeClinicCount: clinicsData?.length || 0,
+      activeClinicCount: clinics?.length || 0,
       totalCoachCount: coachCount,
       weeklyActivitiesCount: activitiesCount || 0,
       clinicsSummary
@@ -150,78 +153,100 @@ async function fetchRecentActivities(limit: number = 5): Promise<ActivityItem[]>
     }
     
     console.log('[RecentActivities] Authentication verified, fetching data');
-    
-    // Fetch recent check-ins as activities
-    const { data: checkInsData, error: checkInsError } = await supabase
-      .from('check_ins')
-      .select('id, client_id, created_at')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-      
-    if (checkInsError) {
-      console.error('[RecentActivities] Error fetching check-ins:', checkInsError);
-      throw checkInsError;
-    }
-    
-    // Fetch client names for the check-ins
     const activities: ActivityItem[] = [];
     
-    if (checkInsData && checkInsData.length > 0) {
-      for (const checkIn of checkInsData) {
-        // Get client name
-        const { data: clientData, error: clientError } = await supabase
-          .from('clients')
-          .select('name, clinic_id')
-          .eq('id', checkIn.client_id)
-          .maybeSingle();
-          
-        if (clientError) {
-          console.error(`[RecentActivities] Error fetching client for check-in ${checkIn.id}:`, clientError);
-          continue;
-        }
+    // Fetch recent check-ins as activities
+    try {
+      const { data: checkInsData, error: checkInsError } = await supabase
+        .from('check_ins')
+        .select('id, client_id, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit);
         
-        if (clientData) {
-          const timestamp = new Date(checkIn.created_at);
-          
-          activities.push({
-            id: checkIn.id,
-            type: 'check_in',
-            description: `${clientData.name} submitted a check-in`,
-            timestamp: timestamp.toLocaleString(),
-            clinicId: clientData.clinic_id
-          });
+      if (checkInsError) {
+        console.error('[RecentActivities] Error fetching check-ins:', checkInsError);
+        // We'll continue processing other activity types
+      } else if (checkInsData && checkInsData.length > 0) {
+        for (const checkIn of checkInsData) {
+          try {
+            // Get client name
+            const { data: clientData, error: clientError } = await supabase
+              .from('clients')
+              .select('name, clinic_id')
+              .eq('id', checkIn.client_id)
+              .maybeSingle();
+              
+            if (clientError) {
+              console.error(`[RecentActivities] Error fetching client for check-in ${checkIn.id}:`, clientError);
+              continue;
+            }
+            
+            if (clientData) {
+              const timestamp = new Date(checkIn.created_at);
+              
+              activities.push({
+                id: checkIn.id,
+                type: 'check_in',
+                description: `${clientData.name} submitted a check-in`,
+                timestamp: timestamp.toLocaleString(),
+                clinicId: clientData.clinic_id
+              });
+            }
+          } catch (clientFetchError) {
+            console.error(`[RecentActivities] Unexpected error with check-in ${checkIn.id}:`, clientFetchError);
+          }
         }
       }
+    } catch (checkInsProcessError) {
+      console.error('[RecentActivities] Error processing check-ins:', checkInsProcessError);
     }
     
     // Fetch recent coaches added as activities
-    const { data: coachesData, error: coachesError } = await supabase
-      .from('coaches')
-      .select('id, name, clinic_id, created_at')
-      .order('created_at', { ascending: false })
-      .limit(Math.floor(limit / 2));  // Use half of the limit for coaches
-      
-    if (coachesError) {
-      console.error('[RecentActivities] Error fetching coaches:', coachesError);
-    } else if (coachesData) {
-      for (const coach of coachesData) {
-        // Get clinic name
-        const { data: clinicData, error: clinicError } = await supabase
-          .from('clinics')
-          .select('name')
-          .eq('id', coach.clinic_id)
-          .maybeSingle();
-          
-        const timestamp = new Date(coach.created_at);
+    try {
+      const { data: coachesData, error: coachesError } = await supabase
+        .from('coaches')
+        .select('id, name, clinic_id, created_at')
+        .order('created_at', { ascending: false })
+        .limit(Math.floor(limit / 2));  // Use half of the limit for coaches
         
-        activities.push({
-          id: coach.id,
-          type: 'coach_added',
-          description: `${coach.name} was added as a coach${clinicData ? ` to ${clinicData.name}` : ''}`,
-          timestamp: timestamp.toLocaleString(),
-          clinicId: coach.clinic_id
-        });
+      if (coachesError) {
+        console.error('[RecentActivities] Error fetching coaches:', coachesError);
+      } else if (coachesData && coachesData.length > 0) {
+        for (const coach of coachesData) {
+          try {
+            // Get clinic name
+            const { data: clinicData, error: clinicError } = await supabase
+              .from('clinics')
+              .select('name')
+              .eq('id', coach.clinic_id)
+              .maybeSingle();
+              
+            const timestamp = new Date(coach.created_at);
+            
+            activities.push({
+              id: coach.id,
+              type: 'coach_added',
+              description: `${coach.name} was added as a coach${clinicData ? ` to ${clinicData.name}` : ''}`,
+              timestamp: timestamp.toLocaleString(),
+              clinicId: coach.clinic_id
+            });
+          } catch (clinicFetchError) {
+            console.error(`[RecentActivities] Error fetching clinic for coach ${coach.id}:`, clinicFetchError);
+            
+            // Still add the activity, just without the clinic name
+            const timestamp = new Date(coach.created_at);
+            activities.push({
+              id: coach.id,
+              type: 'coach_added',
+              description: `${coach.name} was added as a coach`,
+              timestamp: timestamp.toLocaleString(),
+              clinicId: coach.clinic_id
+            });
+          }
+        }
       }
+    } catch (coachesProcessError) {
+      console.error('[RecentActivities] Error processing coaches:', coachesProcessError);
     }
     
     // Sort all activities by timestamp (newest first)
@@ -236,7 +261,10 @@ async function fetchRecentActivities(limit: number = 5): Promise<ActivityItem[]>
     
   } catch (error) {
     console.error('[RecentActivities] Error fetching recent activities:', error);
-    throw error;
+    // Instead of throwing and causing the entire request to fail,
+    // we'll return an empty array with a warning
+    toast.error("Could not load recent activities");
+    return [];
   }
 }
 
@@ -246,7 +274,8 @@ export function useDashboardStats() {
     queryKey: ['dashboard-stats'],
     queryFn: fetchDashboardStats,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: 3 // Increase retries
+    retry: 2, // Retry twice, then fail
+    refetchOnWindowFocus: false // Don't refetch when window gets focus
   });
 }
 
@@ -256,6 +285,7 @@ export function useRecentActivities(limit: number = 5) {
     queryKey: ['recent-activities', limit],
     queryFn: () => fetchRecentActivities(limit),
     staleTime: 1000 * 60 * 2, // 2 minutes
-    retry: 3 // Increase retries
+    retry: 2, // Retry twice, then fail
+    refetchOnWindowFocus: false // Don't refetch when window gets focus
   });
 }

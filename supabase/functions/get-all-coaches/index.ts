@@ -48,100 +48,105 @@ Deno.serve(async (req) => {
 
     console.log(`User making request: ${user.id}`);
     
-    // Instead of checking the profile table (which might not have entries for all users),
-    // we'll allow the request to proceed and let the RLS policies handle access control.
-    // This is a temporary fix - in a production environment, you would want to properly check roles.
+    // Bypass admin check for now and let RLS policies handle access control
     console.log('Admin check bypassed for debugging, fetching all coaches');
 
-    // Get all coaches with client count
-    const { data: coaches, error: coachesError } = await supabaseClient
-      .from('coaches')
-      .select(`
-        id, 
-        name, 
-        email, 
-        phone, 
-        status, 
-        clinic_id,
-        created_at
-      `)
-      .order('created_at', { ascending: false })
+    try {
+      // Get all coaches with client count
+      const { data: coaches, error: coachesError } = await supabaseClient
+        .from('coaches')
+        .select(`
+          id, 
+          name, 
+          email, 
+          phone, 
+          status, 
+          clinic_id,
+          created_at
+        `)
+        .order('created_at', { ascending: false })
 
-    if (coachesError) {
-      console.error('Error fetching coaches:', coachesError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch coaches', details: coachesError }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
+      if (coachesError) {
+        console.error('Error fetching coaches:', coachesError);
+        throw coachesError;
+      }
 
-    if (!coaches || coaches.length === 0) {
-      console.log('No coaches found in the database');
-      return new Response(
-        JSON.stringify([]),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      )
-    }
+      if (!coaches || coaches.length === 0) {
+        console.log('No coaches found in the database');
+        return new Response(
+          JSON.stringify([]),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        )
+      }
 
-    console.log(`Found ${coaches.length} coaches across all clinics`);
-    
-    // For each coach, count their clients
-    console.log(`Calculating client counts for ${coaches.length} coaches...`);
-    
-    const coachesWithClientCount = await Promise.all(coaches.map(async (coach) => {
-      console.log(`Calculating client count for coach ${coach.id}`);
-      const { count, error: countError } = await supabaseClient
-        .from('clients')
-        .select('id', { count: 'exact', head: true })
-        .eq('coach_id', coach.id)
+      console.log(`Found ${coaches.length} coaches across all clinics`);
       
-      if (countError) {
-        console.error(`Error counting clients for coach ${coach.id}:`, countError);
-        // Ensure status is either 'active' or 'inactive'
-        const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
-          ? coach.status as "active" | "inactive"
-          : "inactive";
+      // For each coach, count their clients
+      console.log(`Calculating client counts for ${coaches.length} coaches...`);
+      
+      const coachesWithClientCount = await Promise.all(coaches.map(async (coach) => {
+        try {
+          console.log(`Calculating client count for coach ${coach.id}`);
+          const { count, error: countError } = await supabaseClient
+            .from('clients')
+            .select('id', { count: 'exact', head: true })
+            .eq('coach_id', coach.id)
           
-        return {
-          ...coach,
-          client_count: 0,
-          status: validStatus
+          if (countError) {
+            console.error(`Error counting clients for coach ${coach.id}:`, countError);
+            throw countError;
+          }
+          
+          // Ensure status is either 'active' or 'inactive'
+          const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
+            ? coach.status as "active" | "inactive"
+            : "inactive";
+            
+          return {
+            ...coach,
+            client_count: count || 0,
+            status: validStatus
+          }
+        } catch (error) {
+          console.error(`Error processing coach ${coach.id}:`, error);
+          // Return the coach with default values rather than failing the entire request
+          return {
+            ...coach,
+            client_count: 0,
+            status: (coach.status === 'active' || coach.status === 'inactive') 
+              ? coach.status as "active" | "inactive" 
+              : "inactive" as const
+          }
         }
-      }
+      }))
 
-      console.log(`Coach ${coach.id} has ${count || 0} clients`);
-      // Ensure status is either 'active' or 'inactive'
-      const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
-        ? coach.status as "active" | "inactive"
-        : "inactive";
-        
-      return {
-        ...coach,
-        client_count: count || 0,
-        status: validStatus
-      }
-    }))
+      console.log(`Successfully compiled data for ${coachesWithClientCount.length} coaches`);
+      console.log('Returning data to client');
 
-    console.log(`Successfully compiled data for ${coachesWithClientCount.length} coaches`);
-    console.log('Returning data to client');
-
-    return new Response(
-      JSON.stringify(coachesWithClientCount),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }, 
-        status: 200 
-      }
-    )
+      return new Response(
+        JSON.stringify(coachesWithClientCount),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }, 
+          status: 200 
+        }
+      )
+    } catch (dataError) {
+      console.error('Error fetching or processing coaches data:', dataError);
+      throw dataError;
+    }
   } catch (error) {
     console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({ 
+        error: 'Internal server error', 
+        details: error instanceof Error ? error.message : String(error)
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
