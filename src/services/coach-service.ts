@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { checkAuthentication } from './clinics/auth-helper';
@@ -26,36 +25,33 @@ export const CoachService = {
         throw new Error('Authentication required to fetch coaches');
       }
       
-      const { data, error } = await supabase
-        .from('coaches')
-        .select(`
-          id, 
-          name, 
-          email, 
-          phone, 
-          status, 
-          clinic_id,
-          clients:clients(id)
-        `)
-        .eq('clinic_id', clinicId)
-        .order('name');
+      // Use RPC call to bypass RLS issues
+      const { data, error } = await supabase.rpc(
+        'get_clinic_coaches' as any, 
+        { clinic_id_param: clinicId }
+      );
 
       if (error) {
         console.error('Error fetching coaches:', error);
         throw error;
       }
       
-      console.log('Fetched coaches data:', data);
+      console.log('Fetched coaches data from RPC:', data);
+      
+      if (!Array.isArray(data)) {
+        console.error('Invalid data format, expected array:', data);
+        throw new Error('Invalid data format returned from server');
+      }
       
       // Transform and return the coaches data
-      return (data || []).map(coach => ({
+      return data.map(coach => ({
         id: coach.id,
         name: coach.name,
         email: coach.email,
         phone: coach.phone,
-        status: coach.status as 'active' | 'inactive', // Cast to union type
+        status: coach.status as 'active' | 'inactive',
         clinicId: coach.clinic_id,
-        clients: Array.isArray(coach.clients) ? coach.clients.length : 0
+        clients: coach.client_count || 0
       }));
     } catch (error) {
       console.error('Error fetching clinic coaches:', error);
