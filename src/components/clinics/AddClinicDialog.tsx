@@ -94,7 +94,8 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
         billingState: values.billingState || null,
         billingZip: values.billingZip || null,
         paymentMethod: values.paymentMethod || null,
-        subscriptionTier: values.subscriptionTier || null
+        subscriptionTier: values.subscriptionTier || null,
+        subscriptionStatus: 'active' // Set default status to active
       };
       
       console.log('Submitting clinic data:', clinicData);

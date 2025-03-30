@@ -33,12 +33,21 @@ export async function addClinic(clinic: {
     const session = await checkAuthentication();
     if (!session) {
       console.log('Authentication failed, cannot add clinic');
+      toast.error('You must be logged in to add a clinic');
       return null;
     }
 
     console.log('User authenticated, proceeding with clinic creation');
     
-    const dbClinic = mapClinicToDbClinic(clinic);
+    // Ensure status is set to active if not provided
+    const clinicData = {
+      ...clinic,
+      subscriptionStatus: clinic.subscriptionStatus || 'active'
+    };
+    
+    const dbClinic = mapClinicToDbClinic(clinicData);
+    console.log('Mapped DB clinic data:', dbClinic);
+    
     const { data, error } = await supabase
       .from('clinics')
       .insert(dbClinic)
