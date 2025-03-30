@@ -21,12 +21,18 @@ const ClinicsPage = () => {
   const [showAddCoachDialog, setShowAddCoachDialog] = useState(false);
   const [showEditCoachDialog, setShowEditCoachDialog] = useState(false);
   const [showReassignDialog, setShowReassignDialog] = useState(false);
+  const [showAddClinicDialog, setShowAddClinicDialog] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [replacementCoachId, setReplacementCoachId] = useState<string>('');
   
   const [coachName, setCoachName] = useState('');
   const [coachEmail, setCoachEmail] = useState('');
   const [coachPhone, setCoachPhone] = useState('');
+  
+  const [clinicName, setClinicName] = useState('');
+  const [clinicLocation, setClinicLocation] = useState('');
+  const [clinicEmail, setClinicEmail] = useState('');
+  const [clinicPhone, setClinicPhone] = useState('');
 
   const clinics = [
     { 
@@ -56,10 +62,29 @@ const ClinicsPage = () => {
   ];
 
   const handleAddClinic = () => {
+    setShowAddClinicDialog(true);
+  };
+
+  const handleSubmitClinic = () => {
+    if (!clinicName || !clinicLocation) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide clinic name and location.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     toast({
-      title: "Coming Soon",
-      description: "The Add Clinic feature is under development",
+      title: "Clinic Added",
+      description: `${clinicName} has been added successfully.`
     });
+    
+    setClinicName('');
+    setClinicLocation('');
+    setClinicEmail('');
+    setClinicPhone('');
+    setShowAddClinicDialog(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -458,6 +483,75 @@ const ClinicsPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showAddClinicDialog} onOpenChange={setShowAddClinicDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Clinic</DialogTitle>
+            <DialogDescription>
+              Add a new clinic to your organization. You'll be able to manage its coaches and programs later.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="clinic-name" className="text-right">
+                Name
+              </Label>
+              <Input 
+                id="clinic-name" 
+                value={clinicName} 
+                onChange={(e) => setClinicName(e.target.value)} 
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="location" className="text-right">
+                Location
+              </Label>
+              <Input 
+                id="location" 
+                value={clinicLocation} 
+                onChange={(e) => setClinicLocation(e.target.value)} 
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="clinic-email" className="text-right">
+                Email
+              </Label>
+              <Input 
+                id="clinic-email" 
+                type="email" 
+                value={clinicEmail} 
+                onChange={(e) => setClinicEmail(e.target.value)} 
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="clinic-phone" className="text-right">
+                Phone
+              </Label>
+              <Input 
+                id="clinic-phone" 
+                type="tel" 
+                value={clinicPhone} 
+                onChange={(e) => setClinicPhone(e.target.value)} 
+                className="col-span-3" 
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowAddClinicDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSubmitClinic}>
+              Add Clinic
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
