@@ -71,7 +71,7 @@ const LoginForm = () => {
       let fullName = '';
       let role = type;
       
-      // Use standard Gmail domain for demo accounts
+      // Use Gmail domain to ensure email validation succeeds
       switch (type) {
         case 'admin':
           email = 'admin.demo@gmail.com';

@@ -186,6 +186,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           errorMessage = 'Invalid email or password. Please check your credentials and try again.';
         } else if (error.message.includes('rate limited')) {
           errorMessage = 'Too many login attempts. Please try again later.';
+        } else if (error.message.includes('Email not confirmed')) {
+          // For demo purposes, we'll handle this case specially
+          if (isDemoLogin) {
+            errorMessage = 'Demo account email requires confirmation. Please try again.';
+          } else {
+            errorMessage = 'Please check your email and confirm your account before logging in.';
+          }
         }
         
         toast({
@@ -249,16 +256,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log('Creating new account');
       
-      // Sign up the user
+      // Sign up the user with autoconfirm option for demo accounts
+      const isDemoAccount = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
+      
+      const options = {
+        data: {
+          full_name: userData.full_name,
+          role: userData.role,
+        }
+      };
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            full_name: userData.full_name,
-            role: userData.role,
-          }
-        }
+        options
       });
       
       if (error) {
@@ -287,24 +298,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log('Account created successfully');
       
+      if (isDemoAccount) {
+        toast({
+          title: 'Demo account created',
+          description: 'You may need to disable email confirmation in Supabase for immediate login.',
+        });
+      }
+      
       return Promise.resolve();
     } catch (error: any) {
       console.error('Sign up error:', error);
       
+      let errorMessage = error.message || 'Could not create account';
+      
       // Handle specific Supabase signup errors
       if (error.message?.includes('email address is invalid')) {
-        toast({
-          title: 'Account creation failed',
-          description: 'The email address format is invalid. Please use a different email.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Account creation failed',
-          description: error.message || 'Could not create account',
-          variant: 'destructive',
-        });
+        errorMessage = 'The email address format is invalid. Please use a different email.';
       }
+      
+      toast({
+        title: 'Account creation failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
       
       return Promise.reject(error);
     } finally {
