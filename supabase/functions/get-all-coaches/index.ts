@@ -48,83 +48,90 @@ Deno.serve(async (req) => {
 
     console.log(`User making request: ${user.id}`);
     
-    // Bypass admin check for now and let RLS policies handle access control
-    console.log('Admin check bypassed for debugging, fetching all coaches');
+    console.log('Getting coaches with simplified query approach');
 
     try {
-      // Get all coaches with client count
+      // Simplified direct query to avoid recursion issues with RLS policies
       const { data: coaches, error: coachesError } = await supabaseClient
-        .from('coaches')
-        .select(`
-          id, 
-          name, 
-          email, 
-          phone, 
-          status, 
-          clinic_id,
-          created_at
-        `)
-        .order('created_at', { ascending: false })
+        .rpc('admin_get_all_coaches');
 
       if (coachesError) {
-        console.error('Error fetching coaches:', coachesError);
-        throw coachesError;
+        console.error('Error fetching coaches with RPC:', coachesError);
+        
+        // Fall back to simple direct query 
+        console.log('Falling back to direct query');
+        const { data: directData, error: directError } = await supabaseClient
+          .from('coaches')
+          .select('id, name, email, phone, status, clinic_id')
+          .order('created_at', { ascending: false });
+        
+        if (directError) {
+          console.error('Error with fallback query:', directError);
+          throw directError;
+        }
+        
+        if (!directData || directData.length === 0) {
+          console.log('No coaches found with direct query');
+          return new Response(
+            JSON.stringify([]),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+          );
+        }
+        
+        // Process each coach to add client counts
+        const coachesWithClientCount = [];
+        
+        for (const coach of directData) {
+          // Get client count
+          let clientCount = 0;
+          try {
+            const { count } = await supabaseClient
+              .from('clients')
+              .select('*', { count: 'exact', head: true })
+              .eq('coach_id', coach.id);
+              
+            clientCount = count || 0;
+          } catch (countErr) {
+            console.error(`Error counting clients for coach ${coach.id}:`, countErr);
+          }
+          
+          coachesWithClientCount.push({
+            ...coach,
+            client_count: clientCount,
+            // Ensure status is valid
+            status: (coach.status === 'active' || coach.status === 'inactive') 
+              ? coach.status 
+              : "inactive"
+          });
+        }
+        
+        return new Response(
+          JSON.stringify(coachesWithClientCount),
+          { 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }, 
+            status: 200 
+          }
+        );
       }
 
-      if (!coaches || coaches.length === 0) {
-        console.log('No coaches found in the database');
+      if (!coaches) {
+        console.log('No coaches found');
         return new Response(
           JSON.stringify([]),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
       }
 
-      console.log(`Found ${coaches.length} coaches across all clinics`);
-      
-      // For each coach, count their clients
-      console.log(`Calculating client counts for ${coaches.length} coaches...`);
-      
-      const coachesWithClientCount = await Promise.all(coaches.map(async (coach) => {
-        try {
-          console.log(`Calculating client count for coach ${coach.id}`);
-          const { count, error: countError } = await supabaseClient
-            .from('clients')
-            .select('id', { count: 'exact', head: true })
-            .eq('coach_id', coach.id)
-          
-          if (countError) {
-            console.error(`Error counting clients for coach ${coach.id}:`, countError);
-            throw countError;
-          }
-          
-          // Ensure status is either 'active' or 'inactive'
-          const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
-            ? coach.status as "active" | "inactive"
-            : "inactive";
-            
-          return {
-            ...coach,
-            client_count: count || 0,
-            status: validStatus
-          }
-        } catch (error) {
-          console.error(`Error processing coach ${coach.id}:`, error);
-          // Return the coach with default values rather than failing the entire request
-          return {
-            ...coach,
-            client_count: 0,
-            status: (coach.status === 'active' || coach.status === 'inactive') 
-              ? coach.status as "active" | "inactive" 
-              : "inactive" as const
-          }
-        }
-      }))
-
-      console.log(`Successfully compiled data for ${coachesWithClientCount.length} coaches`);
-      console.log('Returning data to client');
+      console.log(`Found ${Array.isArray(coaches) ? coaches.length : 'unknown number of'} coaches`);
 
       return new Response(
-        JSON.stringify(coachesWithClientCount),
+        JSON.stringify(coaches),
         { 
           headers: { 
             ...corsHeaders, 

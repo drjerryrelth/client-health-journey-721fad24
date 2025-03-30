@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Coach } from './types';
 import { toast } from 'sonner';
@@ -8,31 +9,23 @@ export async function getCoachCount(): Promise<number> {
   try {
     console.log('[AdminCoachService] Getting total coach count');
     
-    // Use a simple direct query with minimal complexity
-    const { count, error } = await supabase
+    // Use a simpler approach with direct count that avoids RLS recursion
+    const { data, error } = await supabase
       .from('coaches')
-      .select('*', { count: 'exact', head: true });
-    
-    if (error) {
-      console.error('[AdminCoachService] Direct query error:', error);
-      // Try a different approach - count rows by fetching IDs only
-      const { data, error: fetchError } = await supabase
-        .from('coaches')
-        .select('id');
-        
-      if (fetchError) {
-        console.error('[AdminCoachService] Fallback query also failed:', fetchError);
-        return 0; // Return 0 rather than failing
-      }
+      .select('id', { head: true, count: 'exact' })
+      .limit(1);
       
-      return data ? data.length : 0;
+    if (error) {
+      console.error('[AdminCoachService] Count query error:', error);
+      return 0; // Return 0 rather than failing
     }
     
-    console.log(`[AdminCoachService] Found ${count} coaches via direct query`);
-    return count || 0;
+    // Get count from metadata
+    const count = data?.count || 0;
+    console.log(`[AdminCoachService] Found ${count} coaches`);
+    return count;
   } catch (error) {
     console.error('[AdminCoachService] Failed to get coach count:', error);
-    // Return a placeholder value so the UI doesn't break
     return 0;
   }
 }
@@ -42,98 +35,76 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
   try {
     console.log('[AdminCoachService] Getting all coaches');
     
-    // First try direct query as it's simpler and more reliable
+    // Use a more direct and robust approach to avoid RLS recursion
     try {
+      // 1. Get coaches without complex joins or nested queries
       const { data: coachesData, error: coachesError } = await supabase
         .from('coaches')
-        .select(`
-          id,
-          name,
-          email,
-          phone,
-          status,
-          clinic_id
-        `);
+        .select('id, name, email, phone, status, clinic_id, created_at');
       
       if (coachesError) {
-        console.error('[AdminCoachService] Direct query error:', coachesError);
+        console.error('[AdminCoachService] Coaches query error:', coachesError);
         throw coachesError;
       }
       
       if (!coachesData || coachesData.length === 0) {
-        console.log('[AdminCoachService] No coaches found via direct query');
+        console.log('[AdminCoachService] No coaches found');
         return [];
       }
       
-      console.log(`[AdminCoachService] Found ${coachesData.length} coaches via direct query`);
+      console.log(`[AdminCoachService] Found ${coachesData.length} coaches`);
       
-      // Map and add client counts
-      const coachesWithClientCounts = await Promise.all(coachesData.map(async (coach) => {
-        const { count, error: countError } = await supabase
-          .from('clients')
-          .select('id', { count: 'exact', head: true })
-          .eq('coach_id', coach.id);
-        
-        // Ensure status is either 'active' or 'inactive'
-        const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
-          ? coach.status as 'active' | 'inactive' 
-          : 'inactive' as const;
+      // 2. Get client counts separately for each coach to avoid recursion
+      const coachesWithClientCounts: Coach[] = [];
+      
+      for (const coach of coachesData) {
+        try {
+          const { count, error: countError } = await supabase
+            .from('clients')
+            .select('*', { count: 'exact', head: true })
+            .eq('coach_id', coach.id);
+            
+          // Ensure status is either 'active' or 'inactive'
+          const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
+            ? coach.status as 'active' | 'inactive' 
+            : 'inactive' as const;
+            
+          coachesWithClientCounts.push({
+            id: coach.id,
+            name: coach.name,
+            email: coach.email,
+            phone: coach.phone || '',
+            status: validStatus,
+            clinicId: coach.clinic_id,
+            clients: countError ? 0 : (count || 0)
+          });
+        } catch (err) {
+          console.error(`[AdminCoachService] Error getting client count for coach ${coach.id}:`, err);
           
-        return {
-          id: coach.id,
-          name: coach.name,
-          email: coach.email,
-          phone: coach.phone || '',
-          status: validStatus,
-          clinicId: coach.clinic_id,
-          clients: countError ? 0 : (count || 0)
-        };
-      }));
+          // Still add the coach, just without clients count
+          coachesWithClientCounts.push({
+            id: coach.id,
+            name: coach.name,
+            email: coach.email,
+            phone: coach.phone || '',
+            status: (coach.status === 'active' || coach.status === 'inactive') 
+              ? coach.status as 'active' | 'inactive' 
+              : 'inactive' as const,
+            clinicId: coach.clinic_id,
+            clients: 0
+          });
+        }
+      }
       
       return coachesWithClientCounts;
+      
     } catch (directQueryError) {
-      console.error('[AdminCoachService] Direct query failed, trying edge function:', directQueryError);
+      console.error('[AdminCoachService] Direct query approach failed:', directQueryError);
       
-      // If direct query fails, try edge function as fallback
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log('[AdminCoachService] No session, returning mock data');
-        return getMockCoaches();
-      }
-      
-      const { data, error } = await supabase.functions.invoke('get-all-coaches', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-      
-      if (error) {
-        console.error('[AdminCoachService] Edge function error:', error);
-        throw error;
-      }
-      
-      if (!Array.isArray(data)) {
-        console.error('[AdminCoachService] Unexpected data format from edge function:', data);
-        throw new Error('Unexpected data format');
-      }
-      
-      // Map the data to our Coach type, ensuring status is valid
-      return data.map(coach => {
-        // Validate and convert the status field
-        const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
-          ? coach.status as 'active' | 'inactive' 
-          : 'inactive' as const;
-          
-        return {
-          id: coach.id,
-          name: coach.name,
-          email: coach.email,
-          phone: coach.phone || '',
-          status: validStatus,
-          clinicId: coach.clinic_id,
-          clients: coach.client_count || 0
-        };
-      });
+      // Fallback to mock data if everything else fails
+      console.log('[AdminCoachService] Using mock data as final fallback');
+      toast.error('Could not load coaches data. Using sample data instead.');
+      return getMockCoaches();
     }
   } catch (error) {
     console.error('[AdminCoachService] Failed to get all coaches:', error);

@@ -7,18 +7,18 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CoachService, Coach } from '@/services/coaches';
+import { CoachService } from '@/services/coaches';
 import { toast } from 'sonner';
 import ErrorDialog from '@/components/coaches/ErrorDialog';
 
 const CoachesPage = () => {
   const navigate = useNavigate();
   const { toast: uiToast } = useToast();
-  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [coaches, setCoaches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
-  const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
 
   const fetchCoaches = async () => {
@@ -28,8 +28,8 @@ const CoachesPage = () => {
       
       console.log(`[CoachesPage] Fetching all coaches (attempt: ${retryCount + 1})`);
       
-      // Fetch coaches from all clinics (admin view)
-      const allCoaches = await CoachService.getAllCoaches();
+      // Use the admin-specific coach service function to avoid RLS issues
+      const allCoaches = await CoachService.getAllCoachesForAdmin();
       
       console.log('[CoachesPage] Received coaches data:', allCoaches);
       
@@ -90,7 +90,7 @@ const CoachesPage = () => {
         <div className="flex items-center">
           <Button 
             variant="ghost" 
-            onClick={handleBackToClinics}
+            onClick={() => navigate("/clinics")}
             className="mr-2 flex items-center gap-1"
           >
             <ArrowLeft size={18} />
@@ -102,7 +102,10 @@ const CoachesPage = () => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={handleRefresh}
+          onClick={() => {
+            setRetryCount(prev => prev + 1);
+            fetchCoaches();
+          }}
           disabled={loading}
           className="flex items-center gap-1"
         >
@@ -136,7 +139,10 @@ const CoachesPage = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={handleRefresh}
+                    onClick={() => {
+                      setRetryCount(prev => prev + 1);
+                      fetchCoaches();
+                    }}
                     className="flex items-center gap-1"
                   >
                     <RefreshCw size={14} />
@@ -145,7 +151,7 @@ const CoachesPage = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleShowError}
+                    onClick={() => setErrorDialogOpen(true)}
                     className="flex items-center gap-1"
                   >
                     <AlertCircle size={14} />
