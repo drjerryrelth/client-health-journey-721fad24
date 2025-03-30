@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import { 
   Users, User, Calendar, Home, FileText, 
-  Activity, List, Settings, Weight, PlusCircle, Building
+  Activity, List, Settings, Weight, PlusCircle, Building, BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -27,12 +26,14 @@ const Sidebar = () => {
   const isCoach = hasRole('coach');
   const isClient = hasRole('client');
 
-  // Updated admin links to remove check-ins link
+  // Updated admin links with Resources link
   const adminLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Clinics', path: '/clinics', icon: <Building size={20} /> },
+    { name: 'Coaches', path: '/coaches', icon: <Users size={20} /> },
     { name: 'Programs', path: '/programs', icon: <List size={20} /> },
-    { name: 'Reports', path: '/reports', icon: <FileText size={20} /> },
+    { name: 'Activities', path: '/activities', icon: <Activity size={20} /> },
+    { name: 'Resources', path: '/resources', icon: <BookOpen size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
 

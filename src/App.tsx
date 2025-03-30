@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,7 +24,8 @@ import ProgramsPage from "./pages/admin/ProgramsPage";
 import ReportsPage from "./pages/admin/ReportsPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import CoachesPage from "./pages/admin/CoachesPage";
-import ActivitiesPage from "./pages/admin/ActivitiesPage"; // Import the new activities page
+import ActivitiesPage from "./pages/admin/ActivitiesPage"; 
+import ResourcesPage from "./pages/admin/ResourcesPage";
 
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
@@ -62,7 +62,8 @@ const App = () => (
               <Route path="/check-ins" element={<CheckInsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/activities" element={<ActivitiesPage />} /> {/* Update to use the new ActivitiesPage */}
+              <Route path="/activities" element={<ActivitiesPage />} />
+              <Route path="/resources" element={<ResourcesPage />} />
             </Route>
             
             {/* Coach routes */}
