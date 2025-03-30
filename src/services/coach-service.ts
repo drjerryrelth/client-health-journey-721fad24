@@ -149,7 +149,7 @@ export const CoachService = {
   // Update a coach
   async updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 'clients'>>): Promise<Coach | null> {
     try {
-      // Check if user is authenticated
+      // Check if user is authenticated using the helper
       const session = await checkAuthentication();
       if (!session) {
         console.error('User is not authenticated');
@@ -161,7 +161,7 @@ export const CoachService = {
       if (coach.name) updates.name = coach.name;
       if (coach.email) updates.email = coach.email;
       if (coach.phone !== undefined) updates.phone = coach.phone;
-      if (coach.status) updates.status = coach.status; // Now correctly typed as 'active' | 'inactive'
+      if (coach.status) updates.status = coach.status;
       if (coach.clinicId) updates.clinic_id = coach.clinicId;
       
       const { data, error } = await supabase
@@ -199,7 +199,7 @@ export const CoachService = {
         name: data.name,
         email: data.email,
         phone: data.phone,
-        status: data.status as 'active' | 'inactive', // Cast to union type
+        status: data.status as 'active' | 'inactive',
         clinicId: data.clinic_id,
         clients: Array.isArray(data.clients) ? data.clients.length : 0
       };
