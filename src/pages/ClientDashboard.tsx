@@ -1,15 +1,18 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { Button } from '@/components/ui/button';
 import { Calendar, Activity, Weight, PlusCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
 import ProgressChart from '@/components/progress/ProgressChart';
+import { useToast } from '@/hooks/use-toast';
 
 const ClientDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Mock data
   const currentWeight = 172;
@@ -21,6 +24,14 @@ const ClientDashboard = () => {
   const streak = 5;
   
   const daysLeft = 21;
+  
+  const handleNewCheckIn = () => {
+    navigate('/check-in');
+  };
+  
+  const handleViewProgress = () => {
+    navigate('/progress');
+  };
   
   return (
     <div>
@@ -65,7 +76,7 @@ const ClientDashboard = () => {
       
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleViewProgress}>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Weight Loss</CardTitle>
             <Weight className="text-primary-500" size={20} />
@@ -77,7 +88,7 @@ const ClientDashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleViewProgress}>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Average Energy</CardTitle>
             <Activity className="text-secondary-500" size={20} />
@@ -89,7 +100,7 @@ const ClientDashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleNewCheckIn}>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Check-in Streak</CardTitle>
             <Calendar className="text-orange-500" size={20} />
@@ -115,9 +126,9 @@ const ClientDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-lg">Weight Progress</CardTitle>
-              <Link to="/progress">
-                <Button variant="outline" size="sm">View All</Button>
-              </Link>
+              <Button onClick={handleViewProgress} variant="outline" size="sm">
+                View All
+              </Button>
             </CardHeader>
             <CardContent className="h-[300px]">
               <ProgressChart />
@@ -133,12 +144,10 @@ const ClientDashboard = () => {
             <CardContent className="flex flex-col items-center justify-center space-y-4">
               <div className="text-center">
                 <p className="text-sm text-gray-500 mb-2">Don't forget to log your daily progress!</p>
-                <Link to="/check-in">
-                  <Button className="w-full">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    New Check-in
-                  </Button>
-                </Link>
+                <Button onClick={handleNewCheckIn} className="w-full">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  New Check-in
+                </Button>
               </div>
               
               <div className="w-full pt-4 border-t border-gray-200">

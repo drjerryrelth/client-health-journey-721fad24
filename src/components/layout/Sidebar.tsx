@@ -1,18 +1,22 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/auth';
 import { 
   Users, User, Calendar, Home, FileText, 
   Activity, List, Settings, Weight, PlusCircle, Building
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const Sidebar = () => {
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, logout } = useAuth();
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = React.useState(isMobile);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Update collapsed state when screen size changes
   React.useEffect(() => {
@@ -49,6 +53,14 @@ const Sidebar = () => {
     { name: 'My Program', path: '/my-program', icon: <List size={20} /> },
     { name: 'My Profile', path: '/profile', icon: <User size={20} /> },
   ];
+
+  const handleAddClick = () => {
+    if (isAdmin) {
+      navigate('/add-coach');
+    } else if (isCoach) {
+      navigate('/add-client');
+    }
+  };
 
   let links = clientLinks; // default
   if (isAdmin) links = adminLinks;
@@ -99,33 +111,18 @@ const Sidebar = () => {
           </nav>
         </div>
         
-        {isAdmin && (
+        {(isAdmin || isCoach) && (
           <div className="p-4 border-t border-gray-200">
-            <NavLink
-              to="/add-coach"
+            <Button
+              onClick={handleAddClick}
               className={cn(
-                "flex items-center px-3 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors",
+                "flex items-center px-3 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors w-full",
                 collapsed ? "justify-center" : "space-x-2"
               )}
             >
               <PlusCircle size={20} />
-              {!collapsed && <span>Add Coach</span>}
-            </NavLink>
-          </div>
-        )}
-        
-        {isCoach && (
-          <div className="p-4 border-t border-gray-200">
-            <NavLink
-              to="/add-client"
-              className={cn(
-                "flex items-center px-3 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors",
-                collapsed ? "justify-center" : "space-x-2"
-              )}
-            >
-              <PlusCircle size={20} />
-              {!collapsed && <span>Add Client</span>}
-            </NavLink>
+              {!collapsed && <span>{isAdmin ? "Add Coach" : "Add Client"}</span>}
+            </Button>
           </div>
         )}
       </div>

@@ -4,6 +4,7 @@ import { useAuth } from '@/context/auth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Bell, Settings, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +13,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from '@/hooks/use-toast';
 
 const TopBar = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+  
+  const handleSettings = () => {
+    if (user?.role === 'admin') {
+      navigate('/settings');
+    } else if (user?.role === 'coach') {
+      navigate('/coach/settings');
+    } else {
+      navigate('/profile');
+    }
+  };
+  
+  const handleNotifications = () => {
+    toast({
+      title: "Notifications",
+      description: "Notification center coming soon",
+    });
+  };
   
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-2">
@@ -27,7 +53,12 @@ const TopBar = () => {
         </div>
         
         <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-700">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-gray-500 hover:text-gray-700"
+            onClick={handleNotifications}
+          >
             <Bell size={20} />
           </Button>
           
@@ -49,13 +80,16 @@ const TopBar = () => {
                 </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="flex items-center cursor-pointer">
+              <DropdownMenuItem 
+                className="flex items-center cursor-pointer"
+                onClick={handleSettings}
+              >
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuItem 
                 className="flex items-center text-red-500 focus:text-red-500 cursor-pointer"
-                onClick={logout}
+                onClick={handleLogout}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>

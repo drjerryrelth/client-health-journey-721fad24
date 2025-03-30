@@ -1,14 +1,17 @@
 
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Activity, Calendar, Building, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import CoachList from '@/components/coaches/CoachList';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Mock statistics for admin
   const stats = [
@@ -17,6 +20,18 @@ const AdminDashboard = () => {
     { title: 'Active Clinics', value: 3, icon: <Building className="text-orange-500" size={24} /> },
     { title: 'Weekly Check-ins', value: 52, icon: <Calendar className="text-purple-500" size={24} /> },
   ];
+  
+  const handleManageCoaches = () => {
+    navigate("/coaches");
+  };
+  
+  const handleViewAllActivities = () => {
+    navigate("/activities");
+    toast({
+      title: "Coming Soon",
+      description: "The activities page is under development",
+    });
+  };
   
   return (
     <div>
@@ -28,7 +43,7 @@ const AdminDashboard = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, index) => (
-          <Card key={index}>
+          <Card key={index} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
               {stat.icon}
@@ -45,9 +60,9 @@ const AdminDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-lg">Active Coaches</CardTitle>
-              <Link to="/coaches">
-                <Button variant="outline" size="sm">Manage Coaches</Button>
-              </Link>
+              <Button onClick={handleManageCoaches} variant="outline" size="sm">
+                Manage Coaches
+              </Button>
             </CardHeader>
             <CardContent>
               <CoachList limit={5} />
@@ -59,9 +74,9 @@ const AdminDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-lg">Recent Activities</CardTitle>
-              <Link to="/activities">
-                <Button variant="outline" size="sm">View All</Button>
-              </Link>
+              <Button onClick={handleViewAllActivities} variant="outline" size="sm">
+                View All
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
