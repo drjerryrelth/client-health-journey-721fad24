@@ -29,7 +29,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 const LoginForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { login, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -68,23 +68,45 @@ const LoginForm = () => {
     try {
       let email = '';
       const password = 'password123'; // Demo password
+      let fullName = '';
+      let role = type;
       
-      // Use the correct demo accounts that exist in your Supabase instance
+      // Use the correct demo accounts
       switch (type) {
         case 'admin':
           email = 'admin@example.com';
+          fullName = 'Admin User';
           break;
         case 'coach':
           email = 'coach@example.com';
+          fullName = 'Coach User';
           break;
         case 'client':
           email = 'client@example.com';
+          fullName = 'Client User';
           break;
       }
       
       console.log(`Attempting demo login as ${type} with email: ${email}`);
       
-      await login(email, password);
+      try {
+        // First try to login directly
+        await login(email, password);
+        console.log('Demo login successful');
+      } catch (loginError) {
+        console.log('Login failed, attempting to create demo account', loginError);
+        
+        // If login fails, try to sign up the demo user first
+        await signUp(email, password, {
+          full_name: fullName,
+          role: role
+        });
+        
+        console.log('Demo account created, now logging in');
+        
+        // Now try logging in again
+        await login(email, password);
+      }
       
       toast({
         title: 'Demo login successful',
@@ -96,7 +118,7 @@ const LoginForm = () => {
       console.error('Demo login error:', error);
       toast({
         title: 'Login failed',
-        description: 'An error occurred during demo login. Please try again.',
+        description: 'An error occurred during demo login. Please check the console for details.',
         variant: 'destructive',
       });
     } finally {

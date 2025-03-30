@@ -22,6 +22,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   hasRole: (role: UserRole | UserRole[]) => boolean;
+  signUp: (email: string, password: string, userData: { full_name: string; role: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -32,6 +33,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: async () => {},
   hasRole: () => false,
+  signUp: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -222,6 +224,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signUp = async (email: string, password: string, userData: { full_name: string; role: string }) => {
+    setIsLoading(true);
+    
+    try {
+      console.log('Attempting to create account with email:', email);
+      
+      // First check if the user already exists by trying to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      // If login succeeds, user already exists
+      if (!signInError) {
+        console.log('User already exists, no need to sign up');
+        return;
+      }
+      
+      console.log('User does not exist, creating new account');
+      
+      // Sign up the user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: userData.full_name,
+            role: userData.role,
+          }
+        }
+      });
+      
+      if (error) {
+        console.error('Sign up error:', error);
+        throw error;
+      }
+      
+      if (!data.user) {
+        throw new Error('No user returned from signup');
+      }
+      
+      // Create profile record manually to ensure it exists even if the trigger fails
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        full_name: userData.full_name,
+        email: email,
+        role: userData.role,
+      });
+      
+      console.log('Account created successfully');
+      
+      return Promise.resolve();
+    } catch (error: any) {
+      console.error('Sign up error:', error);
+      toast({
+        title: 'Account creation failed',
+        description: error.message || 'Could not create account',
+        variant: 'destructive',
+      });
+      return Promise.reject(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       console.log('Logging out user');
@@ -256,6 +323,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         hasRole,
+        signUp,
       }}
     >
       {children}
