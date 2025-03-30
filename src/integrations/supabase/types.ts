@@ -171,27 +171,39 @@ export type Database = {
       clinics: {
         Row: {
           created_at: string | null
+          email: string | null
           id: string
+          location: string | null
           logo: string | null
           name: string
+          phone: string | null
           primary_color: string | null
           secondary_color: string | null
+          status: string | null
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
           id?: string
+          location?: string | null
           logo?: string | null
           name: string
+          phone?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          status?: string | null
         }
         Update: {
           created_at?: string | null
+          email?: string | null
           id?: string
+          location?: string | null
           logo?: string | null
           name?: string
+          phone?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          status?: string | null
         }
         Relationships: []
       }
