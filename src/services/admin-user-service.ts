@@ -47,46 +47,67 @@ export const AdminUserService = {
    */
   async createAdminUser(userData: AdminUserFormData): Promise<AdminUser> {
     try {
-      console.log('Creating admin user:', userData);
+      console.log('Creating admin user with data:', userData);
       
-      // Call the stored procedure that creates both auth user and admin user
-      // Make sure we're passing the parameters with the exact names expected by the function
-      const { data, error } = await supabase
-        .rpc('create_admin_user', {
+      // First create the auth user directly
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: userData.email,
+        password: userData.password || '',
+        email_confirm: true,
+        user_metadata: {
+          full_name: userData.fullName,
+          role: userData.role || 'admin'
+        }
+      });
+      
+      if (authError) {
+        console.error('Error creating auth user:', authError);
+        throw new Error(`Failed to create admin user: ${authError.message}`);
+      }
+      
+      if (!authData || !authData.user) {
+        throw new Error('Failed to create auth user: No data returned');
+      }
+      
+      console.log('Auth user created:', authData.user);
+      
+      // Then create the admin user entry
+      const { data: adminUser, error: adminError } = await supabase
+        .from('admin_users')
+        .insert({
+          auth_user_id: authData.user.id,
           email: userData.email,
-          password: userData.password || '',
-          full_name: userData.fullName, // Ensure we use fullName (camelCase) from our form data
+          full_name: userData.fullName,
+          role: userData.role || 'admin'
+        })
+        .select()
+        .maybeSingle();
+      
+      if (adminError) {
+        console.error('Error creating admin user record:', adminError);
+        throw new Error(`Failed to create admin user record: ${adminError.message}`);
+      }
+      
+      // Also create a profile entry for the user
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email: userData.email,
+          full_name: userData.fullName,
           role: userData.role || 'admin'
         });
       
-      if (error) {
-        console.error('Error creating admin user:', error);
-        throw new Error(`Failed to create admin user: ${error.message}`);
+      if (profileError) {
+        console.error('Error creating user profile:', profileError);
+        console.warn('Profile creation failed, but admin user was created');
       }
       
-      if (!data) {
-        throw new Error('Failed to create admin user: No data returned');
+      if (!adminUser) {
+        throw new Error('Admin user record created but no details returned');
       }
       
-      console.log('Admin user created with auth_user_id:', data);
-      
-      // Return the newly created admin user
-      const { data: newUser, error: fetchError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('auth_user_id', data)
-        .maybeSingle();
-      
-      if (fetchError) {
-        console.error('Error fetching new admin user:', fetchError);
-        throw new Error(`Admin user created but failed to fetch details: ${fetchError.message}`);
-      }
-      
-      if (!newUser) {
-        throw new Error('Admin user created but no details found');
-      }
-      
-      return newUser as AdminUser;
+      return adminUser as AdminUser;
     } catch (error: any) {
       console.error('Error in createAdminUser:', error);
       throw error;
