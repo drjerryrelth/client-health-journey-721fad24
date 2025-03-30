@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 
 // Get Supabase environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 // Log for debugging if environment variables are present
 console.log('Supabase URL:', supabaseUrl ? '[present]' : '[missing]');
