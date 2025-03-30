@@ -166,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Attempting login with email:', email);
       
       // Check if this is a demo login
-      const isDemoLogin = ['admin@example.com', 'coach@example.com', 'client@example.com'].includes(email);
+      const isDemoLogin = ['admin@clienthealthtracker.com', 'coach@clienthealthtracker.com', 'client@clienthealthtracker.com'].includes(email);
       if (isDemoLogin) {
         console.log('This is a demo login attempt');
       }
@@ -231,18 +231,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Attempting to create account with email:', email);
       
       // First check if the user already exists by trying to sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      // If login succeeds, user already exists
-      if (!signInError) {
-        console.log('User already exists, no need to sign up');
-        return;
+      try {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        // If login succeeds, user already exists
+        if (!signInError) {
+          console.log('User already exists, no need to sign up');
+          return;
+        }
+      } catch (signInError) {
+        // Continue with signup if login failed
+        console.log('User does not exist, continuing with signup');
       }
       
-      console.log('User does not exist, creating new account');
+      console.log('Creating new account');
       
       // Sign up the user
       const { data, error } = await supabase.auth.signUp({
@@ -265,24 +270,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('No user returned from signup');
       }
       
+      console.log('User created, creating profile record');
+      
       // Create profile record manually to ensure it exists even if the trigger fails
-      await supabase.from('profiles').upsert({
+      const { error: profileError } = await supabase.from('profiles').upsert({
         id: data.user.id,
         full_name: userData.full_name,
         email: email,
         role: userData.role,
       });
       
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        // Continue anyway since the user was created
+      }
+      
       console.log('Account created successfully');
       
       return Promise.resolve();
     } catch (error: any) {
       console.error('Sign up error:', error);
-      toast({
-        title: 'Account creation failed',
-        description: error.message || 'Could not create account',
-        variant: 'destructive',
-      });
+      
+      // Handle specific Supabase signup errors
+      if (error.message?.includes('email address is invalid')) {
+        toast({
+          title: 'Account creation failed',
+          description: 'The email address format is invalid. Please use a different email.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Account creation failed',
+          description: error.message || 'Could not create account',
+          variant: 'destructive',
+        });
+      }
+      
       return Promise.reject(error);
     } finally {
       setIsLoading(false);

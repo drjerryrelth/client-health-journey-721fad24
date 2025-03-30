@@ -71,18 +71,18 @@ const LoginForm = () => {
       let fullName = '';
       let role = type;
       
-      // Use the correct demo accounts
+      // Use valid email formats for demo accounts
       switch (type) {
         case 'admin':
-          email = 'admin@example.com';
+          email = 'admin@clienthealthtracker.com';
           fullName = 'Admin User';
           break;
         case 'coach':
-          email = 'coach@example.com';
+          email = 'coach@clienthealthtracker.com';
           fullName = 'Coach User';
           break;
         case 'client':
-          email = 'client@example.com';
+          email = 'client@clienthealthtracker.com';
           fullName = 'Client User';
           break;
       }
@@ -118,7 +118,7 @@ const LoginForm = () => {
       console.error('Demo login error:', error);
       toast({
         title: 'Login failed',
-        description: 'An error occurred during demo login. Please check the console for details.',
+        description: error.message || 'An error occurred during demo login.',
         variant: 'destructive',
       });
     } finally {
