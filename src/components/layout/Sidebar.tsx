@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
@@ -37,20 +38,24 @@ const Sidebar = () => {
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
 
+  // Updated coach links with Resources link
   const coachLinks = [
     { name: 'Dashboard', path: '/coach-dashboard', icon: <Home size={20} /> },
     { name: 'Clients', path: '/coach/clients', icon: <Users size={20} /> },
     { name: 'Programs', path: '/coach/programs', icon: <List size={20} /> },
     { name: 'Check-ins', path: '/coach/check-ins', icon: <Calendar size={20} /> },
     { name: 'Reports', path: '/coach/reports', icon: <FileText size={20} /> },
+    { name: 'Resources', path: '/coach/resources', icon: <BookOpen size={20} /> },
     { name: 'Settings', path: '/coach/settings', icon: <Settings size={20} /> },
   ];
 
+  // Updated client links with Resources link
   const clientLinks = [
     { name: 'Dashboard', path: '/client-dashboard', icon: <Home size={20} /> },
     { name: 'Check-in', path: '/check-in', icon: <Calendar size={20} /> },
     { name: 'Progress', path: '/progress', icon: <Activity size={20} /> },
     { name: 'My Program', path: '/my-program', icon: <List size={20} /> },
+    { name: 'Resources', path: '/client/resources', icon: <BookOpen size={20} /> },
     { name: 'My Profile', path: '/profile', icon: <User size={20} /> },
   ];
 

@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/coach/check-ins" element={<Dashboard />} />
               <Route path="/coach/reports" element={<Dashboard />} />
               <Route path="/coach/settings" element={<Dashboard />} />
+              <Route path="/coach/resources" element={<ResourcesPage />} />
               <Route path="/add-client" element={<Dashboard />} />
             </Route>
             
@@ -85,6 +87,7 @@ const App = () => (
               <Route path="/progress" element={<ClientDashboard />} />
               <Route path="/my-program" element={<ClientDashboard />} />
               <Route path="/profile" element={<ClientDashboard />} />
+              <Route path="/client/resources" element={<ResourcesPage />} />
             </Route>
             
             {/* Catch-all route */}
