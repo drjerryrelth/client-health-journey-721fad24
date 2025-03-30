@@ -29,12 +29,16 @@ const CoachesPage = () => {
       const allCoaches = await CoachService.getAllCoaches();
       
       setCoaches(allCoaches);
+      
+      if (allCoaches.length === 0) {
+        console.warn('No coaches were returned. Using mock data as fallback.');
+      }
+      
       setLoading(false);
     } catch (err) {
       console.error("Error fetching coaches:", err);
       setError("Failed to load coaches. Please try again.");
-      setErrorDetails(JSON.stringify(err, null, 2));
-      toast.error("Failed to load coaches");
+      setErrorDetails(err instanceof Error ? err.message : JSON.stringify(err, null, 2));
       setLoading(false);
     }
   };
@@ -48,6 +52,7 @@ const CoachesPage = () => {
   };
 
   const handleRefresh = () => {
+    toast.info("Refreshing coaches data...");
     fetchCoaches();
   };
 
@@ -143,7 +148,7 @@ const CoachesPage = () => {
                             <div className="bg-primary-100 h-6 w-6 rounded-full flex items-center justify-center">
                               <Building className="h-3 w-3 text-primary-700" />
                             </div>
-                            <span>Clinic {coach.clinicId.slice(-4)}</span>
+                            <span>Clinic {coach.clinicId ? coach.clinicId.slice(-4) : 'Unknown'}</span>
                           </div>
                         </TableCell>
                         <TableCell>{coach.clients}</TableCell>

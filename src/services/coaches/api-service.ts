@@ -66,6 +66,8 @@ export async function getAllCoaches(): Promise<Coach[]> {
     // Get the auth token
     const authToken = session.access_token;
     
+    console.log('Using auth token for coaches request:', authToken ? 'Token available' : 'Token missing');
+    
     // Use Edge Function to fetch all coaches (admin only)
     const { data, error } = await supabase.functions.invoke('get-all-coaches', {
       headers: {

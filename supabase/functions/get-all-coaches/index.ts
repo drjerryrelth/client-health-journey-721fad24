@@ -7,11 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Create a Supabase client with the service role key for admin operations
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -19,6 +14,11 @@ serve(async (req) => {
   }
   
   try {
+    // Create a Supabase client with the auth token from the request
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
     // Get user session to verify admin role
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -28,8 +28,8 @@ serve(async (req) => {
       );
     }
     
-    // Verify that the user is an admin by checking both the profiles and admin_users tables
-    const { data: userData, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !userData.user) {
       console.error("Error getting user:", userError);
@@ -39,27 +39,29 @@ serve(async (req) => {
       );
     }
     
-    console.log("User making request:", userData.user.id);
+    const userId = userData.user.id;
+    console.log("User making request:", userId);
     
-    // Fetch the user's role from profiles table
-    const { data: userProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userData.user.id)
-      .maybeSingle();
+    // First, check if the user is an admin based on user metadata
+    const isAdminFromMetadata = userData.user.user_metadata?.role === 'admin';
     
-    // Check for admin role in admin_users table as fallback
-    const { data: adminUser, error: adminError } = await supabase
-      .from('admin_users')
-      .select('role, email')
-      .eq('auth_user_id', userData.user.id)
-      .maybeSingle();
+    // Fall back to checking the admin_users table
+    let isAdminFromTable = false;
+    if (!isAdminFromMetadata) {
+      const { data: adminUser } = await supabase
+        .from('admin_users')
+        .select('role')
+        .eq('auth_user_id', userId)
+        .single();
+      
+      isAdminFromTable = adminUser?.role === 'admin';
+    }
     
-    // Consider user an admin if either check passes
-    const isAdmin = (userProfile?.role === 'admin') || (adminUser?.role === 'admin');
+    // Final admin check
+    const isAdmin = isAdminFromMetadata || isAdminFromTable;
     
     if (!isAdmin) {
-      console.log("User is not an admin. Profile:", userProfile, "Admin:", adminUser);
+      console.log("User is not an admin. Metadata role:", userData.user.user_metadata?.role);
       return new Response(
         JSON.stringify({ error: "Admin privileges required" }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
