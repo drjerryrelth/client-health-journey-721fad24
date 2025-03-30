@@ -10,17 +10,21 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 console.log('Supabase URL:', supabaseUrl ? '[present]' : '[missing]');
 console.log('Supabase Anon Key:', supabaseAnonKey ? '[present]' : '[missing]');
 
-// Check if environment variables are available
+// Default values for development - DO NOT use in production
+// These will prevent initial loading errors but won't connect to a real database
+const devUrl = 'https://placeholder-project.supabase.co';
+const devKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSJ9.J_RmC3Z_2BCmkjdLFbqV8NAXh6ZBgRQPIBY7ABHSGSU';
+
+// Use environment variables or fallback to development defaults
+const finalSupabaseUrl = supabaseUrl || devUrl;
+const finalSupabaseKey = supabaseAnonKey || devKey;
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables');
-  // Provide fallback values for development only
-  // This should be removed in production
+  console.warn('Using development Supabase credentials. API calls will fail, but the app will render.');
+  console.warn('Please set up proper Supabase environment variables for full functionality.');
 }
 
-// Create Supabase client with explicit type casting to avoid null/undefined errors
-export const supabase = createClient<Database>(
-  supabaseUrl || '',
-  supabaseAnonKey || ''
-);
+// Create Supabase client
+export const supabase = createClient<Database>(finalSupabaseUrl, finalSupabaseKey);
 
 export default supabase;
