@@ -19,21 +19,29 @@ const CoachesPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const fetchCoaches = async () => {
     try {
-      console.log('CoachesPage: Starting to fetch all coaches');
       setLoading(true);
       setError(null);
+      
+      console.log(`[CoachesPage] Fetching all coaches (attempt: ${retryCount + 1})`);
       
       // Fetch coaches from all clinics (admin view)
       const allCoaches = await CoachService.getAllCoaches();
       
-      console.log('CoachesPage: Received coaches data:', allCoaches);
+      console.log('[CoachesPage] Received coaches data:', allCoaches);
+      
+      if (!Array.isArray(allCoaches)) {
+        console.error('[CoachesPage] Invalid coaches data format:', allCoaches);
+        throw new Error('Invalid data format received from service');
+      }
+      
       setCoaches(allCoaches);
       
       if (allCoaches.length === 0) {
-        console.warn('CoachesPage: No coaches were returned');
+        console.warn('[CoachesPage] No coaches were returned');
         toast.info('No coaches found in the database');
       } else {
         toast.success(`Successfully loaded ${allCoaches.length} coaches`);
@@ -41,15 +49,24 @@ const CoachesPage = () => {
       
       setLoading(false);
     } catch (err) {
-      console.error("CoachesPage: Error fetching coaches:", err);
+      console.error("[CoachesPage] Error fetching coaches:", err);
       setError("Failed to load coaches. Please try again.");
       setErrorDetails(err instanceof Error ? err.message : String(err));
       setLoading(false);
+      
+      // If this was the first attempt, retry once automatically
+      if (retryCount === 0) {
+        console.log('[CoachesPage] First attempt failed, retrying automatically');
+        setRetryCount(1);
+        setTimeout(() => {
+          fetchCoaches();
+        }, 1000);
+      }
     }
   };
 
   useEffect(() => {
-    console.log('CoachesPage: Component mounted, fetching coaches');
+    console.log('[CoachesPage] Component mounted, fetching coaches');
     fetchCoaches();
   }, []);
 
@@ -58,6 +75,7 @@ const CoachesPage = () => {
   };
 
   const handleRefresh = () => {
+    setRetryCount(prev => prev + 1);
     toast.info("Refreshing coaches data...");
     fetchCoaches();
   };
@@ -106,6 +124,7 @@ const CoachesPage = () => {
               <div className="text-center">
                 <RefreshCw size={24} className="animate-spin mx-auto mb-2" />
                 <p className="text-gray-600">Loading coaches...</p>
+                <p className="text-xs text-gray-400 mt-1">{retryCount > 0 ? `Attempt ${retryCount + 1}` : ''}</p>
               </div>
             </div>
           ) : error ? (

@@ -7,8 +7,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.44.0'
 import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req) => {
+  console.log('Edge function called: get-all-coaches');
+  
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders })
   }
 
@@ -93,7 +96,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    if (!coaches || coaches.length === 0) {
+    if (!coaches) {
       console.log('No coaches found in the database');
       return new Response(
         JSON.stringify([]),
@@ -103,6 +106,7 @@ Deno.serve(async (req) => {
 
     // For each coach, count their clients
     console.log(`Found ${coaches.length} coaches, calculating client counts...`);
+    
     const coachesWithClientCount = await Promise.all(coaches.map(async (coach) => {
       console.log(`Calculating client count for coach ${coach.id}`);
       const { count, error: countError } = await supabaseClient
@@ -126,10 +130,20 @@ Deno.serve(async (req) => {
     }))
 
     console.log(`Successfully compiled data for ${coachesWithClientCount.length} coaches`);
+    console.log('Returning data to client');
 
     return new Response(
       JSON.stringify(coachesWithClientCount),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }, 
+        status: 200 
+      }
     )
   } catch (error) {
     console.error('Unexpected error:', error);
