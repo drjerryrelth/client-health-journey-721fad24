@@ -107,4 +107,41 @@ export const mapClientToDbClient = (client: Omit<Client, 'id'>): Omit<ClientRow,
   clinic_id: client.clinicId,
 });
 
-// Add more mapping functions as needed for other entity types
+// Add mapping functions for Program and Supplement
+export const mapDbProgramToProgram = (dbProgram: ProgramRow, supplements: SupplementRow[] = []): Program => ({
+  id: dbProgram.id,
+  name: dbProgram.name,
+  description: dbProgram.description,
+  duration: dbProgram.duration,
+  type: dbProgram.type as 'practice_naturals' | 'keto' | 'custom',
+  checkInFrequency: dbProgram.check_in_frequency as 'daily' | 'weekly',
+  clinicId: dbProgram.clinic_id,
+  supplements: supplements.map(mapDbSupplementToSupplement),
+});
+
+export const mapProgramToDbProgram = (program: Omit<Program, 'id' | 'supplements'>): Omit<ProgramRow, 'id' | 'created_at'> => ({
+  name: program.name,
+  description: program.description,
+  duration: program.duration,
+  type: program.type,
+  check_in_frequency: program.checkInFrequency,
+  clinic_id: program.clinicId,
+});
+
+export const mapDbSupplementToSupplement = (dbSupplement: SupplementRow): Supplement => ({
+  id: dbSupplement.id,
+  name: dbSupplement.name,
+  description: dbSupplement.description,
+  dosage: dbSupplement.dosage,
+  frequency: dbSupplement.frequency,
+  timeOfDay: dbSupplement.time_of_day || undefined,
+});
+
+export const mapSupplementToDbSupplement = (supplement: Omit<Supplement, 'id'>, programId: string): Omit<SupplementRow, 'id' | 'created_at'> => ({
+  name: supplement.name,
+  description: supplement.description,
+  dosage: supplement.dosage,
+  frequency: supplement.frequency,
+  time_of_day: supplement.timeOfDay || null,
+  program_id: programId,
+});
