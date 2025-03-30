@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import CoachService from '@/services/coaches';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { useAuth } from '@/context/auth';
-import CoachForm from './CoachForm';
+import { CoachForm } from './CoachForm';
 import ErrorDialog from './ErrorDialog';
 import { CoachFormValues } from './schema/coach-form-schema';
 
