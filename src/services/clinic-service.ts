@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 export type Clinic = {
   id: string;
   name: string;
-  location: string;
   email: string | null;
   phone: string | null;
   status: 'active' | 'inactive';
@@ -43,7 +42,6 @@ export const ClinicService = {
       return data.map(clinic => ({
         id: clinic.id,
         name: clinic.name,
-        location: clinic.location || '',
         email: clinic.email,
         phone: clinic.phone,
         status: (clinic.status || 'active') as 'active' | 'inactive',
@@ -53,7 +51,7 @@ export const ClinicService = {
         state: clinic.state,
         zip: clinic.zip,
         primaryContact: clinic.primary_contact,
-        // Map the new billing fields
+        // Map the billing fields
         billingContactName: clinic.billing_contact_name,
         billingEmail: clinic.billing_email,
         billingPhone: clinic.billing_phone,
@@ -87,7 +85,6 @@ export const ClinicService = {
       return {
         id: data.id,
         name: data.name,
-        location: data.location || '',
         email: data.email,
         phone: data.phone,
         status: (data.status || 'active') as 'active' | 'inactive',
@@ -97,7 +94,7 @@ export const ClinicService = {
         state: data.state,
         zip: data.zip,
         primaryContact: data.primary_contact,
-        // Map the new billing fields
+        // Map the billing fields
         billingContactName: data.billing_contact_name,
         billingEmail: data.billing_email,
         billingPhone: data.billing_phone,
@@ -119,7 +116,6 @@ export const ClinicService = {
   // Add a new clinic
   async addClinic(clinic: {
     name: string;
-    location: string;
     email?: string;
     phone?: string;
     streetAddress?: string;
@@ -143,7 +139,6 @@ export const ClinicService = {
         .from('clinics')
         .insert({
           name: clinic.name,
-          location: clinic.location,
           email: clinic.email || null,
           phone: clinic.phone || null,
           status: 'active',
@@ -171,7 +166,6 @@ export const ClinicService = {
       return {
         id: data.id,
         name: data.name,
-        location: data.location || '',
         email: data.email,
         phone: data.phone,
         status: data.status as 'active' | 'inactive',
@@ -266,7 +260,6 @@ export const ClinicService = {
       return {
         id: data.id,
         name: data.name,
-        location: data.location || '',
         email: data.email,
         phone: data.phone,
         status: data.status as 'active' | 'inactive',
@@ -317,7 +310,6 @@ export const getMockClinics = (): Clinic[] => [
   { 
     id: '1',
     name: 'Wellness Center',
-    location: 'New York, NY',
     email: 'info@wellness.com',
     phone: '(555) 123-4567',
     status: 'active',
@@ -341,7 +333,6 @@ export const getMockClinics = (): Clinic[] => [
   { 
     id: '2',
     name: 'Practice Naturals',
-    location: 'Los Angeles, CA',
     email: 'contact@practicenaturals.com',
     phone: '(555) 234-5678',
     status: 'active',
@@ -365,7 +356,6 @@ export const getMockClinics = (): Clinic[] => [
   { 
     id: '3',
     name: 'Health Partners',
-    location: 'Chicago, IL',
     email: 'support@healthpartners.com',
     phone: '(555) 345-6789',
     status: 'active',

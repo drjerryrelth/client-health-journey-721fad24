@@ -24,7 +24,6 @@ const EditClinicDialog = ({ open, onOpenChange, clinicId, onClinicUpdated }: Edi
   
   // General info
   const [clinicName, setClinicName] = useState('');
-  const [clinicLocation, setClinicLocation] = useState('');
   const [clinicEmail, setClinicEmail] = useState('');
   const [clinicPhone, setClinicPhone] = useState('');
   const [streetAddress, setStreetAddress] = useState('');
@@ -61,7 +60,6 @@ const EditClinicDialog = ({ open, onOpenChange, clinicId, onClinicUpdated }: Edi
         
         // Set general info
         setClinicName(fetchedClinic.name || '');
-        setClinicLocation(fetchedClinic.location || '');
         setClinicEmail(fetchedClinic.email || '');
         setClinicPhone(fetchedClinic.phone || '');
         setStreetAddress(fetchedClinic.streetAddress || '');
@@ -109,7 +107,6 @@ const EditClinicDialog = ({ open, onOpenChange, clinicId, onClinicUpdated }: Edi
     try {
       const updatedClinic = await ClinicService.updateClinic(clinicId, {
         name: clinicName,
-        location: clinicLocation,
         email: clinicEmail || null,
         phone: clinicPhone || null,
         status: status as 'active' | 'inactive',
@@ -202,17 +199,6 @@ const EditClinicDialog = ({ open, onOpenChange, clinicId, onClinicUpdated }: Edi
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="location" className="text-right">Location</Label>
-                <Input 
-                  id="location" 
-                  value={clinicLocation} 
-                  onChange={(e) => setClinicLocation(e.target.value)} 
-                  className="col-span-3" 
-                  placeholder="General location (e.g. Downtown)"
-                />
               </div>
               
               <div className="grid grid-cols-4 items-center gap-4">

@@ -21,7 +21,6 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
   
   // General info
   const [clinicName, setClinicName] = useState('');
-  const [clinicLocation, setClinicLocation] = useState('');
   const [clinicEmail, setClinicEmail] = useState('');
   const [clinicPhone, setClinicPhone] = useState('');
   const [streetAddress, setStreetAddress] = useState('');
@@ -42,10 +41,10 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
   const [subscriptionTier, setSubscriptionTier] = useState('');
 
   const handleSubmitClinic = async () => {
-    if (!clinicName || !clinicLocation) {
+    if (!clinicName) {
       toast({
         title: "Missing Information",
-        description: "Please provide clinic name and location.",
+        description: "Please provide clinic name.",
         variant: "destructive"
       });
       return;
@@ -55,7 +54,6 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
       setIsSubmitting(true);
       const newClinic = await ClinicService.addClinic({
         name: clinicName,
-        location: clinicLocation,
         email: clinicEmail || undefined,
         phone: clinicPhone || undefined,
         streetAddress: streetAddress || undefined,
@@ -107,7 +105,6 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
 
   const resetForm = () => {
     setClinicName('');
-    setClinicLocation('');
     setClinicEmail('');
     setClinicPhone('');
     setStreetAddress('');
@@ -155,17 +152,6 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                   value={clinicName} 
                   onChange={(e) => setClinicName(e.target.value)} 
                   className="col-span-3" 
-                />
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="location" className="text-right">Location</Label>
-                <Input 
-                  id="location" 
-                  value={clinicLocation} 
-                  onChange={(e) => setClinicLocation(e.target.value)} 
-                  className="col-span-3" 
-                  placeholder="General location (e.g. Downtown)"
                 />
               </div>
               

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -202,7 +201,6 @@ const ClinicsPage = () => {
   const formattedClinics = clinics.map(clinic => ({
     id: clinic.id,
     name: clinic.name,
-    location: clinic.location,
     city: clinic.city,
     state: clinic.state,
     status: clinic.status,
