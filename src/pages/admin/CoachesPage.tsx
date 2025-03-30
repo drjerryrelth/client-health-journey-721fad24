@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, ArrowLeft } from 'lucide-react';
@@ -7,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { getMockCoaches } from '@/services/coach-service';
+import { getMockCoaches } from '@/services/coaches';
 
 const CoachesPage = () => {
   const navigate = useNavigate();
