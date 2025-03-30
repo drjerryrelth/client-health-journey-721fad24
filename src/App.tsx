@@ -10,6 +10,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientPortal from "./pages/ClientPortal";
 import CheckIn from "./pages/CheckIn";
@@ -41,14 +42,25 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
-            {/* Admin/Coach routes */}
-            <Route element={<MainLayout requiredRoles={['admin', 'coach']} />}>
-              <Route path="/dashboard" element={<Dashboard />} />
+            {/* Admin routes */}
+            <Route element={<MainLayout requiredRoles={['admin']} />}>
+              <Route path="/dashboard" element={<AdminDashboard />} />
+              <Route path="/coaches" element={<AdminDashboard />} />
               <Route path="/clients" element={<Dashboard />} />
               <Route path="/programs" element={<Dashboard />} />
               <Route path="/check-ins" element={<Dashboard />} />
               <Route path="/reports" element={<Dashboard />} />
               <Route path="/settings" element={<Dashboard />} />
+            </Route>
+            
+            {/* Coach routes */}
+            <Route element={<MainLayout requiredRoles={['coach']} />}>
+              <Route path="/coach-dashboard" element={<Dashboard />} />
+              <Route path="/coach/clients" element={<Dashboard />} />
+              <Route path="/coach/programs" element={<Dashboard />} />
+              <Route path="/coach/check-ins" element={<Dashboard />} />
+              <Route path="/coach/reports" element={<Dashboard />} />
+              <Route path="/coach/settings" element={<Dashboard />} />
             </Route>
             
             {/* Client routes */}

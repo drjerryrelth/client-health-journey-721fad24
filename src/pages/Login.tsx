@@ -12,10 +12,12 @@ const Login = () => {
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
       console.log('User authenticated, redirecting...');
-      if (hasRole('client')) {
-        navigate('/client-dashboard');
-      } else {
-        navigate('/dashboard');
+      if (hasRole('admin')) {
+        navigate('/dashboard'); // Admin dashboard
+      } else if (hasRole('coach')) {
+        navigate('/coach-dashboard'); // Coach dashboard
+      } else if (hasRole('client')) {
+        navigate('/client-dashboard'); // Client dashboard
       }
     }
   }, [isAuthenticated, isLoading, hasRole, navigate]);
@@ -46,10 +48,12 @@ const Login = () => {
   // Already logged in - this is a fallback in case the effect doesn't trigger
   if (isAuthenticated) {
     console.log('Already authenticated, redirecting directly');
-    if (hasRole('client')) {
-      return <Navigate to="/client-dashboard" replace />;
-    } else {
+    if (hasRole('admin')) {
       return <Navigate to="/dashboard" replace />;
+    } else if (hasRole('coach')) {
+      return <Navigate to="/coach-dashboard" replace />;
+    } else if (hasRole('client')) {
+      return <Navigate to="/client-dashboard" replace />;
     }
   }
   

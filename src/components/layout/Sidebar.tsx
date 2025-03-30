@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { 
   Users, User, Calendar, Home, FileText, 
-  Activity, List, Settings, Weight, PlusCircle 
+  Activity, List, Settings, Weight, PlusCircle, Building
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,16 +19,27 @@ const Sidebar = () => {
     setCollapsed(isMobile);
   }, [isMobile]);
 
-  const isAdmin = hasRole(['admin', 'coach']);
+  const isAdmin = hasRole('admin');
+  const isCoach = hasRole('coach');
   const isClient = hasRole('client');
 
   const adminLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
-    { name: 'Clients', path: '/clients', icon: <Users size={20} /> },
+    { name: 'Coaches', path: '/coaches', icon: <Users size={20} /> },
+    { name: 'Clients', path: '/clients', icon: <User size={20} /> },
+    { name: 'Clinics', path: '/clinics', icon: <Building size={20} /> },
     { name: 'Programs', path: '/programs', icon: <List size={20} /> },
-    { name: 'Check-ins', path: '/check-ins', icon: <Calendar size={20} /> },
     { name: 'Reports', path: '/reports', icon: <FileText size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
+  ];
+
+  const coachLinks = [
+    { name: 'Dashboard', path: '/coach-dashboard', icon: <Home size={20} /> },
+    { name: 'Clients', path: '/coach/clients', icon: <Users size={20} /> },
+    { name: 'Programs', path: '/coach/programs', icon: <List size={20} /> },
+    { name: 'Check-ins', path: '/coach/check-ins', icon: <Calendar size={20} /> },
+    { name: 'Reports', path: '/coach/reports', icon: <FileText size={20} /> },
+    { name: 'Settings', path: '/coach/settings', icon: <Settings size={20} /> },
   ];
 
   const clientLinks = [
@@ -39,7 +50,9 @@ const Sidebar = () => {
     { name: 'My Profile', path: '/profile', icon: <User size={20} /> },
   ];
 
-  const links = isAdmin ? adminLinks : clientLinks;
+  let links = clientLinks; // default
+  if (isAdmin) links = adminLinks;
+  else if (isCoach) links = coachLinks;
 
   return (
     <div 
@@ -87,6 +100,21 @@ const Sidebar = () => {
         </div>
         
         {isAdmin && (
+          <div className="p-4 border-t border-gray-200">
+            <NavLink
+              to="/add-coach"
+              className={cn(
+                "flex items-center px-3 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors",
+                collapsed ? "justify-center" : "space-x-2"
+              )}
+            >
+              <PlusCircle size={20} />
+              {!collapsed && <span>Add Coach</span>}
+            </NavLink>
+          </div>
+        )}
+        
+        {isCoach && (
           <div className="p-4 border-t border-gray-200">
             <NavLink
               to="/add-client"
