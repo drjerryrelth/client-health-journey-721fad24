@@ -5,6 +5,7 @@ import { Activity, Calendar, Bell, Users, Building, RefreshCw } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { useRecentActivities } from '@/hooks/use-dashboard-stats';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 const AdminActivitiesPage = () => {
   const { 
@@ -31,18 +32,18 @@ const AdminActivitiesPage = () => {
 
   const handleRefresh = () => {
     refetch();
+    toast.success("Activities refreshed");
   };
 
   const renderActivitySummary = () => {
-    if (!activities) return null;
+    if (!activities || activities.length === 0) return null;
 
     // Count activities by type
     const checkIns = activities.filter(a => a.type === 'check_in').length;
     const clinics = activities.filter(a => a.type === 'clinic_signup').length;
     const coaches = activities.filter(a => a.type === 'coach_added').length;
 
-    // Calculate total activities from database this month
-    // For this example, we'll just use the total activities we have
+    // Calculate total activities
     const totalActivities = activities.length;
 
     return (

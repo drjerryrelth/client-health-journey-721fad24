@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardStats, useRecentActivities } from '@/hooks/use-dashboard-stats';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -16,15 +17,17 @@ const AdminDashboard = () => {
   const { 
     data: dashboardStats, 
     isLoading: isLoadingStats, 
-    error: statsError 
+    error: statsError,
+    refetch: refetchStats
   } = useDashboardStats();
   
   const { 
     data: recentActivities, 
-    isLoading: isLoadingActivities
+    isLoading: isLoadingActivities,
+    refetch: refetchActivities
   } = useRecentActivities(3); // Limit to 3 for the dashboard
   
-  // Updated statistics with different navigation paths
+  // Stats with different navigation paths
   const stats = [
     { 
       title: 'Active Clinics', 
@@ -58,6 +61,15 @@ const AdminDashboard = () => {
     navigate("/activities");
   };
 
+  const handleRefresh = () => {
+    refetchStats();
+    refetchActivities();
+    toast({
+      title: "Dashboard refreshed",
+      description: "Latest data has been loaded from the database."
+    });
+  };
+
   // Define an activity icon mapping
   const getActivityIcon = (type: string) => {
     switch(type) {
@@ -74,9 +86,19 @@ const AdminDashboard = () => {
   
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-500">Welcome back, {user?.name}!</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-500">Welcome back, {user?.name}!</p>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={handleRefresh} 
+          className="flex items-center gap-1"
+        >
+          <RefreshCw size={16} />
+          <span>Refresh</span>
+        </Button>
       </div>
       
       {/* Stats Cards */}
@@ -93,8 +115,8 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               {isLoadingStats ? (
-                <div className="text-2xl font-bold text-gray-300 animate-pulse">
-                  Loading...
+                <div className="text-2xl font-bold">
+                  <Skeleton className="h-8 w-12" />
                 </div>
               ) : (
                 <div className="text-2xl font-bold">{stat.value}</div>
@@ -115,14 +137,31 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               {isLoadingStats ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                <div className="space-y-2">
+                  {Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="flex justify-between items-center">
+                      <Skeleton className="h-5 w-32" />
+                      <div className="flex space-x-4">
+                        <Skeleton className="h-5 w-8" />
+                        <Skeleton className="h-5 w-8" />
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : statsError ? (
                 <div className="text-center py-8 text-red-500">
                   Failed to load clinic data
+                  <Button 
+                    onClick={() => refetchStats()} 
+                    variant="outline" 
+                    size="sm" 
+                    className="ml-2"
+                  >
+                    Try Again
+                  </Button>
                 </div>
-              ) : dashboardStats?.clinicsSummary.length === 0 ? (
+              ) : !dashboardStats || dashboardStats.clinicsSummary.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   No active clinics found
                 </div>
@@ -138,7 +177,7 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {dashboardStats?.clinicsSummary.map((clinic) => (
+                      {dashboardStats.clinicsSummary.map((clinic) => (
                         <tr key={clinic.id} className="border-b hover:bg-gray-50">
                           <td className="py-3">{clinic.name}</td>
                           <td className="py-3">{clinic.coaches}</td>
@@ -168,16 +207,24 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               {isLoadingActivities ? (
-                <div className="flex justify-center py-4">
-                  <div className="animate-spin h-6 w-6 border-4 border-primary border-t-transparent rounded-full"></div>
+                <div className="space-y-4">
+                  {Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="flex items-start space-x-3">
+                      <Skeleton className="h-5 w-5 rounded-full mt-1" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ) : recentActivities?.length === 0 ? (
+              ) : !recentActivities || recentActivities.length === 0 ? (
                 <div className="text-center py-4 text-gray-500">
                   No recent activities found
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {recentActivities?.slice(0, 3).map((activity) => (
+                  {recentActivities.slice(0, 3).map((activity) => (
                     <div key={activity.id} className="flex items-start space-x-3">
                       {getActivityIcon(activity.type)}
                       <div>
@@ -195,5 +242,7 @@ const AdminDashboard = () => {
     </div>
   );
 };
+
+import { RefreshCw } from 'lucide-react';
 
 export default AdminDashboard;

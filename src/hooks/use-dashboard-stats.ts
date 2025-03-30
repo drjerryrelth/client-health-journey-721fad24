@@ -29,13 +29,20 @@ export const useDashboardStats = () => {
     queryKey: ['dashboardStats'],
     queryFn: async (): Promise<DashboardStats> => {
       try {
+        console.log('Fetching dashboard stats...');
+        
         // 1. Get active clinics count
         const { data: clinics, error: clinicsError } = await supabase
           .from('clinics')
           .select('*')
           .eq('status', 'active');
 
-        if (clinicsError) throw clinicsError;
+        if (clinicsError) {
+          console.error('Error fetching clinics:', clinicsError);
+          throw clinicsError;
+        }
+        
+        console.log('Active clinics found:', clinics?.length || 0);
 
         // 2. Get total coaches count
         const { data: coaches, error: coachesError } = await supabase
@@ -43,7 +50,12 @@ export const useDashboardStats = () => {
           .select('*')
           .eq('status', 'active');
 
-        if (coachesError) throw coachesError;
+        if (coachesError) {
+          console.error('Error fetching coaches:', coachesError);
+          throw coachesError;
+        }
+        
+        console.log('Active coaches found:', coaches?.length || 0);
 
         // 3. Get weekly activities (check-ins within last 7 days)
         const oneWeekAgo = new Date();
@@ -55,18 +67,26 @@ export const useDashboardStats = () => {
           .select('*')
           .gte('date', oneWeekAgoStr);
 
-        if (checkInsError) throw checkInsError;
+        if (checkInsError) {
+          console.error('Error fetching check-ins:', checkInsError);
+          throw checkInsError;
+        }
+        
+        console.log('Weekly activities found:', recentCheckIns?.length || 0);
 
         // 4. Get client count per clinic
         const clinicSummaries = await Promise.all(
-          clinics.map(async (clinic) => {
+          (clinics || []).map(async (clinic) => {
             // Get coaches for this clinic
             const { data: clinicCoaches, error: clinicCoachesError } = await supabase
               .from('coaches')
               .select('id')
               .eq('clinic_id', clinic.id);
 
-            if (clinicCoachesError) throw clinicCoachesError;
+            if (clinicCoachesError) {
+              console.error(`Error fetching coaches for clinic ${clinic.id}:`, clinicCoachesError);
+              throw clinicCoachesError;
+            }
 
             // Get clients for this clinic
             const { data: clinicClients, error: clinicClientsError } = await supabase
@@ -74,7 +94,10 @@ export const useDashboardStats = () => {
               .select('id')
               .eq('clinic_id', clinic.id);
 
-            if (clinicClientsError) throw clinicClientsError;
+            if (clinicClientsError) {
+              console.error(`Error fetching clients for clinic ${clinic.id}:`, clinicClientsError);
+              throw clinicClientsError;
+            }
 
             return {
               id: clinic.id,
@@ -85,11 +108,13 @@ export const useDashboardStats = () => {
             };
           })
         );
+        
+        console.log('Clinic summaries prepared:', clinicSummaries.length);
 
         return {
-          activeClinicCount: clinics.length,
-          totalCoachCount: coaches.length,
-          weeklyActivitiesCount: recentCheckIns.length,
+          activeClinicCount: clinics?.length || 0,
+          totalCoachCount: coaches?.length || 0,
+          weeklyActivitiesCount: recentCheckIns?.length || 0,
           clinicsSummary: clinicSummaries,
         };
       } catch (error) {
@@ -99,6 +124,7 @@ export const useDashboardStats = () => {
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
   });
 };
 
@@ -107,6 +133,8 @@ export const useRecentActivities = (limit: number = 10) => {
     queryKey: ['recentActivities', limit],
     queryFn: async (): Promise<ActivityItem[]> => {
       try {
+        console.log(`Fetching recent activities (limit: ${limit})...`);
+        
         // Get recent check-ins
         const { data: checkIns, error: checkInsError } = await supabase
           .from('check_ins')
@@ -114,7 +142,12 @@ export const useRecentActivities = (limit: number = 10) => {
           .order('created_at', { ascending: false })
           .limit(Math.ceil(limit / 2));
 
-        if (checkInsError) throw checkInsError;
+        if (checkInsError) {
+          console.error('Error fetching check-ins:', checkInsError);
+          throw checkInsError;
+        }
+        
+        console.log('Check-ins found:', checkIns?.length || 0);
 
         // Get recent clinic creations
         const { data: clinics, error: clinicsError } = await supabase
@@ -123,7 +156,12 @@ export const useRecentActivities = (limit: number = 10) => {
           .order('created_at', { ascending: false })
           .limit(Math.ceil(limit / 4));
 
-        if (clinicsError) throw clinicsError;
+        if (clinicsError) {
+          console.error('Error fetching clinics:', clinicsError);
+          throw clinicsError;
+        }
+        
+        console.log('Recent clinics found:', clinics?.length || 0);
 
         // Get recent coach additions
         const { data: coaches, error: coachesError } = await supabase
@@ -132,10 +170,15 @@ export const useRecentActivities = (limit: number = 10) => {
           .order('created_at', { ascending: false })
           .limit(Math.ceil(limit / 4));
 
-        if (coachesError) throw coachesError;
+        if (coachesError) {
+          console.error('Error fetching coaches:', coachesError);
+          throw coachesError;
+        }
+        
+        console.log('Recent coaches found:', coaches?.length || 0);
 
         // Format check-ins as activities
-        const checkInActivities = checkIns.map(checkIn => {
+        const checkInActivities = (checkIns || []).map(checkIn => {
           const clientName = checkIn.clients?.name || 'Unknown Client';
           
           return {
@@ -147,7 +190,7 @@ export const useRecentActivities = (limit: number = 10) => {
         });
 
         // Format clinic creations as activities
-        const clinicActivities = clinics.map(clinic => {
+        const clinicActivities = (clinics || []).map(clinic => {
           return {
             id: `clinic-${clinic.id}`,
             type: 'clinic_signup',
@@ -157,7 +200,7 @@ export const useRecentActivities = (limit: number = 10) => {
         });
 
         // Format coach additions as activities
-        const coachActivities = coaches.map(coach => {
+        const coachActivities = (coaches || []).map(coach => {
           const clinicName = coach.clinics?.name || 'Unknown Clinic';
           
           return {
@@ -182,6 +225,8 @@ export const useRecentActivities = (limit: number = 10) => {
           return timeA - timeB;
         })
         .slice(0, limit);
+        
+        console.log('Total activities prepared:', allActivities.length);
 
         return allActivities;
       } catch (error) {
@@ -191,11 +236,14 @@ export const useRecentActivities = (limit: number = 10) => {
       }
     },
     staleTime: 1000 * 60 * 1, // 1 minute
+    retry: 1,
   });
 };
 
 // Helper functions for timestamp formatting
 function formatTimeAgo(dateStr: string): string {
+  if (!dateStr) return 'unknown time';
+  
   const date = new Date(dateStr);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -219,6 +267,7 @@ function formatTimeAgo(dateStr: string): string {
 
 function extractTimeValue(timeAgo: string): number {
   if (timeAgo === 'just now') return 0;
+  if (timeAgo === 'unknown time') return Number.MAX_SAFE_INTEGER;
   
   const match = timeAgo.match(/(\d+)/);
   if (!match) return Number.MAX_SAFE_INTEGER;
