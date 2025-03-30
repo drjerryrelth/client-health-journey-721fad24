@@ -54,6 +54,15 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
         clinicId: clinicId
       });
       
+      // Check if we're authenticated
+      const { data: sessionData } = await CoachService.supabase.auth.getSession();
+      if (!sessionData?.session) {
+        setErrorDetails("You are not logged in. Please log in to add a coach.");
+        setShowErrorDialog(true);
+        toast.error("Authentication required to add a coach.");
+        return;
+      }
+      
       const newCoach = await CoachService.addCoach({
         name: values.name,
         email: values.email,

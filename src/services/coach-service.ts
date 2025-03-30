@@ -90,6 +90,14 @@ export const CoachService = {
     try {
       console.log('Adding coach with data:', coach);
       
+      // Check if user is authenticated
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) {
+        console.error('User is not authenticated');
+        toast.error('You must be logged in to add a coach');
+        return null;
+      }
+      
       const { data, error } = await supabase
         .from('coaches')
         .insert({
@@ -108,6 +116,12 @@ export const CoachService = {
         throw error;
       }
       
+      if (!data) {
+        console.error('No data returned from coach creation');
+        toast.error('Failed to add coach: No data returned from server');
+        return null;
+      }
+      
       console.log('Added coach successfully:', data);
       toast.success('Coach added successfully!');
       
@@ -122,6 +136,11 @@ export const CoachService = {
       };
     } catch (error) {
       console.error('Error adding coach:', error);
+      if (error instanceof Error) {
+        toast.error(`Failed to add coach: ${error.message}`);
+      } else {
+        toast.error('Failed to add coach due to an unknown error');
+      }
       return null;
     }
   },
@@ -129,6 +148,14 @@ export const CoachService = {
   // Update a coach
   async updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 'clients'>>): Promise<Coach | null> {
     try {
+      // Check if user is authenticated
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) {
+        console.error('User is not authenticated');
+        toast.error('You must be logged in to update a coach');
+        return null;
+      }
+      
       const updates: any = {};
       if (coach.name) updates.name = coach.name;
       if (coach.email) updates.email = coach.email;
@@ -151,7 +178,20 @@ export const CoachService = {
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating coach:', error);
+        toast.error(`Failed to update coach: ${error.message}`);
+        throw error;
+      }
+      
+      if (!data) {
+        console.error('No data returned from coach update');
+        toast.error('Failed to update coach: No data returned from server');
+        return null;
+      }
+      
+      console.log('Updated coach successfully:', data);
+      toast.success('Coach updated successfully!');
       
       return {
         id: data.id,
@@ -164,7 +204,11 @@ export const CoachService = {
       };
     } catch (error) {
       console.error('Error updating coach:', error);
-      toast.error('Failed to update coach.');
+      if (error instanceof Error) {
+        toast.error(`Failed to update coach: ${error.message}`);
+      } else {
+        toast.error('Failed to update coach due to an unknown error');
+      }
       return null;
     }
   }
