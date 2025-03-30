@@ -65,25 +65,25 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
       setIsSubmitting(true);
       setErrorDetails(null);
       
-      console.log('Submitting coach:', {
+      console.log('[AddCoachDialog] Submitting coach data:', {
         name: values.name,
         email: values.email,
         phone: values.phone || null,
         clinicId: clinicId
       });
       
-      console.log('Current user:', user);
+      console.log('[AddCoachDialog] Current auth context user:', user);
       
-      // Check if we're authenticated using the authentication helper
+      // Verify auth one more time before submission
       const session = await checkAuthentication();
       if (!session) {
-        setErrorDetails("You are not logged in. Please log in to add a coach.");
+        setErrorDetails("Authentication verification failed. Please try logging in again.");
         setShowErrorDialog(true);
         toast.error("Authentication required to add a coach.");
         return;
       }
       
-      console.log('Session found:', session);
+      console.log('[AddCoachDialog] Session verified before submission:', session.user.id);
       
       const newCoach = await CoachService.addCoach({
         name: values.name,
@@ -102,10 +102,10 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
         // Notify parent component to refresh coach list
         if (onCoachAdded) onCoachAdded();
       } else {
-        throw new Error("Failed to add coach. Server returned null.");
+        throw new Error("Coach addition failed - service returned null");
       }
     } catch (error) {
-      console.error("Error adding coach:", error);
+      console.error("[AddCoachDialog] Error adding coach:", error);
       
       // Set detailed error message for debugging
       if (error instanceof Error) {
@@ -233,17 +233,16 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
         </DialogContent>
       </Dialog>
 
-      {/* Error Debug Dialog */}
       <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Error Adding Coach</AlertDialogTitle>
             <AlertDialogDescription>
               <div className="text-red-500">
-                <p className="mb-2">There was a problem adding the coach:</p>
-                <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-60">
+                <p>There was a problem adding the coach:</p>
+                <div className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-60">
                   {errorDetails || "Unknown error"}
-                </pre>
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
