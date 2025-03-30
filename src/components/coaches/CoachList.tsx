@@ -3,14 +3,18 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Phone } from 'lucide-react';
+import { User, Mail, Phone, MoreVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface CoachListProps {
   limit?: number;
   clinicId?: string;
+  onEdit?: (coach: any) => void;
+  onDelete?: (coach: any) => void;
 }
 
-const CoachList: React.FC<CoachListProps> = ({ limit, clinicId }) => {
+const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete }) => {
   // Mock coaches data
   const allCoaches = [
     {
@@ -89,6 +93,7 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId }) => {
             <TableHead>Phone</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Clients</TableHead>
+            {(onEdit || onDelete) && <TableHead className="w-[80px]">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -124,11 +129,38 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId }) => {
                   </Badge>
                 </TableCell>
                 <TableCell>{coach.clients}</TableCell>
+                {(onEdit || onDelete) && (
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {onEdit && (
+                          <DropdownMenuItem onClick={() => onEdit(coach)}>
+                            Edit
+                          </DropdownMenuItem>
+                        )}
+                        {onDelete && (
+                          <DropdownMenuItem 
+                            onClick={() => onDelete(coach)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            Remove
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-4">
+              <TableCell colSpan={onEdit || onDelete ? 6 : 5} className="text-center py-4">
                 No coaches found for this clinic
               </TableCell>
             </TableRow>

@@ -3,16 +3,27 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, Building, ChevronRight, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Building, ChevronRight, ArrowLeft, UserPlus, Edit2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import CoachList from '@/components/coaches/CoachList';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const ClinicsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedClinic, setSelectedClinic] = useState<{id: string, name: string} | null>(null);
+  const [showAddCoachDialog, setShowAddCoachDialog] = useState(false);
+  const [showEditCoachDialog, setShowEditCoachDialog] = useState(false);
+  const [selectedCoach, setSelectedCoach] = useState<any>(null);
+  
+  // Form state
+  const [coachName, setCoachName] = useState('');
+  const [coachEmail, setCoachEmail] = useState('');
+  const [coachPhone, setCoachPhone] = useState('');
 
   // Mock clinics data
   const clinics = [
@@ -68,6 +79,84 @@ const ClinicsPage = () => {
     setSelectedClinic(null);
   };
 
+  const handleAddCoach = () => {
+    setShowAddCoachDialog(true);
+  };
+
+  const handleEditCoach = (coach: any) => {
+    setSelectedCoach(coach);
+    setCoachName(coach.name);
+    setCoachEmail(coach.email);
+    setCoachPhone(coach.phone || '');
+    setShowEditCoachDialog(true);
+  };
+
+  const handleDeleteCoach = (coach: any) => {
+    toast({
+      title: "Confirm Deletion",
+      description: `Are you sure you want to remove ${coach.name}? This will revoke their access to the system.`,
+      action: (
+        <Button 
+          variant="destructive" 
+          onClick={() => {
+            // Here you would delete the coach
+            toast({
+              title: "Coach Removed",
+              description: `${coach.name} has been removed from ${selectedClinic?.name}.`
+            });
+          }}
+        >
+          Delete
+        </Button>
+      ),
+    });
+  };
+
+  const handleSubmitAddCoach = () => {
+    if (!coachName || !coachEmail) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide name and email for the coach.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Here you would add the coach to the database
+    toast({
+      title: "Coach Added",
+      description: `${coachName} has been added to ${selectedClinic?.name}.`
+    });
+    
+    setShowAddCoachDialog(false);
+    setCoachName('');
+    setCoachEmail('');
+    setCoachPhone('');
+  };
+
+  const handleSubmitEditCoach = () => {
+    if (!coachName || !coachEmail) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide name and email for the coach.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Here you would update the coach in the database
+    toast({
+      title: "Coach Updated",
+      description: `${coachName}'s information has been updated.`
+    });
+    
+    setShowEditCoachDialog(false);
+    setSelectedCoach(null);
+    setCoachName('');
+    setCoachEmail('');
+    setCoachPhone('');
+  };
+
   if (selectedClinic) {
     return (
       <div>
@@ -86,18 +175,137 @@ const ClinicsPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Coaches at {selectedClinic.name}</CardTitle>
-            <Button onClick={() => toast({
-              title: "Coming Soon",
-              description: "The Add Coach feature is under development",
-            })} className="flex items-center gap-2">
-              <PlusCircle size={18} />
+            <Button onClick={handleAddCoach} className="flex items-center gap-2">
+              <UserPlus size={18} />
               <span>Add Coach</span>
             </Button>
           </CardHeader>
           <CardContent>
-            <CoachList clinicId={selectedClinic.id} />
+            <CoachList 
+              clinicId={selectedClinic.id} 
+              onEdit={handleEditCoach}
+              onDelete={handleDeleteCoach}
+            />
           </CardContent>
         </Card>
+
+        {/* Add Coach Dialog */}
+        <Dialog open={showAddCoachDialog} onOpenChange={setShowAddCoachDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Coach</DialogTitle>
+              <DialogDescription>
+                Add a new coach to {selectedClinic.name}. They will receive an email invitation to set up their account.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input 
+                  id="name" 
+                  value={coachName} 
+                  onChange={(e) => setCoachName(e.target.value)} 
+                  className="col-span-3" 
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={coachEmail} 
+                  onChange={(e) => setCoachEmail(e.target.value)} 
+                  className="col-span-3" 
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="phone" className="text-right">
+                  Phone
+                </Label>
+                <Input 
+                  id="phone" 
+                  type="tel" 
+                  value={coachPhone} 
+                  onChange={(e) => setCoachPhone(e.target.value)} 
+                  className="col-span-3" 
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowAddCoachDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleSubmitAddCoach}>
+                Add Coach
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Coach Dialog */}
+        <Dialog open={showEditCoachDialog} onOpenChange={setShowEditCoachDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Coach</DialogTitle>
+              <DialogDescription>
+                Update coach information for {selectedClinic.name}.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-name" className="text-right">
+                  Name
+                </Label>
+                <Input 
+                  id="edit-name" 
+                  value={coachName} 
+                  onChange={(e) => setCoachName(e.target.value)} 
+                  className="col-span-3" 
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-email" className="text-right">
+                  Email
+                </Label>
+                <Input 
+                  id="edit-email" 
+                  type="email" 
+                  value={coachEmail} 
+                  onChange={(e) => setCoachEmail(e.target.value)} 
+                  className="col-span-3" 
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-phone" className="text-right">
+                  Phone
+                </Label>
+                <Input 
+                  id="edit-phone" 
+                  type="tel" 
+                  value={coachPhone} 
+                  onChange={(e) => setCoachPhone(e.target.value)} 
+                  className="col-span-3" 
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowEditCoachDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleSubmitEditCoach}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -154,7 +362,7 @@ const ClinicsPage = () => {
                         className="flex items-center"
                         onClick={() => handleClinicSelect({id: clinic.id, name: clinic.name})}
                       >
-                        <span className="mr-1">View Coaches</span>
+                        <span className="mr-1">Manage Coaches</span>
                         <ChevronRight size={16} />
                       </Button>
                     </TableCell>

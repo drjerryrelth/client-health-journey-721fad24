@@ -1,11 +1,9 @@
-
 import React from 'react';
 import { useAuth } from '@/context/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Activity, Calendar, Building, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import CoachList from '@/components/coaches/CoachList';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminDashboard = () => {
@@ -19,7 +17,7 @@ const AdminDashboard = () => {
       title: 'Total Coaches', 
       value: 8, 
       icon: <Users className="text-primary-500" size={24} />,
-      path: '/clinics'  // Changed to go to clinics since coaches are now under clinics
+      path: '/clinics'  // This now directs to clinics for coach management
     },
     { 
       title: 'Total Clients', 
