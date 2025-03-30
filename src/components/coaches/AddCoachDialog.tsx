@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import CoachService from '@/services/coach-service';
+import CoachService from '@/services/coaches';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -45,7 +44,6 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
     }
   });
 
-  // Check authentication status when dialog opens
   useEffect(() => {
     if (open) {
       const verifyAuth = async () => {
@@ -74,7 +72,6 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
       
       console.log('[AddCoachDialog] Current auth context user:', user);
       
-      // Verify auth one more time before submission
       const session = await checkAuthentication();
       if (!session) {
         setErrorDetails("Authentication verification failed. Please try logging in again.");
@@ -96,10 +93,8 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
       if (newCoach) {
         toast.success(`${values.name} has been added to ${clinicName}`);
         
-        // Reset form and close dialog
         form.reset();
         onOpenChange(false);
-        // Notify parent component to refresh coach list
         if (onCoachAdded) onCoachAdded();
       } else {
         throw new Error("Coach addition failed - service returned null");
@@ -107,7 +102,6 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
     } catch (error) {
       console.error("[AddCoachDialog] Error adding coach:", error);
       
-      // Set detailed error message for debugging
       if (error instanceof Error) {
         setErrorDetails(error.message);
       } else {

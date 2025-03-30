@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -6,14 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { User, Mail, Phone, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Coach, CoachService } from '@/services/coach-service';
+import { Coach, CoachService } from '@/services/coaches';
 
 interface CoachListProps {
   limit?: number;
   clinicId?: string;
   onEdit?: (coach: Coach) => void;
   onDelete?: (coach: Coach) => void;
-  refreshTrigger?: number; // Add a refresh trigger prop
+  refreshTrigger?: number;
 }
 
 const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete, refreshTrigger = 0 }) => {
@@ -41,11 +40,10 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
     };
 
     loadCoaches();
-  }, [clinicId, refreshTrigger]); // Add refreshTrigger to the dependency array
-  
-  // Apply limit if specified
+  }, [clinicId, refreshTrigger]);
+
   const displayedCoaches = limit ? coaches.slice(0, limit) : coaches;
-  
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
