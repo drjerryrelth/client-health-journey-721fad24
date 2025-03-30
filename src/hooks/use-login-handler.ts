@@ -61,10 +61,40 @@ export const useLoginHandler = () => {
         // First try to login directly
         await login(email, password);
         console.log('Demo login successful');
-      } catch (loginError) {
+      } catch (loginError: any) {
         console.log('Login failed, attempting to create demo account', loginError);
         
-        // If login fails, try to sign up the demo user first
+        // Special handling for email not confirmed errors
+        if (loginError.message?.includes('Email not confirmed')) {
+          toast({
+            title: 'Email confirmation required',
+            description: 'For demo accounts, please check the Supabase User Management section to confirm the email manually.',
+            variant: 'destructive',
+          });
+          
+          // Still attempt to create the account if it doesn't exist
+          try {
+            await signUp(email, password, {
+              full_name: fullName,
+              role: role
+            });
+            
+            toast({
+              title: 'Demo account created',
+              description: 'Please confirm the email in Supabase User Management to login.',
+            });
+          } catch (signupError: any) {
+            // If the account already exists, this is expected
+            if (!signupError.message?.includes('already registered')) {
+              throw signupError;
+            }
+          }
+          
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // If login fails for other reasons, try to sign up the demo user first
         await signUp(email, password, {
           full_name: fullName,
           role: role

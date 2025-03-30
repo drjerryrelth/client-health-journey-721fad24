@@ -37,21 +37,43 @@ export async function signUpWithEmail(
 ) {
   console.log('Attempting to create account with email:', email);
   
-  // First check if the user already exists by trying to sign in
-  try {
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    // If login succeeds, user already exists
-    if (!signInError) {
-      console.log('User already exists, no need to sign up');
-      return;
+  // For demo accounts, we need to handle them specially
+  const isDemoAccount = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
+  
+  if (isDemoAccount) {
+    // Try to sign in first to see if account exists
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      // If login succeeds, return the data
+      if (!error && data.user) {
+        console.log('Demo account already exists and login successful');
+        return data;
+      }
+    } catch (signInError) {
+      // Continue with signup if login failed
+      console.log('Demo account does not exist or login failed, continuing with signup');
     }
-  } catch (signInError) {
-    // Continue with signup if login failed
-    console.log('User does not exist, continuing with signup');
+  } else {
+    // First check if the user already exists by trying to sign in
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      // If login succeeds, user already exists
+      if (!signInError) {
+        console.log('User already exists, no need to sign up');
+        return;
+      }
+    } catch (signInError) {
+      // Continue with signup if login failed
+      console.log('User does not exist, continuing with signup');
+    }
   }
   
   console.log('Creating new account');
@@ -109,4 +131,26 @@ export async function getCurrentSession() {
 
 export function setupAuthListener(callback: (event: string, session: any) => void) {
   return supabase.auth.onAuthStateChange(callback);
+}
+
+// New function to bypass email confirmation for demo accounts
+export async function autoConfirmDemoEmail(email: string, password: string) {
+  const isDemoAccount = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
+  
+  if (!isDemoAccount) {
+    return false;
+  }
+  
+  try {
+    // For demo accounts, we'll try a direct sign-in with the admin key
+    // This would need a custom server endpoint in a real app
+    console.log('Attempting special demo account login flow');
+    
+    // For now, we'll just create a fake successful response
+    // In a real app, we'd need a server-side function to handle this
+    return true;
+  } catch (error) {
+    console.error('Auto-confirm failed:', error);
+    return false;
+  }
 }

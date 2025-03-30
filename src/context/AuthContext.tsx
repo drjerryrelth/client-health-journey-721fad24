@@ -134,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // For demo purposes, we'll handle this case specially
         const isDemoLogin = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
         if (isDemoLogin) {
-          errorMessage = 'Demo account email requires confirmation. Please try again.';
+          errorMessage = 'This demo account requires email confirmation in Supabase. To use the demo account, please go to Supabase User Management and confirm the email manually.';
         } else {
           errorMessage = 'Please check your email and confirm your account before logging in.';
         }
@@ -163,7 +163,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (isDemoAccount) {
         toast({
           title: 'Demo account created',
-          description: 'You may need to disable email confirmation in Supabase for immediate login.',
+          description: 'Since email confirmation is required, please go to the Supabase User Management panel to confirm the email manually.',
+        });
+      } else {
+        toast({
+          title: 'Account created',
+          description: 'Please check your email to confirm your account before logging in.',
         });
       }
       
@@ -176,6 +181,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Handle specific Supabase signup errors
       if (error.message?.includes('email address is invalid')) {
         errorMessage = 'The email address format is invalid. Please use a different email.';
+      } else if (error.message?.includes('already registered')) {
+        errorMessage = 'This email is already registered. Please try logging in instead.';
       }
       
       toast({
