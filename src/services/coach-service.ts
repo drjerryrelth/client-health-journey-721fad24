@@ -17,11 +17,12 @@ export const CoachService = {
   async getClinicCoaches(clinicId: string): Promise<Coach[]> {
     try {
       // Since the coaches table doesn't exist in the current Supabase schema,
-      // we're using mock data for now
+      // we're using mock data
       return getMockCoaches().filter(coach => coach.clinicId === clinicId);
       
       /* 
       // This code would be used once the coaches table is set up in Supabase
+      // Note: We'll need to create the coaches table with appropriate columns first
       const { data, error } = await supabase
         .from('coaches')
         .select('*, clients(id)')
@@ -58,7 +59,7 @@ export const CoachService = {
       return true;
       
       /* 
-      // This code would be used once the clients and coaches tables are set up in Supabase
+      // This code would be used once the coaches table is set up in Supabase
       // First reassign all clients
       const { error: reassignError } = await supabase
         .from('clients')
