@@ -45,7 +45,7 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
       name: coach.name,
       email: coach.email,
       phone: coach.phone,
-      status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status : 'inactive',
+      status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status as 'active' | 'inactive' : 'inactive' as const,
       clinicId: coach.clinic_id,
       clients: coach.client_count || 0
     }));
@@ -104,7 +104,7 @@ export async function getAllCoaches(): Promise<Coach[]> {
             name: coach.name,
             email: coach.email,
             phone: coach.phone,
-            status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status as 'active' | 'inactive' : 'inactive',
+            status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status as 'active' | 'inactive' : 'inactive' as const,
             clinicId: coach.clinic_id,
             clients: 0
           };
@@ -115,7 +115,7 @@ export async function getAllCoaches(): Promise<Coach[]> {
           name: coach.name,
           email: coach.email,
           phone: coach.phone,
-          status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status as 'active' | 'inactive' : 'inactive',
+          status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status as 'active' | 'inactive' : 'inactive' as const,
           clinicId: coach.clinic_id,
           clients: count || 0
         };
@@ -169,7 +169,7 @@ export async function getAllCoaches(): Promise<Coach[]> {
         name: coach.name,
         email: coach.email,
         phone: coach.phone || null,
-        status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status as 'active' | 'inactive' : 'inactive',
+        status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status as 'active' | 'inactive' : 'inactive' as const,
         clinicId: coach.clinic_id,
         clients: coach.client_count || 0
       }));
