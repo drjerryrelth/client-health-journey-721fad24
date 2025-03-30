@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/context/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Calendar, Building, Users } from 'lucide-react';
+import { Activity, Calendar, Building, Users, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -18,14 +18,27 @@ const AdminDashboard = () => {
     data: dashboardStats, 
     isLoading: isLoadingStats, 
     error: statsError,
-    refetch: refetchStats
+    refetch: refetchStats,
+    isError: isStatsError
   } = useDashboardStats();
   
   const { 
     data: recentActivities, 
     isLoading: isLoadingActivities,
-    refetch: refetchActivities
+    refetch: refetchActivities,
+    isError: isActivitiesError
   } = useRecentActivities(3); // Limit to 3 for the dashboard
+
+  // Auto-refresh on error after 2 seconds
+  useEffect(() => {
+    if (isStatsError) {
+      const timer = setTimeout(() => {
+        console.log('Auto-refreshing dashboard stats due to error');
+        refetchStats();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isStatsError, refetchStats]);
   
   // Stats with different navigation paths
   const stats = [
@@ -149,17 +162,22 @@ const AdminDashboard = () => {
                     </div>
                   ))}
                 </div>
-              ) : statsError ? (
-                <div className="text-center py-8 text-red-500">
-                  Failed to load clinic data
-                  <Button 
-                    onClick={() => refetchStats()} 
-                    variant="outline" 
-                    size="sm" 
-                    className="ml-2"
-                  >
-                    Try Again
-                  </Button>
+              ) : isStatsError ? (
+                <div className="text-center py-8">
+                  <div className="inline-flex items-center text-red-500 mb-2">
+                    <AlertTriangle size={20} className="mr-2" />
+                    <span>Failed to load clinic data</span>
+                  </div>
+                  <div>
+                    <Button 
+                      onClick={() => refetchStats()} 
+                      variant="outline" 
+                      size="sm" 
+                      className="ml-2"
+                    >
+                      Try Again
+                    </Button>
+                  </div>
                 </div>
               ) : !dashboardStats || dashboardStats.clinicsSummary.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
@@ -218,6 +236,23 @@ const AdminDashboard = () => {
                     </div>
                   ))}
                 </div>
+              ) : isActivitiesError ? (
+                <div className="text-center py-4">
+                  <div className="inline-flex items-center text-red-500 mb-2">
+                    <AlertTriangle size={18} className="mr-2" />
+                    <span>Failed to load activities</span>
+                  </div>
+                  <div>
+                    <Button 
+                      onClick={() => refetchActivities()} 
+                      variant="outline" 
+                      size="sm" 
+                      className="ml-2"
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                </div>
               ) : !recentActivities || recentActivities.length === 0 ? (
                 <div className="text-center py-4 text-gray-500">
                   No recent activities found
@@ -242,7 +277,5 @@ const AdminDashboard = () => {
     </div>
   );
 };
-
-import { RefreshCw } from 'lucide-react';
 
 export default AdminDashboard;

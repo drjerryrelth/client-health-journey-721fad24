@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
         return {
           ...coach,
           client_count: 0,
-          // Ensure status is 'active' or 'inactive'
+          // Ensure status is valid
           status: coach.status === 'active' || coach.status === 'inactive' ? coach.status : 'inactive'
         }
       }
@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       return {
         ...coach,
         client_count: count || 0,
-        // Ensure status is 'active' or 'inactive'
+        // Ensure status is valid
         status: coach.status === 'active' || coach.status === 'inactive' ? coach.status : 'inactive'
       }
     }))

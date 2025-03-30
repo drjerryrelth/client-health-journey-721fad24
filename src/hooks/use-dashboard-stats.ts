@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { toast } from 'sonner';
+import { getCoachCount } from '@/services/coaches/admin-coach-service';
 
 // Types for the dashboard statistics
 export interface DashboardStats {
@@ -56,16 +56,8 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
     
     console.log('[DashboardStats] Clinics fetched:', clinicsData?.length || 0);
     
-    // Fetch total coaches count
-    const { count: coachCount, error: coachError } = await supabase
-      .from('coaches')
-      .select('id', { count: 'exact', head: true });
-      
-    if (coachError) {
-      console.error('[DashboardStats] Error fetching coach count:', coachError);
-      throw coachError;
-    }
-    
+    // Get coach count using our specialized service
+    const coachCount = await getCoachCount();
     console.log('[DashboardStats] Coach count:', coachCount);
     
     // Calculate the date 7 days ago
@@ -127,7 +119,7 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
     
     return {
       activeClinicCount: clinicsData?.length || 0,
-      totalCoachCount: coachCount || 0,
+      totalCoachCount: coachCount,
       weeklyActivitiesCount: activitiesCount || 0,
       clinicsSummary
     };
