@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
@@ -27,10 +26,10 @@ const Sidebar = () => {
   const isCoach = hasRole('coach');
   const isClient = hasRole('client');
 
+  // Updated admin links to focus on clinics
   const adminLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Clinics', path: '/clinics', icon: <Building size={20} /> },
-    { name: 'Clients', path: '/clients', icon: <User size={20} /> },
     { name: 'Programs', path: '/programs', icon: <List size={20} /> },
     { name: 'Check-ins', path: '/check-ins', icon: <Calendar size={20} /> },
     { name: 'Reports', path: '/reports', icon: <FileText size={20} /> },
@@ -56,10 +55,10 @@ const Sidebar = () => {
 
   const handleAddClick = () => {
     if (isAdmin) {
-      navigate('/add-coach');
+      navigate('/clinics');
       toast({
-        title: "Coming Soon",
-        description: "The Add Coach feature is under development",
+        title: "Clinic Management",
+        description: "Navigate to a clinic to add coaches",
       });
     } else if (isCoach) {
       navigate('/add-client');

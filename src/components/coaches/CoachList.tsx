@@ -1,29 +1,45 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { User, Mail, Phone, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { getMockCoaches } from '@/services/coach-service';
+import { Coach, CoachService } from '@/services/coach-service';
 
 interface CoachListProps {
   limit?: number;
   clinicId?: string;
-  onEdit?: (coach: any) => void;
-  onDelete?: (coach: any) => void;
+  onEdit?: (coach: Coach) => void;
+  onDelete?: (coach: Coach) => void;
 }
 
 const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete }) => {
-  // Use mock coaches data
-  const allCoaches = getMockCoaches();
-  
-  // Filter by clinic if clinicId is provided
-  const coaches = clinicId 
-    ? allCoaches.filter(coach => coach.clinicId === clinicId) 
-    : allCoaches;
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    const loadCoaches = async () => {
+      if (clinicId) {
+        setIsLoading(true);
+        try {
+          const coachesData = await CoachService.getClinicCoaches(clinicId);
+          setCoaches(coachesData);
+        } catch (error) {
+          console.error('Error loading coaches:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setCoaches([]);
+        setIsLoading(false);
+      }
+    };
+
+    loadCoaches();
+  }, [clinicId]);
+  
   // Apply limit if specified
   const displayedCoaches = limit ? coaches.slice(0, limit) : coaches;
   
@@ -37,6 +53,10 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (isLoading) {
+    return <div className="flex justify-center py-4">Loading coaches...</div>;
+  }
 
   return (
     <div className="overflow-x-auto">

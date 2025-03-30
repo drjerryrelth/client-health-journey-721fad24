@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { useAuth } from '@/context/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Activity, Calendar, Building, User } from 'lucide-react';
+import { Activity, Calendar, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -11,24 +12,18 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Mock statistics for admin with navigation paths
+  // Updated statistics to focus on clinics
   const stats = [
-    { 
-      title: 'Total Coaches', 
-      value: 8, 
-      icon: <Users className="text-primary-500" size={24} />,
-      path: '/clinics'  // This now directs to clinics for coach management
-    },
-    { 
-      title: 'Total Clients', 
-      value: 24, 
-      icon: <User className="text-secondary-500" size={24} />,
-      path: '/clients'
-    },
     { 
       title: 'Active Clinics', 
       value: 3, 
-      icon: <Building className="text-orange-500" size={24} />,
+      icon: <Building className="text-primary-500" size={24} />,
+      path: '/clinics'
+    },
+    { 
+      title: 'Total Coaches', 
+      value: 8, 
+      icon: <Building className="text-secondary-500" size={24} />,
       path: '/clinics'
     },
     { 
@@ -63,7 +58,7 @@ const AdminDashboard = () => {
       </div>
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {stats.map((stat, index) => (
           <Card 
             key={index} 
