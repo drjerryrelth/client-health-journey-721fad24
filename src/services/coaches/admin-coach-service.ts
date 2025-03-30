@@ -10,10 +10,9 @@ export async function getCoachCount(): Promise<number> {
     console.log('[AdminCoachService] Getting total coach count');
     
     // Use a simpler approach with direct count that avoids RLS recursion
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('coaches')
-      .select('id', { head: true, count: 'exact' })
-      .limit(1);
+      .select('id', { head: true, count: 'exact' });
       
     if (error) {
       console.error('[AdminCoachService] Count query error:', error);
@@ -21,9 +20,8 @@ export async function getCoachCount(): Promise<number> {
     }
     
     // Get count from metadata
-    const count = data?.count || 0;
-    console.log(`[AdminCoachService] Found ${count} coaches`);
-    return count;
+    console.log(`[AdminCoachService] Found ${count || 0} coaches`);
+    return count || 0;
   } catch (error) {
     console.error('[AdminCoachService] Failed to get coach count:', error);
     return 0;
@@ -33,10 +31,43 @@ export async function getCoachCount(): Promise<number> {
 // Get all coaches with their client counts for admin purposes
 export async function getAllCoachesForAdmin(): Promise<Coach[]> {
   try {
-    console.log('[AdminCoachService] Getting all coaches');
+    console.log('[AdminCoachService] Getting all coaches using RPC function');
     
-    // Use a more direct and robust approach to avoid RLS recursion
+    // Attempt to use the new RPC function first (from our SQL migration)
+    const { data: coachesData, error: rpcError } = await supabase.rpc('admin_get_all_coaches');
+    
+    if (rpcError) {
+      console.error('[AdminCoachService] RPC function error:', rpcError);
+      throw rpcError;
+    }
+    
+    if (!coachesData || coachesData.length === 0) {
+      console.log('[AdminCoachService] No coaches found via RPC');
+      return [];
+    }
+    
+    console.log(`[AdminCoachService] Found ${coachesData.length} coaches via RPC`);
+    
+    // Process coaches from the RPC function
+    return coachesData.map(coach => ({
+      id: coach.id,
+      name: coach.name,
+      email: coach.email,
+      phone: coach.phone || '',
+      status: (coach.status === 'active' || coach.status === 'inactive') 
+        ? coach.status as 'active' | 'inactive' 
+        : 'inactive' as const,
+      clinicId: coach.clinic_id,
+      clients: coach.client_count || 0
+    }));
+    
+  } catch (error) {
+    console.error('[AdminCoachService] Failed to get all coaches:', error);
+    
+    // Fall back to the direct query approach if the RPC fails
     try {
+      console.log('[AdminCoachService] Falling back to direct query approach');
+      
       // 1. Get coaches without complex joins or nested queries
       const { data: coachesData, error: coachesError } = await supabase
         .from('coaches')
@@ -106,9 +137,5 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
       toast.error('Could not load coaches data. Using sample data instead.');
       return getMockCoaches();
     }
-  } catch (error) {
-    console.error('[AdminCoachService] Failed to get all coaches:', error);
-    toast.error('Failed to fetch coaches data');
-    return getMockCoaches();
   }
 }

@@ -48,87 +48,27 @@ Deno.serve(async (req) => {
 
     console.log(`User making request: ${user.id}`);
     
-    console.log('Getting coaches with simplified query approach');
-
+    console.log('Using admin_get_all_coaches RPC function');
+    
     try {
-      // Simplified direct query to avoid recursion issues with RLS policies
+      // Use the security-definer RPC function to avoid RLS issues
       const { data: coaches, error: coachesError } = await supabaseClient
         .rpc('admin_get_all_coaches');
 
       if (coachesError) {
         console.error('Error fetching coaches with RPC:', coachesError);
-        
-        // Fall back to simple direct query 
-        console.log('Falling back to direct query');
-        const { data: directData, error: directError } = await supabaseClient
-          .from('coaches')
-          .select('id, name, email, phone, status, clinic_id')
-          .order('created_at', { ascending: false });
-        
-        if (directError) {
-          console.error('Error with fallback query:', directError);
-          throw directError;
-        }
-        
-        if (!directData || directData.length === 0) {
-          console.log('No coaches found with direct query');
-          return new Response(
-            JSON.stringify([]),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-          );
-        }
-        
-        // Process each coach to add client counts
-        const coachesWithClientCount = [];
-        
-        for (const coach of directData) {
-          // Get client count
-          let clientCount = 0;
-          try {
-            const { count } = await supabaseClient
-              .from('clients')
-              .select('*', { count: 'exact', head: true })
-              .eq('coach_id', coach.id);
-              
-            clientCount = count || 0;
-          } catch (countErr) {
-            console.error(`Error counting clients for coach ${coach.id}:`, countErr);
-          }
-          
-          coachesWithClientCount.push({
-            ...coach,
-            client_count: clientCount,
-            // Ensure status is valid
-            status: (coach.status === 'active' || coach.status === 'inactive') 
-              ? coach.status 
-              : "inactive"
-          });
-        }
-        
-        return new Response(
-          JSON.stringify(coachesWithClientCount),
-          { 
-            headers: { 
-              ...corsHeaders, 
-              'Content-Type': 'application/json',
-              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
-            }, 
-            status: 200 
-          }
-        );
+        throw coachesError;
       }
-
-      if (!coaches) {
-        console.log('No coaches found');
+      
+      if (!coaches || coaches.length === 0) {
+        console.log('No coaches found with RPC function');
         return new Response(
           JSON.stringify([]),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-        )
+        );
       }
 
-      console.log(`Found ${Array.isArray(coaches) ? coaches.length : 'unknown number of'} coaches`);
+      console.log(`Found ${coaches.length} coaches via RPC function`);
 
       return new Response(
         JSON.stringify(coaches),
@@ -143,9 +83,69 @@ Deno.serve(async (req) => {
           status: 200 
         }
       )
-    } catch (dataError) {
-      console.error('Error fetching or processing coaches data:', dataError);
-      throw dataError;
+    } catch (rpcError) {
+      console.error('RPC approach failed:', rpcError);
+      
+      // Fall back to direct query if RPC fails
+      console.log('Falling back to direct query');
+      const { data: directData, error: directError } = await supabaseClient
+        .from('coaches')
+        .select('id, name, email, phone, status, clinic_id')
+        .order('created_at', { ascending: false });
+      
+      if (directError) {
+        console.error('Error with fallback query:', directError);
+        throw directError;
+      }
+      
+      if (!directData || directData.length === 0) {
+        console.log('No coaches found with direct query');
+        return new Response(
+          JSON.stringify([]),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      }
+      
+      // Process each coach to add client counts
+      const coachesWithClientCount = [];
+      
+      for (const coach of directData) {
+        // Get client count
+        let clientCount = 0;
+        try {
+          const { count } = await supabaseClient
+            .from('clients')
+            .select('*', { count: 'exact', head: true })
+            .eq('coach_id', coach.id);
+            
+          clientCount = count || 0;
+        } catch (countErr) {
+          console.error(`Error counting clients for coach ${coach.id}:`, countErr);
+        }
+        
+        coachesWithClientCount.push({
+          ...coach,
+          client_count: clientCount,
+          // Ensure status is valid
+          status: (coach.status === 'active' || coach.status === 'inactive') 
+            ? coach.status 
+            : "inactive"
+        });
+      }
+      
+      return new Response(
+        JSON.stringify(coachesWithClientCount),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }, 
+          status: 200 
+        }
+      );
     }
   } catch (error) {
     console.error('Unexpected error:', error);

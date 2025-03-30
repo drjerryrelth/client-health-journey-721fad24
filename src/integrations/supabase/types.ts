@@ -436,6 +436,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_get_all_coaches: {
+        Args: Record<PropertyKey, never>
+        Returns: Json[]
+      }
       create_admin_user: {
         Args: {
           email: string
