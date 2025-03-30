@@ -18,27 +18,27 @@ interface AddClinicDialogProps {
   onClinicAdded?: () => void;
 }
 
-// Define validation schema
+// Define validation schema with all fields required
 const addClinicSchema = z.object({
   clinicName: z.string().min(1, "Clinic name is required"),
-  clinicEmail: z.string().email("Invalid email format").or(z.literal('')).optional(),
-  clinicPhone: z.string().optional(),
-  streetAddress: z.string().optional(),
+  clinicEmail: z.string().email("Invalid email format").min(1, "Email is required"),
+  clinicPhone: z.string().min(1, "Phone number is required"),
+  streetAddress: z.string().min(1, "Street address is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   zipCode: z.string().min(1, "ZIP code is required"),
   primaryContact: z.string().min(1, "Primary contact is required"),
   
-  // Billing info
-  billingContactName: z.string().optional(),
-  billingEmail: z.string().email("Invalid email format").or(z.literal('')).optional(),
-  billingPhone: z.string().optional(),
-  billingAddress: z.string().optional(),
-  billingCity: z.string().optional(),
-  billingState: z.string().optional(),
-  billingZip: z.string().optional(),
-  paymentMethod: z.string().optional(),
-  subscriptionTier: z.string().optional(),
+  // Billing info - all required now
+  billingContactName: z.string().min(1, "Billing contact name is required"),
+  billingEmail: z.string().email("Invalid email format").min(1, "Billing email is required"),
+  billingPhone: z.string().min(1, "Billing phone is required"),
+  billingAddress: z.string().min(1, "Billing address is required"),
+  billingCity: z.string().min(1, "Billing city is required"),
+  billingState: z.string().min(1, "Billing state is required"),
+  billingZip: z.string().min(1, "Billing ZIP is required"),
+  paymentMethod: z.string().min(1, "Payment method is required"),
+  subscriptionTier: z.string().min(1, "Subscription tier is required"),
 });
 
 type AddClinicFormValues = z.infer<typeof addClinicSchema>;
@@ -192,7 +192,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="streetAddress"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Street Address</FormLabel>
+                        <FormLabel className="text-right">Street Address <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <Input {...field} />
@@ -256,7 +256,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="clinicEmail"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Email</FormLabel>
+                        <FormLabel className="text-right">Email <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <Input {...field} type="email" />
@@ -272,7 +272,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="clinicPhone"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Phone</FormLabel>
+                        <FormLabel className="text-right">Phone <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <Input {...field} type="tel" />
@@ -292,7 +292,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="billingContactName"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing Contact</FormLabel>
+                        <FormLabel className="text-right">Billing Contact <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <Input {...field} />
@@ -308,7 +308,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="billingEmail"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing Email</FormLabel>
+                        <FormLabel className="text-right">Billing Email <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <Input {...field} type="email" />
@@ -324,7 +324,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="billingPhone"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing Phone</FormLabel>
+                        <FormLabel className="text-right">Billing Phone <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <Input {...field} type="tel" />
@@ -340,7 +340,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="billingAddress"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing Address</FormLabel>
+                        <FormLabel className="text-right">Billing Address <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <Input {...field} />
@@ -356,7 +356,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="billingCity"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing City</FormLabel>
+                        <FormLabel className="text-right">Billing City <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <Input {...field} />
@@ -372,7 +372,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="billingState"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing State</FormLabel>
+                        <FormLabel className="text-right">Billing State <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <Input {...field} />
@@ -388,7 +388,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="billingZip"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing ZIP</FormLabel>
+                        <FormLabel className="text-right">Billing ZIP <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <Input {...field} />
@@ -404,7 +404,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="paymentMethod"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Payment Method</FormLabel>
+                        <FormLabel className="text-right">Payment Method <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <select
@@ -429,7 +429,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
                     name="subscriptionTier"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Subscription Tier</FormLabel>
+                        <FormLabel className="text-right">Subscription Tier <span className="text-red-500">*</span></FormLabel>
                         <div className="col-span-3">
                           <FormControl>
                             <select
