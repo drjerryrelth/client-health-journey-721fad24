@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
@@ -11,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 const Sidebar = () => {
-  const { user, hasRole, logout } = useAuth();
+  const { user, hasRole } = useAuth();
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = React.useState(isMobile);
   const navigate = useNavigate();
@@ -26,12 +27,11 @@ const Sidebar = () => {
   const isCoach = hasRole('coach');
   const isClient = hasRole('client');
 
-  // Updated admin links to focus on clinics
+  // Updated admin links to remove check-ins link
   const adminLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Clinics', path: '/clinics', icon: <Building size={20} /> },
     { name: 'Programs', path: '/programs', icon: <List size={20} /> },
-    { name: 'Check-ins', path: '/check-ins', icon: <Calendar size={20} /> },
     { name: 'Reports', path: '/reports', icon: <FileText size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
@@ -57,8 +57,8 @@ const Sidebar = () => {
     if (isAdmin) {
       navigate('/clinics');
       toast({
-        title: "Clinic Management",
-        description: "Navigate to a clinic to add coaches",
+        title: "Add Clinic",
+        description: "Create a new clinic for your organization",
       });
     } else if (isCoach) {
       navigate('/add-client');
@@ -128,7 +128,7 @@ const Sidebar = () => {
               )}
             >
               <PlusCircle size={20} />
-              {!collapsed && <span>{isAdmin ? "Add Coach" : "Add Client"}</span>}
+              {!collapsed && <span>{isAdmin ? "Add Clinic" : "Add Client"}</span>}
             </Button>
           </div>
         )}

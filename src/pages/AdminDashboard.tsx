@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/context/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Calendar, Building } from 'lucide-react';
+import { Activity, Calendar, Building, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +12,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Updated statistics to focus on clinics
+  // Updated statistics with different navigation paths
   const stats = [
     { 
       title: 'Active Clinics', 
@@ -23,14 +23,14 @@ const AdminDashboard = () => {
     { 
       title: 'Total Coaches', 
       value: 8, 
-      icon: <Building className="text-secondary-500" size={24} />,
-      path: '/clinics'
+      icon: <Users className="text-secondary-500" size={24} />,
+      path: '/coaches' // Changed this path to a more appropriate one
     },
     { 
-      title: 'Weekly Check-ins', 
+      title: 'Weekly Activities', // Changed from "Weekly Check-ins"
       value: 52, 
-      icon: <Calendar className="text-purple-500" size={24} />,
-      path: '/check-ins'
+      icon: <Activity className="text-purple-500" size={24} />,
+      path: '/activities'
     },
   ];
   
