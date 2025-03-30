@@ -27,7 +27,7 @@ const Sidebar = () => {
   const isCoach = hasRole('coach');
   const isClient = hasRole('client');
 
-  // Updated admin links with Resources link
+  // Updated admin links with Reports link re-added
   const adminLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Clinics', path: '/clinics', icon: <Building size={20} /> },
@@ -35,6 +35,7 @@ const Sidebar = () => {
     { name: 'Programs', path: '/programs', icon: <List size={20} /> },
     { name: 'Activities', path: '/activities', icon: <Activity size={20} /> },
     { name: 'Resources', path: '/resources', icon: <BookOpen size={20} /> },
+    { name: 'Reports', path: '/reports', icon: <FileText size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
 
