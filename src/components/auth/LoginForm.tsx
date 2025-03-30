@@ -7,58 +7,87 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Weight } from 'lucide-react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+
+// Create form schema
+const loginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const LoginForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Initialize form
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
 
     try {
-      await login(email, password);
+      await login(data.email, data.password);
       toast({
         title: 'Login successful',
         description: 'Welcome to Client Health Tracker!',
       });
       
-      // Redirect based on role
-      if (email === 'client@example.com') {
-        navigate('/client-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      // Navigation will be handled by the auth state listener
     } catch (error) {
       console.error('Login error:', error);
-      toast({
-        title: 'Login failed',
-        description: 'Invalid email or password',
-        variant: 'destructive',
-      });
+      // Toast notification is handled in the auth context
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDemoLogin = async (type: 'admin' | 'client') => {
+  const handleDemoLogin = async (type: 'admin' | 'coach' | 'client') => {
     setIsSubmitting(true);
+    
     try {
-      if (type === 'admin') {
-        await login('admin@example.com', 'password123');
-        navigate('/dashboard');
-      } else {
-        await login('client@example.com', 'password123');
-        navigate('/client-dashboard');
+      let email = '';
+      let password = 'password123'; // Demo password
+      
+      switch (type) {
+        case 'admin':
+          email = 'admin@example.com';
+          break;
+        case 'coach':
+          email = 'coach@example.com';
+          break;
+        case 'client':
+          email = 'client@example.com';
+          break;
       }
+      
+      await login(email, password);
+      
       toast({
         title: 'Demo login successful',
-        description: `You're logged in as ${type === 'admin' ? 'an admin' : 'a client'}!`,
+        description: `You're logged in as ${type}!`,
       });
+      
+      // Navigation will be handled by the auth state listener
     } catch (error) {
       toast({
         title: 'Login failed',
@@ -75,64 +104,85 @@ const LoginForm = () => {
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-lg shadow-md">
           <div className="flex flex-col items-center mb-6">
-            <div className="w-12 h-12 rounded-lg bg-primary-500 flex items-center justify-center mb-4">
+            <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4">
               <Weight className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-center text-gray-800">Client Health Tracker</h1>
             <p className="text-gray-500 text-center mt-1">Log in to your account</p>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="you@example.com" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        placeholder="••••••••" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <span className="flex items-center justify-center">
-                  <span className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent border-white rounded-full"></span>
-                  Logging in...
-                </span>
-              ) : (
-                'Log in'
-              )}
-            </Button>
-          </form>
+              
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center">
+                    <span className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent border-white rounded-full"></span>
+                    Logging in...
+                  </span>
+                ) : (
+                  'Log in'
+                )}
+              </Button>
+            </form>
+          </Form>
           
           <div className="mt-8">
             <p className="text-sm text-center text-gray-500 mb-4">Demo Accounts</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <Button 
                 variant="outline"
                 onClick={() => handleDemoLogin('admin')}
                 disabled={isSubmitting}
                 className="text-xs"
               >
-                Login as Clinic Staff
+                Login as Admin
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => handleDemoLogin('coach')}
+                disabled={isSubmitting}
+                className="text-xs"
+              >
+                Login as Coach
               </Button>
               <Button 
                 variant="outline"

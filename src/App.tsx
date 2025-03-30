@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 
 // Pages
+import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ClientDashboard from "./pages/ClientDashboard";
@@ -17,17 +18,25 @@ import Unauthorized from "./pages/Unauthorized";
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
           <Routes>
             {/* Public routes */}
+            <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
@@ -50,15 +59,12 @@ const App = () => (
               <Route path="/profile" element={<ClientDashboard />} />
             </Route>
             
-            {/* Default route */}
-            <Route path="/" element={<Login />} />
-            
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
