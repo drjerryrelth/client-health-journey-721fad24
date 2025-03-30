@@ -102,12 +102,17 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
           .select('id', { count: 'exact', head: true })
           .eq('coach_id', coach.id);
         
+        // Ensure status is either 'active' or 'inactive'
+        const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
+          ? coach.status as 'active' | 'inactive' 
+          : 'inactive' as const;
+          
         return {
           id: coach.id,
           name: coach.name,
           email: coach.email,
           phone: coach.phone || '',
-          status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status : 'inactive',
+          status: validStatus,
           clinicId: coach.clinic_id,
           clients: countError ? 0 : (count || 0)
         };
@@ -140,16 +145,23 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
         throw new Error('Unexpected data format');
       }
       
-      // Map the data to our Coach type
-      return data.map(coach => ({
-        id: coach.id,
-        name: coach.name,
-        email: coach.email,
-        phone: coach.phone || '',
-        status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status : 'inactive',
-        clinicId: coach.clinic_id,
-        clients: coach.client_count || 0
-      }));
+      // Map the data to our Coach type, ensuring status is valid
+      return data.map(coach => {
+        // Validate and convert the status field
+        const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
+          ? coach.status as 'active' | 'inactive' 
+          : 'inactive' as const;
+          
+        return {
+          id: coach.id,
+          name: coach.name,
+          email: coach.email,
+          phone: coach.phone || '',
+          status: validStatus,
+          clinicId: coach.clinic_id,
+          clients: coach.client_count || 0
+        };
+      });
     }
   } catch (error) {
     console.error('[AdminCoachService] Failed to get all coaches:', error);
