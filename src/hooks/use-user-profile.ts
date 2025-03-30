@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { UserData } from '@/types/auth';
+import { UserRole } from '@/types';
 
 export async function fetchUserProfile(userId: string): Promise<UserData | null> {
   console.log('Fetching user profile for ID:', userId);
@@ -24,15 +25,26 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
         console.log('Demo account detected, creating fallback profile data');
         
         // For demo accounts, create a fallback profile
-        const userRole = userData?.user?.user_metadata?.role || 'admin';
-        const userName = userData?.user?.user_metadata?.full_name || 'Demo User';
+        const userMetadata = userData?.user?.user_metadata;
+        const userRoleFromMetadata = userMetadata?.role || 'admin';
+        
+        // Validate and ensure the role is a valid UserRole type
+        let userRole: UserRole;
+        if (userRoleFromMetadata === 'admin' || userRoleFromMetadata === 'coach' || userRoleFromMetadata === 'client') {
+          userRole = userRoleFromMetadata as UserRole;
+        } else {
+          // Default to admin if the role is not valid
+          userRole = 'admin';
+        }
+        
+        const userName = userMetadata?.full_name || 'Demo User';
         
         // Create a fallback profile object
         const demoProfile: UserData = {
           id: userId,
           name: userName,
           email: 'drrelth@contourlight.com',
-          role: userRole as any, // Cast to match UserRole type
+          role: userRole, // Now properly typed
         };
         
         // Try to insert the profile into the database
@@ -56,12 +68,22 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       return null;
     }
     
+    // Validate the role from the database
+    let userRole: UserRole;
+    if (profile.role === 'admin' || profile.role === 'coach' || profile.role === 'client') {
+      userRole = profile.role as UserRole;
+    } else {
+      // Default to admin if the role from the database is not valid
+      userRole = 'admin';
+      console.warn(`Invalid role "${profile.role}" found in database, defaulting to admin`);
+    }
+    
     // Transform the profile data to match UserData structure
     const userData: UserData = {
       id: profile.id,
       name: profile.full_name,
       email: profile.email,
-      role: profile.role,
+      role: userRole, // Now properly typed
       clinicId: profile.clinic_id,
     };
     
