@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import CoachService from '@/services/coach-service';
 
 interface AddCoachDialogProps {
@@ -16,24 +16,43 @@ interface AddCoachDialogProps {
 }
 
 const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded }: AddCoachDialogProps) => {
-  const { toast } = useToast();
   const [coachName, setCoachName] = useState('');
   const [coachEmail, setCoachEmail] = useState('');
   const [coachPhone, setCoachPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{name?: string; email?: string}>({});
+
+  const validateForm = (): boolean => {
+    const newErrors: {name?: string; email?: string} = {};
+    
+    if (!coachName.trim()) {
+      newErrors.name = "Name is required";
+    }
+    
+    if (!coachEmail.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(coachEmail)) {
+      newErrors.email = "Invalid email format";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmitAddCoach = async () => {
-    if (!coachName || !coachEmail) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide name and email for the coach.",
-        variant: "destructive"
-      });
+    if (!validateForm()) {
       return;
     }
 
     try {
       setIsSubmitting(true);
+      console.log('Submitting coach:', {
+        name: coachName,
+        email: coachEmail,
+        phone: coachPhone,
+        clinicId: clinicId
+      });
+      
       const newCoach = await CoachService.addCoach({
         name: coachName,
         email: coachEmail,
@@ -43,10 +62,7 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
       });
 
       if (newCoach) {
-        toast({
-          title: "Coach Added",
-          description: `${coachName} has been added to ${clinicName}.`
-        });
+        toast(`${coachName} has been added to ${clinicName}`);
         
         // Reset form and close dialog
         resetForm();
@@ -54,19 +70,11 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
         // Notify parent component to refresh coach list
         if (onCoachAdded) onCoachAdded();
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to add coach. Please try again.",
-          variant: "destructive"
-        });
+        toast.error("Failed to add coach. Please try again.");
       }
     } catch (error) {
       console.error("Error adding coach:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -76,6 +84,7 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
     setCoachName('');
     setCoachEmail('');
     setCoachPhone('');
+    setErrors({});
   };
 
   return (
@@ -94,26 +103,32 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
-              Name
+              Name <span className="text-red-500">*</span>
             </Label>
-            <Input 
-              id="name" 
-              value={coachName} 
-              onChange={(e) => setCoachName(e.target.value)} 
-              className="col-span-3" 
-            />
+            <div className="col-span-3">
+              <Input 
+                id="name" 
+                value={coachName} 
+                onChange={(e) => setCoachName(e.target.value)} 
+                className={errors.name ? "border-red-500" : ""}
+              />
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+            </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="email" className="text-right">
-              Email
+              Email <span className="text-red-500">*</span>
             </Label>
-            <Input 
-              id="email" 
-              type="email" 
-              value={coachEmail} 
-              onChange={(e) => setCoachEmail(e.target.value)} 
-              className="col-span-3" 
-            />
+            <div className="col-span-3">
+              <Input 
+                id="email" 
+                type="email" 
+                value={coachEmail} 
+                onChange={(e) => setCoachEmail(e.target.value)} 
+                className={errors.email ? "border-red-500" : ""}
+              />
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="phone" className="text-right">

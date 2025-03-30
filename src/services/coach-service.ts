@@ -16,6 +16,8 @@ export const CoachService = {
   // Fetch all coaches for a specific clinic
   async getClinicCoaches(clinicId: string): Promise<Coach[]> {
     try {
+      console.log('Fetching coaches for clinic:', clinicId);
+      
       const { data, error } = await supabase
         .from('coaches')
         .select(`
@@ -30,7 +32,12 @@ export const CoachService = {
         .eq('clinic_id', clinicId)
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching coaches:', error);
+        throw error;
+      }
+      
+      console.log('Fetched coaches data:', data);
       
       // Transform and return the coaches data
       return (data || []).map(coach => ({
@@ -81,32 +88,40 @@ export const CoachService = {
   // Add a new coach
   async addCoach(coach: Omit<Coach, 'id' | 'clients'>): Promise<Coach | null> {
     try {
+      console.log('Adding coach with data:', coach);
+      
       const { data, error } = await supabase
         .from('coaches')
         .insert({
           name: coach.name,
           email: coach.email,
           phone: coach.phone,
-          status: coach.status, // Now correctly typed as 'active' | 'inactive'
+          status: coach.status,
           clinic_id: coach.clinicId
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding coach:', error);
+        toast.error(`Failed to add coach: ${error.message}`);
+        throw error;
+      }
+      
+      console.log('Added coach successfully:', data);
+      toast.success('Coach added successfully!');
       
       return {
         id: data.id,
         name: data.name,
         email: data.email,
         phone: data.phone,
-        status: data.status as 'active' | 'inactive', // Cast to union type
+        status: data.status as 'active' | 'inactive',
         clinicId: data.clinic_id,
         clients: 0
       };
     } catch (error) {
       console.error('Error adding coach:', error);
-      toast.error('Failed to add coach.');
       return null;
     }
   },
