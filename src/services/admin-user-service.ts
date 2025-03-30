@@ -55,7 +55,7 @@ export const AdminUserService = {
         .rpc('create_admin_user', {
           email: userData.email,
           password: userData.password || '',
-          full_name: userData.fullName,
+          full_name: userData.fullName, // Ensure we use fullName (camelCase) from our form data
           role: userData.role || 'admin'
         });
       
