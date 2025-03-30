@@ -117,9 +117,9 @@ export const CoachService = {
       
       console.log('[Coach Service] Authentication successful, user ID:', session.user.id);
       
-      // Using the add_coach RPC function with correct typing
+      // Using the add_coach RPC function with explicit type casting
       const { data, error } = await supabase.rpc(
-        'add_coach', 
+        'add_coach' as any, 
         {
           coach_name: coach.name,
           coach_email: coach.email,
@@ -143,7 +143,8 @@ export const CoachService = {
         return null;
       }
       
-      // Cast the response to the correct type
+      // Parse the response data properly
+      // The data should be a JSON object, so we'll type cast it
       const responseData = data as {
         id: string;
         name: string;
