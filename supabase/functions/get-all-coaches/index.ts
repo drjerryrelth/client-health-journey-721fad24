@@ -28,7 +28,7 @@ serve(async (req) => {
       );
     }
     
-    // Verify that the user is an admin by checking the profiles table
+    // Verify that the user is an admin by checking both the profiles and admin_users tables
     const { data: userData, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     
     if (userError || !userData.user) {
@@ -41,7 +41,7 @@ serve(async (req) => {
     
     console.log("User making request:", userData.user.id);
     
-    // Fetch the user's role
+    // Fetch the user's role from profiles table
     const { data: userProfile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
@@ -55,6 +55,7 @@ serve(async (req) => {
       .eq('auth_user_id', userData.user.id)
       .maybeSingle();
     
+    // Consider user an admin if either check passes
     const isAdmin = (userProfile?.role === 'admin') || (adminUser?.role === 'admin');
     
     if (!isAdmin) {
@@ -72,7 +73,7 @@ serve(async (req) => {
       .from('coaches')
       .select(`
         *,
-        client_count:clients(count)
+        clients(id)
       `)
       .order('name');
     
@@ -86,11 +87,14 @@ serve(async (req) => {
     
     // Process the coaches to calculate client count
     const processedCoaches = coaches.map(coach => {
-      // Process the count from the client_count aggregate
-      const clientCount = Array.isArray(coach.client_count) ? coach.client_count.length : 0;
+      // Process the count from the client relationship
+      const clientCount = coach.clients ? coach.clients.length : 0;
+      
+      // Remove the clients array from the response
+      const { clients, ...coachData } = coach;
       
       return {
-        ...coach,
+        ...coachData,
         client_count: clientCount
       };
     });

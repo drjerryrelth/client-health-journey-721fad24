@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { CoachService, Coach } from '@/services/coaches';
 import { toast } from 'sonner';
+import ErrorDialog from '@/components/coaches/ErrorDialog';
 
 const CoachesPage = () => {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ const CoachesPage = () => {
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
 
   const fetchCoaches = async () => {
     try {
@@ -23,19 +26,15 @@ const CoachesPage = () => {
       setError(null);
       
       // Fetch coaches from all clinics (admin view)
-      const allCoachesPromises = [];
-      
-      // Since we need to get all coaches across clinics, we need to 
-      // get all clinic IDs first using the service role (handled by the edge function)
-      // This would be implemented in a follow-up feature
       const allCoaches = await CoachService.getAllCoaches();
       
       setCoaches(allCoaches);
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching coaches:", err);
       setError("Failed to load coaches. Please try again.");
+      setErrorDetails(JSON.stringify(err, null, 2));
       toast.error("Failed to load coaches");
-    } finally {
       setLoading(false);
     }
   };
@@ -50,6 +49,10 @@ const CoachesPage = () => {
 
   const handleRefresh = () => {
     fetchCoaches();
+  };
+
+  const handleShowError = () => {
+    setErrorDialogOpen(true);
   };
 
   return (
@@ -95,14 +98,22 @@ const CoachesPage = () => {
             <div className="flex justify-center py-8">
               <div className="text-center">
                 <p className="text-red-500">{error}</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRefresh}
-                  className="mt-2"
-                >
-                  Try Again
-                </Button>
+                <div className="flex gap-2 justify-center mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRefresh}
+                  >
+                    Try Again
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleShowError}
+                  >
+                    Show Details
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
@@ -156,6 +167,13 @@ const CoachesPage = () => {
           )}
         </CardContent>
       </Card>
+
+      <ErrorDialog
+        open={errorDialogOpen}
+        onOpenChange={setErrorDialogOpen}
+        errorDetails={errorDetails}
+        title="Coach Fetching Error"
+      />
     </div>
   );
 };

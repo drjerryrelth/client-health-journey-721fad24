@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { checkAuthentication } from '../clinics/auth-helper';
@@ -62,8 +63,15 @@ export async function getAllCoaches(): Promise<Coach[]> {
       throw new Error('Authentication required to fetch coaches');
     }
     
-    // Use RPC call to fetch all coaches (admin only)
-    const { data, error } = await supabase.functions.invoke('get-all-coaches', {});
+    // Get the auth token
+    const authToken = session.access_token;
+    
+    // Use Edge Function to fetch all coaches (admin only)
+    const { data, error } = await supabase.functions.invoke('get-all-coaches', {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
     
     if (error) {
       console.error('Error fetching all coaches:', error);
