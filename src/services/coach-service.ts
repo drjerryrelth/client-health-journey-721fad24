@@ -16,32 +16,33 @@ export const CoachService = {
   // Fetch all coaches for a specific clinic
   async getClinicCoaches(clinicId: string): Promise<Coach[]> {
     try {
-      // Since the coaches table doesn't exist in the current Supabase schema,
-      // we're using mock data
-      return getMockCoaches().filter(coach => coach.clinicId === clinicId);
-      
-      /* 
-      // This code would be used once the coaches table is set up in Supabase
-      // Note: We'll need to create the coaches table with appropriate columns first
+      // Now that we have the coaches table set up, we can query it directly
       const { data, error } = await supabase
         .from('coaches')
-        .select('*, clients(id)')
+        .select(`
+          id, 
+          name, 
+          email, 
+          phone, 
+          status, 
+          clinic_id,
+          clients:clients(id)
+        `)
         .eq('clinic_id', clinicId)
         .order('name');
 
       if (error) throw error;
       
       // Transform and return the coaches data
-      return data.map(coach => ({
+      return (data || []).map(coach => ({
         id: coach.id,
         name: coach.name,
         email: coach.email,
         phone: coach.phone,
         status: coach.status,
         clinicId: coach.clinic_id,
-        clients: coach.clients ? coach.clients.length : 0
+        clients: Array.isArray(coach.clients) ? coach.clients.length : 0
       }));
-      */
     } catch (error) {
       console.error('Error fetching clinic coaches:', error);
       toast.error('Failed to fetch coaches. Using mock data as fallback.');
@@ -53,13 +54,9 @@ export const CoachService = {
   // Delete a coach and reassign their clients
   async removeCoachAndReassignClients(coachId: string, newCoachId: string): Promise<boolean> {
     try {
-      // Mock implementation since we don't have the actual tables yet
-      console.log(`Mock reassignment: Coach ${coachId}'s clients reassigned to coach ${newCoachId}`);
-      toast.success('Clients reassigned and coach removed successfully');
-      return true;
+      // Now that we have the coaches table and clients have coach_id column,
+      // we can perform the reassignment and deletion operations
       
-      /* 
-      // This code would be used once the coaches table is set up in Supabase
       // First reassign all clients
       const { error: reassignError } = await supabase
         .from('clients')
@@ -76,14 +73,90 @@ export const CoachService = {
 
       if (deleteError) throw deleteError;
 
+      toast.success('Clients reassigned and coach removed successfully');
       return true;
-      */
     } catch (error) {
       console.error('Error removing coach and reassigning clients:', error);
       toast.error('Failed to remove coach and reassign clients.');
       return false;
     }
   },
+  
+  // Add a new coach
+  async addCoach(coach: Omit<Coach, 'id' | 'clients'>): Promise<Coach | null> {
+    try {
+      const { data, error } = await supabase
+        .from('coaches')
+        .insert({
+          name: coach.name,
+          email: coach.email,
+          phone: coach.phone,
+          status: coach.status,
+          clinic_id: coach.clinicId
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        status: data.status,
+        clinicId: data.clinic_id,
+        clients: 0
+      };
+    } catch (error) {
+      console.error('Error adding coach:', error);
+      toast.error('Failed to add coach.');
+      return null;
+    }
+  },
+  
+  // Update a coach
+  async updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 'clients'>>): Promise<Coach | null> {
+    try {
+      const updates: any = {};
+      if (coach.name) updates.name = coach.name;
+      if (coach.email) updates.email = coach.email;
+      if (coach.phone !== undefined) updates.phone = coach.phone;
+      if (coach.status) updates.status = coach.status;
+      if (coach.clinicId) updates.clinic_id = coach.clinicId;
+      
+      const { data, error } = await supabase
+        .from('coaches')
+        .update(updates)
+        .eq('id', id)
+        .select(`
+          id, 
+          name, 
+          email, 
+          phone, 
+          status, 
+          clinic_id,
+          clients:clients(id)
+        `)
+        .single();
+
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        status: data.status,
+        clinicId: data.clinic_id,
+        clients: Array.isArray(data.clients) ? data.clients.length : 0
+      };
+    } catch (error) {
+      console.error('Error updating coach:', error);
+      toast.error('Failed to update coach.');
+      return null;
+    }
+  }
 };
 
 // Mock data for fallback when API calls fail

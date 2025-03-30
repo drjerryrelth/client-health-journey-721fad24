@@ -115,6 +115,7 @@ export type Database = {
       clients: {
         Row: {
           clinic_id: string
+          coach_id: string | null
           created_at: string | null
           email: string
           id: string
@@ -129,6 +130,7 @@ export type Database = {
         }
         Insert: {
           clinic_id: string
+          coach_id?: string | null
           created_at?: string | null
           email: string
           id?: string
@@ -143,6 +145,7 @@ export type Database = {
         }
         Update: {
           clinic_id?: string
+          coach_id?: string | null
           created_at?: string | null
           email?: string
           id?: string
@@ -155,7 +158,15 @@ export type Database = {
           start_date?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "coaches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clinics: {
         Row: {
@@ -183,6 +194,44 @@ export type Database = {
           secondary_color?: string | null
         }
         Relationships: []
+      }
+      coaches: {
+        Row: {
+          clinic_id: string
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          status?: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaches_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
