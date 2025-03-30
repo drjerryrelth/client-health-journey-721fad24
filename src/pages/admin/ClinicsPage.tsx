@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, ArrowLeft, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Coach, getMockCoaches } from '@/services/coach-service';
+import { Coach, CoachService, getMockCoaches } from '@/services/coach-service';
 import CoachList from '@/components/coaches/CoachList';
 import AddClinicDialog from '@/components/clinics/AddClinicDialog';
 import ClinicsTable from '@/components/clinics/ClinicsTable';

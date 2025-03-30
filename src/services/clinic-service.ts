@@ -29,7 +29,7 @@ export const ClinicService = {
         location: clinic.location || '',
         email: clinic.email,
         phone: clinic.phone,
-        status: clinic.status || 'active',
+        status: (clinic.status || 'active') as 'active' | 'inactive',
         createdAt: clinic.created_at
       }));
     } catch (error) {
@@ -68,7 +68,7 @@ export const ClinicService = {
         location: data.location || '',
         email: data.email,
         phone: data.phone,
-        status: data.status,
+        status: data.status as 'active' | 'inactive',
         createdAt: data.created_at
       };
     } catch (error) {
@@ -82,7 +82,6 @@ export const ClinicService = {
   async updateClinic(id: string, updates: Partial<Omit<Clinic, 'id' | 'createdAt'>>): Promise<Clinic | null> {
     try {
       const dbUpdates: any = { ...updates };
-      if (updates.createdAt) delete dbUpdates.createdAt; // Remove createdAt from updates
       
       const { data, error } = await supabase
         .from('clinics')
@@ -99,7 +98,7 @@ export const ClinicService = {
         location: data.location || '',
         email: data.email,
         phone: data.phone,
-        status: data.status,
+        status: data.status as 'active' | 'inactive',
         createdAt: data.created_at
       };
     } catch (error) {
