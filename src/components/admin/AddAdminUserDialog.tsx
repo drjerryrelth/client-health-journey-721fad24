@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { AdminUserFormData } from '@/types/admin';
-import { useCreateAdminUserMutation } from '@/hooks/use-admin-users';
+import { useCreateAdminUserMutation, useAdminUsersQuery } from '@/hooks/use-admin-users';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -40,12 +40,15 @@ export function AddAdminUserDialog({ open, onOpenChange }: AddAdminUserDialogPro
   });
   
   const createAdminUser = useCreateAdminUserMutation();
+  const adminUsersQuery = useAdminUsersQuery();
   
   const onSubmit = async (data: AdminUserFormData) => {
     setErrorMessage(null);
     
     try {
       await createAdminUser.mutateAsync(data);
+      // Explicitly refetch the admin users data
+      await adminUsersQuery.refetch();
       form.reset();
       onOpenChange(false);
     } catch (error: any) {

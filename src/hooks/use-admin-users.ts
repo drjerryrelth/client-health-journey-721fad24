@@ -40,7 +40,11 @@ export const useCreateAdminUserMutation = () => {
     },
     onSuccess: (data) => {
       console.log('Admin user created successfully:', data);
+      
+      // Explicitly invalidate and refetch the admin users query
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      // Force a refetch to ensure the latest data
+      queryClient.refetchQueries({ queryKey: ['adminUsers'] });
       
       // Use sonner toast for more visible notification
       sonnerToast.success('Admin user created', {

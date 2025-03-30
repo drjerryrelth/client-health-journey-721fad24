@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserPlus, Pencil, Trash2, AlertCircle } from 'lucide-react';
@@ -19,8 +19,13 @@ const AdminUsersPage = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   
-  const { data: adminUsers, isLoading, isError } = useAdminUsersQuery();
+  const { data: adminUsers, isLoading, isError, refetch } = useAdminUsersQuery();
   const deleteAdminUser = useDeleteAdminUserMutation();
+
+  // Refresh data when component mounts or after dialog closes
+  useEffect(() => {
+    refetch();
+  }, [refetch, isAddDialogOpen, isEditDialogOpen]);
 
   const handleAdd = () => {
     setIsAddDialogOpen(true);
@@ -40,6 +45,8 @@ const AdminUsersPage = () => {
     if (selectedUserId) {
       try {
         await deleteAdminUser.mutateAsync(selectedUserId);
+        // Explicitly refetch after delete
+        await refetch();
       } catch (error) {
         // Error handled by mutation hook
         console.error('Error deleting admin user:', error);
@@ -47,6 +54,27 @@ const AdminUsersPage = () => {
     }
     setIsDeleteDialogOpen(false);
     setSelectedUserId(undefined);
+  };
+
+  // Handle dialog close events to refresh data
+  const handleAddDialogClose = (open: boolean) => {
+    setIsAddDialogOpen(open);
+    if (!open) {
+      // Small delay to ensure database has time to update
+      setTimeout(() => {
+        refetch();
+      }, 500);
+    }
+  };
+
+  const handleEditDialogClose = (open: boolean) => {
+    setIsEditDialogOpen(open);
+    if (!open) {
+      // Small delay to ensure database has time to update
+      setTimeout(() => {
+        refetch();
+      }, 500);
+    }
   };
 
   return (
@@ -142,14 +170,14 @@ const AdminUsersPage = () => {
       {/* Add Admin Dialog */}
       <AddAdminUserDialog 
         open={isAddDialogOpen} 
-        onOpenChange={setIsAddDialogOpen} 
+        onOpenChange={handleAddDialogClose} 
       />
 
       {/* Edit Admin Dialog */}
       <EditAdminUserDialog 
         userId={selectedUserId} 
         open={isEditDialogOpen} 
-        onOpenChange={setIsEditDialogOpen} 
+        onOpenChange={handleEditDialogClose} 
       />
 
       {/* Delete Confirmation Dialog */}

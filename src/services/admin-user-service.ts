@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { AdminUser, AdminUserFormData } from "@/types/admin";
 
@@ -6,6 +7,7 @@ export const AdminUserService = {
    * Get all admin users
    */
   async getAllAdminUsers(): Promise<AdminUser[]> {
+    console.log('Fetching all admin users');
     const { data, error } = await supabase
       .from('admin_users')
       .select('*')
@@ -16,6 +18,7 @@ export const AdminUserService = {
       throw error;
     }
     
+    console.log('Admin users fetched:', data?.length || 0);
     return data || [];
   },
 
@@ -118,10 +121,13 @@ export const AdminUserService = {
       throw new Error(`Admin user with ID ${id} not found`);
     }
     
-    // Delete the auth user (will cascade to admin_users via foreign key)
-    const { error } = await supabase.auth.admin.deleteUser(
-      adminUser.auth_user_id
-    );
+    // Call the edge function to delete the user with admin privileges
+    const { error } = await supabase.functions.invoke('create-admin-user', {
+      body: {
+        action: 'delete',
+        userId: adminUser.auth_user_id
+      }
+    });
     
     if (error) {
       console.error(`Error deleting admin user with ID ${id}:`, error);
