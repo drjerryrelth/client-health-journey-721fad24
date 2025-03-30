@@ -1,0 +1,145 @@
+
+import { supabase } from '@/integrations/supabase/client';
+import { ensureDemoProfileExists } from './demo-service';
+
+export async function loginWithEmail(email: string, password: string) {
+  console.log('Attempting login with email:', email);
+  
+  // Check if this is a demo login
+  const demoEmails = {
+    admin: 'drrelth@contourlight.com',
+    coach: 'support@practicenaturals.com',
+    client: 'drjerryrelth@gmail.com'
+  };
+  
+  const isDemoLogin = Object.values(demoEmails).includes(email);
+  if (isDemoLogin) {
+    console.log('This is a demo login attempt');
+  }
+  
+  // Add timeout to prevent hanging
+  const loginPromise = supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Login timeout')), 10000);
+  });
+  
+  // Race between actual login and timeout
+  const { data, error } = await Promise.race([
+    loginPromise,
+    timeoutPromise.then(() => {
+      throw new Error('Login request timed out');
+    }),
+  ]);
+  
+  if (error) {
+    console.error('Login error details:', error);
+    throw error;
+  }
+  
+  if (!data.user) {
+    console.error('No user returned from login');
+    throw new Error('No user returned from login');
+  }
+  
+  // For demo accounts, ensure the profile exists
+  if (isDemoLogin) {
+    await ensureDemoProfileExists(data.user.id, email);
+  }
+  
+  console.log('Login successful');
+  return data;
+}
+
+export async function signUpWithEmail(
+  email: string, 
+  password: string, 
+  userData: { full_name: string; role: string }
+) {
+  console.log('Attempting to create account with email:', email);
+  
+  // For demo accounts, we need to handle them specially
+  const isDemoAccount = email === 'drrelth@contourlight.com';
+  
+  if (isDemoAccount) {
+    // Try to sign in first to see if account exists
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      // If login succeeds, return the data
+      if (!error && data.user) {
+        console.log('Demo account already exists and login successful');
+        return data;
+      }
+    } catch (signInError) {
+      // Continue with signup if login failed
+      console.log('Demo account does not exist or login failed, continuing with signup');
+    }
+  } else {
+    // First check if the user already exists by trying to sign in
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      // If login succeeds, user already exists
+      if (!signInError) {
+        console.log('User already exists, no need to sign up');
+        return;
+      }
+    } catch (signInError) {
+      // Continue with signup if login failed
+      console.log('User does not exist, continuing with signup');
+    }
+  }
+  
+  console.log('Creating new account');
+  
+  const options = {
+    data: {
+      full_name: userData.full_name,
+      role: userData.role,
+    }
+  };
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options
+  });
+  
+  if (error) {
+    console.error('Sign up error:', error);
+    throw error;
+  }
+  
+  if (!data.user) {
+    throw new Error('No user returned from signup');
+  }
+  
+  console.log('User created, creating profile record');
+  
+  // Create profile record manually to ensure it exists even if the trigger fails
+  const { error: profileError } = await supabase.from('profiles').upsert({
+    id: data.user.id,
+    full_name: userData.full_name,
+    email: email,
+    role: userData.role,
+  });
+  
+  if (profileError) {
+    console.error('Error creating profile:', profileError);
+    // Continue anyway since the user was created
+  }
+  
+  console.log('Account created successfully');
+  
+  return data;
+}

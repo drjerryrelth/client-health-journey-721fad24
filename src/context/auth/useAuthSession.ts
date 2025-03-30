@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { UserData } from '@/types/auth';
@@ -7,7 +6,7 @@ import { ToastAction } from '@/components/ui/toast';
 import { 
   getCurrentSession,
   setupAuthListener 
-} from '@/services/auth-service';
+} from '@/services/auth';
 
 type UseAuthSessionProps = {
   setUser: React.Dispatch<React.SetStateAction<UserData | null>>;

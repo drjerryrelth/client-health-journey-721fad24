@@ -5,7 +5,7 @@ import {
   loginWithEmail, 
   signUpWithEmail, 
   logoutUser 
-} from '@/services/auth-service';
+} from '@/services/auth';
 
 type UseAuthMethodsProps = {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -127,8 +127,6 @@ export const useAuthMethods = ({
     login,
     signUp,
     logout,
-    hasRole: (role: UserRole | UserRole[]) => ({
-      execute: (user: UserData | null = null) => hasRole(role, user)
-    }).execute
+    hasRole: (role: UserRole | UserRole[]) => (user: UserData | null = null) => hasRole(role, user)
   };
 };
