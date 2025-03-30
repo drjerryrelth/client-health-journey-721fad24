@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, ArrowLeft, UserPlus } from 'lucide-react';
@@ -11,9 +11,12 @@ import ClinicsTable from '@/components/clinics/ClinicsTable';
 import AddCoachDialog from '@/components/coaches/AddCoachDialog';
 import EditCoachDialog from '@/components/coaches/EditCoachDialog';
 import ReassignClientsDialog from '@/components/coaches/ReassignClientsDialog';
+import ClinicService, { Clinic } from '@/services/clinic-service';
 
 const ClinicsPage = () => {
   const { toast } = useToast();
+  const [clinics, setClinics] = useState<Clinic[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedClinic, setSelectedClinic] = useState<{id: string, name: string} | null>(null);
   const [showAddCoachDialog, setShowAddCoachDialog] = useState(false);
   const [showEditCoachDialog, setShowEditCoachDialog] = useState(false);
@@ -22,32 +25,26 @@ const ClinicsPage = () => {
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [replacementCoachId, setReplacementCoachId] = useState<string>('');
   
-  const clinics = [
-    { 
-      id: '1',
-      name: 'Wellness Center',
-      coaches: 4,
-      clients: 18,
-      location: 'New York, NY',
-      status: 'active'
-    },
-    { 
-      id: '2',
-      name: 'Practice Naturals',
-      coaches: 3,
-      clients: 12,
-      location: 'Los Angeles, CA',
-      status: 'active'
-    },
-    { 
-      id: '3',
-      name: 'Health Partners',
-      coaches: 2,
-      clients: 9,
-      location: 'Chicago, IL',
-      status: 'active'
-    },
-  ];
+  useEffect(() => {
+    fetchClinics();
+  }, []);
+  
+  const fetchClinics = async () => {
+    setLoading(true);
+    try {
+      const fetchedClinics = await ClinicService.getClinics();
+      setClinics(fetchedClinics);
+    } catch (error) {
+      console.error("Error fetching clinics:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch clinics. Using mock data.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddClinic = () => {
     setShowAddClinicDialog(true);
@@ -92,11 +89,21 @@ const ClinicsPage = () => {
         action: (
           <Button 
             variant="destructive" 
-            onClick={() => {
-              toast({
-                title: "Coach Removed",
-                description: `${coach.name} has been removed from ${selectedClinic?.name}.`
-              });
+            onClick={async () => {
+              try {
+                await CoachService.removeCoachAndReassignClients(coach.id, '');
+                toast({
+                  title: "Coach Removed",
+                  description: `${coach.name} has been removed from ${selectedClinic?.name}.`
+                });
+              } catch (error) {
+                console.error("Error removing coach:", error);
+                toast({
+                  title: "Error",
+                  description: "Failed to remove coach. Please try again.",
+                  variant: "destructive"
+                });
+              }
             }}
           >
             Delete
@@ -106,7 +113,7 @@ const ClinicsPage = () => {
     }
   };
 
-  const handleReassignAndDelete = () => {
+  const handleReassignAndDelete = async () => {
     if (!selectedCoach || !replacementCoachId) {
       toast({
         title: "Selection Required",
@@ -116,10 +123,32 @@ const ClinicsPage = () => {
       return;
     }
 
-    toast({
-      title: "Clients Reassigned and Coach Removed",
-      description: `${selectedCoach.name}'s clients have been reassigned and the coach has been removed from ${selectedClinic?.name}.`
-    });
+    try {
+      const result = await CoachService.removeCoachAndReassignClients(
+        selectedCoach.id, 
+        replacementCoachId
+      );
+      
+      if (result) {
+        toast({
+          title: "Clients Reassigned and Coach Removed",
+          description: `${selectedCoach.name}'s clients have been reassigned and the coach has been removed from ${selectedClinic?.name}.`
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to reassign clients and remove coach.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error reassigning clients:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reassign clients and remove coach.",
+        variant: "destructive"
+      });
+    }
 
     setShowReassignDialog(false);
     setReplacementCoachId('');
@@ -129,6 +158,14 @@ const ClinicsPage = () => {
     ? getMockCoaches()
         .filter(coach => coach.clinicId === selectedClinic.id && coach.id !== selectedCoach.id)
     : [];
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   if (selectedClinic) {
     return (
@@ -166,7 +203,12 @@ const ClinicsPage = () => {
         <AddCoachDialog 
           open={showAddCoachDialog} 
           onOpenChange={setShowAddCoachDialog} 
-          clinicName={selectedClinic.name} 
+          clinicName={selectedClinic.name}
+          clinicId={selectedClinic.id}
+          onCoachAdded={() => {
+            // Trigger a refresh of the coach list
+            // The CoachList component handles this internally with its own state
+          }}
         />
 
         <EditCoachDialog 
@@ -189,6 +231,15 @@ const ClinicsPage = () => {
     );
   }
 
+  const formattedClinics = clinics.map(clinic => ({
+    id: clinic.id,
+    name: clinic.name,
+    location: clinic.location,
+    status: clinic.status,
+    coaches: 0, // These would be dynamically fetched in a real implementation
+    clients: 0, // These would be dynamically fetched in a real implementation
+  }));
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -205,7 +256,7 @@ const ClinicsPage = () => {
         </CardHeader>
         <CardContent>
           <ClinicsTable 
-            clinics={clinics}
+            clinics={formattedClinics}
             onClinicSelect={handleClinicSelect}
             getStatusColor={getStatusColor}
           />
@@ -213,7 +264,11 @@ const ClinicsPage = () => {
       </Card>
 
       {/* Add Clinic Dialog */}
-      <AddClinicDialog open={showAddClinicDialog} onOpenChange={setShowAddClinicDialog} />
+      <AddClinicDialog 
+        open={showAddClinicDialog} 
+        onOpenChange={setShowAddClinicDialog}
+        onClinicAdded={fetchClinics}
+      />
     </div>
   );
 };

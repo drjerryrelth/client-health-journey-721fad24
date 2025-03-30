@@ -5,20 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import ClinicService from '@/services/clinic-service';
 
 interface AddClinicDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onClinicAdded?: () => void;
 }
 
-const AddClinicDialog = ({ open, onOpenChange }: AddClinicDialogProps) => {
+const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogProps) => {
   const { toast } = useToast();
   const [clinicName, setClinicName] = useState('');
   const [clinicLocation, setClinicLocation] = useState('');
   const [clinicEmail, setClinicEmail] = useState('');
   const [clinicPhone, setClinicPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitClinic = () => {
+  const handleSubmitClinic = async () => {
     if (!clinicName || !clinicLocation) {
       toast({
         title: "Missing Information",
@@ -28,14 +31,44 @@ const AddClinicDialog = ({ open, onOpenChange }: AddClinicDialogProps) => {
       return;
     }
 
-    toast({
-      title: "Clinic Added",
-      description: `${clinicName} has been added successfully.`
-    });
-    
-    // Reset form and close dialog
-    resetForm();
-    onOpenChange(false);
+    try {
+      setIsSubmitting(true);
+      const newClinic = await ClinicService.addClinic({
+        name: clinicName,
+        location: clinicLocation,
+        email: clinicEmail || undefined,
+        phone: clinicPhone || undefined
+      });
+
+      if (newClinic) {
+        toast({
+          title: "Clinic Added",
+          description: `${clinicName} has been added successfully.`
+        });
+        
+        // Reset form and close dialog
+        resetForm();
+        onOpenChange(false);
+        
+        // Notify parent component to refresh clinic list
+        if (onClinicAdded) onClinicAdded();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add clinic. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error adding clinic:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -46,7 +79,10 @@ const AddClinicDialog = ({ open, onOpenChange }: AddClinicDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen) resetForm();
+      onOpenChange(newOpen);
+    }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Clinic</DialogTitle>
@@ -105,11 +141,20 @@ const AddClinicDialog = ({ open, onOpenChange }: AddClinicDialogProps) => {
         </div>
         
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button type="button" onClick={handleSubmitClinic}>
-            Add Clinic
+          <Button 
+            type="button" 
+            onClick={handleSubmitClinic}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Adding...' : 'Add Clinic'}
           </Button>
         </DialogFooter>
       </DialogContent>

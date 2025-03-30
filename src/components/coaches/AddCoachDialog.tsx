@@ -5,20 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import CoachService from '@/services/coach-service';
 
 interface AddCoachDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   clinicName: string;
+  clinicId: string;
+  onCoachAdded?: () => void;
 }
 
-const AddCoachDialog = ({ open, onOpenChange, clinicName }: AddCoachDialogProps) => {
+const AddCoachDialog = ({ open, onOpenChange, clinicName, clinicId, onCoachAdded }: AddCoachDialogProps) => {
   const { toast } = useToast();
   const [coachName, setCoachName] = useState('');
   const [coachEmail, setCoachEmail] = useState('');
   const [coachPhone, setCoachPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitAddCoach = () => {
+  const handleSubmitAddCoach = async () => {
     if (!coachName || !coachEmail) {
       toast({
         title: "Missing Information",
@@ -28,14 +32,44 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName }: AddCoachDialogProps)
       return;
     }
 
-    toast({
-      title: "Coach Added",
-      description: `${coachName} has been added to ${clinicName}.`
-    });
-    
-    // Reset form and close dialog
-    resetForm();
-    onOpenChange(false);
+    try {
+      setIsSubmitting(true);
+      const newCoach = await CoachService.addCoach({
+        name: coachName,
+        email: coachEmail,
+        phone: coachPhone,
+        status: 'active',
+        clinicId: clinicId
+      });
+
+      if (newCoach) {
+        toast({
+          title: "Coach Added",
+          description: `${coachName} has been added to ${clinicName}.`
+        });
+        
+        // Reset form and close dialog
+        resetForm();
+        onOpenChange(false);
+        // Notify parent component to refresh coach list
+        if (onCoachAdded) onCoachAdded();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add coach. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error adding coach:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -45,7 +79,10 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName }: AddCoachDialogProps)
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen) resetForm();
+      onOpenChange(newOpen);
+    }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Coach</DialogTitle>
@@ -93,11 +130,20 @@ const AddCoachDialog = ({ open, onOpenChange, clinicName }: AddCoachDialogProps)
         </div>
         
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button type="button" onClick={handleSubmitAddCoach}>
-            Add Coach
+          <Button 
+            type="button" 
+            onClick={handleSubmitAddCoach}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Adding...' : 'Add Coach'}
           </Button>
         </DialogFooter>
       </DialogContent>
