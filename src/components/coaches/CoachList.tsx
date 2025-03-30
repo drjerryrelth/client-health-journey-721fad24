@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { User, Mail, Phone, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { getMockCoaches } from '@/services/coach-service';
 
 interface CoachListProps {
   limit?: number;
@@ -15,54 +16,8 @@ interface CoachListProps {
 }
 
 const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete }) => {
-  // Mock coaches data
-  const allCoaches = [
-    {
-      id: '1',
-      name: 'Lisa Johnson',
-      email: 'lisa@healthtracker.com',
-      phone: '(555) 123-4567',
-      status: 'active',
-      clients: 8,
-      clinicId: '1'
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      email: 'michael@healthtracker.com',
-      phone: '(555) 234-5678',
-      status: 'active',
-      clients: 6,
-      clinicId: '1'
-    },
-    {
-      id: '3',
-      name: 'Sarah Williams',
-      email: 'sarah@healthtracker.com',
-      phone: '(555) 345-6789',
-      status: 'inactive',
-      clients: 4,
-      clinicId: '2'
-    },
-    {
-      id: '4',
-      name: 'David Martinez',
-      email: 'david@healthtracker.com',
-      phone: '(555) 456-7890',
-      status: 'active',
-      clients: 7,
-      clinicId: '2'
-    },
-    {
-      id: '5',
-      name: 'Jennifer Lee',
-      email: 'jennifer@healthtracker.com',
-      phone: '(555) 567-8901',
-      status: 'active',
-      clients: 9,
-      clinicId: '3'
-    }
-  ];
+  // Use mock coaches data
+  const allCoaches = getMockCoaches();
   
   // Filter by clinic if clinicId is provided
   const coaches = clinicId 

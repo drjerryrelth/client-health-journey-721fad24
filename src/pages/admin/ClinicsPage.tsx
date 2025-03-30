@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,9 @@ import CoachList from '@/components/coaches/CoachList';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getMockCoaches, Coach } from '@/services/coach-service';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const ClinicsPage = () => {
   const navigate = useNavigate();
@@ -18,14 +20,14 @@ const ClinicsPage = () => {
   const [selectedClinic, setSelectedClinic] = useState<{id: string, name: string} | null>(null);
   const [showAddCoachDialog, setShowAddCoachDialog] = useState(false);
   const [showEditCoachDialog, setShowEditCoachDialog] = useState(false);
-  const [selectedCoach, setSelectedCoach] = useState<any>(null);
+  const [showReassignDialog, setShowReassignDialog] = useState(false);
+  const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
+  const [replacementCoachId, setReplacementCoachId] = useState<string>('');
   
-  // Form state
   const [coachName, setCoachName] = useState('');
   const [coachEmail, setCoachEmail] = useState('');
   const [coachPhone, setCoachPhone] = useState('');
 
-  // Mock clinics data
   const clinics = [
     { 
       id: '1',
@@ -83,7 +85,7 @@ const ClinicsPage = () => {
     setShowAddCoachDialog(true);
   };
 
-  const handleEditCoach = (coach: any) => {
+  const handleEditCoach = (coach: Coach) => {
     setSelectedCoach(coach);
     setCoachName(coach.name);
     setCoachEmail(coach.email);
@@ -91,25 +93,48 @@ const ClinicsPage = () => {
     setShowEditCoachDialog(true);
   };
 
-  const handleDeleteCoach = (coach: any) => {
+  const handleDeleteCoach = (coach: Coach) => {
+    if (coach.clients > 0) {
+      setSelectedCoach(coach);
+      setShowReassignDialog(true);
+    } else {
+      toast({
+        title: "Confirm Deletion",
+        description: `Are you sure you want to remove ${coach.name}? This will revoke their access to the system.`,
+        action: (
+          <Button 
+            variant="destructive" 
+            onClick={() => {
+              toast({
+                title: "Coach Removed",
+                description: `${coach.name} has been removed from ${selectedClinic?.name}.`
+              });
+            }}
+          >
+            Delete
+          </Button>
+        ),
+      });
+    }
+  };
+
+  const handleReassignAndDelete = () => {
+    if (!selectedCoach || !replacementCoachId) {
+      toast({
+        title: "Selection Required",
+        description: "Please select a coach to reassign clients to.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     toast({
-      title: "Confirm Deletion",
-      description: `Are you sure you want to remove ${coach.name}? This will revoke their access to the system.`,
-      action: (
-        <Button 
-          variant="destructive" 
-          onClick={() => {
-            // Here you would delete the coach
-            toast({
-              title: "Coach Removed",
-              description: `${coach.name} has been removed from ${selectedClinic?.name}.`
-            });
-          }}
-        >
-          Delete
-        </Button>
-      ),
+      title: "Clients Reassigned and Coach Removed",
+      description: `${selectedCoach.name}'s clients have been reassigned and the coach has been removed from ${selectedClinic?.name}.`
     });
+
+    setShowReassignDialog(false);
+    setReplacementCoachId('');
   };
 
   const handleSubmitAddCoach = () => {
@@ -122,7 +147,6 @@ const ClinicsPage = () => {
       return;
     }
 
-    // Here you would add the coach to the database
     toast({
       title: "Coach Added",
       description: `${coachName} has been added to ${selectedClinic?.name}.`
@@ -144,7 +168,6 @@ const ClinicsPage = () => {
       return;
     }
 
-    // Here you would update the coach in the database
     toast({
       title: "Coach Updated",
       description: `${coachName}'s information has been updated.`
@@ -156,6 +179,11 @@ const ClinicsPage = () => {
     setCoachEmail('');
     setCoachPhone('');
   };
+
+  const availableCoaches = selectedClinic && selectedCoach
+    ? getMockCoaches()
+        .filter(coach => coach.clinicId === selectedClinic.id && coach.id !== selectedCoach.id)
+    : [];
 
   if (selectedClinic) {
     return (
@@ -189,7 +217,6 @@ const ClinicsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Add Coach Dialog */}
         <Dialog open={showAddCoachDialog} onOpenChange={setShowAddCoachDialog}>
           <DialogContent>
             <DialogHeader>
@@ -248,7 +275,6 @@ const ClinicsPage = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Edit Coach Dialog */}
         <Dialog open={showEditCoachDialog} onOpenChange={setShowEditCoachDialog}>
           <DialogContent>
             <DialogHeader>
@@ -306,6 +332,65 @@ const ClinicsPage = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={showReassignDialog} onOpenChange={setShowReassignDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reassign Clients</AlertDialogTitle>
+              <AlertDialogDescription>
+                {selectedCoach?.name} has {selectedCoach?.clients} client{selectedCoach?.clients !== 1 ? 's' : ''}. 
+                Please select another coach to reassign these clients to before removing {selectedCoach?.name}.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <div className="py-4">
+              <Label htmlFor="replacement-coach" className="block mb-2">
+                Select Replacement Coach
+              </Label>
+              <Select onValueChange={setReplacementCoachId} value={replacementCoachId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a coach" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableCoaches.length > 0 ? (
+                    availableCoaches.map(coach => (
+                      <SelectItem key={coach.id} value={coach.id}>
+                        {coach.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>No other coaches available</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              
+              {availableCoaches.length === 0 && (
+                <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 rounded border border-yellow-200">
+                  <p className="text-sm">
+                    There are no other coaches available in this clinic. Add another coach first, 
+                    or transfer clients to a different clinic before removing this coach.
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setShowReassignDialog(false);
+                setReplacementCoachId('');
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleReassignAndDelete}
+                className="bg-red-600 hover:bg-red-700"
+                disabled={!replacementCoachId || availableCoaches.length === 0}
+              >
+                Reassign & Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
