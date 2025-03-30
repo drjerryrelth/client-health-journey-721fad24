@@ -1,12 +1,7 @@
 
 import { Coach } from './types';
-import { 
-  getClinicCoaches,
-  getAllCoaches, 
-  addCoach, 
-  updateCoach, 
-  removeCoachAndReassignClients 
-} from './api-service';
+import { getClinicCoaches, getAllCoaches } from './coach-fetchers';
+import { addCoach, updateCoach, removeCoachAndReassignClients } from './coach-mutations';
 import { getMockCoaches } from './mock-data';
 
 // Export types
