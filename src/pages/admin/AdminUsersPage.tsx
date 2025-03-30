@@ -7,46 +7,46 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-// Mock admin user data - in a real app this would come from Supabase
-const mockAdmins = [
-  { id: '1', name: 'Jane Smith', email: 'jane.smith@example.com', role: 'admin' },
-  { id: '2', name: 'John Doe', email: 'john.doe@example.com', role: 'admin' },
-];
+import { AddAdminUserDialog } from '@/components/admin/AddAdminUserDialog';
+import { EditAdminUserDialog } from '@/components/admin/EditAdminUserDialog';
+import { useAdminUsersQuery, useDeleteAdminUserMutation } from '@/hooks/use-admin-users';
+import { Badge } from '@/components/ui/badge';
 
 const AdminUsersPage = () => {
-  const [adminUsers, setAdminUsers] = useState(mockAdmins);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<typeof mockAdmins[0] | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
+  
+  const { data: adminUsers, isLoading, isError } = useAdminUsersQuery();
+  const deleteAdminUser = useDeleteAdminUserMutation();
 
   const handleAdd = () => {
     setIsAddDialogOpen(true);
   };
 
-  const handleEdit = (user: typeof mockAdmins[0]) => {
-    setSelectedUser(user);
+  const handleEdit = (userId: string) => {
+    setSelectedUserId(userId);
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (user: typeof mockAdmins[0]) => {
-    setSelectedUser(user);
+  const handleDelete = (userId: string) => {
+    setSelectedUserId(userId);
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (selectedUser) {
-      // In a real app, you would delete the user from Supabase here
-      setAdminUsers(prev => prev.filter(user => user.id !== selectedUser.id));
-      toast({
-        title: "Admin user deleted",
-        description: `${selectedUser.name} has been removed from admin users.`,
-      });
+  const confirmDelete = async () => {
+    if (selectedUserId) {
+      try {
+        await deleteAdminUser.mutateAsync(selectedUserId);
+      } catch (error) {
+        // Error handled by mutation hook
+        console.error('Error deleting admin user:', error);
+      }
     }
     setIsDeleteDialogOpen(false);
-    setSelectedUser(null);
+    setSelectedUserId(undefined);
   };
 
   return (
@@ -74,32 +74,59 @@ const AdminUsersPage = () => {
             </AlertDescription>
           </Alert>
 
+          {isError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                There was an error loading admin users. Please try refreshing the page.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Full Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {adminUsers.length === 0 ? (
+              {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    Loading admin users...
+                  </TableCell>
+                </TableRow>
+              ) : adminUsers?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     No admin users found. Add an admin to get started.
                   </TableCell>
                 </TableRow>
               ) : (
-                adminUsers.map((user) => (
+                adminUsers?.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.full_name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
+                      <Badge variant={user.role === 'super_admin' ? 'default' : 'outline'}>
+                        {user.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={user.is_active ? 'success' : 'destructive'}>
+                        {user.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline" onClick={() => handleEdit(user)}>
+                        <Button size="sm" variant="outline" onClick={() => handleEdit(user.id)}>
                           <Pencil size={14} className="mr-1" /> Edit
                         </Button>
-                        <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleDelete(user)}>
+                        <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleDelete(user.id)}>
                           <Trash2 size={14} className="mr-1" /> Delete
                         </Button>
                       </div>
@@ -112,6 +139,19 @@ const AdminUsersPage = () => {
         </CardContent>
       </Card>
 
+      {/* Add Admin Dialog */}
+      <AddAdminUserDialog 
+        open={isAddDialogOpen} 
+        onOpenChange={setIsAddDialogOpen} 
+      />
+
+      {/* Edit Admin Dialog */}
+      <EditAdminUserDialog 
+        userId={selectedUserId} 
+        open={isEditDialogOpen} 
+        onOpenChange={setIsEditDialogOpen} 
+      />
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
@@ -123,61 +163,13 @@ const AdminUsersPage = () => {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Admin Dialog - in a real app this would include a form to enter details */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Admin User</DialogTitle>
-            <DialogDescription>
-              Enter the details for the new admin user. They will receive an email invitation.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-center text-muted-foreground">
-              Form would go here in the complete implementation.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => {
-              toast({
-                title: "Feature in development",
-                description: "Adding admin users will be fully implemented soon.",
-              });
-              setIsAddDialogOpen(false);
-            }}>Add Admin</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Admin Dialog - in a real app this would include a form to edit details */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Admin User</DialogTitle>
-            <DialogDescription>
-              Update the details for this admin user.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-center text-muted-foreground">
-              Form would go here in the complete implementation.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => {
-              toast({
-                title: "Feature in development",
-                description: "Editing admin users will be fully implemented soon.",
-              });
-              setIsEditDialogOpen(false);
-            }}>Save Changes</Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDelete}
+              disabled={deleteAdminUser.isPending}
+            >
+              {deleteAdminUser.isPending ? "Deleting..." : "Delete"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
