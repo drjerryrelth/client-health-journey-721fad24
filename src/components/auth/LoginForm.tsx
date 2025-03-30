@@ -71,18 +71,18 @@ const LoginForm = () => {
       let fullName = '';
       let role = type;
       
-      // Use valid email formats for demo accounts
+      // Use standard Gmail domain for demo accounts
       switch (type) {
         case 'admin':
-          email = 'admin@clienthealthtracker.com';
+          email = 'admin.demo@gmail.com';
           fullName = 'Admin User';
           break;
         case 'coach':
-          email = 'coach@clienthealthtracker.com';
+          email = 'coach.demo@gmail.com';
           fullName = 'Coach User';
           break;
         case 'client':
-          email = 'client@clienthealthtracker.com';
+          email = 'client.demo@gmail.com';
           fullName = 'Client User';
           break;
       }

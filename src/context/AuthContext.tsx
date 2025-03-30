@@ -166,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Attempting login with email:', email);
       
       // Check if this is a demo login
-      const isDemoLogin = ['admin@clienthealthtracker.com', 'coach@clienthealthtracker.com', 'client@clienthealthtracker.com'].includes(email);
+      const isDemoLogin = ['admin.demo@gmail.com', 'coach.demo@gmail.com', 'client.demo@gmail.com'].includes(email);
       if (isDemoLogin) {
         console.log('This is a demo login attempt');
       }
