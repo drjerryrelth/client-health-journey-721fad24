@@ -99,8 +99,8 @@ Deno.serve(async (req) => {
         console.error(`Error counting clients for coach ${coach.id}:`, countError);
         // Ensure status is either 'active' or 'inactive'
         const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
-          ? coach.status 
-          : 'inactive';
+          ? coach.status as "active" | "inactive"
+          : "inactive";
           
         return {
           ...coach,
@@ -112,8 +112,8 @@ Deno.serve(async (req) => {
       console.log(`Coach ${coach.id} has ${count || 0} clients`);
       // Ensure status is either 'active' or 'inactive'
       const validStatus = (coach.status === 'active' || coach.status === 'inactive') 
-        ? coach.status 
-        : 'inactive';
+        ? coach.status as "active" | "inactive"
+        : "inactive";
         
       return {
         ...coach,
