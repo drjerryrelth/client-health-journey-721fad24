@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Checking initial session');
         
         // Add a timeout to prevent infinite loading
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise<{data: null, error: Error}>((_, reject) => 
           setTimeout(() => reject(new Error('Session check timeout')), 10000)
         );
         
