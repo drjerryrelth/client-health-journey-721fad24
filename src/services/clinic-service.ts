@@ -82,7 +82,10 @@ export const ClinicService = {
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching clinic:', error);
+        throw error;
+      }
       
       return {
         id: data.id,
@@ -118,26 +121,34 @@ export const ClinicService = {
   // Add a new clinic
   async addClinic(clinic: {
     name: string;
-    email?: string;
-    phone?: string;
-    streetAddress?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
-    primaryContact?: string;
-    billingContactName?: string;
-    billingEmail?: string;
-    billingPhone?: string;
-    billingAddress?: string;
-    billingCity?: string;
-    billingState?: string;
-    billingZip?: string;
-    paymentMethod?: string;
-    subscriptionTier?: string;
-    subscriptionStatus?: string;
+    email?: string | null;
+    phone?: string | null;
+    streetAddress?: string | null;
+    city?: string | null;
+    state?: string | null;
+    zip?: string | null;
+    primaryContact?: string | null;
+    billingContactName?: string | null;
+    billingEmail?: string | null;
+    billingPhone?: string | null;
+    billingAddress?: string | null;
+    billingCity?: string | null;
+    billingState?: string | null;
+    billingZip?: string | null;
+    paymentMethod?: string | null;
+    subscriptionTier?: string | null;
+    subscriptionStatus?: string | null;
   }): Promise<Clinic | null> {
     try {
       console.log('Adding clinic:', clinic);
+      
+      // Check if user is logged in
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        console.error('User not authenticated');
+        toast.error('You must be logged in to add a clinic');
+        return null;
+      }
       
       const { data, error } = await supabase
         .from('clinics')

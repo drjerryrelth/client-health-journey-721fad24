@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -52,25 +51,31 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
 
     try {
       setIsSubmitting(true);
-      const newClinic = await ClinicService.addClinic({
+      
+      // Create a clean object without undefined values that might cause issues
+      const clinicData = {
         name: clinicName,
-        email: clinicEmail || undefined,
-        phone: clinicPhone || undefined,
-        streetAddress: streetAddress || undefined,
-        city: city || undefined,
-        state: state || undefined,
-        zip: zipCode || undefined,
-        primaryContact: primaryContact || undefined,
-        billingContactName: billingContactName || undefined,
-        billingEmail: billingEmail || undefined,
-        billingPhone: billingPhone || undefined,
-        billingAddress: billingAddress || undefined,
-        billingCity: billingCity || undefined,
-        billingState: billingState || undefined,
-        billingZip: billingZip || undefined,
-        paymentMethod: paymentMethod || undefined,
-        subscriptionTier: subscriptionTier || undefined
-      });
+        email: clinicEmail || null,
+        phone: clinicPhone || null,
+        streetAddress: streetAddress || null,
+        city: city || null,
+        state: state || null,
+        zip: zipCode || null,
+        primaryContact: primaryContact || null,
+        billingContactName: billingContactName || null,
+        billingEmail: billingEmail || null,
+        billingPhone: billingPhone || null,
+        billingAddress: billingAddress || null,
+        billingCity: billingCity || null,
+        billingState: billingState || null,
+        billingZip: billingZip || null,
+        paymentMethod: paymentMethod || null,
+        subscriptionTier: subscriptionTier || null
+      };
+      
+      console.log('Submitting clinic data:', clinicData);
+      
+      const newClinic = await ClinicService.addClinic(clinicData);
 
       if (newClinic) {
         toast({
