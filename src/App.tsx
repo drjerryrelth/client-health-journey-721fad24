@@ -27,6 +27,7 @@ import SettingsPage from "./pages/admin/SettingsPage";
 import CoachesPage from "./pages/admin/CoachesPage";
 import ActivitiesPage from "./pages/admin/ActivitiesPage"; 
 import ResourcesPage from "./pages/admin/ResourcesPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage"; // Import the new AdminUsersPage
 
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/activities" element={<ActivitiesPage />} />
               <Route path="/resources" element={<ResourcesPage />} />
+              <Route path="/admin-users" element={<AdminUsersPage />} /> {/* Add the AdminUsersPage route */}
             </Route>
             
             {/* Coach routes */}

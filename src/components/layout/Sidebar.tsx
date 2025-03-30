@@ -4,7 +4,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import { 
   Users, User, Calendar, Home, FileText, 
-  Activity, List, Settings, Weight, PlusCircle, Building, BookOpen
+  Activity, List, Settings, Weight, PlusCircle, Building, BookOpen,
+  UserCog
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -27,11 +28,12 @@ const Sidebar = () => {
   const isCoach = hasRole('coach');
   const isClient = hasRole('client');
 
-  // Updated admin links with Reports link re-added
+  // Updated admin links with Reports link re-added and Admin Users link added
   const adminLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Clinics', path: '/clinics', icon: <Building size={20} /> },
     { name: 'Coaches', path: '/coaches', icon: <Users size={20} /> },
+    { name: 'Admin Users', path: '/admin-users', icon: <UserCog size={20} /> },
     { name: 'Programs', path: '/programs', icon: <List size={20} /> },
     { name: 'Activities', path: '/activities', icon: <Activity size={20} /> },
     { name: 'Resources', path: '/resources', icon: <BookOpen size={20} /> },
