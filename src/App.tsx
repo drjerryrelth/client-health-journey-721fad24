@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ClientDashboard from "./pages/ClientDashboard";
+import ClientPortal from "./pages/ClientPortal";
 import CheckIn from "./pages/CheckIn";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
@@ -53,6 +54,7 @@ const App = () => (
             {/* Client routes */}
             <Route element={<MainLayout requiredRoles={['client']} />}>
               <Route path="/client-dashboard" element={<ClientDashboard />} />
+              <Route path="/client-portal" element={<ClientPortal />} />
               <Route path="/check-in" element={<CheckIn />} />
               <Route path="/progress" element={<ClientDashboard />} />
               <Route path="/my-program" element={<ClientDashboard />} />
