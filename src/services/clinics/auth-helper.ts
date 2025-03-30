@@ -10,6 +10,8 @@ export const checkAuthentication = async () => {
       toast.error('You must be logged in to perform this action');
       return null;
     }
+    
+    console.log('Authentication successful, user is logged in');
     return sessionData.session;
   } catch (error) {
     console.error('Authentication error:', error);

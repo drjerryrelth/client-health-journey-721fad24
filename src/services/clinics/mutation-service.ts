@@ -32,12 +32,11 @@ export async function addClinic(clinic: {
     // Check if user is logged in
     const session = await checkAuthentication();
     if (!session) {
+      console.log('Authentication failed, cannot add clinic');
       return null;
     }
 
-    // For demo purposes, we'll assume the user is an admin if they're logged in
-    // This is a workaround for the RLS policy issues
-    // In production, we would properly verify the admin role
+    console.log('User authenticated, proceeding with clinic creation');
     
     const dbClinic = mapClinicToDbClinic(clinic);
     const { data, error } = await supabase
@@ -51,6 +50,8 @@ export async function addClinic(clinic: {
       throw error;
     }
     
+    console.log('Clinic added successfully:', data);
+    toast.success('Clinic added successfully!');
     return mapDbClinicToClinic(data);
   } catch (error) {
     console.error('Error adding clinic:', error);
@@ -65,9 +66,11 @@ export async function updateClinic(id: string, updates: Partial<Omit<Clinic, 'id
     // Check if user is logged in
     const session = await checkAuthentication();
     if (!session) {
+      console.log('Authentication failed, cannot update clinic');
       return null;
     }
 
+    console.log('User authenticated, proceeding with clinic update');
     const dbUpdates = mapClinicToDbClinic(updates);
     
     const { data, error } = await supabase
@@ -82,6 +85,8 @@ export async function updateClinic(id: string, updates: Partial<Omit<Clinic, 'id
       throw error;
     }
     
+    console.log('Clinic updated successfully:', data);
+    toast.success('Clinic updated successfully!');
     return mapDbClinicToClinic(data);
   } catch (error) {
     console.error('Error updating clinic:', error);
@@ -96,9 +101,11 @@ export async function deleteClinic(id: string): Promise<boolean> {
     // Check if user is logged in
     const session = await checkAuthentication();
     if (!session) {
+      console.log('Authentication failed, cannot delete clinic');
       return false;
     }
     
+    console.log('User authenticated, proceeding with clinic deletion');
     const { error } = await supabase
       .from('clinics')
       .delete()
@@ -109,6 +116,8 @@ export async function deleteClinic(id: string): Promise<boolean> {
       throw error;
     }
     
+    console.log('Clinic deleted successfully');
+    toast.success('Clinic deleted successfully!');
     return true;
   } catch (error) {
     console.error('Error deleting clinic:', error);

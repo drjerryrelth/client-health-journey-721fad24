@@ -12,9 +12,11 @@ export async function getClinics(): Promise<Clinic[]> {
     // First check if user is authenticated
     const session = await checkAuthentication();
     if (!session) {
+      console.log('User not authenticated, returning mock data');
       return getMockClinics(); // Fallback to mock data
     }
 
+    console.log('Fetching clinics from database');
     const { data, error } = await supabase
       .from('clinics')
       .select('*')
@@ -40,9 +42,11 @@ export async function getClinic(id: string): Promise<Clinic | null> {
     // First check if user is authenticated
     const session = await checkAuthentication();
     if (!session) {
+      console.log('User not authenticated, cannot fetch clinic details');
       return null;
     }
     
+    console.log('Fetching clinic with ID:', id);
     const { data, error } = await supabase
       .from('clinics')
       .select('*')
