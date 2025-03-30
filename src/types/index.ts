@@ -1,4 +1,3 @@
-
 import { ProfileRow, ClientRow, ProgramRow, SupplementRow, CheckInRow, ClinicRow } from './database';
 
 export type UserRole = 'admin' | 'coach' | 'client';
@@ -23,6 +22,7 @@ export type Client = {
   notes?: string;
   profileImage?: string;
   clinicId: string;
+  coachId?: string; // Added coachId field
 };
 
 export type Program = {
@@ -92,6 +92,7 @@ export const mapDbClientToClient = (dbClient: ClientRow): Client => ({
   notes: dbClient.notes || undefined,
   profileImage: dbClient.profile_image || undefined,
   clinicId: dbClient.clinic_id,
+  coachId: dbClient.coach_id || undefined, // Map the coach_id field
 });
 
 export const mapClientToDbClient = (client: Omit<Client, 'id'>): Omit<ClientRow, 'id' | 'created_at'> => ({
@@ -105,6 +106,7 @@ export const mapClientToDbClient = (client: Omit<Client, 'id'>): Omit<ClientRow,
   notes: client.notes || null,
   profile_image: client.profileImage || null,
   clinic_id: client.clinicId,
+  coach_id: client.coachId || null // Map the coachId field
 });
 
 // Add mapping functions for Program and Supplement

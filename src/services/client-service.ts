@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Client, mapDbClientToClient, mapClientToDbClient } from '@/types';
 import { ClientRow } from '@/types/database';
@@ -81,6 +80,7 @@ export const ClientService = {
       if ('profileImage' in updates) dbUpdates.profile_image = updates.profileImage || null;
       if (updates.clinicId) dbUpdates.clinic_id = updates.clinicId;
       if ('userId' in updates) dbUpdates.user_id = updates.userId || null;
+      if ('coachId' in updates) dbUpdates.coach_id = updates.coachId || null; // Handle coachId updates
       
       const { data, error } = await supabase
         .from('clients')

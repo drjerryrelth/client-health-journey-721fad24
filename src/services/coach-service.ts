@@ -16,7 +16,6 @@ export const CoachService = {
   // Fetch all coaches for a specific clinic
   async getClinicCoaches(clinicId: string): Promise<Coach[]> {
     try {
-      // Now that we have the coaches table set up, we can query it directly
       const { data, error } = await supabase
         .from('coaches')
         .select(`
@@ -39,7 +38,7 @@ export const CoachService = {
         name: coach.name,
         email: coach.email,
         phone: coach.phone,
-        status: coach.status,
+        status: coach.status as 'active' | 'inactive', // Cast to union type
         clinicId: coach.clinic_id,
         clients: Array.isArray(coach.clients) ? coach.clients.length : 0
       }));
@@ -54,9 +53,6 @@ export const CoachService = {
   // Delete a coach and reassign their clients
   async removeCoachAndReassignClients(coachId: string, newCoachId: string): Promise<boolean> {
     try {
-      // Now that we have the coaches table and clients have coach_id column,
-      // we can perform the reassignment and deletion operations
-      
       // First reassign all clients
       const { error: reassignError } = await supabase
         .from('clients')
@@ -91,7 +87,7 @@ export const CoachService = {
           name: coach.name,
           email: coach.email,
           phone: coach.phone,
-          status: coach.status,
+          status: coach.status, // Now correctly typed as 'active' | 'inactive'
           clinic_id: coach.clinicId
         })
         .select()
@@ -104,7 +100,7 @@ export const CoachService = {
         name: data.name,
         email: data.email,
         phone: data.phone,
-        status: data.status,
+        status: data.status as 'active' | 'inactive', // Cast to union type
         clinicId: data.clinic_id,
         clients: 0
       };
@@ -122,7 +118,7 @@ export const CoachService = {
       if (coach.name) updates.name = coach.name;
       if (coach.email) updates.email = coach.email;
       if (coach.phone !== undefined) updates.phone = coach.phone;
-      if (coach.status) updates.status = coach.status;
+      if (coach.status) updates.status = coach.status; // Now correctly typed as 'active' | 'inactive'
       if (coach.clinicId) updates.clinic_id = coach.clinicId;
       
       const { data, error } = await supabase
@@ -147,7 +143,7 @@ export const CoachService = {
         name: data.name,
         email: data.email,
         phone: data.phone,
-        status: data.status,
+        status: data.status as 'active' | 'inactive', // Cast to union type
         clinicId: data.clinic_id,
         clients: Array.isArray(data.clients) ? data.clients.length : 0
       };
