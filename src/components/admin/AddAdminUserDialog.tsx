@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { AdminUserFormData } from '@/types/admin';
 import { useCreateAdminUserMutation } from '@/hooks/use-admin-users';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Define the form validation schema
 const formSchema = z.object({
@@ -25,6 +27,8 @@ interface AddAdminUserDialogProps {
 }
 
 export function AddAdminUserDialog({ open, onOpenChange }: AddAdminUserDialogProps) {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
   const form = useForm<AdminUserFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,18 +42,26 @@ export function AddAdminUserDialog({ open, onOpenChange }: AddAdminUserDialogPro
   const createAdminUser = useCreateAdminUserMutation();
   
   const onSubmit = async (data: AdminUserFormData) => {
+    setErrorMessage(null);
+    
     try {
       await createAdminUser.mutateAsync(data);
       form.reset();
       onOpenChange(false);
-    } catch (error) {
-      // Error is handled in the mutation hook
+    } catch (error: any) {
       console.error("Error creating admin user:", error);
+      setErrorMessage(error?.message || 'An unknown error occurred when creating the admin user');
     }
   };
   
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        form.reset();
+        setErrorMessage(null);
+      }
+      onOpenChange(isOpen);
+    }}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add Admin User</DialogTitle>
@@ -57,6 +69,14 @@ export function AddAdminUserDialog({ open, onOpenChange }: AddAdminUserDialogPro
             Create a new admin user with access to the admin dashboard.
           </DialogDescription>
         </DialogHeader>
+        
+        {errorMessage && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField

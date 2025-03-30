@@ -46,28 +46,50 @@ export const AdminUserService = {
    * Create a new admin user with auth credentials
    */
   async createAdminUser(userData: AdminUserFormData): Promise<AdminUser> {
-    // Call the stored procedure that creates both auth user and admin user
-    const { data, error } = await supabase
-      .rpc('create_admin_user', {
-        email: userData.email,
-        password: userData.password,
-        full_name: userData.fullName,
-        role: userData.role || 'admin'
-      });
-    
-    if (error) {
-      console.error('Error creating admin user:', error);
+    try {
+      console.log('Creating admin user:', userData);
+      
+      // Call the stored procedure that creates both auth user and admin user
+      const { data, error } = await supabase
+        .rpc('create_admin_user', {
+          email: userData.email,
+          password: userData.password || '',
+          full_name: userData.fullName,
+          role: userData.role || 'admin'
+        });
+      
+      if (error) {
+        console.error('Error creating admin user:', error);
+        throw new Error(`Failed to create admin user: ${error.message}`);
+      }
+      
+      if (!data) {
+        throw new Error('Failed to create admin user: No data returned');
+      }
+      
+      console.log('Admin user created with auth_user_id:', data);
+      
+      // Return the newly created admin user
+      const { data: newUser, error: fetchError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('auth_user_id', data)
+        .maybeSingle();
+      
+      if (fetchError) {
+        console.error('Error fetching new admin user:', fetchError);
+        throw new Error(`Admin user created but failed to fetch details: ${fetchError.message}`);
+      }
+      
+      if (!newUser) {
+        throw new Error('Admin user created but no details found');
+      }
+      
+      return newUser as AdminUser;
+    } catch (error: any) {
+      console.error('Error in createAdminUser:', error);
       throw error;
     }
-    
-    // Return the newly created admin user
-    const { data: newUser } = await supabase
-      .from('admin_users')
-      .select('*')
-      .eq('auth_user_id', data)
-      .maybeSingle();
-    
-    return newUser as AdminUser;
   },
 
   /**
@@ -99,11 +121,16 @@ export const AdminUserService = {
    */
   async deleteAdminUser(id: string): Promise<void> {
     // First get the auth_user_id
-    const { data: adminUser } = await supabase
+    const { data: adminUser, error: fetchError } = await supabase
       .from('admin_users')
       .select('auth_user_id')
       .eq('id', id)
       .maybeSingle();
+    
+    if (fetchError) {
+      console.error(`Error fetching admin user with ID ${id}:`, fetchError);
+      throw fetchError;
+    }
     
     if (!adminUser) {
       throw new Error(`Admin user with ID ${id} not found`);

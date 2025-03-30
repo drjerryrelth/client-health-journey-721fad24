@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminUserService } from '@/services/admin-user-service';
 import type { AdminUser, AdminUserFormData } from '@/types/admin';
 import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 
 // Admin Users Queries
 export const useAdminUsersQuery = () => {
@@ -25,20 +26,46 @@ export const useCreateAdminUserMutation = () => {
   const { toast } = useToast();
   
   return useMutation({
-    mutationFn: (userData: AdminUserFormData) => 
-      AdminUserService.createAdminUser(userData),
-    onSuccess: () => {
+    mutationFn: async (userData: AdminUserFormData) => {
+      // Log the userData to help with debugging
+      console.log('Creating admin user with data:', userData);
+      try {
+        const result = await AdminUserService.createAdminUser(userData);
+        console.log('Admin user creation result:', result);
+        return result;
+      } catch (error) {
+        console.error('Error in mutationFn:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      console.log('Admin user created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
-      toast({
-        title: 'Admin user created',
+      
+      // Use sonner toast for more visible notification
+      sonnerToast.success('Admin user created', {
         description: 'The admin user has been successfully created.',
+        duration: 4000,
       });
     },
-    onError: (error) => {
-      toast({
-        title: 'Failed to create admin user',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-        variant: 'destructive',
+    onError: (error: any) => {
+      console.error('Admin user creation failed:', error);
+      
+      // Extract meaningful error message
+      let errorMessage = 'An unknown error occurred';
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error?.error?.message) {
+        errorMessage = error.error.message;
+      }
+      
+      // Use sonner toast for more visible error notification
+      sonnerToast.error('Failed to create admin user', {
+        description: errorMessage,
+        duration: 5000,
       });
     }
   });
