@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { checkAuthentication } from './clinics/auth-helper';
 
 export type Coach = {
   id: string;
@@ -90,9 +91,9 @@ export const CoachService = {
     try {
       console.log('Adding coach with data:', coach);
       
-      // Check if user is authenticated
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session) {
+      // Check if user is authenticated using the helper
+      const session = await checkAuthentication();
+      if (!session) {
         console.error('User is not authenticated');
         toast.error('You must be logged in to add a coach');
         return null;
@@ -149,8 +150,8 @@ export const CoachService = {
   async updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 'clients'>>): Promise<Coach | null> {
     try {
       // Check if user is authenticated
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session) {
+      const session = await checkAuthentication();
+      if (!session) {
         console.error('User is not authenticated');
         toast.error('You must be logged in to update a coach');
         return null;
