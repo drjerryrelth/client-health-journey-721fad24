@@ -112,20 +112,23 @@ export const useAuthMethods = ({
     }
   };
 
-  const hasRole = (role: UserRole | UserRole[], currentUser: UserData | null = null) => {
-    if (!currentUser) return false;
-    
-    if (Array.isArray(role)) {
-      return role.includes(currentUser.role);
-    }
-    
-    return currentUser.role === role;
+  // Fixed implementation of hasRole function
+  const hasRole = (role: UserRole | UserRole[]) => {
+    return (currentUser: UserData | null = null) => {
+      if (!currentUser) return false;
+      
+      if (Array.isArray(role)) {
+        return role.includes(currentUser.role);
+      }
+      
+      return currentUser.role === role;
+    };
   };
 
   return {
     login,
     signUp,
     logout,
-    hasRole: (role: UserRole | UserRole[]) => hasRole(role)
+    hasRole
   };
 };

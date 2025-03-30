@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         logout,
-        // Fix: Pass the user from state to the hasRole function
+        // Fixed: Call hasRole with the role and immediately pass in the user
         hasRole: (role: UserRole | UserRole[]) => hasRole(role)(user),
         signUp,
       }}
