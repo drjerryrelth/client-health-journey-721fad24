@@ -5,19 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
 import { Building, ChevronRight } from 'lucide-react';
 
-interface Clinic {
+interface FormattedClinic {
   id: string;
   name: string;
   coaches: number;
   clients: number;
-  location: string;
   city?: string | null;
   state?: string | null;
   status: string;
 }
 
 interface ClinicsTableProps {
-  clinics: Clinic[];
+  clinics: FormattedClinic[];
   onClinicSelect: (clinicId: string) => void;
   getStatusColor: (status: string) => string;
 }
@@ -59,7 +58,7 @@ const ClinicsTable = ({ clinics, onClinicSelect, getStatusColor }: ClinicsTableP
                 <TableCell>
                   {clinic.city && clinic.state 
                     ? `${clinic.city}, ${clinic.state}`
-                    : clinic.location}
+                    : "N/A"}
                 </TableCell>
                 <TableCell>
                   <Badge className={getStatusColor(clinic.status)} variant="outline">

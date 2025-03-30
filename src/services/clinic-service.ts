@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -37,7 +36,10 @@ export const ClinicService = {
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error details from Supabase:', error);
+        throw error;
+      }
       
       return data.map(clinic => ({
         id: clinic.id,
@@ -135,6 +137,8 @@ export const ClinicService = {
     subscriptionStatus?: string;
   }): Promise<Clinic | null> {
     try {
+      console.log('Adding clinic:', clinic);
+      
       const { data, error } = await supabase
         .from('clinics')
         .insert({
@@ -161,7 +165,10 @@ export const ClinicService = {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error details from Supabase:', error);
+        throw error;
+      }
       
       return {
         id: data.id,
