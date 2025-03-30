@@ -8,8 +8,8 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
   
   try {
     // First, get the user's email from auth
-    const { data: userData } = await supabase.auth.getUser();
-    const email = userData?.user?.email;
+    const { data: authUserData } = await supabase.auth.getUser();
+    const email = authUserData?.user?.email;
     
     if (!email) {
       console.error('Could not retrieve user email');
@@ -29,7 +29,7 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       // List of demo emails
       const demoEmails = {
         admin: 'drrelth@contourlight.com',
-        coach: 'support@practicenaturals.com', // Fixed email typo
+        coach: 'support@practicenaturals.com',
         client: 'drjerryrelth@gmail.com'
       };
       
@@ -100,7 +100,7 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
     }
     
     // Transform the profile data to match UserData structure
-    const userData: UserData = {
+    const profileData: UserData = {
       id: profile.id,
       name: profile.full_name,
       email: profile.email,
@@ -108,8 +108,8 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       clinicId: profile.clinic_id,
     };
     
-    console.log('User profile fetched successfully:', userData);
-    return userData;
+    console.log('User profile fetched successfully:', profileData);
+    return profileData;
   } catch (error) {
     console.error('Unexpected error in fetchUserProfile:', error);
     return null;
