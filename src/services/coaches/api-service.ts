@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { checkAuthentication } from '../clinics/auth-helper';
@@ -49,6 +48,51 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
     toast.error('Failed to fetch coaches. Using mock data as fallback.');
     // Return mock data as fallback
     return getMockCoaches().filter(coach => coach.clinicId === clinicId);
+  }
+}
+
+export async function getAllCoaches(): Promise<Coach[]> {
+  try {
+    console.log('Fetching all coaches across clinics');
+    
+    // Check authentication before proceeding
+    const session = await checkAuthentication();
+    if (!session) {
+      console.error('User not authenticated');
+      throw new Error('Authentication required to fetch coaches');
+    }
+    
+    // Use RPC call to fetch all coaches (admin only)
+    const { data, error } = await supabase.functions.invoke('get-all-coaches', {});
+    
+    if (error) {
+      console.error('Error fetching all coaches:', error);
+      throw error;
+    }
+    
+    console.log('Fetched coaches data:', data);
+    
+    if (!Array.isArray(data)) {
+      console.error('Invalid data format, expected array:', data);
+      // Fall back to mock data if we can't get data from the server
+      return getMockCoaches();
+    }
+    
+    // Transform and return the coaches data
+    return data.map(coach => ({
+      id: coach.id,
+      name: coach.name,
+      email: coach.email,
+      phone: coach.phone || null,
+      status: coach.status as 'active' | 'inactive',
+      clinicId: coach.clinic_id,
+      clients: coach.client_count || 0
+    }));
+  } catch (error) {
+    console.error('Error fetching all coaches:', error);
+    toast.error('Failed to fetch coaches. Using mock data as fallback.');
+    // Return mock data as fallback
+    return getMockCoaches();
   }
 }
 

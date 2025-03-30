@@ -1,7 +1,8 @@
 
 import { Coach } from './types';
 import { 
-  getClinicCoaches, 
+  getClinicCoaches,
+  getAllCoaches, 
   addCoach, 
   updateCoach, 
   removeCoachAndReassignClients 
@@ -14,6 +15,7 @@ export type { Coach };
 // Export functions
 export const CoachService = {
   getClinicCoaches,
+  getAllCoaches,
   addCoach,
   updateCoach,
   removeCoachAndReassignClients
