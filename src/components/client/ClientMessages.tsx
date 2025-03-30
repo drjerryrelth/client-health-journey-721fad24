@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Send, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { Message } from '@/components/types/Message';
 
 // Temporary mock data
 const initialMessages = [
@@ -22,7 +23,7 @@ const initialMessages = [
     id: '2',
     senderId: 'client-1',
     senderName: 'You',
-    message: 'I'm doing well! I've been following the meal plan and feel more energetic already.',
+    message: "I'm doing well! I've been following the meal plan and feel more energetic already.",
     timestamp: '2023-09-12T10:45:00Z',
     isRead: true
   },
@@ -31,7 +32,7 @@ const initialMessages = [
     senderId: 'coach-1',
     senderName: 'Dr. Jessica Smith',
     senderAvatar: 'https://i.pravatar.cc/150?img=44',
-    message: 'That's great to hear! Have you experienced any challenges with the supplement schedule?',
+    message: "That's great to hear! Have you experienced any challenges with the supplement schedule?",
     timestamp: '2023-09-12T11:00:00Z',
     isRead: true
   },
@@ -39,13 +40,13 @@ const initialMessages = [
 
 const ClientMessages = () => {
   const { user } = useAuth();
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [newMessage, setNewMessage] = useState('');
 
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
     
-    const message = {
+    const message: Message = {
       id: `${Date.now()}`,
       senderId: 'client-1',
       senderName: 'You',
