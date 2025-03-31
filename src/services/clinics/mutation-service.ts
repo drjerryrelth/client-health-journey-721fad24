@@ -1,136 +1,92 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Clinic } from './types';
-import { mapClinicToDbClinic, mapDbClinicToClinic } from './mappers';
-import { checkAuthentication } from './auth-helper';
+import { mapClinicToDb, mapDbToClinic } from './mappers';
 
-// Add a new clinic
-export async function addClinic(clinic: {
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  streetAddress?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zip?: string | null;
-  primaryContact?: string | null;
-  billingContactName?: string | null;
-  billingEmail?: string | null;
-  billingPhone?: string | null;
-  billingAddress?: string | null;
-  billingCity?: string | null;
-  billingState?: string | null;
-  billingZip?: string | null;
-  paymentMethod?: string | null;
-  subscriptionTier?: string | null;
-  subscriptionStatus?: string | null;
-}): Promise<Clinic | null> {
+export const addClinic = async (clinic: Partial<Clinic>): Promise<Clinic | null> => {
   try {
-    console.log('Adding clinic:', clinic);
-    
-    // Check if user is logged in
-    const session = await checkAuthentication();
-    if (!session) {
-      console.log('Authentication failed, cannot add clinic');
-      toast.error('You must be logged in to add a clinic');
-      return null;
-    }
-
-    console.log('User authenticated, proceeding with clinic creation');
-    
-    // Ensure status is set to active if not provided
-    const clinicData = {
-      ...clinic,
-      subscriptionStatus: clinic.subscriptionStatus || 'active'
-    };
-    
-    const dbClinic = mapClinicToDbClinic(clinicData);
-    console.log('Mapped DB clinic data:', dbClinic);
-    
     const { data, error } = await supabase
       .from('clinics')
-      .insert(dbClinic)
+      .insert(mapClinicToDb(clinic))
       .select()
       .single();
 
-    if (error) {
-      console.error('Error details from Supabase:', error);
-      throw error;
-    }
-    
-    console.log('Clinic added successfully:', data);
-    toast.success('Clinic added successfully!');
-    return mapDbClinicToClinic(data);
+    if (error) throw error;
+    return mapDbToClinic(data);
   } catch (error) {
     console.error('Error adding clinic:', error);
-    toast.error('Failed to add clinic.');
     return null;
   }
-}
+};
 
-// Update a clinic
-export async function updateClinic(id: string, updates: Partial<Omit<Clinic, 'id' | 'createdAt'>>): Promise<Clinic | null> {
+export const createClinic = async (clinic: Partial<Clinic>): Promise<{ data: Clinic | null, error: any }> => {
   try {
-    // Check if user is logged in
-    const session = await checkAuthentication();
-    if (!session) {
-      console.log('Authentication failed, cannot update clinic');
-      return null;
-    }
-
-    console.log('User authenticated, proceeding with clinic update');
-    const dbUpdates = mapClinicToDbClinic(updates);
-    
     const { data, error } = await supabase
       .from('clinics')
-      .update(dbUpdates)
-      .eq('id', id)
+      .insert(mapClinicToDb(clinic))
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating clinic:', error);
-      throw error;
-    }
-    
-    console.log('Clinic updated successfully:', data);
-    toast.success('Clinic updated successfully!');
-    return mapDbClinicToClinic(data);
+    if (error) throw error;
+    return { data: mapDbToClinic(data), error: null };
+  } catch (error) {
+    console.error('Error creating clinic:', error);
+    return { data: null, error };
+  }
+};
+
+export const updateClinic = async (clinicId: string, updates: Partial<Clinic>): Promise<{ data: Clinic | null, error: any }> => {
+  try {
+    const { data, error } = await supabase
+      .from('clinics')
+      .update(mapClinicToDb(updates))
+      .eq('id', clinicId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data: mapDbToClinic(data), error: null };
   } catch (error) {
     console.error('Error updating clinic:', error);
-    toast.error('Failed to update clinic.');
-    return null;
+    return { data: null, error };
   }
-}
+};
 
-// Delete a clinic
-export async function deleteClinic(id: string): Promise<boolean> {
+export const deleteClinic = async (clinicId: string): Promise<{ success: boolean, error: any }> => {
   try {
-    // Check if user is logged in
-    const session = await checkAuthentication();
-    if (!session) {
-      console.log('Authentication failed, cannot delete clinic');
-      return false;
-    }
-    
-    console.log('User authenticated, proceeding with clinic deletion');
     const { error } = await supabase
       .from('clinics')
       .delete()
-      .eq('id', id);
+      .eq('id', clinicId);
 
-    if (error) {
-      console.error('Error deleting clinic:', error);
-      throw error;
-    }
-    
-    console.log('Clinic deleted successfully');
-    toast.success('Clinic deleted successfully!');
-    return true;
+    if (error) throw error;
+    return { success: true, error: null };
   } catch (error) {
     console.error('Error deleting clinic:', error);
-    toast.error('Failed to delete clinic.');
-    return false;
+    return { success: false, error };
   }
-}
+};
+
+export const updateClinicBranding = async (
+  clinicId: string, 
+  logo: string | null, 
+  primaryColor: string | null, 
+  secondaryColor: string | null
+): Promise<{ success: boolean, error: any }> => {
+  try {
+    const { error } = await supabase
+      .from('clinics')
+      .update({
+        logo,
+        primary_color: primaryColor,
+        secondary_color: secondaryColor
+      })
+      .eq('id', clinicId);
+
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error updating clinic branding:', error);
+    return { success: false, error };
+  }
+};

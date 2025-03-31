@@ -1,6 +1,5 @@
 
-// Define types used throughout the clinic services
-export type Clinic = {
+export interface Clinic {
   id: string;
   name: string;
   email: string | null;
@@ -24,4 +23,8 @@ export type Clinic = {
   paymentMethod: string | null;
   subscriptionTier: string | null;
   subscriptionStatus: string | null;
-};
+  // Branding
+  logo: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+}
