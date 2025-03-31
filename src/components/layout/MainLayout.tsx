@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/context/auth';
 import { Navigate, Outlet } from 'react-router-dom';
-import Sidebar from './Sidebar';
+import { Sidebar } from './Sidebar';
 import TopBar from './TopBar';
 import { UserRole } from '@/types';
 import { toast } from 'sonner';
