@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/types';
@@ -13,18 +14,18 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await loginWithEmail(email, password);
+      const result = await loginWithEmail(email, password);
       
-      if (error) {
+      if (!result.user) {
         toast({
           title: 'Login failed',
-          description: error.message,
+          description: 'No user returned from login',
           variant: 'destructive',
         });
-        throw error;
+        throw new Error('No user returned from login');
       }
       
-      return data;
+      return result;
     } catch (error: any) {
       toast({
         title: 'Login failed',
@@ -63,14 +64,14 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
   const signUp = async (email: string, password: string, userData: { full_name: string; role: string }) => {
     setIsLoading(true);
     try {
-      const data = await signUpWithEmail(email, password, userData);
+      const result = await signUpWithEmail(email, password, userData);
       
       toast({
         title: 'Sign up successful',
         description: 'Your account has been created.',
       });
       
-      return data;
+      return result;
     } catch (error: any) {
       toast({
         title: 'Sign up failed',

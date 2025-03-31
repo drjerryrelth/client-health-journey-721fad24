@@ -21,7 +21,7 @@ export async function loginWithEmail(email: string, password: string) {
       // Since we can't check if a user exists directly with the client SDK,
       // we'll try to create the user and handle "already exists" errors
       try {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const signUpData = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -34,12 +34,12 @@ export async function loginWithEmail(email: string, password: string) {
           }
         });
         
-        if (signUpError) {
+        if (signUpData.error) {
           // If error is because user already exists, that's fine - we'll continue with login
-          if (signUpError.message?.includes('already registered')) {
+          if (signUpData.error.message?.includes('already registered')) {
             console.log('Demo user already exists, will proceed with login');
           } else {
-            console.warn('Could not create demo user:', signUpError.message);
+            console.warn('Could not create demo user:', signUpData.error.message);
           }
         } else {
           console.log('Demo user created successfully');
@@ -63,30 +63,30 @@ export async function loginWithEmail(email: string, password: string) {
   });
   
   // Race between actual login and timeout
-  const { data, error } = await Promise.race([
-    loginPromise,
-    timeoutPromise.then(() => {
-      throw new Error('Login request timed out');
-    }),
-  ]);
-  
-  if (error) {
+  try {
+    const result = await Promise.race([
+      loginPromise,
+      timeoutPromise.then(() => {
+        throw new Error('Login request timed out');
+      }),
+    ]);
+    
+    if (!result.data.user) {
+      console.error('No user returned from login');
+      throw new Error('No user returned from login');
+    }
+    
+    // For demo accounts, ensure the profile exists
+    if (isDemoLogin) {
+      await ensureDemoProfileExists(result.data.user.id, email);
+    }
+    
+    console.log('Login successful');
+    return result.data;
+  } catch (error: any) {
     console.error('Login error details:', error);
     throw error;
   }
-  
-  if (!data.user) {
-    console.error('No user returned from login');
-    throw new Error('No user returned from login');
-  }
-  
-  // For demo accounts, ensure the profile exists
-  if (isDemoLogin) {
-    await ensureDemoProfileExists(data.user.id, email);
-  }
-  
-  console.log('Login successful');
-  return data;
 }
 
 export async function signUpWithEmail(
@@ -102,15 +102,15 @@ export async function signUpWithEmail(
   if (isDemoAccount) {
     // Try to sign in first to see if account exists
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const result = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       // If login succeeds, return the data
-      if (!error && data.user) {
+      if (!result.error && result.data.user) {
         console.log('Demo account already exists and login successful');
-        return data;
+        return result.data;
       }
     } catch (signInError) {
       // Continue with signup if login failed
@@ -127,7 +127,7 @@ export async function signUpWithEmail(
       // If login succeeds, user already exists
       if (!signInError) {
         console.log('User already exists, no need to sign up');
-        return;
+        return { user: null, session: null };
       }
     } catch (signInError) {
       // Continue with signup if login failed
@@ -144,18 +144,18 @@ export async function signUpWithEmail(
     }
   };
   
-  const { data, error } = await supabase.auth.signUp({
+  const result = await supabase.auth.signUp({
     email,
     password,
     options
   });
   
-  if (error) {
-    console.error('Sign up error:', error);
-    throw error;
+  if (result.error) {
+    console.error('Sign up error:', result.error);
+    throw result.error;
   }
   
-  if (!data.user) {
+  if (!result.data.user) {
     throw new Error('No user returned from signup');
   }
   
@@ -163,7 +163,7 @@ export async function signUpWithEmail(
   
   // Create profile record manually to ensure it exists even if the trigger fails
   const { error: profileError } = await supabase.from('profiles').upsert({
-    id: data.user.id,
+    id: result.data.user.id,
     full_name: userData.full_name,
     email: email,
     role: userData.role,
@@ -176,5 +176,5 @@ export async function signUpWithEmail(
   
   console.log('Account created successfully');
   
-  return data;
+  return result.data;
 }

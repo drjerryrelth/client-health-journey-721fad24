@@ -35,6 +35,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setupAuth();
   }, []);
 
+  // Wrap the signUp method to match the expected return type
+  const wrappedSignUp = async (email: string, password: string, userData: { full_name: string; role: string }) => {
+    await signUp(email, password, userData);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -46,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         // Fixed: Call hasRole with the role and immediately pass in the user
         hasRole: (role: UserRole | UserRole[]) => hasRole(role)(user),
-        signUp,
+        signUp: wrappedSignUp,
       }}
     >
       {children}
