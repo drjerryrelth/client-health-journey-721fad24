@@ -39,6 +39,7 @@ export interface ClientRow {
   email: string;
   phone?: string;
   program_id?: string;
+  program_category?: string; // Added program_category field
   start_date: string;
   last_check_in?: string;
   notes?: string;

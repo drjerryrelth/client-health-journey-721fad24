@@ -53,7 +53,7 @@ interface AddClientDialogProps {
 
 const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange }) => {
   const { user } = useAuth();
-  const { mutate: createClient, isLoading } = useCreateClientMutation();
+  const { mutate: createClient, isPending } = useCreateClientMutation();
   const [selectedProgramType, setSelectedProgramType] = useState<string | null>(null);
   
   // Get all programs for the clinic
@@ -251,8 +251,8 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange })
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Adding...' : 'Add Client'}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? 'Adding...' : 'Add Client'}
               </Button>
             </DialogFooter>
           </form>
