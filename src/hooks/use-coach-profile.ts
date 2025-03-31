@@ -4,6 +4,7 @@ import { useAuth } from '@/context/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { checkAuthentication } from '@/services/clinics/auth-helper';
 
 // Define the profile schema
 export const profileSchema = z.object({
@@ -17,10 +18,18 @@ export const profileSchema = z.object({
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
 
+// Define profile data interface to avoid type errors
+interface ProfileData {
+  name: string;
+  email: string;
+  phone: string;
+  [key: string]: any; // Allow additional properties
+}
+
 export const useCoachProfile = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState<any>(null);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,6 +46,14 @@ export const useCoachProfile = () => {
       try {
         console.log('Fetching coach profile for user ID:', user.id);
         
+        // Check if the session is valid
+        const session = await checkAuthentication();
+        if (!session) {
+          setError("Authentication session expired");
+          setLoading(false);
+          return;
+        }
+        
         // First try to get profile from coaches table
         const { data: coachData, error: coachError } = await supabase
           .from('coaches')
@@ -47,12 +64,17 @@ export const useCoachProfile = () => {
         if (coachError) {
           console.error('Error fetching coach data:', coachError);
           setError("Failed to retrieve coach profile data");
+          setLoading(false);
           return;
         }
         
         if (coachData) {
           console.log('Coach data found:', coachData);
-          setProfileData(coachData);
+          setProfileData({
+            name: coachData.name || "",
+            email: coachData.email || "",
+            phone: coachData.phone || "",
+          });
         } else {
           // If not found in coaches table, try profiles table
           console.log('No coach data found, checking profiles table');
@@ -64,7 +86,8 @@ export const useCoachProfile = () => {
             
           if (profileError) {
             console.error('Error fetching profile data:', profileError);
-            setError("Failed to retrieve profile data");
+            setError("Failed to retrieve coach profile data");
+            setLoading(false);
             return;
           }
           
@@ -74,10 +97,10 @@ export const useCoachProfile = () => {
             // Check if we have user information to create fallback
             if (user?.email) {
               // Create fallback profile from user object
-              const fallbackProfile = {
+              const fallbackProfile: ProfileData = {
                 name: user.name || user.email.split('@')[0] || "Coach",
                 email: user.email,
-                phone: "", // Include an empty phone property
+                phone: "", // Always include phone property
               };
               
               console.log('Created fallback profile:', fallbackProfile);
@@ -97,8 +120,8 @@ export const useCoachProfile = () => {
         }
       } catch (error: any) {
         console.error('Error loading coach profile:', error);
-        setError(error.message || "Failed to load profile information");
-        toast.error("Failed to load your profile information");
+        setError("Failed to retrieve coach profile data");
+        toast.error("Failed to load profile information");
       } finally {
         setLoading(false);
       }
@@ -119,7 +142,7 @@ export const useCoachProfile = () => {
       const updates = {
         name: data.fullName,
         email: data.email,
-        phone: data.phone || null,
+        phone: data.phone || "",
       };
       
       // Check if we're updating a coach profile or a regular profile
@@ -129,7 +152,7 @@ export const useCoachProfile = () => {
         const nameField = table === 'profiles' ? 'full_name' : 'name';
         
         const updateData = table === 'profiles' 
-          ? { full_name: data.fullName, email: data.email, phone: data.phone || null }
+          ? { full_name: data.fullName, email: data.email, phone: data.phone || "" }
           : updates;
           
         const { error } = await supabase
@@ -137,14 +160,18 @@ export const useCoachProfile = () => {
           .update(updateData)
           .eq('id', user.id);
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating profile:', error);
+          toast.error("Failed to update profile");
+          throw error;
+        }
         
         // Update the local state with the new data
         setProfileData({
           ...profileData,
           [nameField]: data.fullName,
           email: data.email,
-          phone: data.phone || null
+          phone: data.phone || ""
         });
         
         toast.success("Profile updated successfully");

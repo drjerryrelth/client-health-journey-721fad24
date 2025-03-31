@@ -76,7 +76,7 @@ export const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
           </Alert>
         ) : !profileData ? (
           <div className="text-center py-8 text-muted-foreground">
-            Could not load profile information. Please refresh the page and try again.
+            Could not load profile information. Please refresh the page.
           </div>
         ) : (
           <Form {...profileForm}>
