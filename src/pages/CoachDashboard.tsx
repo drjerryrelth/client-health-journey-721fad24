@@ -3,14 +3,14 @@ import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { useDashboardStats, useRecentActivities } from '@/hooks/use-dashboard-stats';
+import { useCoachDashboardStats, useCoachRecentActivities } from '@/hooks/use-coach-dashboard-stats';
 import { useCoachActions } from '@/hooks/use-coach-actions';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const CoachDashboard = () => {
   const { user } = useAuth();
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: activities, isLoading: activitiesLoading } = useRecentActivities(5);
+  const { data: stats, isLoading: statsLoading } = useCoachDashboardStats();
+  const { data: activities, isLoading: activitiesLoading } = useCoachRecentActivities(5);
   const { addClient, isLoading: actionLoading } = useCoachActions();
 
   return (
@@ -31,7 +31,7 @@ const CoachDashboard = () => {
             {statsLoading ? (
               <Skeleton className="h-7 w-20" />
             ) : (
-              <div className="text-2xl font-bold">{stats?.totalClients || 0}</div>
+              <div className="text-2xl font-bold">{stats?.activeClients || 0}</div>
             )}
           </CardContent>
         </Card>
@@ -96,10 +96,7 @@ const CoachDashboard = () => {
                 <div key={i}>
                   <div className="flex items-center">
                     <div className="ml-4 space-y-1">
-                      <p className="text-sm font-medium leading-none">{activity.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {activity.description}
-                      </p>
+                      <p className="text-sm font-medium leading-none">{activity.description}</p>
                     </div>
                     <div className="ml-auto text-xs text-muted-foreground">
                       {new Date(activity.timestamp).toLocaleDateString()}
