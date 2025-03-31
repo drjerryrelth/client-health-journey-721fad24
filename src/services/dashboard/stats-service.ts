@@ -38,29 +38,9 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     let coachCount = await getCoachCount();
     console.log('[DashboardStats] Coach count from database:', coachCount);
     
-    // Calculate weekly activities (in the last 7 days)
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
-    // Try to fetch activities from the last week
-    let activitiesCount = 0;
-    try {
-      const { count, error: activitiesError } = await supabase
-        .from('activities')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', oneWeekAgo.toISOString());
-        
-      if (activitiesError) {
-        console.error('[DashboardStats] Error fetching activities count:', activitiesError);
-      } else {
-        activitiesCount = count || 0;
-        console.log('[DashboardStats] Activities count from database:', activitiesCount);
-      }
-    } catch (actError) {
-      console.error('[DashboardStats] Exception fetching activities:', actError);
-      // Use a fallback value if activities table doesn't exist
-      activitiesCount = 24;
-    }
+    // For weekly activities count, use a fixed value for now since the activities table doesn't exist
+    const activitiesCount = 24; // Mock data
+    console.log('[DashboardStats] Using mock activities count:', activitiesCount);
     
     // Prepare clinic summary data
     let clinicsSummary = [];
