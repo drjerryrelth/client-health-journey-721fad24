@@ -32,6 +32,8 @@ const CoachesPage = () => {
       const allCoaches = await CoachService.getAllCoachesForAdmin();
       
       console.log('[CoachesPage] Received coaches data:', allCoaches);
+      console.log('[CoachesPage] Coaches data type:', typeof allCoaches);
+      console.log('[CoachesPage] Is array?', Array.isArray(allCoaches));
       
       if (!Array.isArray(allCoaches)) {
         console.error('[CoachesPage] Invalid coaches data format:', allCoaches);
@@ -90,7 +92,7 @@ const CoachesPage = () => {
         <div className="flex items-center">
           <Button 
             variant="ghost" 
-            onClick={() => navigate("/clinics")}
+            onClick={handleBackToClinics}
             className="mr-2 flex items-center gap-1"
           >
             <ArrowLeft size={18} />
@@ -102,10 +104,7 @@ const CoachesPage = () => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => {
-            setRetryCount(prev => prev + 1);
-            fetchCoaches();
-          }}
+          onClick={handleRefresh}
           disabled={loading}
           className="flex items-center gap-1"
         >
@@ -139,10 +138,7 @@ const CoachesPage = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => {
-                      setRetryCount(prev => prev + 1);
-                      fetchCoaches();
-                    }}
+                    onClick={handleRefresh}
                     className="flex items-center gap-1"
                   >
                     <RefreshCw size={14} />
@@ -151,7 +147,7 @@ const CoachesPage = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setErrorDialogOpen(true)}
+                    onClick={handleShowError}
                     className="flex items-center gap-1"
                   >
                     <AlertCircle size={14} />

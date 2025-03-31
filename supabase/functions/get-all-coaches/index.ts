@@ -71,8 +71,11 @@ Deno.serve(async (req) => {
         throw coachesError;
       }
       
-      if (!coaches || !Array.isArray(coaches) || coaches.length === 0) {
-        console.log('No coaches found with RPC function');
+      // Log what we received to diagnose issues
+      console.log('Raw RPC response:', JSON.stringify(coaches).substring(0, 200) + '...');
+      
+      if (!coaches || !Array.isArray(coaches)) {
+        console.log('No coaches found or invalid response format');
         return new Response(
           JSON.stringify([]),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
@@ -81,32 +84,28 @@ Deno.serve(async (req) => {
 
       console.log(`Found ${coaches.length} coaches via RPC function`);
 
-      // Type safety with validation - explicit cast to any[] first
-      const coachesArray = coaches as any[];
-      const typedCoaches: CoachData[] = coachesArray.map(coach => {
+      // Cast to any[] to safely process the data
+      const coachesAny = coaches as any[];
+      
+      // Transform and validate each coach object
+      const typedCoaches = coachesAny.map(coach => {
+        // Skip invalid entries
         if (!coach || typeof coach !== 'object') {
           console.warn('Invalid coach data in response');
-          return {
-            id: '',
-            name: '',
-            email: '',
-            phone: null,
-            status: 'inactive',
-            clinic_id: '',
-            client_count: 0
-          };
+          return null;
         }
         
+        // Process valid entries with proper type conversions
         return {
           id: String(coach.id || ''),
           name: String(coach.name || ''),
           email: String(coach.email || ''),
-          phone: coach.phone,
+          phone: coach.phone !== null ? String(coach.phone) : null,
           status: String(coach.status || 'inactive'),
           clinic_id: String(coach.clinic_id || ''),
           client_count: typeof coach.client_count === 'number' ? coach.client_count : 0
         };
-      });
+      }).filter(Boolean) as CoachData[]; // Remove any null entries from invalid data
 
       return new Response(
         JSON.stringify(typedCoaches),
