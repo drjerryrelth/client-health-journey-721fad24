@@ -1,150 +1,267 @@
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/context/AuthContext";
+import {
+  BarChart3,
+  ClipboardList,
+  Users,
+  Building,
+  User,
+  Settings,
+  Package,
+  CalendarCheck,
+  FileText,
+  Activity,
+  BookOpen,
+  Home,
+  Menu,
+  X,
+  MessageSquare,
+  BookMarked,
+  UserCircle,
+  LogOut,
+} from "lucide-react";
 
-import React from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/auth';
-import { 
-  Users, User, Calendar, Home, FileText, 
-  Activity, List, Settings, Weight, PlusCircle, Building, BookOpen,
-  UserCog
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { toast } from 'sonner';
+interface SidebarProps {
+  className?: string;
+  isMobile?: boolean;
+  onClose?: () => void;
+}
 
-const Sidebar = () => {
-  const { user, hasRole } = useAuth();
-  const isMobile = useIsMobile();
-  const [collapsed, setCollapsed] = React.useState(isMobile);
-  const navigate = useNavigate();
+export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) {
+  const { user, hasRole, logout } = useAuth();
   const location = useLocation();
+  const [open, setOpen] = useState(false);
 
-  // Update collapsed state when screen size changes
-  React.useEffect(() => {
-    setCollapsed(isMobile);
-  }, [isMobile]);
+  if (!user) return null;
 
-  const isAdmin = hasRole('admin') || hasRole('super_admin');
-  const isCoach = hasRole('coach');
-  const isClient = hasRole('client');
-  
-  console.log('User role in sidebar:', user?.role);
-  console.log('Is admin:', isAdmin);
-  console.log('Is coach:', isCoach);
-  console.log('Is client:', isClient);
-
-  // Admin links
-  const adminLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
-    { name: 'Clinics', path: '/clinics', icon: <Building size={20} /> },
-    { name: 'Coaches', path: '/coaches', icon: <Users size={20} /> },
-    { name: 'Admin Users', path: '/admin-users', icon: <UserCog size={20} /> },
-    { name: 'Programs', path: '/programs', icon: <List size={20} /> },
-    { name: 'Activities', path: '/activities', icon: <Activity size={20} /> },
-    { name: 'Resources', path: '/resources', icon: <BookOpen size={20} /> },
-    { name: 'Reports', path: '/reports', icon: <FileText size={20} /> },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
+  const adminItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: Home,
+    },
+    {
+      title: "Clients",
+      href: "/clients",
+      icon: Users,
+    },
+    {
+      title: "Clinics",
+      href: "/clinics",
+      icon: Building,
+    },
+    {
+      title: "Coaches",
+      href: "/coaches",
+      icon: User,
+    },
+    {
+      title: "Programs",
+      href: "/programs",
+      icon: Package,
+    },
+    {
+      title: "Check-ins",
+      href: "/check-ins",
+      icon: CalendarCheck,
+    },
+    {
+      title: "Reports",
+      href: "/reports",
+      icon: BarChart3,
+    },
+    {
+      title: "Activities",
+      href: "/activities",
+      icon: Activity,
+    },
+    {
+      title: "Resources",
+      href: "/resources",
+      icon: BookOpen,
+    },
+    {
+      title: "Meal Plan Generator",
+      href: "/meal-plan-generator",
+      icon: ClipboardList,
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: Settings,
+    },
   ];
 
-  // Updated coach links without Programs
-  const coachLinks = [
-    { name: 'Dashboard', path: '/coach-dashboard', icon: <Home size={20} /> },
-    { name: 'Clients', path: '/coach/clients', icon: <Users size={20} /> },
-    { name: 'Check-ins', path: '/coach/check-ins', icon: <Calendar size={20} /> },
-    { name: 'Reports', path: '/coach/reports', icon: <FileText size={20} /> },
-    { name: 'Resources', path: '/coach/resources', icon: <BookOpen size={20} /> },
-    { name: 'Settings', path: '/coach/settings', icon: <Settings size={20} /> },
+  const coachItems = [
+    {
+      title: "Dashboard",
+      href: "/coach-dashboard",
+      icon: Home,
+    },
+    {
+      title: "Clients",
+      href: "/coach/clients",
+      icon: Users,
+    },
+    {
+      title: "Check-ins",
+      href: "/coach/check-ins",
+      icon: CalendarCheck,
+    },
+    {
+      title: "Reports",
+      href: "/coach/reports",
+      icon: BarChart3,
+    },
+    {
+      title: "Resources",
+      href: "/coach/resources",
+      icon: BookOpen,
+    },
+    {
+      title: "Meal Plan Generator",
+      href: "/coach/meal-plan-generator",
+      icon: ClipboardList,
+    },
+    {
+      title: "Settings",
+      href: "/coach/settings",
+      icon: Settings,
+    },
   ];
 
-  // Client links - updated the My Profile path
-  const clientLinks = [
-    { name: 'Dashboard', path: '/client-dashboard', icon: <Home size={20} /> },
-    { name: 'Check-in', path: '/check-in', icon: <Calendar size={20} /> },
-    { name: 'Progress', path: '/progress', icon: <Activity size={20} /> },
-    { name: 'My Program', path: '/my-program', icon: <List size={20} /> },
-    { name: 'Resources', path: '/client/resources', icon: <BookOpen size={20} /> },
-    { name: 'My Profile', path: '/profile', icon: <User size={20} /> },
+  const clientItems = [
+    {
+      title: "Dashboard",
+      href: "/client-dashboard",
+      icon: Home,
+    },
+    {
+      title: "Check-in",
+      href: "/check-in",
+      icon: CalendarCheck,
+    },
+    {
+      title: "Progress",
+      href: "/progress",
+      icon: BarChart3,
+    },
+    {
+      title: "My Program",
+      href: "/my-program",
+      icon: Package,
+    },
+    {
+      title: "Messages",
+      href: "/client/messages",
+      icon: MessageSquare,
+    },
+    {
+      title: "Resources",
+      href: "/client/resources",
+      icon: BookOpen,
+    },
+    {
+      title: "Profile",
+      href: "/profile",
+      icon: UserCircle,
+    },
   ];
 
-  const handleAddClick = () => {
-    if (isAdmin) {
-      // Direct navigation with action=add parameter for add clinic dialog
-      navigate('/clinics?action=add');
-      toast.info("Opening Add Clinic dialog");
-    } else if (isCoach) {
-      // For coach, navigate to client page with action=add query param
-      navigate('/coach/clients?action=add');
-      toast.info("Opening Add Client dialog");
-    }
+  let navItems = clientItems;
+
+  if (hasRole("admin") || hasRole("super_admin")) {
+    navItems = adminItems;
+  } else if (hasRole("coach")) {
+    navItems = coachItems;
+  }
+
+  const handleLogout = async () => {
+    await logout();
   };
 
-  let links = clientLinks; // default
-  if (isAdmin) links = adminLinks;
-  else if (isCoach) links = coachLinks;
-
   return (
-    <div 
+    <div
       className={cn(
-        "h-full bg-white border-r border-gray-200 transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+        "flex flex-col h-screen border-r bg-background",
+        isMobile ? "fixed inset-y-0 left-0 z-50 w-72" : "w-72",
+        className
       )}
     >
-      <div className="flex flex-col h-full">
-        <div className="h-16 flex items-center px-4 border-b border-gray-200">
-          {!collapsed && (
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-md bg-primary-500 flex items-center justify-center">
-                <Weight className="h-5 w-5 text-white" />
-              </div>
-              <span className="font-bold text-lg">HealthTracker</span>
-            </div>
-          )}
-          {collapsed && (
-            <div className="w-8 h-8 mx-auto rounded-md bg-primary-500 flex items-center justify-center">
-              <Weight className="h-5 w-5 text-white" />
-            </div>
-          )}
-        </div>
-        
-        <div className="flex-1 py-4 overflow-y-auto">
-          <nav className="px-2 space-y-1">
-            {links.map((link) => (
-              <NavLink
-                key={link.path}
-                to={link.path}
-                className={({ isActive }) => cn(
-                  "flex items-center px-3 py-2 rounded-md transition-colors",
-                  isActive 
-                    ? "bg-primary-50 text-primary-700" 
-                    : "text-gray-700 hover:bg-gray-50",
-                  collapsed ? "justify-center" : "space-x-3"
-                )}
-              >
-                <span>{link.icon}</span>
-                {!collapsed && <span>{link.name}</span>}
-              </NavLink>
-            ))}
-          </nav>
-        </div>
-        
-        {(isAdmin || isCoach) && (
-          <div className="p-4 border-t border-gray-200">
-            <Button
-              onClick={handleAddClick}
+      <div className="flex items-center justify-between p-4 border-b">
+        <Link to="/" className="flex items-center gap-2">
+          <BookMarked className="h-6 w-6 text-primary" />
+          <span className="font-semibold">Client Health Tracker</span>
+        </Link>
+        {isMobile && (
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
+      <ScrollArea className="flex-1 py-2">
+        <nav className="grid gap-1 px-2">
+          {navItems.map((item, index) => (
+            <Link
+              key={index}
+              to={item.href}
+              onClick={isMobile ? onClose : undefined}
               className={cn(
-                "flex items-center px-3 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors w-full",
-                collapsed ? "justify-center" : "space-x-2"
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                location.pathname === item.href && "bg-accent text-accent-foreground"
               )}
             >
-              <PlusCircle size={20} />
-              {!collapsed && <span>{isAdmin ? "Add Clinic" : "Add Client"}</span>}
-            </Button>
+              <item.icon className="h-5 w-5" />
+              {item.title}
+            </Link>
+          ))}
+        </nav>
+      </ScrollArea>
+      <div className="mt-auto p-4 border-t">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="rounded-full bg-primary/10 p-1">
+            <UserCircle className="h-6 w-6 text-primary" />
           </div>
-        )}
+          <div>
+            <p className="text-sm font-medium">{user.name}</p>
+            <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          className="w-full justify-start gap-2"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4" />
+          Log out
+        </Button>
       </div>
     </div>
   );
-};
+}
 
-export default Sidebar;
+export function MobileSidebar() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="icon"
+        className="md:hidden"
+        onClick={() => setOpen(true)}
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+      {open && (
+        <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden">
+          <Sidebar isMobile onClose={() => setOpen(false)} />
+        </div>
+      )}
+    </>
+  );
+}

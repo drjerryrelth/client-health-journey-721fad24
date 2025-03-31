@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/context/auth";
+import { AuthProvider } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { initializeDemoRelationships } from "./services/demo-data-initializer";
 
@@ -22,6 +22,7 @@ import CheckIn from "./pages/CheckIn";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 import MyProfile from "./pages/MyProfile";
+import MealPlanGenerator from "./pages/MealPlanGenerator";
 
 // Admin Pages
 import ClientsPage from "./pages/admin/ClientsPage";
@@ -81,6 +82,7 @@ const AppContent = () => {
           <Route path="/activities" element={<ActivitiesPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/admin-users" element={<AdminUsersPage />} />
+          <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
         </Route>
         
         {/* Coach routes - clearly separated from admin routes */}
@@ -91,6 +93,7 @@ const AppContent = () => {
           <Route path="/coach/reports" element={<CoachReportsPage />} />
           <Route path="/coach/settings" element={<CoachSettingsPage />} />
           <Route path="/coach/resources" element={<ResourcesPage />} />
+          <Route path="/coach/meal-plan-generator" element={<MealPlanGenerator />} />
           <Route path="/add-client" element={<ClientsPage />} />
         </Route>
         

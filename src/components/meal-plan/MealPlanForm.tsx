@@ -1,0 +1,477 @@
+
+import React, { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { X, Plus } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+
+const formSchema = z.object({
+  program: z.enum(['practice_naturals', 'chirothin', 'keto', 'nutrition', 'fitness', 'custom']),
+  programCategory: z.enum(['A', 'B', 'C']).optional(),
+  days: z.number().int().min(1).max(14).default(7),
+  allergies: z.array(z.string()).default([]),
+  likes: z.array(z.string()).default([]),
+  dislikes: z.array(z.string()).default([]),
+  dietaryRestrictions: z.array(z.string()).default([]),
+  clientName: z.string().optional(),
+  clientEmail: z.string().email().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export function MealPlanForm({ clientId, onComplete }: { clientId?: string, onComplete?: (data: any) => void }) {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [newAllergy, setNewAllergy] = useState('');
+  const [newLike, setNewLike] = useState('');
+  const [newDislike, setNewDislike] = useState('');
+  const [newRestriction, setNewRestriction] = useState('');
+  const [generatedPlan, setGeneratedPlan] = useState<{ mealPlan: string, shoppingList: string } | null>(null);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      program: 'practice_naturals',
+      days: 7,
+      allergies: [],
+      likes: [],
+      dislikes: [],
+      dietaryRestrictions: [],
+    },
+  });
+
+  const watchProgram = form.watch('program');
+
+  const handleAddAllergy = () => {
+    if (newAllergy.trim()) {
+      const current = form.getValues('allergies');
+      form.setValue('allergies', [...current, newAllergy.trim()]);
+      setNewAllergy('');
+    }
+  };
+
+  const handleAddLike = () => {
+    if (newLike.trim()) {
+      const current = form.getValues('likes');
+      form.setValue('likes', [...current, newLike.trim()]);
+      setNewLike('');
+    }
+  };
+
+  const handleAddDislike = () => {
+    if (newDislike.trim()) {
+      const current = form.getValues('dislikes');
+      form.setValue('dislikes', [...current, newDislike.trim()]);
+      setNewDislike('');
+    }
+  };
+
+  const handleAddRestriction = () => {
+    if (newRestriction.trim()) {
+      const current = form.getValues('dietaryRestrictions');
+      form.setValue('dietaryRestrictions', [...current, newRestriction.trim()]);
+      setNewRestriction('');
+    }
+  };
+
+  const handleRemoveItem = (field: 'allergies' | 'likes' | 'dislikes' | 'dietaryRestrictions', index: number) => {
+    const current = form.getValues(field);
+    form.setValue(field, current.filter((_, i) => i !== index));
+  };
+
+  const onSubmit = async (values: FormValues) => {
+    try {
+      setIsGenerating(true);
+      
+      const response = await supabase.functions.invoke('generate-meal-plan', {
+        body: {
+          program: values.program,
+          programCategory: values.programCategory,
+          days: values.days,
+          allergies: values.allergies,
+          preferences: {
+            likes: values.likes,
+            dislikes: values.dislikes,
+          },
+          dietaryRestrictions: values.dietaryRestrictions,
+        },
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+      
+      console.log("API Response:", response.data);
+      
+      setGeneratedPlan({
+        mealPlan: response.data.mealPlan,
+        shoppingList: response.data.shoppingList
+      });
+      
+      if (onComplete) {
+        onComplete({
+          mealPlan: response.data.mealPlan,
+          shoppingList: response.data.shoppingList,
+          clientName: values.clientName,
+          clientEmail: values.clientEmail
+        });
+      }
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+      alert("Failed to generate meal plan. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto py-6 space-y-8">
+      <div className="flex flex-col space-y-4">
+        <h2 className="text-2xl font-bold tracking-tight">Create Personalized Meal Plan</h2>
+        <p className="text-muted-foreground">
+          Generate a custom meal plan based on dietary preferences and program requirements.
+        </p>
+      </div>
+
+      {!generatedPlan ? (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="program"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Program</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select program" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="practice_naturals">Practice Naturals</SelectItem>
+                          <SelectItem value="chirothin">ChiroThin</SelectItem>
+                          <SelectItem value="nutrition">Basic Nutrition</SelectItem>
+                          <SelectItem value="keto">Keto</SelectItem>
+                          <SelectItem value="fitness">Fitness</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {watchProgram === 'practice_naturals' && (
+                  <FormField
+                    control={form.control}
+                    name="programCategory"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Program Category</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="A">Category A</SelectItem>
+                            <SelectItem value="B">Category B</SelectItem>
+                            <SelectItem value="C">Category C</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="days"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Days</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={14}
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-4">
+                  <div>
+                    <FormLabel>Food Allergies</FormLabel>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Add an allergy..."
+                        value={newAllergy}
+                        onChange={(e) => setNewAllergy(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button type="button" size="sm" onClick={handleAddAllergy}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {form.watch('allergies').map((allergy, index) => (
+                        <Badge key={index} variant="secondary" className="px-2 py-1">
+                          {allergy}
+                          <X
+                            className="ml-1 h-3 w-3 cursor-pointer"
+                            onClick={() => handleRemoveItem('allergies', index)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <FormLabel>Food Likes</FormLabel>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Add foods you like..."
+                        value={newLike}
+                        onChange={(e) => setNewLike(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button type="button" size="sm" onClick={handleAddLike}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {form.watch('likes').map((like, index) => (
+                        <Badge key={index} variant="secondary" className="px-2 py-1">
+                          {like}
+                          <X
+                            className="ml-1 h-3 w-3 cursor-pointer"
+                            onClick={() => handleRemoveItem('likes', index)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <FormLabel>Food Dislikes</FormLabel>
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="Add foods you dislike..."
+                      value={newDislike}
+                      onChange={(e) => setNewDislike(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button type="button" size="sm" onClick={handleAddDislike}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {form.watch('dislikes').map((dislike, index) => (
+                      <Badge key={index} variant="secondary" className="px-2 py-1">
+                        {dislike}
+                        <X
+                          className="ml-1 h-3 w-3 cursor-pointer"
+                          onClick={() => handleRemoveItem('dislikes', index)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <FormLabel>Dietary Restrictions</FormLabel>
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="Add dietary restrictions..."
+                      value={newRestriction}
+                      onChange={(e) => setNewRestriction(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button type="button" size="sm" onClick={handleAddRestriction}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {form.watch('dietaryRestrictions').map((restriction, index) => (
+                      <Badge key={index} variant="secondary" className="px-2 py-1">
+                        {restriction}
+                        <X
+                          className="ml-1 h-3 w-3 cursor-pointer"
+                          onClick={() => handleRemoveItem('dietaryRestrictions', index)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {!clientId && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="clientName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Client Name (Optional)</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="clientEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Client Email (Optional)</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+
+            <Button type="submit" disabled={isGenerating} className="w-full md:w-auto">
+              {isGenerating ? "Generating..." : "Generate Meal Plan"}
+            </Button>
+          </form>
+        </Form>
+      ) : (
+        <MealPlanDisplay 
+          mealPlan={generatedPlan.mealPlan} 
+          shoppingList={generatedPlan.shoppingList}
+          onBack={() => setGeneratedPlan(null)}
+          clientEmail={form.getValues('clientEmail')}
+          clientName={form.getValues('clientName')}
+        />
+      )}
+    </div>
+  );
+}
+
+function MealPlanDisplay({ 
+  mealPlan, 
+  shoppingList,
+  onBack,
+  clientEmail,
+  clientName
+}: { 
+  mealPlan: string; 
+  shoppingList: string;
+  onBack: () => void;
+  clientEmail?: string;
+  clientName?: string;
+}) {
+  const [isSending, setIsSending] = useState(false);
+
+  const convertToHtml = (text: string) => {
+    return text
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br />')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/# (.*?)\n/g, '<h2>$1</h2>')
+      .replace(/## (.*?)\n/g, '<h3>$1</h3>')
+      .replace(/### (.*?)\n/g, '<h4>$1</h4>')
+      .replace(/- (.*?)\n/g, '<li>$1</li>')
+      .replace(/<li>(.*?)<\/li>/g, '<ul><li>$1</li></ul>')
+      .replace(/<\/ul><ul>/g, '')
+  };
+
+  const handleEmailMealPlan = async () => {
+    if (!clientEmail) {
+      alert("Client email is required to send the meal plan");
+      return;
+    }
+
+    try {
+      setIsSending(true);
+      
+      const response = await supabase.functions.invoke('email-meal-plan', {
+        body: {
+          email: clientEmail,
+          name: clientName || 'Client',
+          subject: '7-Day Meal Plan',
+          mealPlan: mealPlan,
+          shoppingList: shoppingList,
+        },
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+      
+      alert("Meal plan has been emailed successfully!");
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert("Failed to send email. Please try again.");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <Button variant="outline" onClick={onBack}>Back to Form</Button>
+        
+        {clientEmail && (
+          <Button onClick={handleEmailMealPlan} disabled={isSending}>
+            {isSending ? "Sending..." : "Email to Client"}
+          </Button>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h3 className="text-xl font-semibold mb-4">7-Day Meal Plan</h3>
+          <div className="prose max-w-none overflow-auto max-h-[600px] whitespace-pre-wrap" 
+            dangerouslySetInnerHTML={{ __html: `<p>${convertToHtml(mealPlan)}</p>` }}>
+          </div>
+        </Card>
+        
+        <Card className="p-6">
+          <h3 className="text-xl font-semibold mb-4">Shopping List</h3>
+          <div className="prose max-w-none overflow-auto max-h-[600px] whitespace-pre-wrap" 
+            dangerouslySetInnerHTML={{ __html: `<p>${convertToHtml(shoppingList)}</p>` }}>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
