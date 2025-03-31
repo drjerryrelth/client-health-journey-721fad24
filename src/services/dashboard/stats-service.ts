@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { DashboardStats } from '@/types/dashboard';
 import { toast } from 'sonner';
+import { getCoachCount } from '@/services/coaches/admin-coach-service';
 
 // Function to fetch dashboard statistics
 export async function fetchDashboardStats(): Promise<DashboardStats> {
@@ -39,23 +40,14 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     const clinics = Array.isArray(clinicsData) ? clinicsData : [];
     console.log('[DashboardStats] Clinics fetched:', clinics.length || 0);
     
-    // Get coach count from the coaches table
+    // Use the admin coach service to get coach count
     let coachCount = 0;
     try {
-      const { count, error: countError } = await supabase
-        .from('coaches')
-        .select('*', { count: 'exact', head: true });
-        
-      if (!countError) {
-        coachCount = count || 0;
-      } else {
-        console.error('[DashboardStats] Error fetching coach count:', countError);
-      }
+      coachCount = await getCoachCount();
+      console.log('[DashboardStats] Coach count from admin service:', coachCount);
     } catch (countErr) {
-      console.error('[DashboardStats] Error counting coaches:', countErr);
+      console.error('[DashboardStats] Error counting coaches with admin service:', countErr);
     }
-    
-    console.log('[DashboardStats] Coach count:', coachCount);
     
     // For weekly activities count, count recent check-ins
     let activitiesCount = 0;
