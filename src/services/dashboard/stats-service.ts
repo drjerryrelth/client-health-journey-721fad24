@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
-import { getCoachCount } from '@/services/coaches/admin-coach-service';
+import { CoachService } from '@/services/coaches';
 import { DashboardStats } from '@/types/dashboard';
 import { toast } from 'sonner';
 
@@ -34,13 +34,50 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     const clinics = Array.isArray(clinicsData) ? clinicsData : [];
     console.log('[DashboardStats] Clinics fetched:', clinics.length || 0);
     
-    // Get coach count from the database
-    let coachCount = await getCoachCount();
-    console.log('[DashboardStats] Coach count from database:', coachCount);
+    // Get coach count from the coaches table
+    let coachCount = 0;
+    try {
+      const { count, error: countError } = await supabase
+        .from('coaches')
+        .select('*', { count: 'exact', head: true });
+        
+      if (!countError) {
+        coachCount = count || 0;
+      } else {
+        console.error('[DashboardStats] Error fetching coach count:', countError);
+        // Try the admin service as a backup
+        coachCount = await CoachService.getCoachCount();
+      }
+    } catch (countErr) {
+      console.error('[DashboardStats] Error counting coaches:', countErr);
+      // Use the admin service as a fallback
+      coachCount = await CoachService.getCoachCount();
+    }
     
-    // For weekly activities count, use a fixed value for now since the activities table doesn't exist
-    const activitiesCount = 24; // Mock data
-    console.log('[DashboardStats] Using mock activities count:', activitiesCount);
+    console.log('[DashboardStats] Coach count:', coachCount);
+    
+    // For weekly activities count, try to count recent check-ins
+    let activitiesCount = 0;
+    try {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const { count, error: checkInsError } = await supabase
+        .from('check_ins')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', oneWeekAgo.toISOString());
+        
+      if (!checkInsError) {
+        activitiesCount = count || 0;
+        console.log('[DashboardStats] Real check-ins count for last week:', activitiesCount);
+      } else {
+        console.error('[DashboardStats] Error counting check-ins:', checkInsError);
+        activitiesCount = 24; // Use mock data as fallback
+      }
+    } catch (err) {
+      console.error('[DashboardStats] Error with activities count:', err);
+      activitiesCount = 24; // Use mock data as fallback
+    }
     
     // Prepare clinic summary data
     let clinicsSummary = [];
@@ -48,26 +85,36 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     if (clinics.length > 0) {
       // If we have real clinic data, fetch additional info for each
       const clinicPromises = clinics.slice(0, 5).map(async (clinic) => {
-        // Get coach count for this clinic
-        const { count: coachesCount } = await supabase
-          .from('coaches')
-          .select('*', { count: 'exact', head: true })
-          .eq('clinic_id', clinic.id)
-          .eq('status', 'active');
-          
-        // Get client count for this clinic
-        const { count: clientsCount } = await supabase
-          .from('clients')
-          .select('*', { count: 'exact', head: true })
-          .eq('clinic_id', clinic.id);
-          
-        return {
-          id: clinic.id,
-          name: clinic.name,
-          coaches: coachesCount || 0,
-          clients: clientsCount || 0,
-          status: clinic.status
-        };
+        try {
+          // Get coach count for this clinic
+          const { count: coachesCount } = await supabase
+            .from('coaches')
+            .select('*', { count: 'exact', head: true })
+            .eq('clinic_id', clinic.id);
+            
+          // Get client count for this clinic
+          const { count: clientsCount } = await supabase
+            .from('clients')
+            .select('*', { count: 'exact', head: true })
+            .eq('clinic_id', clinic.id);
+            
+          return {
+            id: clinic.id,
+            name: clinic.name,
+            coaches: coachesCount || 0,
+            clients: clientsCount || 0,
+            status: clinic.status
+          };
+        } catch (error) {
+          console.error(`[DashboardStats] Error getting counts for clinic ${clinic.id}:`, error);
+          return {
+            id: clinic.id,
+            name: clinic.name,
+            coaches: 0,
+            clients: 0,
+            status: clinic.status
+          };
+        }
       });
       
       try {

@@ -4,17 +4,6 @@ import { Coach } from './types';
 import { toast } from 'sonner';
 import { getMockCoaches } from './mock-data';
 
-// Define interface for the raw RPC response
-interface CoachRPCResponse {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  status: string;
-  clinic_id: string;
-  client_count: number;
-}
-
 // Special service function to get total coach count for admin dashboard
 export async function getCoachCount(): Promise<number> {
   try {
@@ -51,7 +40,8 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
     // Try to get real coaches from the database first
     const { data: coachesData, error: coachesError } = await supabase
       .from('coaches')
-      .select('*');
+      .select('*')
+      .order('name', { ascending: true });
       
     if (coachesError) {
       console.error('[AdminCoachService] Error fetching coaches:', coachesError);
