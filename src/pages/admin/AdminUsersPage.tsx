@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ const AdminUsersPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   
+  // Check if user role is 'super_admin' string, not UserRole type
   const isSuperAdmin = user?.role === 'super_admin';
   
   const { data: adminUsers, isLoading, isError, refetch, isFetching } = useAdminUsersQuery();

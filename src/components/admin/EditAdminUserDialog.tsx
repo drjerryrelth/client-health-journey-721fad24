@@ -25,9 +25,10 @@ interface EditAdminUserDialogProps {
   userId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isSuperAdmin?: boolean; // Add the missing isSuperAdmin prop
 }
 
-export function EditAdminUserDialog({ userId, open, onOpenChange }: EditAdminUserDialogProps) {
+export function EditAdminUserDialog({ userId, open, onOpenChange, isSuperAdmin = false }: EditAdminUserDialogProps) {
   const { data: adminUser, isLoading } = useAdminUserQuery(userId);
   
   const form = useForm<FormValues>({
@@ -114,7 +115,10 @@ export function EditAdminUserDialog({ userId, open, onOpenChange }: EditAdminUse
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="super_admin">Super Admin</SelectItem>
+                        {/* Only show Super Admin option if current user is a Super Admin */}
+                        {isSuperAdmin && (
+                          <SelectItem value="super_admin">Super Admin</SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                     <FormDescription>
