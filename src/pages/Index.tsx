@@ -39,8 +39,8 @@ const Index = () => {
                   Sign In
                 </Button>
                 <Button 
-                  asChild variant="outline"
-                  className="w-full sm:w-auto px-8 py-3 text-base font-medium border-2 border-primary-600 text-primary-600 bg-white hover:bg-primary-50 hover:text-primary-700 hover:border-primary-700"
+                  asChild variant="secondary"
+                  className="w-full sm:w-auto px-8 py-3 text-base font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border-gray-300 hover:text-gray-900"
                 >
                   <a href="#features">Learn More</a>
                 </Button>

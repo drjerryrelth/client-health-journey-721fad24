@@ -12,7 +12,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Weight, Activity, Droplets, Apple, Camera } from 'lucide-react';
+import { Weight, Activity, Droplets, Apple, Camera, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const CheckInForm = () => {
@@ -22,14 +22,33 @@ const CheckInForm = () => {
   
   // Form state
   const [weight, setWeight] = useState("");
-  const [waist, setWaist] = useState("");
-  const [hips, setHips] = useState("");
   const [energyLevel, setEnergyLevel] = useState([5]);
   const [moodLevel, setMoodLevel] = useState([5]);
   const [waterIntake, setWaterIntake] = useState("64");
-  const [breakfast, setBreakfast] = useState("");
-  const [lunch, setLunch] = useState("");
-  const [dinner, setDinner] = useState("");
+  const [steps, setSteps] = useState("");
+  
+  // Nutrition state
+  const [breakfastProtein, setBreakfastProtein] = useState("");
+  const [breakfastFruit, setBreakfastFruit] = useState("");
+  const [breakfastVegetable, setBreakfastVegetable] = useState("");
+  const [breakfastPortions, setBreakfastPortions] = useState("");
+  
+  const [lunchProtein, setLunchProtein] = useState("");
+  const [lunchFruit, setLunchFruit] = useState("");
+  const [lunchVegetable, setLunchVegetable] = useState("");
+  const [lunchPortions, setLunchPortions] = useState("");
+  
+  const [dinnerProtein, setDinnerProtein] = useState("");
+  const [dinnerFruit, setDinnerFruit] = useState("");
+  const [dinnerVegetable, setDinnerVegetable] = useState("");
+  const [dinnerPortions, setDinnerPortions] = useState("");
+  
+  const [snacks, setSnacks] = useState("");
+  const [snackPortions, setSnackPortions] = useState("");
+  
+  // Supplements state
+  const [supplements, setSupplements] = useState("");
+  
   const [notes, setNotes] = useState("");
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -56,7 +75,7 @@ const CheckInForm = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-            <TabsList className="grid grid-cols-4 mb-8">
+            <TabsList className="grid grid-cols-5 mb-8">
               <TabsTrigger value="measurements" className="flex items-center space-x-2">
                 <Weight size={16} />
                 <span className="hidden sm:inline">Measurements</span>
@@ -68,6 +87,10 @@ const CheckInForm = () => {
               <TabsTrigger value="nutrition" className="flex items-center space-x-2">
                 <Apple size={16} />
                 <span className="hidden sm:inline">Nutrition</span>
+              </TabsTrigger>
+              <TabsTrigger value="supplements" className="flex items-center space-x-2">
+                <PlusCircle size={16} />
+                <span className="hidden sm:inline">Supplements</span>
               </TabsTrigger>
               <TabsTrigger value="photos" className="flex items-center space-x-2">
                 <Camera size={16} />
@@ -89,29 +112,15 @@ const CheckInForm = () => {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="waist">Waist (inches)</Label>
-                      <Input
-                        id="waist"
-                        type="number"
-                        step="0.1"
-                        placeholder="Waist measurement"
-                        value={waist}
-                        onChange={(e) => setWaist(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="hips">Hips (inches)</Label>
-                      <Input
-                        id="hips"
-                        type="number"
-                        step="0.1"
-                        placeholder="Hip measurement"
-                        value={hips}
-                        onChange={(e) => setHips(e.target.value)}
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor="steps">Daily Steps</Label>
+                    <Input
+                      id="steps"
+                      type="number"
+                      placeholder="Enter your daily steps"
+                      value={steps}
+                      onChange={(e) => setSteps(e.target.value)}
+                    />
                   </div>
                 </div>
               </TabsContent>
@@ -177,37 +186,184 @@ const CheckInForm = () => {
               </TabsContent>
               
               <TabsContent value="nutrition" className="space-y-6">
+                <div className="space-y-6">
+                  {/* Breakfast */}
+                  <div className="border-b pb-4">
+                    <h3 className="font-medium mb-3">Breakfast</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="breakfastProtein">Protein</Label>
+                        <Input
+                          id="breakfastProtein"
+                          placeholder="E.g., eggs, protein shake"
+                          value={breakfastProtein}
+                          onChange={(e) => setBreakfastProtein(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="breakfastFruit">Fruit</Label>
+                        <Input
+                          id="breakfastFruit"
+                          placeholder="E.g., apple, berries"
+                          value={breakfastFruit}
+                          onChange={(e) => setBreakfastFruit(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="breakfastVegetable">Vegetable</Label>
+                        <Input
+                          id="breakfastVegetable"
+                          placeholder="E.g., spinach, tomatoes"
+                          value={breakfastVegetable}
+                          onChange={(e) => setBreakfastVegetable(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="breakfastPortions">Portion Size</Label>
+                        <Input
+                          id="breakfastPortions"
+                          placeholder="E.g., 2 eggs, 1 cup berries"
+                          value={breakfastPortions}
+                          onChange={(e) => setBreakfastPortions(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Lunch */}
+                  <div className="border-b pb-4">
+                    <h3 className="font-medium mb-3">Lunch</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="lunchProtein">Protein</Label>
+                        <Input
+                          id="lunchProtein"
+                          placeholder="E.g., chicken, fish"
+                          value={lunchProtein}
+                          onChange={(e) => setLunchProtein(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="lunchFruit">Fruit</Label>
+                        <Input
+                          id="lunchFruit"
+                          placeholder="E.g., orange, grapes"
+                          value={lunchFruit}
+                          onChange={(e) => setLunchFruit(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="lunchVegetable">Vegetable</Label>
+                        <Input
+                          id="lunchVegetable"
+                          placeholder="E.g., salad, broccoli"
+                          value={lunchVegetable}
+                          onChange={(e) => setLunchVegetable(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="lunchPortions">Portion Size</Label>
+                        <Input
+                          id="lunchPortions"
+                          placeholder="E.g., 4oz chicken, 1 cup vegetables"
+                          value={lunchPortions}
+                          onChange={(e) => setLunchPortions(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Dinner */}
+                  <div className="border-b pb-4">
+                    <h3 className="font-medium mb-3">Dinner</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="dinnerProtein">Protein</Label>
+                        <Input
+                          id="dinnerProtein"
+                          placeholder="E.g., beef, tofu"
+                          value={dinnerProtein}
+                          onChange={(e) => setDinnerProtein(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="dinnerFruit">Fruit</Label>
+                        <Input
+                          id="dinnerFruit"
+                          placeholder="E.g., pear, melon"
+                          value={dinnerFruit}
+                          onChange={(e) => setDinnerFruit(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="dinnerVegetable">Vegetable</Label>
+                        <Input
+                          id="dinnerVegetable"
+                          placeholder="E.g., asparagus, carrots"
+                          value={dinnerVegetable}
+                          onChange={(e) => setDinnerVegetable(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="dinnerPortions">Portion Size</Label>
+                        <Input
+                          id="dinnerPortions"
+                          placeholder="E.g., 6oz fish, 2 cups vegetables"
+                          value={dinnerPortions}
+                          onChange={(e) => setDinnerPortions(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Snacks */}
+                  <div>
+                    <h3 className="font-medium mb-3">Snacks</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="snacks">Snacks</Label>
+                        <Textarea
+                          id="snacks"
+                          placeholder="List any snacks you had today"
+                          value={snacks}
+                          onChange={(e) => setSnacks(e.target.value)}
+                          rows={2}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="snackPortions">Portion Size</Label>
+                        <Input
+                          id="snackPortions"
+                          placeholder="E.g., 1/4 cup nuts, 1 protein bar"
+                          value={snackPortions}
+                          onChange={(e) => setSnackPortions(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="supplements" className="space-y-6">
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="breakfast">Breakfast</Label>
+                    <Label htmlFor="supplements">Supplements Taken Today</Label>
                     <Textarea
-                      id="breakfast"
-                      placeholder="What did you eat for breakfast?"
-                      value={breakfast}
-                      onChange={(e) => setBreakfast(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="lunch">Lunch</Label>
-                    <Textarea
-                      id="lunch"
-                      placeholder="What did you eat for lunch?"
-                      value={lunch}
-                      onChange={(e) => setLunch(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="dinner">Dinner</Label>
-                    <Textarea
-                      id="dinner"
-                      placeholder="What did you eat for dinner?"
-                      value={dinner}
-                      onChange={(e) => setDinner(e.target.value)}
-                      rows={2}
+                      id="supplements"
+                      placeholder="List supplements and time taken (e.g., Multivitamin - morning, Magnesium - evening)"
+                      value={supplements}
+                      onChange={(e) => setSupplements(e.target.value)}
+                      rows={4}
                     />
                   </div>
                 </div>
@@ -232,9 +388,20 @@ const CheckInForm = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="notes">Additional Notes</Label>
+                    <Label htmlFor="notes">Photo Description</Label>
                     <Textarea
                       id="notes"
+                      placeholder="Add a description for your progress photos"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="generalNotes">Additional Notes</Label>
+                    <Textarea
+                      id="generalNotes"
                       placeholder="Any additional notes about your progress today?"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
@@ -249,9 +416,10 @@ const CheckInForm = () => {
                   type="button" 
                   variant="outline" 
                   onClick={() => {
-                    const currentIndex = ["measurements", "wellness", "nutrition", "photos"].indexOf(currentTab);
+                    const tabs = ["measurements", "wellness", "nutrition", "supplements", "photos"];
+                    const currentIndex = tabs.indexOf(currentTab);
                     if (currentIndex > 0) {
-                      setCurrentTab(["measurements", "wellness", "nutrition", "photos"][currentIndex - 1]);
+                      setCurrentTab(tabs[currentIndex - 1]);
                     }
                   }}
                   disabled={currentTab === "measurements" || isSubmitting}
@@ -263,9 +431,10 @@ const CheckInForm = () => {
                   <Button 
                     type="button" 
                     onClick={() => {
-                      const currentIndex = ["measurements", "wellness", "nutrition", "photos"].indexOf(currentTab);
-                      if (currentIndex < 3) {
-                        setCurrentTab(["measurements", "wellness", "nutrition", "photos"][currentIndex + 1]);
+                      const tabs = ["measurements", "wellness", "nutrition", "supplements", "photos"];
+                      const currentIndex = tabs.indexOf(currentTab);
+                      if (currentIndex < 4) {
+                        setCurrentTab(tabs[currentIndex + 1]);
                       }
                     }}
                     disabled={isSubmitting}

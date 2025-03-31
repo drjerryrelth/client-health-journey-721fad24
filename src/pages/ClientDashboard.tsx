@@ -3,16 +3,33 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/auth';
 import { Button } from '@/components/ui/button';
-import { Calendar, Activity, Weight, PlusCircle } from 'lucide-react';
+import { Calendar, Activity, Weight, PlusCircle, Droplets } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
 import ProgressChart from '@/components/progress/ProgressChart';
 import { useToast } from '@/hooks/use-toast';
 
+// Motivational quotes
+const motivationalQuotes = [
+  "The only bad workout is the one that didn't happen.",
+  "Small daily improvements lead to stunning results.",
+  "Your health is an investment, not an expense.",
+  "Take care of your body. It's the only place you have to live.",
+  "The greatest wealth is health.",
+  "Strive for progress, not perfection.",
+  "Wellness is the complete integration of body, mind, and spirit.",
+  "Your body hears everything your mind says.",
+  "Health is not about the weight you lose, but about the life you gain.",
+  "Wellness is a connection of paths: knowledge and action."
+];
+
 const ClientDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Get a random motivational quote
+  const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
   
   // Mock data
   const currentWeight = 172;
@@ -24,6 +41,10 @@ const ClientDashboard = () => {
   const streak = 5;
   
   const daysLeft = 21;
+
+  // Mock water intake data for the week
+  const waterIntakeData = [56, 64, 72, 48, 80, 64, 72];
+  const averageWaterIntake = Math.round(waterIntakeData.reduce((a, b) => a + b, 0) / waterIntakeData.length);
   
   const handleNewCheckIn = () => {
     navigate('/check-in');
@@ -39,6 +60,13 @@ const ClientDashboard = () => {
         <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
         <p className="text-gray-500">Welcome back, {user?.name}!</p>
       </div>
+
+      {/* Motivational Quote */}
+      <Card className="mb-6 border-l-4 border-l-primary-500">
+        <CardContent className="py-4">
+          <blockquote className="italic text-gray-700">"{randomQuote}"</blockquote>
+        </CardContent>
+      </Card>
       
       {/* Program Progress Overview */}
       <Card className="mb-6">
@@ -75,7 +103,7 @@ const ClientDashboard = () => {
       </Card>
       
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleViewProgress}>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Weight Loss</CardTitle>
@@ -97,6 +125,18 @@ const ClientDashboard = () => {
             <div className="text-2xl font-bold">7.5/10</div>
             <Progress value={75} className="h-1 mt-2" />
             <p className="text-xs text-gray-500 mt-2">Last 7 days</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleViewProgress}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Water Intake</CardTitle>
+            <Droplets className="text-blue-500" size={20} />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{averageWaterIntake} oz</div>
+            <Progress value={(averageWaterIntake / 100) * 100} className="h-1 mt-2 bg-blue-100" indicatorClassName="bg-blue-500" />
+            <p className="text-xs text-gray-500 mt-2">Daily average</p>
           </CardContent>
         </Card>
         
