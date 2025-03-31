@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
@@ -26,7 +25,6 @@ const CoachesPage = () => {
   const fetchClinics = async () => {
     try {
       const allClinics = await ClinicService.getClinics();
-      // Create a map of clinic IDs to clinic names for easy lookup
       const clinicMap = {};
       allClinics.forEach(clinic => {
         clinicMap[clinic.id] = clinic.name;
@@ -45,7 +43,6 @@ const CoachesPage = () => {
       
       console.log(`[CoachesPage] Fetching all coaches (attempt: ${retryCount + 1})`);
       
-      // Use the admin-specific coach service function to avoid RLS issues
       const allCoaches = await CoachService.getAllCoachesForAdmin();
       
       console.log('[CoachesPage] Received coaches data:', allCoaches);
@@ -73,7 +70,6 @@ const CoachesPage = () => {
       setErrorDetails(err instanceof Error ? err.message : String(err));
       setLoading(false);
       
-      // If this was the first attempt, retry once automatically
       if (retryCount === 0) {
         console.log('[CoachesPage] First attempt failed, retrying automatically');
         setRetryCount(1);
@@ -86,18 +82,18 @@ const CoachesPage = () => {
 
   useEffect(() => {
     console.log('[CoachesPage] Component mounted, fetching coaches');
-    fetchClinics(); // First fetch clinics
-    fetchCoaches(); // Then fetch coaches
+    fetchClinics();
+    fetchCoaches();
   }, []);
 
-  const handleBackToClinics = () => {
-    navigate("/clinics");
+  const handleBackToDashboard = () => {
+    navigate("/admin/dashboard");
   };
 
   const handleRefresh = () => {
     setRetryCount(prev => prev + 1);
     toast.info("Refreshing coaches data...");
-    fetchClinics(); // Refresh clinics data too
+    fetchClinics();
     fetchCoaches();
   };
 
@@ -115,11 +111,11 @@ const CoachesPage = () => {
         <div className="flex items-center">
           <Button 
             variant="ghost" 
-            onClick={handleBackToClinics}
+            onClick={handleBackToDashboard}
             className="mr-2 flex items-center gap-1"
           >
             <ArrowLeft size={18} />
-            <span>Back to All Clinics</span>
+            <span>Back to Dashboard</span>
           </Button>
           <h1 className="text-2xl font-bold text-gray-900">All Coaches</h1>
         </div>
