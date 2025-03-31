@@ -25,15 +25,26 @@ const profileSchema = z.object({
   notifyClientProgress: z.boolean().default(false),
 });
 
+// Password form schema
+const passwordSchema = z.object({
+  currentPassword: z.string().min(6, { message: "Current password is required" }),
+  newPassword: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  confirmPassword: z.string().min(8, { message: "Password must be at least 8 characters" })
+}).refine(data => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 type ProfileFormValues = z.infer<typeof profileSchema>;
+type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 const CoachSettingsPage = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
   
-  // Initialize form with default values
-  const form = useForm<ProfileFormValues>({
+  // Initialize profile form with default values
+  const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       fullName: "",
@@ -42,6 +53,16 @@ const CoachSettingsPage = () => {
       notifyClientCheckIn: true,
       notifyClientMessage: true,
       notifyClientProgress: false,
+    }
+  });
+  
+  // Initialize password form
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     }
   });
   
@@ -80,7 +101,7 @@ const CoachSettingsPage = () => {
             phone: "",
           });
           
-          form.reset({
+          profileForm.reset({
             fullName: profileData.full_name || "",
             email: profileData.email || "",
             phone: "",
@@ -91,7 +112,7 @@ const CoachSettingsPage = () => {
         } else {
           setProfileData(coachData);
           
-          form.reset({
+          profileForm.reset({
             fullName: coachData.name || "",
             email: coachData.email || "",
             phone: coachData.phone || "",
@@ -111,7 +132,7 @@ const CoachSettingsPage = () => {
     fetchCoachProfile();
   }, [user?.id]);
   
-  const onSubmit = async (data: ProfileFormValues) => {
+  const handleProfileSubmit = async (data: ProfileFormValues) => {
     if (!user?.id) return;
     
     try {
@@ -134,6 +155,28 @@ const CoachSettingsPage = () => {
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error("Failed to update profile");
+    }
+  };
+  
+  const handlePasswordSubmit = async (data: PasswordFormValues) => {
+    try {
+      toast.info("Updating password...");
+      
+      const { error } = await supabase.auth.updateUser({
+        password: data.newPassword
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Password updated successfully");
+      passwordForm.reset({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      toast.error(error?.message || "Failed to update password");
     }
   };
   
@@ -172,10 +215,10 @@ const CoachSettingsPage = () => {
                   </div>
                 </div>
               ) : (
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <Form {...profileForm}>
+                  <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4">
                     <FormField
-                      control={form.control}
+                      control={profileForm.control}
                       name="fullName"
                       render={({ field }) => (
                         <FormItem>
@@ -189,7 +232,7 @@ const CoachSettingsPage = () => {
                     />
                     
                     <FormField
-                      control={form.control}
+                      control={profileForm.control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
@@ -203,7 +246,7 @@ const CoachSettingsPage = () => {
                     />
                     
                     <FormField
-                      control={form.control}
+                      control={profileForm.control}
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
@@ -236,10 +279,10 @@ const CoachSettingsPage = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
-                <Form {...form}>
+                <Form {...profileForm}>
                   <form className="space-y-8">
                     <FormField
-                      control={form.control}
+                      control={profileForm.control}
                       name="notifyClientCheckIn"
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -262,7 +305,7 @@ const CoachSettingsPage = () => {
                     />
                     
                     <FormField
-                      control={form.control}
+                      control={profileForm.control}
                       name="notifyClientMessage"
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -285,7 +328,7 @@ const CoachSettingsPage = () => {
                     />
                     
                     <FormField
-                      control={form.control}
+                      control={profileForm.control}
                       name="notifyClientProgress"
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -330,33 +373,55 @@ const CoachSettingsPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <FormLabel>Current Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="●●●●●●●●" />
-                  </FormControl>
-                </div>
-                <div>
-                  <FormLabel>New Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="●●●●●●●●" />
-                  </FormControl>
-                </div>
-                <div>
-                  <FormLabel>Confirm New Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="●●●●●●●●" />
-                  </FormControl>
-                </div>
-                <div className="flex justify-end">
-                  <Button type="button" onClick={() => {
-                    toast.success("Password changed successfully");
-                  }}>
-                    Change Password
-                  </Button>
-                </div>
-              </div>
+              <Form {...passwordForm}>
+                <form onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)} className="space-y-4">
+                  <FormField
+                    control={passwordForm.control}
+                    name="currentPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="●●●●●●●●" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={passwordForm.control}
+                    name="newPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="●●●●●●●●" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={passwordForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm New Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="●●●●●●●●" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="flex justify-end">
+                    <Button type="submit">Change Password</Button>
+                  </div>
+                </form>
+              </Form>
             </CardContent>
           </Card>
         </TabsContent>
