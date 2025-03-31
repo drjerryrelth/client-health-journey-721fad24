@@ -9,14 +9,24 @@ export const useProgramsQuery = (clinicId?: string) => {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['programs', clinicId ? 'clinic' : 'all'],
+    queryKey: ['programs', clinicId || 'all'],
     queryFn: async () => {
-      console.log("Fetching programs, clinic ID:", clinicId);
+      console.log("Fetching programs with clinicId:", clinicId);
       try {
         let programs;
-        // Always fetch all programs for global statistics
-        programs = await ProgramService.getAllPrograms();
-        console.log("Fetched programs:", programs);
+        if (clinicId) {
+          programs = await ProgramService.getClinicPrograms(clinicId);
+          console.log(`Fetched ${programs?.length || 0} programs for clinic ${clinicId}:`, programs);
+        } else {
+          programs = await ProgramService.getAllPrograms();
+          console.log(`Fetched ${programs?.length || 0} programs (all):`, programs);
+        }
+        
+        if (!programs || programs.length === 0) {
+          console.log("No programs found in database");
+          return [];
+        }
+        
         return programs;
       } catch (error) {
         console.error("Error in queryFn when fetching programs:", error);
@@ -48,7 +58,10 @@ export const useCreateProgramMutation = () => {
     onSuccess: (data) => {
       // Update programs query cache
       queryClient.invalidateQueries({ queryKey: ['programs'] });
-      queryClient.invalidateQueries({ queryKey: ['programs', data.clinicId] });
+      queryClient.invalidateQueries({ queryKey: ['programs', 'all'] });
+      if (data.clinicId) {
+        queryClient.invalidateQueries({ queryKey: ['programs', data.clinicId] });
+      }
     },
   });
 };
@@ -66,7 +79,10 @@ export const useUpdateProgramMutation = () => {
       // Update both the program and programs queries
       queryClient.invalidateQueries({ queryKey: ['program', data.id] });
       queryClient.invalidateQueries({ queryKey: ['programs'] });
-      queryClient.invalidateQueries({ queryKey: ['programs', data.clinicId] });
+      queryClient.invalidateQueries({ queryKey: ['programs', 'all'] });
+      if (data.clinicId) {
+        queryClient.invalidateQueries({ queryKey: ['programs', data.clinicId] });
+      }
     },
   });
 };
@@ -79,12 +95,15 @@ export const useDeleteProgramMutation = () => {
     onSuccess: (_, variables) => {
       // Get the program data from cache to know which clinic to invalidate
       const program = queryClient.getQueryData<Program>(['program', variables]);
+      
+      // Remove program from cache and invalidate relevant queries
+      queryClient.removeQueries({ queryKey: ['program', variables] });
+      queryClient.invalidateQueries({ queryKey: ['programs'] });
+      queryClient.invalidateQueries({ queryKey: ['programs', 'all'] });
+      
       if (program?.clinicId) {
-        queryClient.invalidateQueries({ queryKey: ['programs'] });
         queryClient.invalidateQueries({ queryKey: ['programs', program.clinicId] });
       }
-      // Remove program from cache
-      queryClient.removeQueries({ queryKey: ['program', variables] });
     },
   });
 };

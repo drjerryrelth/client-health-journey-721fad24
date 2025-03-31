@@ -22,11 +22,16 @@ export async function getClinicPrograms(clinicId: string): Promise<Program[]> {
       throw error;
     }
     
-    console.log("Programs data returned:", data?.length || 0, "programs");
+    console.log("Programs data returned for clinic:", data?.length || 0, "programs");
+    
+    if (!data || data.length === 0) {
+      console.log("No programs found for clinic:", clinicId);
+      return [];
+    }
     
     // Fetch supplements for each program and add client count
     const programsWithSupplements = await Promise.all(
-      (data || []).map(async (program) => {
+      data.map(async (program) => {
         const supplements = await getSupplementsByProgramId(program.id);
         
         // Get client count for each program
@@ -36,7 +41,7 @@ export async function getClinicPrograms(clinicId: string): Promise<Program[]> {
           .eq('program_id', program.id);
           
         if (countError) {
-          console.error('Error fetching client count:', countError);
+          console.error(`Error fetching client count for program ${program.id}:`, countError);
         }
         
         const mappedProgram = mapDbProgramToProgram(program);
@@ -85,27 +90,36 @@ export async function getAllPrograms(): Promise<Program[]> {
     // Fetch supplements for each program and add client count
     const programsWithSupplements = await Promise.all(
       data.map(async (program) => {
-        const supplements = await getSupplementsByProgramId(program.id);
-        
-        // Get client count for each program
-        const { count: clientCount, error: countError } = await supabase
-          .from('clients')
-          .select('*', { count: 'exact', head: true })
-          .eq('program_id', program.id);
+        try {
+          const supplements = await getSupplementsByProgramId(program.id);
           
-        if (countError) {
-          console.error(`Error fetching client count for program ${program.id}:`, countError);
+          // Get client count for each program
+          const { count: clientCount, error: countError } = await supabase
+            .from('clients')
+            .select('*', { count: 'exact', head: true })
+            .eq('program_id', program.id);
+            
+          if (countError) {
+            console.error(`Error fetching client count for program ${program.id}:`, countError);
+          }
+          
+          const mappedProgram = mapDbProgramToProgram(program);
+          // Add supplements to the program object
+          mappedProgram.supplements = supplements;
+          // Add client count to the program object
+          mappedProgram.clientCount = clientCount || 0;
+          
+          console.log(`Program ${program.id} (${program.name}) has ${clientCount || 0} clients`);
+          
+          return mappedProgram;
+        } catch (error) {
+          console.error(`Error processing program ${program.id}:`, error);
+          // Return a basic program with default values if there's an error
+          const mappedProgram = mapDbProgramToProgram(program);
+          mappedProgram.supplements = [];
+          mappedProgram.clientCount = 0;
+          return mappedProgram;
         }
-        
-        const mappedProgram = mapDbProgramToProgram(program);
-        // Add supplements to the program object
-        mappedProgram.supplements = supplements;
-        // Add client count to the program object
-        mappedProgram.clientCount = clientCount || 0;
-        
-        console.log(`Program ${program.id} (${program.name}) has ${clientCount || 0} clients`);
-        
-        return mappedProgram;
       })
     );
     
@@ -122,14 +136,25 @@ export async function getAllPrograms(): Promise<Program[]> {
  */
 export async function getProgramById(programId: string): Promise<Program | null> {
   try {
+    console.log(`ProgramService: Fetching program with ID: ${programId}`);
+    
     const { data, error } = await supabase
       .from('programs')
       .select('*')
       .eq('id', programId)
-      .single();
+      .maybeSingle();
 
-    if (error) throw error;
-    if (!data) return null;
+    if (error) {
+      console.error(`Error fetching program ${programId}:`, error);
+      throw error;
+    }
+    
+    if (!data) {
+      console.log(`No program found with ID: ${programId}`);
+      return null;
+    }
+    
+    console.log(`Found program: ${data.name}`);
     
     // Fetch supplements for the program
     const supplements = await getSupplementsByProgramId(programId);
@@ -146,10 +171,12 @@ export async function getProgramById(programId: string): Promise<Program | null>
       .eq('program_id', programId);
       
     if (countError) {
-      console.error('Error fetching client count:', countError);
+      console.error(`Error fetching client count for program ${programId}:`, countError);
     }
     
     program.clientCount = clientCount || 0;
+    
+    console.log(`Program details complete for ${program.name}, client count: ${program.clientCount}`);
     
     return program;
   } catch (error) {

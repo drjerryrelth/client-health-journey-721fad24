@@ -15,8 +15,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const ProgramsPage = () => {
   const { user } = useAuth();
-  // Always fetch all programs to show global usage statistics
-  const { data: programs, isLoading, isError, error } = useProgramsQuery();
+  
+  // Use user's clinicId if available, otherwise fetch all programs
+  const { 
+    data: programs, 
+    isLoading, 
+    isError, 
+    error, 
+    refetch 
+  } = useProgramsQuery(user?.clinicId);
   
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [showProgramDetails, setShowProgramDetails] = useState(false);
@@ -29,7 +36,14 @@ const ProgramsPage = () => {
     handleSubmitProgram 
   } = useProgramForm();
 
+  // Refetch programs when user or clinicId changes
+  useEffect(() => {
+    console.log("User in ProgramsPage:", user);
+    refetch();
+  }, [user, refetch]);
+
   const handleViewProgramDetails = (program: Program) => {
+    console.log("Selected program for details:", program);
     setSelectedProgram(program);
     setShowProgramDetails(true);
   };
@@ -42,16 +56,16 @@ const ProgramsPage = () => {
     }
   }, [isError, error]);
 
-  // Add detailed debugging logging to help identify issues
+  // Add detailed debugging logging
   useEffect(() => {
-    console.log("Programs data in component:", programs);
+    console.log("Programs data in ProgramsPage:", programs);
     if (programs) {
-      console.log(`Number of programs: ${programs.length}`);
+      console.log(`Found ${programs.length} programs`);
       programs.forEach((program, index) => {
         console.log(`Program ${index + 1}:`, program.name, "Client count:", program.clientCount || 0);
       });
     } else {
-      console.log("No programs data available");
+      console.log("No programs data available in ProgramsPage");
     }
   }, [programs]);
 
