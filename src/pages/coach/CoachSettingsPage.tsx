@@ -5,9 +5,24 @@ import { useCoachProfile } from '@/hooks/use-coach-profile';
 import { ProfileTabContent } from '@/components/coach/ProfileTabContent';
 import { NotificationsTabContent } from '@/components/coach/NotificationsTabContent';
 import { PasswordTabContent } from '@/components/coach/PasswordTabContent';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const CoachSettingsPage = () => {
   const { profileData, loading, updateCoachProfile } = useCoachProfile();
+  const [error, setError] = React.useState<string | null>(null);
+  
+  React.useEffect(() => {
+    // Clear error when profile data loads successfully
+    if (profileData) {
+      setError(null);
+    }
+    
+    // Set error if loading completes without data
+    if (!loading && !profileData) {
+      setError("Failed to load profile information. Please refresh the page.");
+    }
+  }, [profileData, loading]);
   
   return (
     <div className="space-y-6">
@@ -17,6 +32,13 @@ const CoachSettingsPage = () => {
           Manage your account settings and preferences
         </p>
       </div>
+      
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList>

@@ -24,9 +24,9 @@ export const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      fullName: profileData?.name || "",
-      email: profileData?.email || "",
-      phone: profileData?.phone || "",
+      fullName: "",
+      email: "",
+      phone: "",
       notifyClientCheckIn: true,
       notifyClientMessage: true,
       notifyClientProgress: false,
@@ -64,6 +64,10 @@ export const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
             <div className="flex justify-end">
               <Skeleton className="h-10 w-24" />
             </div>
+          </div>
+        ) : !profileData ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Could not load profile information. Please refresh the page and try again.
           </div>
         ) : (
           <Form {...profileForm}>

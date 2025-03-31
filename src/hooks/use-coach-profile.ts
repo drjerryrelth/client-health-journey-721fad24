@@ -28,36 +28,53 @@ export const useCoachProfile = () => {
       
       setLoading(true);
       try {
+        console.log('Fetching coach profile for user ID:', user.id);
+        
         // First try to get profile from coaches table
         const { data: coachData, error: coachError } = await supabase
           .from('coaches')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single to prevent errors when no data is found
         
-        if (coachError || !coachData) {
+        if (coachError) {
           console.error('Error fetching coach data:', coachError);
-          
+          throw coachError;
+        }
+        
+        if (coachData) {
+          console.log('Coach data found:', coachData);
+          setProfileData(coachData);
+        } else {
           // If not found in coaches table, try profiles table
+          console.log('No coach data found, checking profiles table');
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
             
           if (profileError) {
             console.error('Error fetching profile data:', profileError);
-            toast.error("Failed to load your profile information");
-            return;
+            throw profileError;
           }
           
-          setProfileData({
-            name: profileData.full_name || "",
-            email: profileData.email || "",
-            phone: "",
-          });
-        } else {
-          setProfileData(coachData);
+          if (!profileData) {
+            console.log('No profile data found, creating fallback profile');
+            // Create fallback profile from user object
+            setProfileData({
+              name: user.name || "",
+              email: user.email || "",
+              phone: "",
+            });
+          } else {
+            console.log('Profile data found:', profileData);
+            setProfileData({
+              name: profileData.full_name || "",
+              email: profileData.email || "",
+              phone: "",
+            });
+          }
         }
       } catch (error) {
         console.error('Error loading coach profile:', error);
@@ -88,6 +105,12 @@ export const useCoachProfile = () => {
         .eq('id', user.id);
         
       if (error) throw error;
+      
+      // Update the local state with the new data
+      setProfileData({
+        ...profileData,
+        ...updates
+      });
       
       toast.success("Profile updated successfully");
     } catch (error) {
