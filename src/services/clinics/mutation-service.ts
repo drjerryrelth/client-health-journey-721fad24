@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Clinic } from './types';
 import { mapClinicToDb, mapDbToClinic } from './mappers';
+import { toast } from 'sonner';
 
 export const addClinic = async (clinic: Partial<Clinic>): Promise<Clinic | null> => {
   try {
@@ -31,13 +32,58 @@ export const addClinic = async (clinic: Partial<Clinic>): Promise<Clinic | null>
 
     // If RPC succeeded, return the mapped clinic data
     if (data) {
-      return mapDbToClinic(data);
+      // After successful clinic creation, create a coach for this clinic
+      try {
+        const newClinicData = mapDbToClinic(data);
+        
+        if (newClinicData && newClinicData.id) {
+          await createCoachForClinic(newClinicData);
+        }
+        
+        return newClinicData;
+      } catch (coachError) {
+        console.error('Error creating coach for new clinic:', coachError);
+        // Continue returning the clinic even if coach creation failed
+        return mapDbToClinic(data);
+      }
     }
 
     return null;
   } catch (error) {
     console.error('Error adding clinic:', error);
     throw error;
+  }
+};
+
+// Helper function to create a coach for a newly created clinic
+const createCoachForClinic = async (clinic: Clinic) => {
+  if (!clinic.primaryContact || !clinic.email) {
+    console.warn('Cannot create coach: missing primary contact or email information');
+    return null;
+  }
+
+  try {
+    const { error } = await supabase.rpc(
+      'add_coach',
+      {
+        coach_name: clinic.primaryContact || 'Clinic Manager',
+        coach_email: clinic.email || '',
+        coach_phone: clinic.phone || null,
+        coach_status: 'active',
+        coach_clinic_id: clinic.id
+      }
+    );
+
+    if (error) {
+      console.error('Error creating coach for clinic:', error);
+      return null;
+    }
+
+    console.log(`Coach created for clinic ${clinic.name}`);
+    return true;
+  } catch (error) {
+    console.error('Error in createCoachForClinic:', error);
+    return null;
   }
 };
 

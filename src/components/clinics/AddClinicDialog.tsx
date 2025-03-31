@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,9 +17,7 @@ interface AddClinicDialogProps {
   onClinicAdded?: () => void;
 }
 
-// Update schema: General info required, billing info optional
 const addClinicSchema = z.object({
-  // General info - all required
   clinicName: z.string().min(1, "Clinic name is required"),
   clinicEmail: z.string().email("Invalid email format").min(1, "Email is required"),
   clinicPhone: z.string().min(1, "Phone number is required"),
@@ -30,9 +27,8 @@ const addClinicSchema = z.object({
   zipCode: z.string().min(1, "ZIP code is required"),
   primaryContact: z.string().min(1, "Primary contact is required"),
   
-  // Billing info - all optional
   billingContactName: z.string().optional(),
-  billingEmail: z.string().optional(), // Changed from email validation to optional string
+  billingEmail: z.string().optional(),
   billingPhone: z.string().optional(),
   billingAddress: z.string().optional(),
   billingCity: z.string().optional(),
@@ -49,7 +45,6 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
   const [activeTab, setActiveTab] = useState('general');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Setup form with validation
   const form = useForm<AddClinicFormValues>({
     resolver: zodResolver(addClinicSchema),
     defaultValues: {
@@ -79,7 +74,6 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
       
       console.log("Form values before submission:", values);
       
-      // Create a clean object without undefined values that might cause issues
       const clinicData = {
         name: values.clinicName,
         email: values.clinicEmail || null,
@@ -98,7 +92,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
         billingZip: values.billingZip || null,
         paymentMethod: values.paymentMethod || null,
         subscriptionTier: values.subscriptionTier || null,
-        subscriptionStatus: 'active' // Set default status to active
+        subscriptionStatus: 'active'
       };
       
       console.log('Submitting clinic data:', clinicData);
@@ -118,14 +112,12 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
       if (newClinic) {
         toast({
           title: "Clinic Added",
-          description: `${values.clinicName} has been added successfully.`
+          description: `${values.clinicName} has been added successfully. A coach account has been created using the primary contact information.`
         });
         
-        // Reset form and close dialog
         form.reset();
         onOpenChange(false);
         
-        // Notify parent component to refresh clinic list
         if (onClinicAdded) onClinicAdded();
       } else {
         toast({
@@ -155,7 +147,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
         <DialogHeader>
           <DialogTitle>Add New Clinic</DialogTitle>
           <DialogDescription>
-            Add a new clinic to your organization. You'll be able to manage its coaches and programs later.
+            Add a new clinic to your organization. A coach will automatically be created using the primary contact information.
           </DialogDescription>
         </DialogHeader>
         
