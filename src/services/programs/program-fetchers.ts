@@ -37,27 +37,35 @@ export async function getClinicPrograms(clinicId: string): Promise<Program[]> {
     // Fetch supplements for each program and add client count
     const programsWithSupplements = await Promise.all(
       data.map(async (program) => {
-        const supplements = await getSupplementsByProgramId(program.id);
-        
-        // Get client count for each program
-        const { count: clientCount, error: countError } = await supabase
-          .from('clients')
-          .select('*', { count: 'exact', head: true })
-          .eq('program_id', program.id);
+        try {
+          const supplements = await getSupplementsByProgramId(program.id);
           
-        if (countError) {
-          console.error(`Error fetching client count for program ${program.id}:`, countError);
+          // Get client count for each program
+          const { count: clientCount, error: countError } = await supabase
+            .from('clients')
+            .select('*', { count: 'exact', head: true })
+            .eq('program_id', program.id);
+            
+          if (countError) {
+            console.error(`Error fetching client count for program ${program.id}:`, countError);
+          }
+          
+          const mappedProgram = mapDbProgramToProgram(program);
+          // Add supplements to the program object
+          mappedProgram.supplements = supplements;
+          // Add client count to the program object
+          mappedProgram.clientCount = clientCount || 0;
+          
+          console.log(`Program ${program.id} (${program.name}) has ${clientCount || 0} clients`);
+          
+          return mappedProgram;
+        } catch (error) {
+          console.error(`Error processing program ${program.id}:`, error);
+          const mappedProgram = mapDbProgramToProgram(program);
+          mappedProgram.supplements = [];
+          mappedProgram.clientCount = 0;
+          return mappedProgram;
         }
-        
-        const mappedProgram = mapDbProgramToProgram(program);
-        // Add supplements to the program object
-        mappedProgram.supplements = supplements;
-        // Add client count to the program object
-        mappedProgram.clientCount = clientCount || 0;
-        
-        console.log(`Program ${program.id} (${program.name}) has ${clientCount || 0} clients`);
-        
-        return mappedProgram;
       })
     );
     

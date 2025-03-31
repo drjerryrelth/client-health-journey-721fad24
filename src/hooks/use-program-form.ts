@@ -25,10 +25,10 @@ export const useProgramForm = () => {
     duration: string;
     checkInFrequency: 'daily' | 'weekly';
     description: string;
-    clinicId?: string;  // Optional parameter to override user's clinicId
+    clinicId?: string;
   }) => {
     if (!formData.name || !formData.type || !formData.duration || !formData.checkInFrequency) {
-      toast("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
     
@@ -36,12 +36,13 @@ export const useProgramForm = () => {
     const clinicId = formData.clinicId || user?.clinicId;
     
     if (!clinicId) {
-      toast("No clinic selected. Please select a clinic first.");
+      toast.error("No clinic selected. Please select a clinic first.");
       return;
     }
 
     try {
       setIsSubmitting(true);
+      console.log("Creating program with data:", formData);
       
       // Convert duration string to number of days
       let durationInDays = 0;
@@ -53,6 +54,8 @@ export const useProgramForm = () => {
       if (formData.duration === '24-weeks') durationInDays = 168;
       if (formData.duration === '30-days') durationInDays = 30;
       if (formData.duration === '60-days') durationInDays = 60;
+      
+      console.log(`Duration converted: ${formData.duration} -> ${durationInDays} days`);
       
       await createProgramMutation.mutateAsync({
         program: {
@@ -66,13 +69,13 @@ export const useProgramForm = () => {
         supplements: [] // No supplements for now, will add later
       });
 
-      toast(`${formData.name} has been created successfully.`);
+      toast.success(`${formData.name} has been created successfully.`);
 
       // Close dialog
       setShowAddProgramDialog(false);
     } catch (error) {
       console.error("Error creating program:", error);
-      toast("Failed to create program. Please try again.");
+      toast.error("Failed to create program. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
