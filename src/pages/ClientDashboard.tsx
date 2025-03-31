@@ -41,7 +41,8 @@ const ClientDashboard = () => {
         
         if (clientData) {
           setClientStartDate(clientData.start_date);
-          if (clientData.programs && typeof clientData.programs === 'object') {
+          // Add null check for programs property
+          if (clientData.programs && typeof clientData.programs === 'object' && clientData.programs !== null) {
             setProgramName(clientData.programs.name || "");
           }
           
