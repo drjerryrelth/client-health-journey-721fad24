@@ -31,6 +31,8 @@ const ProgramsPage = () => {
     setShowProgramDetails(true);
   };
 
+  console.log("Current programs:", programs); // Adding a log to see what data is available
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
