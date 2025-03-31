@@ -39,40 +39,15 @@ export async function fetchRecentActivities(limit: number = 5): Promise<Activity
           });
         }
         console.log(`[RecentActivities] Added ${checkInsData.length} check-ins as activities`);
-      } else {
+      } else if (checkInsError) {
         console.error('[RecentActivities] Error fetching check-ins:', checkInsError);
       }
     } catch (error) {
       console.error('[RecentActivities] Error processing check-ins:', error);
     }
     
-    // 2. Get recently added coaches as activities
-    try {
-      const { data: coachesData, error: coachesError } = await supabase
-        .from('coaches')
-        .select('id, name, created_at, clinic_id, clinics(name)')
-        .order('created_at', { ascending: false })
-        .limit(limit);
-        
-      if (!coachesError && coachesData) {
-        for (const coach of coachesData) {
-          activities.push({
-            id: coach.id,
-            type: 'coach_added',
-            description: `${coach.name} was added as a coach to ${coach.clinics?.name || 'a clinic'}`,
-            timestamp: new Date(coach.created_at).toLocaleString(),
-            clinicId: coach.clinic_id
-          });
-        }
-        console.log(`[RecentActivities] Added ${coachesData.length} coaches as activities`);
-      } else {
-        console.error('[RecentActivities] Error fetching coaches:', coachesError);
-      }
-    } catch (error) {
-      console.error('[RecentActivities] Error processing coaches:', error);
-    }
-    
-    // 3. Get recently created clinics as activities
+    // 2. Get clinics as activities 
+    // Skip coaches for now due to policy error
     try {
       const { data: clinicsData, error: clinicsError } = await supabase
         .from('clinics')
@@ -91,7 +66,7 @@ export async function fetchRecentActivities(limit: number = 5): Promise<Activity
           });
         }
         console.log(`[RecentActivities] Added ${clinicsData.length} clinics as activities`);
-      } else {
+      } else if (clinicsError) {
         console.error('[RecentActivities] Error fetching clinics:', clinicsError);
       }
     } catch (error) {

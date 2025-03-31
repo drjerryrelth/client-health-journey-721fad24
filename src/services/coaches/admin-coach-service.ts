@@ -14,7 +14,8 @@ export async function getCoachCount(): Promise<number> {
       
     if (error) {
       console.error('[AdminCoachService] Count query error:', error);
-      throw error;
+      // Return zero but don't throw - allow the UI to show zero instead of erroring
+      return 0;
     }
     
     // Get count from metadata
@@ -40,7 +41,8 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
       
     if (coachesError) {
       console.error('[AdminCoachService] Error fetching coaches:', coachesError);
-      throw coachesError;
+      toast.error('Error fetching coaches: ' + coachesError.message);
+      return [];
     }
     
     // If no coaches data, return empty array

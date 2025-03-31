@@ -26,7 +26,13 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       
     if (clinicsError) {
       console.error('[DashboardStats] Error fetching clinics:', clinicsError);
-      throw clinicsError;
+      toast.error('Error fetching clinics: ' + clinicsError.message);
+      return {
+        activeClinicCount: 0,
+        totalCoachCount: 0,
+        weeklyActivitiesCount: 0,
+        clinicsSummary: []
+      };
     }
     
     // Make sure clinicsData is an array
@@ -44,12 +50,9 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
         coachCount = count || 0;
       } else {
         console.error('[DashboardStats] Error fetching coach count:', countError);
-        throw countError;
       }
     } catch (countErr) {
       console.error('[DashboardStats] Error counting coaches:', countErr);
-      toast.error('Failed to count coaches');
-      coachCount = 0;
     }
     
     console.log('[DashboardStats] Coach count:', coachCount);
@@ -70,12 +73,21 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
         console.log('[DashboardStats] Real check-ins count for last week:', activitiesCount);
       } else {
         console.error('[DashboardStats] Error counting check-ins:', checkInsError);
-        throw checkInsError;
       }
+      
+      // Add clinic creations from the last week
+      const { count: clinicsCreatedCount, error: clinicsCreatedError } = await supabase
+        .from('clinics')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', oneWeekAgo.toISOString());
+        
+      if (!clinicsCreatedError) {
+        activitiesCount += clinicsCreatedCount || 0;
+        console.log('[DashboardStats] Added clinic creations for last week:', clinicsCreatedCount || 0);
+      }
+      
     } catch (err) {
       console.error('[DashboardStats] Error with activities count:', err);
-      toast.error('Failed to count weekly activities');
-      activitiesCount = 0;
     }
     
     // Prepare clinic summary data
