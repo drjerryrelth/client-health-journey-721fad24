@@ -59,10 +59,11 @@ export const useClientDrip = () => {
           .maybeSingle();
         
         if (!messageError && messageData) {
+          // Fix: Access subject and content from the nested drip_content_templates object
           setTodaysDrip({
             id: messageData.id,
-            subject: messageData.drip_content_templates.subject,
-            content: messageData.drip_content_templates.content,
+            subject: messageData.drip_content_templates?.subject,
+            content: messageData.drip_content_templates?.content,
             day_number: messageData.day_number,
             is_read: messageData.is_read
           });
