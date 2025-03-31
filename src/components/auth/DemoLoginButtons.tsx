@@ -4,18 +4,33 @@ import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useLoginHandler } from '@/hooks/use-login-handler';
 
 interface DemoLoginButtonsProps {
-  handleDemoLogin: (type: UserRole, email: string) => Promise<void>;
-  isSubmitting: boolean;
+  handleDemoLogin?: (type: UserRole, email: string) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
-const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsProps) => {
+const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsProps = {}) => {
   // Define demo emails for each role
   const demoEmails = {
     admin: 'drrelth@contourlight.com',
     coach: 'support@practicenaturals.com',
     client: 'drjerryrelth@gmail.com'
+  };
+  
+  // Use login handler if no handler is provided (for homepage use)
+  const navigate = useNavigate();
+  const loginHandler = useLoginHandler();
+  
+  const handleLogin = async (type: UserRole, email: string) => {
+    if (handleDemoLogin) {
+      await handleDemoLogin(type, email);
+    } else {
+      // If no handler provided, use the hook's handler
+      await loginHandler.handleDemoLogin(type, email);
+    }
   };
   
   return (
@@ -34,7 +49,7 @@ const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsPro
       <div className="grid grid-cols-3 gap-3">
         <Button 
           variant="outline"
-          onClick={() => handleDemoLogin('admin', demoEmails.admin)}
+          onClick={() => handleLogin('admin', demoEmails.admin)}
           disabled={isSubmitting}
           className="text-xs"
         >
@@ -42,7 +57,7 @@ const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsPro
         </Button>
         <Button 
           variant="outline"
-          onClick={() => handleDemoLogin('coach', demoEmails.coach)}
+          onClick={() => handleLogin('coach', demoEmails.coach)}
           disabled={isSubmitting}
           className="text-xs"
         >
@@ -50,7 +65,7 @@ const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsPro
         </Button>
         <Button 
           variant="outline"
-          onClick={() => handleDemoLogin('client', demoEmails.client)}
+          onClick={() => handleLogin('client', demoEmails.client)}
           disabled={isSubmitting}
           className="text-xs"
         >
