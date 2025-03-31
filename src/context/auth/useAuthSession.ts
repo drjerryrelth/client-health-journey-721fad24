@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+
+import { useCallback } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { UserData } from '@/types/auth';
 import { fetchUserProfile } from '@/hooks/use-user-profile';
-import { ToastAction } from '@/components/ui/toast';
 import { 
   getCurrentSession,
   setupAuthListener 
@@ -24,7 +24,7 @@ export const useAuthSession = ({
   navigate
 }: UseAuthSessionProps) => {
   
-  const fetchAndSetUserProfile = async (userId: string) => {
+  const fetchAndSetUserProfile = useCallback(async (userId: string) => {
     try {
       const userData = await fetchUserProfile(userId);
       
@@ -33,14 +33,13 @@ export const useAuthSession = ({
         setUser(userData);
       } else {
         console.warn('No user data found, signing out');
-        // Don't call logout here to avoid circular dependency
       }
     } catch (profileError) {
       console.error('Error fetching user profile:', profileError);
     }
-  };
+  }, [setUser]);
 
-  const setupAuth = async () => {
+  const setupAuth = useCallback(async () => {
     let isMounted = true;
     
     try {
@@ -130,7 +129,7 @@ export const useAuthSession = ({
       setIsLoading(false);
       console.error('Setup auth error:', error);
     }
-  };
+  }, [setUser, setSupabaseUser, setIsLoading, toast, navigate, fetchAndSetUserProfile]);
 
   return {
     setupAuth,

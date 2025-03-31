@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '@/types';
@@ -16,7 +16,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const { setupAuth, fetchAndSetUserProfile } = useAuthSession({
+  // Hook for auth session management
+  const { setupAuth } = useAuthSession({
     setUser,
     setSupabaseUser,
     setIsLoading,
@@ -24,16 +25,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     navigate
   });
 
-  // Auth methods
+  // Hook for auth methods
   const { login, logout, signUp, hasRole } = useAuthMethods({
     setIsLoading,
     toast
   });
 
   // Initialize auth once on component mount
-  useEffect(() => {
+  React.useEffect(() => {
     setupAuth();
-  }, []);
+  }, [setupAuth]);
 
   // Wrap the signUp method to match the expected return type
   const wrappedSignUp = async (email: string, password: string, userData: { full_name: string; role: string }) => {
@@ -49,7 +50,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         logout,
-        // Fixed: Call hasRole with the role and immediately pass in the user
         hasRole: (role: UserRole | UserRole[]) => hasRole(role)(user),
         signUp: wrappedSignUp,
       }}

@@ -1,6 +1,5 @@
 
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useCallback } from 'react';
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
 import { loginWithEmail, signUpWithEmail, logoutUser } from '@/services/auth';
@@ -11,7 +10,7 @@ type UseAuthMethodsProps = {
 };
 
 export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => {
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
       const result = await loginWithEmail(email, password);
@@ -36,9 +35,9 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setIsLoading, toast]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setIsLoading(true);
     try {
       const { error } = await logoutUser();
@@ -59,9 +58,9 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setIsLoading, toast]);
 
-  const signUp = async (email: string, password: string, userData: { full_name: string; role: string }) => {
+  const signUp = useCallback(async (email: string, password: string, userData: { full_name: string; role: string }) => {
     setIsLoading(true);
     try {
       const result = await signUpWithEmail(email, password, userData);
@@ -82,10 +81,10 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setIsLoading, toast]);
 
   // Enhanced hasRole function with improved role checking logic
-  const hasRole = (requiredRole: UserRole | UserRole[]) => (user: UserData | null) => {
+  const hasRole = useCallback((requiredRole: UserRole | UserRole[]) => (user: UserData | null) => {
     console.log('Checking role:', requiredRole, 'for user:', user);
     
     // If no user or no role, no permissions
@@ -105,7 +104,7 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     const hasSpecificRole = user.role === requiredRole;
     console.log(`User has role ${requiredRole}?`, hasSpecificRole);
     return hasSpecificRole;
-  };
+  }, []);
 
   return {
     login,
