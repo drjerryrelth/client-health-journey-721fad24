@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
-import { CoachService } from '@/services/coaches';
 import { DashboardStats } from '@/types/dashboard';
 import { toast } from 'sonner';
 
@@ -45,18 +44,17 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
         coachCount = count || 0;
       } else {
         console.error('[DashboardStats] Error fetching coach count:', countError);
-        // Try the admin service as a backup
-        coachCount = await CoachService.getCoachCount();
+        throw countError;
       }
     } catch (countErr) {
       console.error('[DashboardStats] Error counting coaches:', countErr);
-      // Use the admin service as a fallback
-      coachCount = await CoachService.getCoachCount();
+      toast.error('Failed to count coaches');
+      coachCount = 0;
     }
     
     console.log('[DashboardStats] Coach count:', coachCount);
     
-    // For weekly activities count, try to count recent check-ins
+    // For weekly activities count, count recent check-ins
     let activitiesCount = 0;
     try {
       const oneWeekAgo = new Date();
@@ -72,11 +70,12 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
         console.log('[DashboardStats] Real check-ins count for last week:', activitiesCount);
       } else {
         console.error('[DashboardStats] Error counting check-ins:', checkInsError);
-        activitiesCount = 24; // Use mock data as fallback
+        throw checkInsError;
       }
     } catch (err) {
       console.error('[DashboardStats] Error with activities count:', err);
-      activitiesCount = 24; // Use mock data as fallback
+      toast.error('Failed to count weekly activities');
+      activitiesCount = 0;
     }
     
     // Prepare clinic summary data
@@ -122,78 +121,27 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
         console.log('[DashboardStats] Built real clinics summary data:', clinicsSummary);
       } catch (summaryError) {
         console.error('[DashboardStats] Error building clinics summary:', summaryError);
-        // Fall back to mock data below if this fails
         clinicsSummary = [];
       }
     }
     
-    // Use mock data as fallback if we didn't get any real data
-    if (clinicsSummary.length === 0) {
-      console.log('[DashboardStats] Using mock clinics summary data');
-      clinicsSummary = [
-        {
-          id: '1',
-          name: 'Downtown Health Center',
-          coaches: 5,
-          clients: 45,
-          status: 'active'
-        },
-        {
-          id: '2',
-          name: 'Northside Wellness',
-          coaches: 3,
-          clients: 28,
-          status: 'active'
-        },
-        {
-          id: '3',
-          name: 'Harbor Medical Group',
-          coaches: 8,
-          clients: 73,
-          status: 'active'
-        }
-      ];
-    }
-    
-    // Return the complete dashboard stats object with real data where available
+    // Return the complete dashboard stats object with real data
     return {
-      activeClinicCount: clinics.length || clinicsSummary.length,
+      activeClinicCount: clinics.length || 0,
       totalCoachCount: coachCount,
       weeklyActivitiesCount: activitiesCount,
       clinicsSummary
     };
   } catch (error) {
     console.error('[DashboardStats] Error fetching dashboard stats:', error);
-    toast.error("Failed to load all dashboard statistics");
+    toast.error("Failed to load dashboard statistics");
     
-    // Return mock data to ensure the dashboard displays something
+    // Return empty data structure
     return {
-      activeClinicCount: 3,
-      totalCoachCount: 16,
-      weeklyActivitiesCount: 24,
-      clinicsSummary: [
-        {
-          id: '1',
-          name: 'Downtown Health Center',
-          coaches: 5,
-          clients: 45,
-          status: 'active'
-        },
-        {
-          id: '2',
-          name: 'Northside Wellness',
-          coaches: 3,
-          clients: 28,
-          status: 'active'
-        },
-        {
-          id: '3',
-          name: 'Harbor Medical Group',
-          coaches: 8,
-          clients: 73,
-          status: 'active'
-        }
-      ]
+      activeClinicCount: 0,
+      totalCoachCount: 0,
+      weeklyActivitiesCount: 0,
+      clinicsSummary: []
     };
   }
 }

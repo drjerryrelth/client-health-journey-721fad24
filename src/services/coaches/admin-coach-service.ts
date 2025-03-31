@@ -2,23 +2,19 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Coach } from './types';
 import { toast } from 'sonner';
-import { getMockCoaches } from './mock-data';
 
 // Special service function to get total coach count for admin dashboard
 export async function getCoachCount(): Promise<number> {
   try {
     console.log('[AdminCoachService] Getting total coach count');
     
-    // Try to get real count from database first
     const { count, error } = await supabase
       .from('coaches')
       .select('id', { head: true, count: 'exact' });
       
     if (error) {
       console.error('[AdminCoachService] Count query error:', error);
-      // Fall back to mock data if query fails
-      const mockCoaches = getMockCoaches();
-      return mockCoaches.length;
+      throw error;
     }
     
     // Get count from metadata
@@ -26,9 +22,8 @@ export async function getCoachCount(): Promise<number> {
     return count || 0;
   } catch (error) {
     console.error('[AdminCoachService] Failed to get coach count:', error);
-    // Return mock data length as fallback
-    const mockCoaches = getMockCoaches();
-    return mockCoaches.length;
+    toast.error('Failed to get coach count');
+    return 0;
   }
 }
 
@@ -37,7 +32,7 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
   try {
     console.log('[AdminCoachService] Getting all coaches');
     
-    // Try to get real coaches from the database first
+    // Get coaches data from the database
     const { data: coachesData, error: coachesError } = await supabase
       .from('coaches')
       .select('*')
@@ -48,10 +43,10 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
       throw coachesError;
     }
     
-    // If no coaches data or empty array, return mock data
+    // If no coaches data, return empty array
     if (!coachesData || coachesData.length === 0) {
-      console.log('[AdminCoachService] No coaches found in database, using mock data');
-      return getMockCoaches();
+      console.log('[AdminCoachService] No coaches found in database');
+      return [];
     }
     
     console.log(`[AdminCoachService] Found ${coachesData.length} coaches in database`);
@@ -105,12 +100,7 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
     return coachesWithClients;
   } catch (error) {
     console.error('[AdminCoachService] Failed to get all coaches:', error);
-    
-    // Return mock data as fallback
-    console.log('[AdminCoachService] Using mock data as fallback');
-    const mockCoaches = getMockCoaches();
-    console.log('[AdminCoachService] Mock coaches:', mockCoaches);
-    
-    return mockCoaches;
+    toast.error('Failed to load coaches');
+    return [];
   }
 }
