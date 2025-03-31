@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -41,10 +42,10 @@ const ClientDashboard = () => {
         if (clientData) {
           setClientStartDate(clientData.start_date);
           
-          // Fix the null check for programs property
+          // Fix the null check for programs property - ensure programsData and programsData.name are both checked
           const programsData = clientData.programs;
-          if (programsData && typeof programsData === 'object') {
-            setProgramName(programsData.name || "");
+          if (programsData && typeof programsData === 'object' && programsData.name) {
+            setProgramName(programsData.name);
           }
           
           // Fetch check-ins for this client
