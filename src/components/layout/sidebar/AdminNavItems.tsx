@@ -15,6 +15,7 @@ import {
   Activity,
   BookOpen,
   Home,
+  Palette,
 } from "lucide-react";
 
 export interface NavItem {
@@ -68,6 +69,11 @@ export const adminNavItems: NavItem[] = [
     title: "Resources",
     href: "/resources",
     icon: BookOpen,
+  },
+  {
+    title: "Clinic Customization",
+    href: "/clinic-customization",
+    icon: Palette,
   },
   {
     title: "Meal Plan Generator",

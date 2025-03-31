@@ -19,6 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import MealPlanGenerator from "./pages/MealPlanGenerator";
 import MainLayout from "./components/layout/MainLayout";
+import { AdminRoutes, CoachRoutes, ClientRoutes } from "./components/routes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,13 +48,17 @@ const AppContent = () => {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/signup/clinic" element={<ClinicSignup />} />
           
-          {/* Dashboard - handles role-based routing internally */}
+          {/* Dashboard routes that handle role-based routing internally */}
           <Route path="/dashboard/*" element={<Dashboard />} />
+          
+          {/* Direct access to role-specific dashboards */}
+          <Route path="/admin/*" element={<AdminRoutes />} />
+          <Route path="/coach/*" element={<CoachRoutes />} />
+          <Route path="/client/*" element={<ClientRoutes />} />
+          
+          {/* Legacy routes - redirected through Dashboard */}
           <Route path="/coach-dashboard/*" element={<Dashboard />} />
           <Route path="/client-dashboard/*" element={<Dashboard />} />
-          
-          {/* Client routes that are handled by ClientRoutes */}
-          <Route path="/client/*" element={<Dashboard />} />
           <Route path="/check-in" element={<Dashboard />} />
           <Route path="/progress" element={<Dashboard />} />
           <Route path="/my-program" element={<Dashboard />} />

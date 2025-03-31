@@ -14,12 +14,15 @@ import SettingsPage from '@/pages/admin/SettingsPage';
 import ActivitiesPage from '@/pages/admin/ActivitiesPage';
 import AdminUsersPage from '@/pages/admin/AdminUsersPage';
 import ClinicCustomizationPage from '@/pages/admin/ClinicCustomizationPage';
+import MealPlanGenerator from '@/pages/MealPlanGenerator';
+import NotFound from '@/pages/NotFound';
 
 const AdminRoutes = () => {
   return (
     <Routes>
       <Route element={<MainLayout />}>
         <Route index element={<AdminDashboard />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="clients" element={<ClientsPage />} />
         <Route path="programs" element={<ProgramsPage />} />
         <Route path="coaches" element={<CoachesPage />} />
@@ -31,6 +34,8 @@ const AdminRoutes = () => {
         <Route path="activities" element={<ActivitiesPage />} />
         <Route path="admin-users" element={<AdminUsersPage />} />
         <Route path="clinic-customization" element={<ClinicCustomizationPage />} />
+        <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );
