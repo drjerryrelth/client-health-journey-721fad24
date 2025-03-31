@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,6 @@ import EditCoachDialog from '@/components/coaches/EditCoachDialog';
 import ReassignClientsDialog from '@/components/coaches/ReassignClientsDialog';
 import ClinicDetailsTab from '@/components/clinics/ClinicDetailsTab';
 import EditClinicDialog from '@/components/clinics/EditClinicDialog';
-import { useToast } from '@/hooks/use-toast';
 import { useCoachActions } from '@/hooks/use-coach-actions';
 
 interface ClinicDetailProps {
@@ -20,7 +20,6 @@ interface ClinicDetailProps {
 }
 
 const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps) => {
-  const { toast } = useToast();
   const [activeClinicTab, setActiveClinicTab] = useState('coaches');
   const [showAddCoachDialog, setShowAddCoachDialog] = useState(false);
   const [showEditCoachDialog, setShowEditCoachDialog] = useState(false);
@@ -54,6 +53,10 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   const handleEditCoach = (coach: Coach) => {
     setSelectedCoach(coach);
     setShowEditCoachDialog(true);
+  };
+
+  const handleCoachUpdated = () => {
+    setCoachListRefreshTrigger(prev => prev + 1);
   };
 
   const handleCoachDelete = (coach: Coach) => {
@@ -147,7 +150,8 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
         open={showEditCoachDialog} 
         onOpenChange={setShowEditCoachDialog} 
         coach={selectedCoach} 
-        clinicName={clinic.name} 
+        clinicName={clinic.name}
+        onCoachUpdated={handleCoachUpdated}
       />
 
       <ReassignClientsDialog 

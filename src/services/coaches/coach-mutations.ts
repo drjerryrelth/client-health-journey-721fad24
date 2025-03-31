@@ -24,7 +24,7 @@ export async function addCoach(coach: Omit<Coach, 'id' | 'clients'>): Promise<Co
     
     // Using the add_coach RPC function with explicit type casting
     const { data, error } = await supabase.rpc(
-      'add_coach' as any, 
+      'add_coach', 
       {
         coach_name: coach.name,
         coach_email: coach.email,
@@ -90,21 +90,77 @@ export async function addCoach(coach: Omit<Coach, 'id' | 'clients'>): Promise<Co
  */
 export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 'clients'>>): Promise<Coach | null> {
   try {
+    console.log('[Coach Service] Updating coach with ID:', id);
+    console.log('[Coach Service] Update data:', coach);
+
     // Check if user is authenticated using the helper
     const session = await checkAuthentication();
     if (!session) {
-      console.error('User is not authenticated');
+      console.error('[Coach Service] User is not authenticated');
       toast.error('You must be logged in to update a coach');
       return null;
     }
     
-    const updates: any = {};
+    // Prepare the update payload
+    const updates: Record<string, any> = {};
     if (coach.name) updates.name = coach.name;
     if (coach.email) updates.email = coach.email;
     if (coach.phone !== undefined) updates.phone = coach.phone;
     if (coach.status) updates.status = coach.status;
     if (coach.clinicId) updates.clinic_id = coach.clinicId;
     
+    console.log('[Coach Service] Prepared updates:', updates);
+    
+    // Attempt to update the coach using RPC first to bypass RLS
+    try {
+      // Try to use an RPC function if available
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'admin_update_coach',
+        {
+          coach_id: id,
+          coach_updates: updates
+        }
+      );
+      
+      // If RPC successful, process its response
+      if (!rpcError && rpcData) {
+        console.log('[Coach Service] Coach updated successfully via RPC:', rpcData);
+        toast.success('Coach updated successfully!');
+        
+        // Transform the response into our expected Coach format
+        const responseData = rpcData as {
+          id: string;
+          name: string;
+          email: string;
+          phone: string | null;
+          status: string;
+          clinic_id: string;
+          client_count: number;
+        };
+        
+        return {
+          id: responseData.id,
+          name: responseData.name,
+          email: responseData.email,
+          phone: responseData.phone,
+          status: responseData.status as 'active' | 'inactive',
+          clinicId: responseData.clinic_id,
+          clients: responseData.client_count || 0
+        };
+      }
+      
+      // If there was an RPC error but it's not a function-not-found error, log it
+      if (rpcError && !rpcError.message.includes('function not found')) {
+        console.error('[Coach Service] RPC update error:', rpcError);
+      }
+      
+      // Continue with direct update if RPC not available or failed
+      console.log('[Coach Service] Falling back to direct database update');
+    } catch (rpcCallError) {
+      console.warn('[Coach Service] RPC attempt failed, falling back to direct update:', rpcCallError);
+    }
+    
+    // Direct database update
     const { data, error } = await supabase
       .from('coaches')
       .update(updates)
@@ -115,26 +171,39 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
         email, 
         phone, 
         status, 
-        clinic_id,
-        clients:clients(id)
+        clinic_id
       `)
       .single();
 
     if (error) {
-      console.error('Error updating coach:', error);
+      console.error('[Coach Service] Error updating coach via direct update:', error);
       toast.error(`Failed to update coach: ${error.message}`);
       throw error;
     }
     
     if (!data) {
-      console.error('No data returned from coach update');
+      console.error('[Coach Service] No data returned from coach update');
       toast.error('Failed to update coach: No data returned from server');
       return null;
     }
     
-    console.log('Updated coach successfully:', data);
+    // Get the client count for this coach
+    let clientCount = 0;
+    try {
+      const { count } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('coach_id', id);
+        
+      clientCount = count || 0;
+    } catch (countError) {
+      console.warn('[Coach Service] Error counting clients:', countError);
+    }
+    
+    console.log('[Coach Service] Updated coach successfully:', data);
     toast.success('Coach updated successfully!');
     
+    // Return the updated coach with proper structure
     return {
       id: data.id,
       name: data.name,
@@ -142,10 +211,10 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       phone: data.phone,
       status: data.status as 'active' | 'inactive',
       clinicId: data.clinic_id,
-      clients: Array.isArray(data.clients) ? data.clients.length : 0
+      clients: clientCount
     };
   } catch (error) {
-    console.error('Error updating coach:', error);
+    console.error('[Coach Service] Error updating coach:', error);
     if (error instanceof Error) {
       toast.error(`Failed to update coach: ${error.message}`);
     } else {

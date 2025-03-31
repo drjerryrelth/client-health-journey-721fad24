@@ -1,20 +1,20 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { Coach, CoachService } from '@/services/coaches';
 import { CoachForm, CoachFormValues } from './CoachForm';
 import ErrorDialog from './ErrorDialog';
+import { Coach, CoachService } from '@/services/coaches';
+import { toast } from 'sonner';
 
 interface EditCoachDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   coach: Coach | null;
   clinicName: string;
+  onCoachUpdated?: () => void;
 }
 
-const EditCoachDialog = ({ open, onOpenChange, coach, clinicName }: EditCoachDialogProps) => {
-  const { toast } = useToast();
+const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated }: EditCoachDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -35,6 +35,9 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName }: EditCoachDia
     
     try {
       setIsSubmitting(true);
+      setError(null);
+      
+      console.log('Updating coach with values:', values);
       
       const result = await CoachService.updateCoach(coach.id, {
         name: values.name,
@@ -49,6 +52,12 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName }: EditCoachDia
           title: "Coach Updated",
           description: `${values.name}'s information has been updated.`
         });
+        
+        // Call the onCoachUpdated callback if provided
+        if (onCoachUpdated) {
+          onCoachUpdated();
+        }
+        
         onOpenChange(false);
       } else {
         setError("Failed to update coach information. Please try again.");
