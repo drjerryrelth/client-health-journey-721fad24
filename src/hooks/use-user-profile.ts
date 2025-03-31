@@ -8,7 +8,13 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
   
   try {
     // First, get the user's email from auth
-    const { data: authUserData } = await supabase.auth.getUser();
+    const { data: authUserData, error: authError } = await supabase.auth.getUser();
+    
+    if (authError) {
+      console.error('Error getting auth user:', authError);
+      return null;
+    }
+    
     const email = authUserData?.user?.email;
     
     if (!email) {
@@ -34,7 +40,7 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
         .single();
       
       if (clinicError) {
-        console.log('Not a clinic user, checking demo accounts');
+        console.log('Not a clinic user, checking demo accounts:', clinicError.message);
       } else if (clinicData) {
         console.log('User is associated with clinic:', clinicData);
         

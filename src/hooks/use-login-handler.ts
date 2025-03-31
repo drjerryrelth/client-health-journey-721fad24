@@ -22,9 +22,13 @@ export const useLoginHandler = () => {
       });
       
       // Navigation will be handled by the auth state listener
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      // Toast notification is handled in the auth context
+      toast({
+        title: 'Login failed',
+        description: error.message || 'An error occurred during login',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }

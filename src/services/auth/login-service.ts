@@ -99,13 +99,16 @@ const ensureClinicProfileExists = async (userId: string, email: string) => {
     // Check if this email is associated with a clinic
     const { data: clinicData, error: clinicError } = await supabase
       .from('clinics')
-      .select('id, name')
+      .select('id, name, email')
       .eq('email', email)
       .single();
     
     if (clinicError) {
+      console.log('Not a clinic user:', clinicError.message);
       return false; // Not a clinic user
     }
+    
+    console.log('Found clinic for email:', email, clinicData);
     
     // Create or update the profile
     const { error: profileError } = await supabase
@@ -123,6 +126,7 @@ const ensureClinicProfileExists = async (userId: string, email: string) => {
       return false;
     }
     
+    console.log('Successfully created profile for clinic user');
     return true;
   } catch (error) {
     console.error('Error ensuring clinic profile exists:', error);
@@ -139,8 +143,16 @@ export async function loginWithEmail(email: string, password: string) {
   }
   
   try {
+    // Attempt login
     const result = await performLoginRequest(email, password);
     
+    // Check for error in the result
+    if (result.error) {
+      console.error('Login failed:', result.error.message);
+      throw result.error;
+    }
+    
+    // Check if we have a user in the response
     if (!result.data.user) {
       console.error('No user returned from login');
       throw new Error('No user returned from login');
@@ -151,7 +163,8 @@ export async function loginWithEmail(email: string, password: string) {
       await ensureDemoProfileExists(result.data.user.id, email);
     } else {
       // Check if this might be a clinic user
-      await ensureClinicProfileExists(result.data.user.id, email);
+      const isClinic = await ensureClinicProfileExists(result.data.user.id, email);
+      console.log('Clinic user check result:', isClinic);
     }
     
     console.log('Login successful');
