@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -6,6 +7,8 @@ import { User, Mail, Phone, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Coach, CoachService } from '@/services/coaches';
+import { ClinicService } from '@/services/clinic-service';
+import { Clinic } from '@/services/clinics/types';
 
 interface CoachListProps {
   limit?: number;
@@ -17,7 +20,26 @@ interface CoachListProps {
 
 const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete, refreshTrigger = 0 }) => {
   const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [clinics, setClinics] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch all clinics to get clinic names
+    const fetchClinics = async () => {
+      try {
+        const allClinics = await ClinicService.getClinics();
+        const clinicMap: Record<string, string> = {};
+        allClinics.forEach((clinic: Clinic) => {
+          clinicMap[clinic.id] = clinic.name;
+        });
+        setClinics(clinicMap);
+      } catch (error) {
+        console.error('Error fetching clinics:', error);
+      }
+    };
+
+    fetchClinics();
+  }, []);
 
   useEffect(() => {
     const loadCoaches = async () => {
@@ -55,6 +77,10 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
     }
   };
 
+  const getClinicName = (clinicId: string) => {
+    return clinics[clinicId] || `Clinic ${clinicId ? clinicId.slice(-4) : ''}`;
+  };
+
   if (isLoading) {
     return <div className="flex justify-center py-4">Loading coaches...</div>;
   }
@@ -67,6 +93,7 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
             <TableHead>Coach</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Phone</TableHead>
+            <TableHead>Clinic</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Clients</TableHead>
             {(onEdit || onDelete) && <TableHead className="w-[80px]">Actions</TableHead>}
@@ -97,6 +124,11 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
                   <div className="flex items-center space-x-1">
                     <Phone size={14} className="text-gray-400" />
                     <span>{coach.phone}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center space-x-1">
+                    <span>{getClinicName(coach.clinicId)}</span>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -136,7 +168,7 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={onEdit || onDelete ? 6 : 5} className="text-center py-4">
+              <TableCell colSpan={onEdit || onDelete ? 7 : 6} className="text-center py-4">
                 No coaches found for this clinic
               </TableCell>
             </TableRow>

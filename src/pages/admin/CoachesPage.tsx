@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CoachService } from '@/services/coaches';
+import { ClinicService } from '@/services/clinic-service';
 import { toast } from 'sonner';
 import ErrorDialog from '@/components/coaches/ErrorDialog';
 
@@ -15,11 +16,27 @@ const CoachesPage = () => {
   const navigate = useNavigate();
   const { toast: uiToast } = useToast();
   const [coaches, setCoaches] = useState([]);
+  const [clinics, setClinics] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorDetails, setErrorDetails] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
+
+  const fetchClinics = async () => {
+    try {
+      const allClinics = await ClinicService.getClinics();
+      // Create a map of clinic IDs to clinic names for easy lookup
+      const clinicMap = {};
+      allClinics.forEach(clinic => {
+        clinicMap[clinic.id] = clinic.name;
+      });
+      setClinics(clinicMap);
+      console.log('[CoachesPage] Clinic map created:', clinicMap);
+    } catch (err) {
+      console.error('[CoachesPage] Error fetching clinics:', err);
+    }
+  };
 
   const fetchCoaches = async () => {
     try {
@@ -69,7 +86,8 @@ const CoachesPage = () => {
 
   useEffect(() => {
     console.log('[CoachesPage] Component mounted, fetching coaches');
-    fetchCoaches();
+    fetchClinics(); // First fetch clinics
+    fetchCoaches(); // Then fetch coaches
   }, []);
 
   const handleBackToClinics = () => {
@@ -79,11 +97,16 @@ const CoachesPage = () => {
   const handleRefresh = () => {
     setRetryCount(prev => prev + 1);
     toast.info("Refreshing coaches data...");
+    fetchClinics(); // Refresh clinics data too
     fetchCoaches();
   };
 
   const handleShowError = () => {
     setErrorDialogOpen(true);
+  };
+
+  const getClinicName = (clinicId) => {
+    return clinics[clinicId] || `Unknown Clinic (${clinicId ? clinicId.slice(-4) : 'None'})`;
   };
 
   return (
@@ -183,7 +206,7 @@ const CoachesPage = () => {
                             <div className="bg-primary-100 h-6 w-6 rounded-full flex items-center justify-center">
                               <Building className="h-3 w-3 text-primary-700" />
                             </div>
-                            <span>Clinic {coach.clinicId ? coach.clinicId.slice(-4) : 'Unknown'}</span>
+                            <span>{getClinicName(coach.clinicId)}</span>
                           </div>
                         </TableCell>
                         <TableCell>{coach.clients}</TableCell>
