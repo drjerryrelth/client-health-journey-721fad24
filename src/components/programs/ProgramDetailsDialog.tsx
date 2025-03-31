@@ -93,7 +93,7 @@ const ProgramDetailsDialog = ({ program, isOpen, onClose }: ProgramDetailsDialog
             <>
               <Separator />
               <div>
-                <h3 className="font-semibold mb-2">Practice Naturals Categories</h3>
+                <h3 className="font-semibold mb-2">Practice Naturals™ Categories</h3>
                 <div className="space-y-2">
                   <div className="bg-gray-50 p-3 rounded-md">
                     <h4 className="font-medium">Category A</h4>
@@ -116,7 +116,7 @@ const ProgramDetailsDialog = ({ program, isOpen, onClose }: ProgramDetailsDialog
             <>
               <Separator />
               <div>
-                <h3 className="font-semibold mb-2">ChiroThin Meal Plan</h3>
+                <h3 className="font-semibold mb-2">ChiroThin™ Meal Plan</h3>
                 <div className="space-y-2">
                   <div className="bg-gray-50 p-3 rounded-md">
                     <h4 className="font-medium">Lunch & Dinner Only</h4>

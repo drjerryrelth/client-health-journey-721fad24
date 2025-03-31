@@ -20,7 +20,7 @@ const PracticeNaturalsGuideline: React.FC<PracticeNaturalsGuidelineProps> = ({
   return (
     <Card className="mb-4 border-blue-300 bg-blue-50">
       <CardHeader className="py-3 pb-1">
-        <CardTitle className="text-sm text-blue-800">{displayTitle}</CardTitle>
+        <CardTitle className="text-sm text-blue-800">Practice Naturals™ {displayTitle}</CardTitle>
       </CardHeader>
       <CardContent className="py-2 text-sm text-blue-700">
         <ul className="list-disc pl-5 space-y-1">

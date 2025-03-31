@@ -9,7 +9,7 @@ const ChiroThinGuidelines: React.FC = () => {
       <FoodPrepReminder />
       <Card className="mb-4 border-blue-300 bg-blue-50">
         <CardHeader className="py-3 pb-1">
-          <CardTitle className="text-sm text-blue-800">ChiroThin Guidelines</CardTitle>
+          <CardTitle className="text-sm text-blue-800">ChiroThin™ Guidelines</CardTitle>
         </CardHeader>
         <CardContent className="py-2 text-sm text-blue-700">
           <ul className="list-disc pl-5 space-y-1">

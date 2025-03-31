@@ -11,7 +11,7 @@ const ChiroThinBreakfastWarning: React.FC = () => {
           <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
           <div>
             <p className="font-medium text-red-800">
-              No breakfast allowed on the ChiroThin program
+              No breakfast allowed on the ChiroThin™ program
             </p>
             <p className="text-sm text-red-600">
               Your program does not include breakfast. Please leave this empty.

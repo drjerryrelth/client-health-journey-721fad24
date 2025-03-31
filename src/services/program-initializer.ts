@@ -23,7 +23,7 @@ export const ProgramInitializer = {
       // Create Practice Naturals program with supplements
       await ProgramService.createProgram(
         {
-          name: 'Practice Naturals',
+          name: 'Practice Naturals™',
           description: 'A comprehensive program focusing on natural nutrition and wellness.',
           duration: 84, // 12 weeks
           type: 'practice_naturals',
@@ -58,7 +58,7 @@ export const ProgramInitializer = {
       // Create ChiroThin program
       await ProgramService.createProgram(
         {
-          name: 'ChiroThin',
+          name: 'ChiroThin™',
           description: 'A doctor-supervised weight loss program.',
           duration: 42, // 6 weeks
           type: 'chirothin',
@@ -67,8 +67,8 @@ export const ProgramInitializer = {
         },
         [
           {
-            name: 'ChiroThin Drops',
-            description: 'Proprietary formula to support the ChiroThin program.',
+            name: 'ChiroThin™ Drops',
+            description: 'Proprietary formula to support the ChiroThin™ program.',
             dosage: '15 drops',
             frequency: '3x daily',
             timeOfDay: 'before meals'

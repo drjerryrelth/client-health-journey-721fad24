@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Program } from '@/types';
@@ -68,7 +67,7 @@ const ProgramGuidelines: React.FC<ProgramGuidelinesProps> = ({ programType, cate
 const PracticeNaturalsGuidelines: React.FC<{ category?: string | null }> = ({ category }) => {
   return (
     <div>
-      <h3 className="font-medium mb-3">Practice Naturals - Category {category || '?'}</h3>
+      <h3 className="font-medium mb-3">Practice Naturals™ - Category {category || '?'}</h3>
       
       {category === 'A' && (
         <div className="space-y-4">
@@ -180,7 +179,7 @@ const PracticeNaturalsGuidelines: React.FC<{ category?: string | null }> = ({ ca
 const ChiroThinGuidelines: React.FC = () => {
   return (
     <div>
-      <h3 className="font-medium mb-3">ChiroThin Program</h3>
+      <h3 className="font-medium mb-3">ChiroThin™ Program</h3>
       
       <div className="space-y-4">
         <div>
@@ -201,7 +200,7 @@ const ChiroThinGuidelines: React.FC = () => {
       <div className="mt-4">
         <h4 className="font-medium">Recommended Supplements</h4>
         <ul className="list-disc pl-5 text-sm mt-1">
-          <li>ChiroThin drops: Take 10 drops under the tongue 3x/day</li>
+          <li>ChiroThin™ drops: Take 10 drops under the tongue 3x/day</li>
         </ul>
       </div>
     </div>
