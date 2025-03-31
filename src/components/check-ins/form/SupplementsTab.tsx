@@ -33,11 +33,14 @@ const SupplementsTab: React.FC<SupplementsTabProps> = ({
         <Label htmlFor="generalNotes">Additional Notes</Label>
         <Textarea
           id="generalNotes"
-          placeholder="Any additional notes about your progress today?"
+          placeholder="Any additional notes about your progress for this day?"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
         />
+        <p className="text-xs text-gray-500 mt-1">
+          You can record check-ins for up to 7 previous days. Make sure the correct date is selected.
+        </p>
       </div>
     </div>
   );

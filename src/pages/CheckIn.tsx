@@ -6,8 +6,8 @@ const CheckIn = () => {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Daily Check-in</h1>
-        <p className="text-gray-500">Track your progress and stay on course with your wellness journey</p>
+        <h1 className="text-2xl font-bold text-gray-900">Check-in</h1>
+        <p className="text-gray-500">Track your progress for today or update previous days</p>
       </div>
       
       <CheckInForm />
