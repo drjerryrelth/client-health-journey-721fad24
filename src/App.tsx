@@ -12,7 +12,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
-import CoachDashboard from "./pages/CoachDashboard"; // Add import for CoachDashboard
+import CoachDashboard from "./pages/CoachDashboard";
 import ClientPortal from "./pages/ClientPortal";
 import CheckIn from "./pages/CheckIn";
 import NotFound from "./pages/NotFound";
@@ -29,6 +29,10 @@ import CoachesPage from "./pages/admin/CoachesPage";
 import ActivitiesPage from "./pages/admin/ActivitiesPage"; 
 import ResourcesPage from "./pages/admin/ResourcesPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
+
+// Coach Pages
+import CoachReportsPage from "./pages/coach/CoachReportsPage";
+import CoachSettingsPage from "./pages/coach/CoachSettingsPage";
 
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
@@ -74,10 +78,9 @@ const App = () => (
             <Route element={<MainLayout requiredRoles={['coach']} />}>
               <Route path="/coach-dashboard" element={<CoachDashboard />} />
               <Route path="/coach/clients" element={<ClientsPage />} />
-              <Route path="/coach/programs" element={<ProgramsPage />} />
               <Route path="/coach/check-ins" element={<CheckInsPage />} />
-              <Route path="/coach/reports" element={<ReportsPage />} />
-              <Route path="/coach/settings" element={<SettingsPage />} />
+              <Route path="/coach/reports" element={<CoachReportsPage />} />
+              <Route path="/coach/settings" element={<CoachSettingsPage />} />
               <Route path="/coach/resources" element={<ResourcesPage />} />
               <Route path="/add-client" element={<ClientsPage />} />
             </Route>

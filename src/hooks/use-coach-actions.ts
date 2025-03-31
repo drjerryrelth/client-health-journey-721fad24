@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ClientService } from '@/services/client-service';
 import { toast } from 'sonner';
 import { Coach } from '@/services/coaches/types';
+import { useNavigate } from 'react-router-dom';
 
 export interface UseCoachActionsProps {
   addClient: () => Promise<void>;
@@ -13,33 +14,26 @@ export interface UseCoachActionsProps {
   handleReassignAndDelete: (coachId: string, replacementCoachId: string) => Promise<void>;
 }
 
-export const useCoachActions = (clinicName?: string, toast?: any): UseCoachActionsProps => {
+export const useCoachActions = (): UseCoachActionsProps => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const addClient = async (): Promise<void> => {
     try {
       setIsLoading(true);
       
       if (!user?.clinicId) {
-        toast ? toast({
-          title: "Error",
-          description: "You must be associated with a clinic to add clients",
-          variant: "destructive"
-        }) : toast?.error("You must be associated with a clinic to add clients");
+        toast.error("You must be associated with a clinic to add clients");
         return;
       }
       
-      // Redirect to the add client page
-      window.location.href = '/coach/clients?action=add';
+      // Navigate to the add client page
+      navigate('/coach/clients?action=add');
     } catch (error) {
       console.error("Error navigating to add client:", error);
-      toast ? toast({
-        title: "Error",
-        description: "Failed to navigate to add client page",
-        variant: "destructive"
-      }) : toast?.error("Failed to navigate to add client page");
+      toast.error("Failed to navigate to add client page");
     } finally {
       setIsLoading(false);
     }

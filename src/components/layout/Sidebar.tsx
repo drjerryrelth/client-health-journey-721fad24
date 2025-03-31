@@ -46,11 +46,10 @@ const Sidebar = () => {
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
 
-  // Updated coach links with proper paths
+  // Updated coach links without Programs
   const coachLinks = [
     { name: 'Dashboard', path: '/coach-dashboard', icon: <Home size={20} /> },
     { name: 'Clients', path: '/coach/clients', icon: <Users size={20} /> },
-    { name: 'Programs', path: '/coach/programs', icon: <List size={20} /> },
     { name: 'Check-ins', path: '/coach/check-ins', icon: <Calendar size={20} /> },
     { name: 'Reports', path: '/coach/reports', icon: <FileText size={20} /> },
     { name: 'Resources', path: '/coach/resources', icon: <BookOpen size={20} /> },
@@ -75,7 +74,7 @@ const Sidebar = () => {
         description: "Create a new clinic for your organization",
       });
     } else if (isCoach) {
-      navigate('/coach/clients');
+      navigate('/coach/clients?action=add');
       toast({
         title: "Add Client",
         description: "Add a new client to your roster",

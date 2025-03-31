@@ -6,12 +6,14 @@ import { Separator } from '@/components/ui/separator';
 import { useCoachDashboardStats, useCoachRecentActivities } from '@/hooks/use-coach-dashboard-stats';
 import { useCoachActions } from '@/hooks/use-coach-actions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useNavigate } from 'react-router-dom';
 
 const CoachDashboard = () => {
   const { user } = useAuth();
   const { data: stats, isLoading: statsLoading } = useCoachDashboardStats();
   const { data: activities, isLoading: activitiesLoading } = useCoachRecentActivities(5);
   const { addClient, isLoading: actionLoading } = useCoachActions();
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-6">
@@ -128,19 +130,13 @@ const CoachDashboard = () => {
                 Add Client
               </button>
               <button
-                onClick={() => window.location.href = '/coach/check-ins'}
+                onClick={() => navigate('/coach/check-ins')}
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow hover:bg-secondary/90 disabled:pointer-events-none disabled:opacity-50"
               >
                 View Check-ins
               </button>
               <button
-                onClick={() => window.location.href = '/coach/programs'}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow hover:bg-secondary/90 disabled:pointer-events-none disabled:opacity-50"
-              >
-                Manage Programs
-              </button>
-              <button
-                onClick={() => window.location.href = '/coach/resources'}
+                onClick={() => navigate('/coach/resources')}
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow hover:bg-secondary/90 disabled:pointer-events-none disabled:opacity-50"
               >
                 Resources
