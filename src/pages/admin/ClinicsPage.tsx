@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import ClinicService, { Clinic } from '@/services/clinic-service';
 import ClinicsOverview from '@/components/clinics/ClinicsOverview';
 import ClinicDetail from '@/components/clinics/ClinicDetail';
 import { useCoachActions } from '@/hooks/use-coach-actions';
+import { useLocation } from 'react-router-dom';
 
 const ClinicsPage = () => {
   const { toast } = useToast();
@@ -14,12 +16,19 @@ const ClinicsPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [showAddClinicDialog, setShowAddClinicDialog] = useState(false);
+  const location = useLocation();
   
   const { handleDeleteCoach, handleReassignAndDelete } = useCoachActions();
 
   useEffect(() => {
     fetchClinics();
-  }, []);
+    
+    // Check for action=add in the URL query parameters
+    const queryParams = new URLSearchParams(location.search);
+    if (queryParams.get('action') === 'add') {
+      setShowAddClinicDialog(true);
+    }
+  }, [location.search]);
 
   const fetchClinics = async () => {
     setLoading(true);

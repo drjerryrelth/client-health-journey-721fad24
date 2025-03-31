@@ -1,7 +1,24 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Coach } from './types';
-import { toast } from 'sonner';
+
+/**
+ * Associates the demo coach user with a clinic for testing purposes
+ */
+export const assignDemoCoachToClinic = async (coachId: string, clinicId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('coaches')
+      .update({ clinic_id: clinicId })
+      .eq('id', coachId)
+      .select();
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error assigning demo coach to clinic:', error);
+    throw error;
+  }
+};
 
 // Special service function to get total coach count for admin dashboard
 export async function getCoachCount(): Promise<number> {

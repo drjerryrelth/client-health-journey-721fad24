@@ -11,13 +11,13 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const Sidebar = () => {
   const { user, hasRole } = useAuth();
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = React.useState(isMobile);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   // Update collapsed state when screen size changes
   React.useEffect(() => {
@@ -68,17 +68,14 @@ const Sidebar = () => {
 
   const handleAddClick = () => {
     if (isAdmin) {
-      navigate('/clinics');
-      toast({
-        title: "Add Clinic",
-        description: "Create a new clinic for your organization",
-      });
+      // Change: For admin, navigate to clinics but also open the add clinic dialog
+      navigate('/clinics?action=add');
+      // Add notification for better UX
+      toast.info("Opening Add Clinic dialog");
     } else if (isCoach) {
+      // For coach, navigate to client page with action=add query param
       navigate('/coach/clients?action=add');
-      toast({
-        title: "Add Client",
-        description: "Add a new client to your roster",
-      });
+      toast.info("Opening Add Client dialog");
     }
   };
 

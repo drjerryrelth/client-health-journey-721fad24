@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,8 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 const CoachSettingsPage = () => {
   const { toast } = useToast();
@@ -40,20 +40,58 @@ const CoachSettingsPage = () => {
       
       setLoading(true);
       try {
-        // Fetch coach profile from the coaches table
-        const { data, error } = await supabase
+        console.log('Fetching coach profile for user ID:', user.id);
+        
+        // First attempt to get the coach record
+        const { data: coachData, error: coachError } = await supabase
           .from('coaches')
           .select('name, email, phone')
           .eq('id', user.id)
           .single();
           
-        if (error) throw error;
-        
-        setProfileForm({
-          name: data.name || '',
-          email: data.email || '',
-          phone: data.phone || ''
-        });
+        if (coachError) {
+          console.log('Error fetching coach record:', coachError);
+          console.log('Attempting to fetch from auth profile as fallback');
+          
+          // Fallback to profiles table
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', user.id)
+            .single();
+            
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+            throw new Error('Could not retrieve user profile information');
+          }
+          
+          // Use profile data as fallback
+          setProfileForm({
+            name: profileData?.full_name || '',
+            email: profileData?.email || '',
+            phone: ''
+          });
+          
+          // Create a coach record if it doesn't exist yet
+          console.log('Creating coach record for user:', user.id);
+          await supabase
+            .from('coaches')
+            .upsert({
+              id: user.id,
+              name: profileData?.full_name || '',
+              email: profileData?.email || '',
+              phone: '',
+              status: 'active',
+              clinic_id: null // This will be updated later when assigned to a clinic
+            });
+            
+        } else {
+          setProfileForm({
+            name: coachData.name || '',
+            email: coachData.email || '',
+            phone: coachData.phone || ''
+          });
+        }
       } catch (error) {
         console.error('Error fetching coach profile:', error);
         toast({

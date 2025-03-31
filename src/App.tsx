@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/auth";
+import { useEffect } from "react";
+import { initializeDemoRelationships } from "./services/demo-data-initializer";
 
 // Pages
 import Index from "./pages/Index";
@@ -46,60 +48,72 @@ const queryClient = new QueryClient({
   },
 });
 
+const AppContent = () => {
+  // Initialize demo relationships on app start
+  useEffect(() => {
+    initializeDemoRelationships()
+      .catch(err => console.error('Error initializing demo data:', err));
+  }, []);
+  
+  return (
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        
+        {/* Admin routes */}
+        <Route element={<MainLayout requiredRoles={['admin', 'super_admin']} />}>
+          <Route path="/dashboard" element={<AdminDashboard />} />
+          <Route path="/clients" element={<ClientsPage />} />
+          <Route path="/clinics" element={<ClinicsPage />} />
+          <Route path="/coaches" element={<CoachesPage />} />
+          <Route path="/programs" element={<ProgramsPage />} />
+          <Route path="/check-ins" element={<CheckInsPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/activities" element={<ActivitiesPage />} />
+          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/admin-users" element={<AdminUsersPage />} />
+        </Route>
+        
+        {/* Coach routes - clearly separated from admin routes */}
+        <Route element={<MainLayout requiredRoles={['coach']} />}>
+          <Route path="/coach-dashboard" element={<CoachDashboard />} />
+          <Route path="/coach/clients" element={<ClientsPage />} />
+          <Route path="/coach/check-ins" element={<CheckInsPage />} />
+          <Route path="/coach/reports" element={<CoachReportsPage />} />
+          <Route path="/coach/settings" element={<CoachSettingsPage />} />
+          <Route path="/coach/resources" element={<ResourcesPage />} />
+          <Route path="/add-client" element={<ClientsPage />} />
+        </Route>
+        
+        {/* Client routes - completely separate from admin and coach routes */}
+        <Route element={<MainLayout requiredRoles={['client']} />}>
+          <Route path="/client-dashboard" element={<ClientDashboard />} />
+          <Route path="/client-portal" element={<ClientPortal />} />
+          <Route path="/check-in" element={<CheckIn />} />
+          <Route path="/progress" element={<ClientDashboard />} />
+          <Route path="/my-program" element={<ClientDashboard />} />
+          <Route path="/profile" element={<ClientDashboard />} />
+          <Route path="/client/resources" element={<ResourcesPage />} />
+        </Route>
+        
+        {/* Catch-all route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </TooltipProvider>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
-            
-            {/* Admin routes */}
-            <Route element={<MainLayout requiredRoles={['admin', 'super_admin']} />}>
-              <Route path="/dashboard" element={<AdminDashboard />} />
-              <Route path="/clients" element={<ClientsPage />} />
-              <Route path="/clinics" element={<ClinicsPage />} />
-              <Route path="/coaches" element={<CoachesPage />} />
-              <Route path="/programs" element={<ProgramsPage />} />
-              <Route path="/check-ins" element={<CheckInsPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/activities" element={<ActivitiesPage />} />
-              <Route path="/resources" element={<ResourcesPage />} />
-              <Route path="/admin-users" element={<AdminUsersPage />} />
-            </Route>
-            
-            {/* Coach routes - clearly separated from admin routes */}
-            <Route element={<MainLayout requiredRoles={['coach']} />}>
-              <Route path="/coach-dashboard" element={<CoachDashboard />} />
-              <Route path="/coach/clients" element={<ClientsPage />} />
-              <Route path="/coach/check-ins" element={<CheckInsPage />} />
-              <Route path="/coach/reports" element={<CoachReportsPage />} />
-              <Route path="/coach/settings" element={<CoachSettingsPage />} />
-              <Route path="/coach/resources" element={<ResourcesPage />} />
-              <Route path="/add-client" element={<ClientsPage />} />
-            </Route>
-            
-            {/* Client routes - completely separate from admin and coach routes */}
-            <Route element={<MainLayout requiredRoles={['client']} />}>
-              <Route path="/client-dashboard" element={<ClientDashboard />} />
-              <Route path="/client-portal" element={<ClientPortal />} />
-              <Route path="/check-in" element={<CheckIn />} />
-              <Route path="/progress" element={<ClientDashboard />} />
-              <Route path="/my-program" element={<ClientDashboard />} />
-              <Route path="/profile" element={<ClientDashboard />} />
-              <Route path="/client/resources" element={<ResourcesPage />} />
-            </Route>
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
+        <AppContent />
       </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>

@@ -7,6 +7,7 @@ import { useCoachDashboardStats, useCoachRecentActivities } from '@/hooks/use-co
 import { useCoachActions } from '@/hooks/use-coach-actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 const CoachDashboard = () => {
   const { user } = useAuth();
@@ -14,6 +15,19 @@ const CoachDashboard = () => {
   const { data: activities, isLoading: activitiesLoading } = useCoachRecentActivities(5);
   const { addClient, isLoading: actionLoading } = useCoachActions();
   const navigate = useNavigate();
+
+  // Define clickable card paths
+  const cardActions = [
+    { name: 'activeClients', path: '/coach/clients' },
+    { name: 'pendingCheckIns', path: '/coach/check-ins' },
+    { name: 'activePrograms', path: '/coach/reports' },
+    { name: 'completedPrograms', path: '/coach/reports' }
+  ];
+
+  // Handle card click
+  const handleCardClick = (path: string) => {
+    navigate(path);
+  };
 
   return (
     <div className="space-y-6">
@@ -25,7 +39,10 @@ const CoachDashboard = () => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => handleCardClick('/coach/clients')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
           </CardHeader>
@@ -38,7 +55,10 @@ const CoachDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => handleCardClick('/coach/check-ins')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Check-ins</CardTitle>
           </CardHeader>
@@ -51,7 +71,10 @@ const CoachDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => handleCardClick('/coach/reports')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Programs</CardTitle>
           </CardHeader>
@@ -64,7 +87,10 @@ const CoachDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => handleCardClick('/coach/reports')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completed Programs</CardTitle>
           </CardHeader>
@@ -123,7 +149,7 @@ const CoachDashboard = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => addClient()}
+                onClick={() => navigate('/coach/clients?action=add')}
                 disabled={actionLoading}
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
               >
