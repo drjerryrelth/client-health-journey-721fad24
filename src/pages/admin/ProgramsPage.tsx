@@ -50,10 +50,7 @@ const ProgramsPage = () => {
   useEffect(() => {
     if (isError) {
       console.error("Error fetching programs:", error);
-      toast({
-        description: "Failed to load programs. Please try again.",
-        variant: "destructive"
-      });
+      toast("Failed to load programs. Please try again.");
     }
   }, [isError, error]);
 

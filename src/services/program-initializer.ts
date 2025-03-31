@@ -93,10 +93,7 @@ export const ProgramInitializer = {
 
     } catch (error) {
       console.error('Failed to initialize default programs:', error);
-      toast({
-        description: "Failed to create default programs. Please try again.",
-        variant: "destructive"
-      });
+      toast("Failed to create default programs. Please try again.");
     }
   }
 };
