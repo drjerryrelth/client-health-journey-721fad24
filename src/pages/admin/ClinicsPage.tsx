@@ -31,8 +31,30 @@ const ClinicsPage = () => {
   const fetchClinics = async () => {
     setLoading(true);
     try {
+      // Get all clinics
       const fetchedClinics = await ClinicService.getClinics();
-      setClinics(fetchedClinics);
+      
+      // For each clinic, get the coaches count
+      const clinicsWithCounts = await Promise.all(
+        fetchedClinics.map(async (clinic) => {
+          try {
+            // Fetch coaches for this clinic
+            const clinicCoaches = await CoachService.getClinicCoaches(clinic.id);
+            return {
+              ...clinic,
+              coachesCount: clinicCoaches.length
+            };
+          } catch (error) {
+            console.error(`Error fetching coaches for clinic ${clinic.id}:`, error);
+            return {
+              ...clinic,
+              coachesCount: 0
+            };
+          }
+        })
+      );
+      
+      setClinics(clinicsWithCounts);
     } catch (error) {
       console.error("Error fetching clinics:", error);
       toast({
@@ -100,8 +122,8 @@ const ClinicsPage = () => {
     city: clinic.city,
     state: clinic.state,
     status: clinic.status,
-    coaches: 0,
-    clients: 0,
+    coaches: (clinic as any).coachesCount || 0, // Use the coach count we fetch
+    clients: 0, // We'll keep clients at 0 for now
   }));
 
   if (loading) {
