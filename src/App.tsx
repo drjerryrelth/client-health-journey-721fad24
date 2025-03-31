@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
+import CoachDashboard from "./pages/CoachDashboard"; // Add import for CoachDashboard
 import ClientPortal from "./pages/ClientPortal";
 import CheckIn from "./pages/CheckIn";
 import NotFound from "./pages/NotFound";
@@ -71,7 +72,7 @@ const App = () => (
             
             {/* Coach routes */}
             <Route element={<MainLayout requiredRoles={['coach']} />}>
-              <Route path="/coach-dashboard" element={<Dashboard />} />
+              <Route path="/coach-dashboard" element={<CoachDashboard />} />
               <Route path="/coach/clients" element={<ClientsPage />} />
               <Route path="/coach/programs" element={<ProgramsPage />} />
               <Route path="/coach/check-ins" element={<CheckInsPage />} />

@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import AdminDashboard from './AdminDashboard';
+import CoachDashboard from './CoachDashboard'; // Add import for CoachDashboard
 import ClientDashboard from './ClientDashboard';
 import Unauthorized from './Unauthorized';
 import MainLayout from '@/components/layout/MainLayout';
@@ -20,7 +21,7 @@ import ProgramInitializer from '@/services/program-initializer';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, hasRole } = useAuth();
 
   useEffect(() => {
     // Initialize default programs if user is admin or super_admin
@@ -42,9 +43,11 @@ const Dashboard = () => {
     return <Navigate to="/login" />;
   }
 
+  console.log('Dashboard component - user role:', user.role);
+
   return (
     <Routes>
-      {user.role === 'admin' || user.role === 'super_admin' ? (
+      {hasRole('admin') || hasRole('super_admin') ? (
         <Route element={<MainLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="clients" element={<ClientsPage />} />
@@ -58,7 +61,15 @@ const Dashboard = () => {
           <Route path="activities" element={<ActivitiesPage />} />
           <Route path="admin-users" element={<AdminUsersPage />} />
         </Route>
-      ) : user.role === 'client' ? (
+      ) : hasRole('coach') ? (
+        <Route element={<MainLayout />}>
+          <Route index element={<CoachDashboard />} />
+          <Route path="clients" element={<ClientsPage />} />
+          <Route path="programs" element={<ProgramsPage />} />
+          <Route path="check-ins" element={<CheckInsPage />} />
+          <Route path="resources" element={<ResourcesPage />} />
+        </Route>
+      ) : hasRole('client') ? (
         <Route element={<MainLayout />}>
           <Route index element={<ClientDashboard />} />
         </Route>
