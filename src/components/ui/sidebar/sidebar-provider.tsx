@@ -1,8 +1,9 @@
+
 import * as React from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { SidebarContext } from "./sidebar-types";
+import type { SidebarContext as SidebarContextType } from "./sidebar-types";
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -80,7 +81,7 @@ const SidebarProvider = React.forwardRef<
     // This makes it easier to style the sidebar with Tailwind classes.
     const state = open ? "expanded" : "collapsed";
 
-    const contextValue = React.useMemo<SidebarContext>(
+    const contextValue = React.useMemo<SidebarContextType>(
       () => ({
         state,
         open,
@@ -120,11 +121,11 @@ const SidebarProvider = React.forwardRef<
 );
 SidebarProvider.displayName = "SidebarProvider";
 
-// Create sidebar context provider
-const SidebarContext = React.createContext<SidebarContext | null>(null);
+// Create sidebar context
+const SidebarContext = React.createContext<SidebarContextType | null>(null);
 
 const SidebarContextProvider: React.FC<{
-  value: SidebarContext;
+  value: SidebarContextType;
   children: React.ReactNode;
 }> = ({ value, children }) => {
   return (

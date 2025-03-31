@@ -1,6 +1,7 @@
 
 import * as React from "react";
 import { PanelLeft } from "lucide-react";
+import { Slot } from "@radix-ui/react-slot";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
