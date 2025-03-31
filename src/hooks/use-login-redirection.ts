@@ -1,0 +1,56 @@
+
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/auth';
+import { toast } from 'sonner';
+
+export const useLoginRedirection = () => {
+  const { isAuthenticated, hasRole, isLoading, user } = useAuth();
+  const [redirectDestination, setRedirectDestination] = useState<string | null>(null);
+  const navigate = useNavigate();
+  
+  // Effect for navigation when auth status changes
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && user) {
+      console.log('User authenticated, redirecting...', user.role);
+      
+      // Add toast notification for clarity
+      toast.success(`Logged in as ${user.role}`);
+      
+      // Determine redirect destination based on role
+      let destination: string;
+      
+      if (hasRole(['admin', 'super_admin'])) {
+        destination = '/dashboard';
+      } else if (hasRole('coach')) {
+        destination = '/coach-dashboard';
+      } else if (hasRole('client')) {
+        destination = '/client-dashboard';
+      } else {
+        toast.error(`Unknown role: ${user.role}`);
+        return;
+      }
+      
+      setRedirectDestination(destination);
+      navigate(destination);
+    }
+  }, [isAuthenticated, isLoading, hasRole, navigate, user]);
+  
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.log('Authentication check timeout - resetting loading state');
+        window.location.reload(); // Force reload if stuck in loading state
+      }
+    }, 5000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [isLoading]);
+
+  return {
+    isLoading,
+    isAuthenticated,
+    redirectDestination
+  };
+};
