@@ -54,7 +54,7 @@ const ProgramTable = ({ programs, isLoading, isError, onSelectProgram }: Program
     );
   }
 
-  if (programs.length === 0) {
+  if (!programs || programs.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
         No programs found. Click "Add Program" to create one.

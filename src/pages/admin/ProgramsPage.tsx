@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -35,7 +35,7 @@ const ProgramsPage = () => {
   };
 
   // Display error toast if there's an error fetching programs
-  React.useEffect(() => {
+  useEffect(() => {
     if (isError && error) {
       console.error("Error fetching programs:", error);
       toast.error("Failed to load programs. Please try again.");
@@ -43,10 +43,8 @@ const ProgramsPage = () => {
   }, [isError, error]);
 
   // Add debugging logging to help identify issues
-  React.useEffect(() => {
-    if (programs) {
-      console.log("Programs loaded successfully:", programs);
-    }
+  useEffect(() => {
+    console.log("Programs data in component:", programs);
   }, [programs]);
 
   return (
