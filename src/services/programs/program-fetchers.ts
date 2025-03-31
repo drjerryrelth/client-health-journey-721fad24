@@ -11,6 +11,11 @@ export async function getClinicPrograms(clinicId: string): Promise<Program[]> {
   try {
     console.log("ProgramService: Fetching programs for clinic ID:", clinicId);
     
+    if (!clinicId) {
+      console.error("Missing clinic ID in getClinicPrograms");
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from('programs')
       .select('*')

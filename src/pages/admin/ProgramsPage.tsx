@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const ProgramsPage = () => {
   const { user } = useAuth();
+  console.log("Current user in ProgramsPage:", user);
   
   // Use user's clinicId if available, otherwise fetch all programs
   const { 
@@ -38,8 +39,11 @@ const ProgramsPage = () => {
 
   // Refetch programs when user or clinicId changes
   useEffect(() => {
-    console.log("User in ProgramsPage:", user);
-    refetch();
+    console.log("User change detected in ProgramsPage:", user);
+    if (user) {
+      console.log("Refetching programs with clinicId:", user.clinicId);
+      refetch();
+    }
   }, [user, refetch]);
 
   const handleViewProgramDetails = (program: Program) => {
@@ -59,13 +63,13 @@ const ProgramsPage = () => {
   // Add detailed debugging logging
   useEffect(() => {
     console.log("Programs data in ProgramsPage:", programs);
-    if (programs) {
+    if (programs && programs.length > 0) {
       console.log(`Found ${programs.length} programs`);
       programs.forEach((program, index) => {
         console.log(`Program ${index + 1}:`, program.name, "Client count:", program.clientCount || 0);
       });
     } else {
-      console.log("No programs data available in ProgramsPage");
+      console.log("No programs data available in ProgramsPage or empty array");
     }
   }, [programs]);
 

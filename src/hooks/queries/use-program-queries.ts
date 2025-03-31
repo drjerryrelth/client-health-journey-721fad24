@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { ProgramService } from '@/services/programs';
@@ -22,12 +21,8 @@ export const useProgramsQuery = (clinicId?: string) => {
           console.log(`Fetched ${programs?.length || 0} programs (all):`, programs);
         }
         
-        if (!programs || programs.length === 0) {
-          console.log("No programs found in database");
-          return [];
-        }
-        
-        return programs;
+        // Ensure we always return an array, even if empty
+        return Array.isArray(programs) ? programs : [];
       } catch (error) {
         console.error("Error in queryFn when fetching programs:", error);
         throw error;

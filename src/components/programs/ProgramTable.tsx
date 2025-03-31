@@ -38,6 +38,8 @@ const ProgramTable = ({ programs, isLoading, isError, onSelectProgram }: Program
     return `${days} days`;
   };
 
+  console.log("ProgramTable rendering with programs:", programs);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -61,8 +63,6 @@ const ProgramTable = ({ programs, isLoading, isError, onSelectProgram }: Program
       </div>
     );
   }
-
-  console.log("ProgramTable rendering with programs:", programs);
 
   return (
     <div className="overflow-x-auto">
