@@ -538,6 +538,12 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_add_clinic: {
+        Args: {
+          clinic_data: Json
+        }
+        Returns: Json
+      }
       admin_get_all_coaches: {
         Args: Record<PropertyKey, never>
         Returns: Json[]
