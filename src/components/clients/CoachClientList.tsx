@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -82,14 +81,13 @@ const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
             else lastCheckInDisplay = lastCheckIn.toLocaleDateString();
           }
           
-          // Safely get program name - fix for TypeScript error
+          // Safely get program name - fixed TypeScript null check
           let programName = 'No Program';
-          // Check if programs exists, is an object (not null), and has a name property
-          if (client.programs && 
-              typeof client.programs === 'object' && 
-              client.programs !== null && 
-              'name' in client.programs) {
-            programName = client.programs.name || 'No Program';
+          
+          // Using type assertion with optional chaining to avoid null errors
+          const programsObject = client.programs as { name?: string } | null;
+          if (programsObject && 'name' in programsObject) {
+            programName = programsObject.name || 'No Program';
           }
           
           return {
