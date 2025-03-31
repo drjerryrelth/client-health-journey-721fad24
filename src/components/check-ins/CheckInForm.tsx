@@ -12,8 +12,15 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Weight, Activity, Droplets, Apple, Camera, PlusCircle } from 'lucide-react';
+import { Weight, Activity, Droplets, Apple, Clock, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue, 
+} from "@/components/ui/select";
 
 const CheckInForm = () => {
   const { toast } = useToast();
@@ -25,26 +32,34 @@ const CheckInForm = () => {
   const [energyLevel, setEnergyLevel] = useState([5]);
   const [moodLevel, setMoodLevel] = useState([5]);
   const [waterIntake, setWaterIntake] = useState("64");
-  const [steps, setSteps] = useState("");
+  const [exercise, setExercise] = useState("");
+  const [exerciseTime, setExerciseTime] = useState("");
+  const [exerciseType, setExerciseType] = useState("steps");
   
-  // Nutrition state
+  // Nutrition state with portions for each item
   const [breakfastProtein, setBreakfastProtein] = useState("");
+  const [breakfastProteinPortion, setBreakfastProteinPortion] = useState("");
   const [breakfastFruit, setBreakfastFruit] = useState("");
+  const [breakfastFruitPortion, setBreakfastFruitPortion] = useState("");
   const [breakfastVegetable, setBreakfastVegetable] = useState("");
-  const [breakfastPortions, setBreakfastPortions] = useState("");
+  const [breakfastVegetablePortion, setBreakfastVegetablePortion] = useState("");
   
   const [lunchProtein, setLunchProtein] = useState("");
+  const [lunchProteinPortion, setLunchProteinPortion] = useState("");
   const [lunchFruit, setLunchFruit] = useState("");
+  const [lunchFruitPortion, setLunchFruitPortion] = useState("");
   const [lunchVegetable, setLunchVegetable] = useState("");
-  const [lunchPortions, setLunchPortions] = useState("");
+  const [lunchVegetablePortion, setLunchVegetablePortion] = useState("");
   
   const [dinnerProtein, setDinnerProtein] = useState("");
+  const [dinnerProteinPortion, setDinnerProteinPortion] = useState("");
   const [dinnerFruit, setDinnerFruit] = useState("");
+  const [dinnerFruitPortion, setDinnerFruitPortion] = useState("");
   const [dinnerVegetable, setDinnerVegetable] = useState("");
-  const [dinnerPortions, setDinnerPortions] = useState("");
+  const [dinnerVegetablePortion, setDinnerVegetablePortion] = useState("");
   
   const [snacks, setSnacks] = useState("");
-  const [snackPortions, setSnackPortions] = useState("");
+  const [snackPortion, setSnackPortion] = useState("");
   
   // Supplements state
   const [supplements, setSupplements] = useState("");
@@ -75,7 +90,7 @@ const CheckInForm = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-            <TabsList className="grid grid-cols-5 mb-8">
+            <TabsList className="grid grid-cols-4 mb-8">
               <TabsTrigger value="measurements" className="flex items-center space-x-2">
                 <Weight size={16} />
                 <span className="hidden sm:inline">Measurements</span>
@@ -89,12 +104,8 @@ const CheckInForm = () => {
                 <span className="hidden sm:inline">Nutrition</span>
               </TabsTrigger>
               <TabsTrigger value="supplements" className="flex items-center space-x-2">
-                <PlusCircle size={16} />
+                <BookOpen size={16} />
                 <span className="hidden sm:inline">Supplements</span>
-              </TabsTrigger>
-              <TabsTrigger value="photos" className="flex items-center space-x-2">
-                <Camera size={16} />
-                <span className="hidden sm:inline">Photos</span>
               </TabsTrigger>
             </TabsList>
             
@@ -113,15 +124,78 @@ const CheckInForm = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="steps">Daily Steps</Label>
+                    <div className="flex justify-between items-center mb-2">
+                      <Label htmlFor="water">Water Intake (oz)</Label>
+                      <div className="flex items-center text-primary-600">
+                        <Droplets size={16} className="mr-1" />
+                        <span className="font-medium">{waterIntake} oz</span>
+                      </div>
+                    </div>
                     <Input
-                      id="steps"
+                      id="water"
                       type="number"
-                      placeholder="Enter your daily steps"
-                      value={steps}
-                      onChange={(e) => setSteps(e.target.value)}
+                      value={waterIntake}
+                      onChange={(e) => setWaterIntake(e.target.value)}
                     />
                   </div>
+                  
+                  <div>
+                    <Label htmlFor="exerciseType">Exercise Type</Label>
+                    <Select
+                      value={exerciseType}
+                      onValueChange={(value) => setExerciseType(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select exercise type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="steps">Steps</SelectItem>
+                        <SelectItem value="walking">Walking</SelectItem>
+                        <SelectItem value="running">Running</SelectItem>
+                        <SelectItem value="cycling">Cycling</SelectItem>
+                        <SelectItem value="swimming">Swimming</SelectItem>
+                        <SelectItem value="hiking">Hiking</SelectItem>
+                        <SelectItem value="yoga">Yoga</SelectItem>
+                        <SelectItem value="strength">Strength Training</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {exerciseType === "steps" ? (
+                    <div>
+                      <Label htmlFor="steps">Daily Steps</Label>
+                      <Input
+                        id="steps"
+                        type="number"
+                        placeholder="Enter your daily steps"
+                        value={exercise}
+                        onChange={(e) => setExercise(e.target.value)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="exercise">Exercise Description</Label>
+                        <Textarea
+                          id="exercise"
+                          placeholder="Describe your exercise"
+                          value={exercise}
+                          onChange={(e) => setExercise(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="exerciseTime">Duration (minutes)</Label>
+                        <Input
+                          id="exerciseTime"
+                          type="number"
+                          placeholder="How long did you exercise?"
+                          value={exerciseTime}
+                          onChange={(e) => setExerciseTime(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
               
@@ -166,22 +240,6 @@ const CheckInForm = () => {
                       <span>Great Mood</span>
                     </div>
                   </div>
-                  
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <Label htmlFor="water">Water Intake (oz)</Label>
-                      <div className="flex items-center text-primary-600">
-                        <Droplets size={16} className="mr-1" />
-                        <span className="font-medium">{waterIntake} oz</span>
-                      </div>
-                    </div>
-                    <Input
-                      id="water"
-                      type="number"
-                      value={waterIntake}
-                      onChange={(e) => setWaterIntake(e.target.value)}
-                    />
-                  </div>
                 </div>
               </TabsContent>
               
@@ -191,44 +249,70 @@ const CheckInForm = () => {
                   <div className="border-b pb-4">
                     <h3 className="font-medium mb-3">Breakfast</h3>
                     <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="breakfastProtein">Protein</Label>
-                        <Input
-                          id="breakfastProtein"
-                          placeholder="E.g., eggs, protein shake"
-                          value={breakfastProtein}
-                          onChange={(e) => setBreakfastProtein(e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="breakfastProtein">Protein</Label>
+                          <Input
+                            id="breakfastProtein"
+                            placeholder="E.g., eggs, protein shake"
+                            value={breakfastProtein}
+                            onChange={(e) => setBreakfastProtein(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="breakfastProteinPortion">Portion (oz)</Label>
+                          <Input
+                            id="breakfastProteinPortion"
+                            type="number"
+                            placeholder="Portion size"
+                            value={breakfastProteinPortion}
+                            onChange={(e) => setBreakfastProteinPortion(e.target.value)}
+                          />
+                        </div>
                       </div>
                       
-                      <div>
-                        <Label htmlFor="breakfastFruit">Fruit</Label>
-                        <Input
-                          id="breakfastFruit"
-                          placeholder="E.g., apple, berries"
-                          value={breakfastFruit}
-                          onChange={(e) => setBreakfastFruit(e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="breakfastFruit">Fruit</Label>
+                          <Input
+                            id="breakfastFruit"
+                            placeholder="E.g., apple, berries"
+                            value={breakfastFruit}
+                            onChange={(e) => setBreakfastFruit(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="breakfastFruitPortion">Portion (oz)</Label>
+                          <Input
+                            id="breakfastFruitPortion"
+                            type="number"
+                            placeholder="Portion size"
+                            value={breakfastFruitPortion}
+                            onChange={(e) => setBreakfastFruitPortion(e.target.value)}
+                          />
+                        </div>
                       </div>
                       
-                      <div>
-                        <Label htmlFor="breakfastVegetable">Vegetable</Label>
-                        <Input
-                          id="breakfastVegetable"
-                          placeholder="E.g., spinach, tomatoes"
-                          value={breakfastVegetable}
-                          onChange={(e) => setBreakfastVegetable(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="breakfastPortions">Portion Size</Label>
-                        <Input
-                          id="breakfastPortions"
-                          placeholder="E.g., 2 eggs, 1 cup berries"
-                          value={breakfastPortions}
-                          onChange={(e) => setBreakfastPortions(e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="breakfastVegetable">Vegetable</Label>
+                          <Input
+                            id="breakfastVegetable"
+                            placeholder="E.g., spinach, tomatoes"
+                            value={breakfastVegetable}
+                            onChange={(e) => setBreakfastVegetable(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="breakfastVegetablePortion">Portion (oz)</Label>
+                          <Input
+                            id="breakfastVegetablePortion"
+                            type="number"
+                            placeholder="Portion size"
+                            value={breakfastVegetablePortion}
+                            onChange={(e) => setBreakfastVegetablePortion(e.target.value)}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -237,44 +321,70 @@ const CheckInForm = () => {
                   <div className="border-b pb-4">
                     <h3 className="font-medium mb-3">Lunch</h3>
                     <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="lunchProtein">Protein</Label>
-                        <Input
-                          id="lunchProtein"
-                          placeholder="E.g., chicken, fish"
-                          value={lunchProtein}
-                          onChange={(e) => setLunchProtein(e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="lunchProtein">Protein</Label>
+                          <Input
+                            id="lunchProtein"
+                            placeholder="E.g., chicken, fish"
+                            value={lunchProtein}
+                            onChange={(e) => setLunchProtein(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="lunchProteinPortion">Portion (oz)</Label>
+                          <Input
+                            id="lunchProteinPortion"
+                            type="number"
+                            placeholder="Portion size"
+                            value={lunchProteinPortion}
+                            onChange={(e) => setLunchProteinPortion(e.target.value)}
+                          />
+                        </div>
                       </div>
                       
-                      <div>
-                        <Label htmlFor="lunchFruit">Fruit</Label>
-                        <Input
-                          id="lunchFruit"
-                          placeholder="E.g., orange, grapes"
-                          value={lunchFruit}
-                          onChange={(e) => setLunchFruit(e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="lunchFruit">Fruit</Label>
+                          <Input
+                            id="lunchFruit"
+                            placeholder="E.g., orange, grapes"
+                            value={lunchFruit}
+                            onChange={(e) => setLunchFruit(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="lunchFruitPortion">Portion (oz)</Label>
+                          <Input
+                            id="lunchFruitPortion"
+                            type="number"
+                            placeholder="Portion size"
+                            value={lunchFruitPortion}
+                            onChange={(e) => setLunchFruitPortion(e.target.value)}
+                          />
+                        </div>
                       </div>
                       
-                      <div>
-                        <Label htmlFor="lunchVegetable">Vegetable</Label>
-                        <Input
-                          id="lunchVegetable"
-                          placeholder="E.g., salad, broccoli"
-                          value={lunchVegetable}
-                          onChange={(e) => setLunchVegetable(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="lunchPortions">Portion Size</Label>
-                        <Input
-                          id="lunchPortions"
-                          placeholder="E.g., 4oz chicken, 1 cup vegetables"
-                          value={lunchPortions}
-                          onChange={(e) => setLunchPortions(e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="lunchVegetable">Vegetable</Label>
+                          <Input
+                            id="lunchVegetable"
+                            placeholder="E.g., salad, broccoli"
+                            value={lunchVegetable}
+                            onChange={(e) => setLunchVegetable(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="lunchVegetablePortion">Portion (oz)</Label>
+                          <Input
+                            id="lunchVegetablePortion"
+                            type="number"
+                            placeholder="Portion size"
+                            value={lunchVegetablePortion}
+                            onChange={(e) => setLunchVegetablePortion(e.target.value)}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -283,44 +393,70 @@ const CheckInForm = () => {
                   <div className="border-b pb-4">
                     <h3 className="font-medium mb-3">Dinner</h3>
                     <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="dinnerProtein">Protein</Label>
-                        <Input
-                          id="dinnerProtein"
-                          placeholder="E.g., beef, tofu"
-                          value={dinnerProtein}
-                          onChange={(e) => setDinnerProtein(e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="dinnerProtein">Protein</Label>
+                          <Input
+                            id="dinnerProtein"
+                            placeholder="E.g., beef, tofu"
+                            value={dinnerProtein}
+                            onChange={(e) => setDinnerProtein(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="dinnerProteinPortion">Portion (oz)</Label>
+                          <Input
+                            id="dinnerProteinPortion"
+                            type="number"
+                            placeholder="Portion size"
+                            value={dinnerProteinPortion}
+                            onChange={(e) => setDinnerProteinPortion(e.target.value)}
+                          />
+                        </div>
                       </div>
                       
-                      <div>
-                        <Label htmlFor="dinnerFruit">Fruit</Label>
-                        <Input
-                          id="dinnerFruit"
-                          placeholder="E.g., pear, melon"
-                          value={dinnerFruit}
-                          onChange={(e) => setDinnerFruit(e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="dinnerFruit">Fruit</Label>
+                          <Input
+                            id="dinnerFruit"
+                            placeholder="E.g., pear, melon"
+                            value={dinnerFruit}
+                            onChange={(e) => setDinnerFruit(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="dinnerFruitPortion">Portion (oz)</Label>
+                          <Input
+                            id="dinnerFruitPortion"
+                            type="number"
+                            placeholder="Portion size"
+                            value={dinnerFruitPortion}
+                            onChange={(e) => setDinnerFruitPortion(e.target.value)}
+                          />
+                        </div>
                       </div>
                       
-                      <div>
-                        <Label htmlFor="dinnerVegetable">Vegetable</Label>
-                        <Input
-                          id="dinnerVegetable"
-                          placeholder="E.g., asparagus, carrots"
-                          value={dinnerVegetable}
-                          onChange={(e) => setDinnerVegetable(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="dinnerPortions">Portion Size</Label>
-                        <Input
-                          id="dinnerPortions"
-                          placeholder="E.g., 6oz fish, 2 cups vegetables"
-                          value={dinnerPortions}
-                          onChange={(e) => setDinnerPortions(e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="dinnerVegetable">Vegetable</Label>
+                          <Input
+                            id="dinnerVegetable"
+                            placeholder="E.g., asparagus, carrots"
+                            value={dinnerVegetable}
+                            onChange={(e) => setDinnerVegetable(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="dinnerVegetablePortion">Portion (oz)</Label>
+                          <Input
+                            id="dinnerVegetablePortion"
+                            type="number"
+                            placeholder="Portion size"
+                            value={dinnerVegetablePortion}
+                            onChange={(e) => setDinnerVegetablePortion(e.target.value)}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -329,25 +465,27 @@ const CheckInForm = () => {
                   <div>
                     <h3 className="font-medium mb-3">Snacks</h3>
                     <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="snacks">Snacks</Label>
-                        <Textarea
-                          id="snacks"
-                          placeholder="List any snacks you had today"
-                          value={snacks}
-                          onChange={(e) => setSnacks(e.target.value)}
-                          rows={2}
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="snackPortions">Portion Size</Label>
-                        <Input
-                          id="snackPortions"
-                          placeholder="E.g., 1/4 cup nuts, 1 protein bar"
-                          value={snackPortions}
-                          onChange={(e) => setSnackPortions(e.target.value)}
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="snacks">Snacks</Label>
+                          <Textarea
+                            id="snacks"
+                            placeholder="List any snacks you had today"
+                            value={snacks}
+                            onChange={(e) => setSnacks(e.target.value)}
+                            rows={2}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="snackPortion">Portion (oz)</Label>
+                          <Input
+                            id="snackPortion"
+                            type="number"
+                            placeholder="Total snack portions"
+                            value={snackPortion}
+                            onChange={(e) => setSnackPortion(e.target.value)}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -364,37 +502,6 @@ const CheckInForm = () => {
                       value={supplements}
                       onChange={(e) => setSupplements(e.target.value)}
                       rows={4}
-                    />
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="photos" className="space-y-6">
-                <div className="space-y-6">
-                  <div>
-                    <Label className="block mb-3">Progress Photos</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer">
-                        <Camera className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">Front Photo</p>
-                        <p className="text-xs text-gray-400 mt-1">Click or drag and drop</p>
-                      </div>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer">
-                        <Camera className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">Side Photo</p>
-                        <p className="text-xs text-gray-400 mt-1">Click or drag and drop</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="notes">Photo Description</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Add a description for your progress photos"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      rows={2}
                     />
                   </div>
                   
@@ -416,7 +523,7 @@ const CheckInForm = () => {
                   type="button" 
                   variant="outline" 
                   onClick={() => {
-                    const tabs = ["measurements", "wellness", "nutrition", "supplements", "photos"];
+                    const tabs = ["measurements", "wellness", "nutrition", "supplements"];
                     const currentIndex = tabs.indexOf(currentTab);
                     if (currentIndex > 0) {
                       setCurrentTab(tabs[currentIndex - 1]);
@@ -427,13 +534,13 @@ const CheckInForm = () => {
                   Previous
                 </Button>
                 
-                {currentTab !== "photos" ? (
+                {currentTab !== "supplements" ? (
                   <Button 
                     type="button" 
                     onClick={() => {
-                      const tabs = ["measurements", "wellness", "nutrition", "supplements", "photos"];
+                      const tabs = ["measurements", "wellness", "nutrition", "supplements"];
                       const currentIndex = tabs.indexOf(currentTab);
-                      if (currentIndex < 4) {
+                      if (currentIndex < 3) {
                         setCurrentTab(tabs[currentIndex + 1]);
                       }
                     }}
