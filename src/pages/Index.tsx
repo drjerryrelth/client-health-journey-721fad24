@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import DemoLoginButtons from '@/components/auth/DemoLoginButtons';
-import { Weight, Pill, CheckCircle, LineChart, ArrowRight } from 'lucide-react';
+import { Weight, Pill, CheckCircle, LineChart, ArrowRight, Building } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -42,6 +42,18 @@ const Index = () => {
                   className="w-full sm:w-auto px-8 py-3 text-base font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border-gray-300 hover:text-gray-900"
                 >
                   <a href="#features">Learn More</a>
+                </Button>
+              </div>
+              <div className="mt-3">
+                <Button 
+                  asChild
+                  variant="link"
+                  className="text-primary font-medium flex items-center"
+                >
+                  <Link to="/signup/clinic">
+                    <Building size={16} className="mr-1" />
+                    Register your clinic
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -124,6 +136,12 @@ const Index = () => {
           </div>
           <div className="mt-10">
             <DemoLoginButtons />
+          </div>
+          <div className="mt-6 text-center">
+            <p className="text-gray-600 mb-2">Own a wellness clinic or private practice?</p>
+            <Button asChild variant="outline">
+              <Link to="/signup/clinic">Register your clinic</Link>
+            </Button>
           </div>
         </div>
       </div>

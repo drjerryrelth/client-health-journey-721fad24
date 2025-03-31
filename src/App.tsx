@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 import MealPlanGenerator from "./pages/MealPlanGenerator";
 import MyProfile from "./pages/MyProfile";
+import ClinicSignup from "./pages/ClinicSignup";
 
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
@@ -45,6 +46,7 @@ const AppContent = () => {
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/signup/clinic" element={<ClinicSignup />} />
         
         {/* Dashboard - handles role-based routing internally */}
         <Route path="/dashboard/*" element={<Dashboard />} />
