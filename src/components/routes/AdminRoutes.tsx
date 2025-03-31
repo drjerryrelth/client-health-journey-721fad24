@@ -21,25 +21,11 @@ const AdminRoutes = () => {
   return (
     <Routes>
       <Route element={<MainLayout />}>
-        {/* Base routes */}
+        {/* Base route */}
         <Route index element={<AdminDashboard />} />
+        
+        {/* Admin routes - these match exactly with AdminNavItems.tsx */}
         <Route path="dashboard" element={<AdminDashboard />} />
-        
-        {/* Main admin routes - these paths must exactly match those in AdminNavItems.tsx */}
-        <Route path="/dashboard" element={<AdminDashboard />} />
-        <Route path="/clients" element={<ClientsPage />} />
-        <Route path="/clinics" element={<ClinicsPage />} />
-        <Route path="/coaches" element={<CoachesPage />} />
-        <Route path="/programs" element={<ProgramsPage />} />
-        <Route path="/check-ins" element={<CheckInsPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/activities" element={<ActivitiesPage />} />
-        <Route path="/resources" element={<ResourcesPage />} />
-        <Route path="/clinic-customization" element={<ClinicCustomizationPage />} />
-        <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        
-        {/* Admin specific routes */}
         <Route path="clients" element={<ClientsPage />} />
         <Route path="clinics" element={<ClinicsPage />} />
         <Route path="coaches" element={<CoachesPage />} />
@@ -48,10 +34,10 @@ const AdminRoutes = () => {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="activities" element={<ActivitiesPage />} />
         <Route path="resources" element={<ResourcesPage />} />
-        <Route path="admin-users" element={<AdminUsersPage />} />
         <Route path="clinic-customization" element={<ClinicCustomizationPage />} />
         <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="admin-users" element={<AdminUsersPage />} />
         
         {/* Catch all route */}
         <Route path="*" element={<NotFound />} />
