@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -31,11 +30,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   const [replacementCoachId, setReplacementCoachId] = useState<string>('');
   const [coachListRefreshTrigger, setCoachListRefreshTrigger] = useState(0);
   
-  // Use our extracted coach actions hook
-  const { handleDeleteCoach, handleReassignAndDelete: reassignAndDelete } = useCoachActions(
-    clinic.name,
-    toast
-  );
+  const { handleDeleteCoach, handleReassignAndDelete } = useCoachActions(clinic.name, toast);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -67,7 +62,6 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
       setShowReassignDialog(true);
     } else {
       handleDeleteCoach(coach);
-      // Refresh the coach list after deletion
       setTimeout(() => setCoachListRefreshTrigger(prev => prev + 1), 500);
     }
   };
@@ -76,9 +70,9 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
     setShowEditClinicDialog(true);
   };
 
-  const handleReassignAndDelete = async () => {
+  const handleReassignCoachClients = async () => {
     if (selectedCoach) {
-      await reassignAndDelete(selectedCoach.id, replacementCoachId);
+      await handleReassignAndDelete(selectedCoach.id, replacementCoachId);
       setShowReassignDialog(false);
       setReplacementCoachId('');
       setCoachListRefreshTrigger(prev => prev + 1);
@@ -163,7 +157,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
         availableCoaches={availableCoaches}
         replacementCoachId={replacementCoachId}
         setReplacementCoachId={setReplacementCoachId}
-        onReassignAndDelete={handleReassignAndDelete}
+        onReassignAndDelete={handleReassignCoachClients}
       />
 
       <EditClinicDialog 
@@ -171,7 +165,6 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
         onOpenChange={setShowEditClinicDialog} 
         clinicId={clinic.id}
         onClinicUpdated={() => {
-          // Refresh clinic details after update
           if (clinic.id) {
             handleEditClinic();
           }

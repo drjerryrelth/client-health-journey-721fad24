@@ -10,8 +10,8 @@ export interface UseCoachActionsProps {
 }
 
 export const useCoachActions = (
-  clinicName: string,
-  toast: typeof toastUtil
+  clinicName: string = '',
+  toast: typeof toastUtil = () => {}
 ): UseCoachActionsProps => {
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
 

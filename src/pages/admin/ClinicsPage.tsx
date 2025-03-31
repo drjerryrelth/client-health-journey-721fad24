@@ -15,11 +15,7 @@ const ClinicsPage = () => {
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [showAddClinicDialog, setShowAddClinicDialog] = useState(false);
   
-  // Coach actions from extracted hook
-  const { selectedCoach, handleDeleteCoach, handleReassignAndDelete } = useCoachActions(
-    selectedClinic?.name || '',
-    toast
-  );
+  const { handleDeleteCoach, handleReassignAndDelete } = useCoachActions('', toast);
 
   useEffect(() => {
     fetchClinics();
@@ -28,14 +24,11 @@ const ClinicsPage = () => {
   const fetchClinics = async () => {
     setLoading(true);
     try {
-      // Get all clinics
       const fetchedClinics = await ClinicService.getClinics();
       
-      // For each clinic, get the coaches count
       const clinicsWithCounts = await Promise.all(
         fetchedClinics.map(async (clinic) => {
           try {
-            // Fetch coaches for this clinic
             const clinicCoaches = await CoachService.getClinicCoaches(clinic.id);
             return {
               ...clinic,
@@ -115,8 +108,8 @@ const ClinicsPage = () => {
     city: clinic.city,
     state: clinic.state,
     status: clinic.status,
-    coaches: (clinic as any).coachesCount || 0, // Use the coach count we fetch
-    clients: 0, // We'll keep clients at 0 for now
+    coaches: (clinic as any).coachesCount || 0,
+    clients: 0,
   }));
 
   if (loading) {
