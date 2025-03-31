@@ -34,14 +34,14 @@ const LatestStats: React.FC = () => {
               </div>
             )}
             
-            {checkIns[0].water_intake && (
+            {checkIns[0].waterIntake && (
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <Droplets className="h-4 w-4 text-gray-500" />
                     <span className="text-sm text-gray-600">Water Intake</span>
                   </div>
-                  <span className="text-sm">{checkIns[0].water_intake} glasses</span>
+                  <span className="text-sm">{checkIns[0].waterIntake} glasses</span>
                 </div>
                 <Progress value={waterProgress} className="h-1" />
               </div>

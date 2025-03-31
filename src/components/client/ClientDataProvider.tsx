@@ -2,6 +2,8 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useAuth } from '@/context/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { CheckIn } from '@/types';
+import CheckInService from '@/services/check-in-service';
 
 // Define the context type
 interface ClientDataContextType {
@@ -30,6 +32,7 @@ export const useClientData = () => useContext(ClientDataContext);
 
 export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  const [clientId, setClientId] = useState<string | null>(null);
   const [checkIns, setCheckIns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [programName, setProgramName] = useState("");
@@ -37,10 +40,35 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [waterProgress, setWaterProgress] = useState(0);
   const [weightTrend, setWeightTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
   
+  // First, get the client ID associated with the logged-in user
+  useEffect(() => {
+    const fetchClientId = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (error) throw error;
+        if (data) {
+          setClientId(data.id);
+        }
+      } catch (error) {
+        console.error("Error fetching client ID:", error);
+      }
+    };
+    
+    fetchClientId();
+  }, [user]);
+  
+  // Now fetch client data using the client ID
   useEffect(() => {
     const fetchClientData = async () => {
       try {
-        if (!user) return;
+        if (!clientId) return;
         
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
@@ -51,7 +79,7 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             program_id,
             programs:programs (name, duration)
           `)
-          .eq('user_id', user.id)
+          .eq('id', clientId)
           .single();
         
         if (clientError) throw clientError;
@@ -70,40 +98,37 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             }
           }
           
-          // Fetch check-ins for this client
-          const { data: checkInsData, error: checkInsError } = await supabase
-            .from('check_ins')
-            .select('*')
-            .eq('client_id', clientData.id)
-            .order('date', { ascending: false })
-            .limit(10);
+          // Fetch check-ins for this client using the service
+          try {
+            const checkInsData = await CheckInService.getClientCheckIns(clientData.id);
             
-          if (checkInsError) throw checkInsError;
-          
-          if (checkInsData && checkInsData.length > 0) {
-            setCheckIns(checkInsData);
-            
-            // Calculate water progress from latest check-in
-            const latestCheckIn = checkInsData[0];
-            if (latestCheckIn.water_intake) {
-              const waterIntake = latestCheckIn.water_intake;
-              const waterTarget = 8; // 8 glasses as default target
-              setWaterProgress(Math.min(100, (waterIntake / waterTarget) * 100));
-            }
-            
-            // Calculate weight trend
-            if (checkInsData.length >= 2) {
-              const latest = checkInsData[0].weight;
-              const previous = checkInsData[1].weight;
+            if (checkInsData && checkInsData.length > 0) {
+              setCheckIns(checkInsData);
               
-              if (latest < previous) {
-                setWeightTrend('down');
-              } else if (latest > previous) {
-                setWeightTrend('up');
-              } else {
-                setWeightTrend('neutral');
+              // Calculate water progress from latest check-in
+              const latestCheckIn = checkInsData[0];
+              if (latestCheckIn.waterIntake) {
+                const waterIntake = latestCheckIn.waterIntake;
+                const waterTarget = 8; // 8 glasses as default target
+                setWaterProgress(Math.min(100, (waterIntake / waterTarget) * 100));
+              }
+              
+              // Calculate weight trend
+              if (checkInsData.length >= 2) {
+                const latest = checkInsData[0].weight;
+                const previous = checkInsData[1].weight;
+                
+                if (latest < previous) {
+                  setWeightTrend('down');
+                } else if (latest > previous) {
+                  setWeightTrend('up');
+                } else {
+                  setWeightTrend('neutral');
+                }
               }
             }
+          } catch (checkInsError) {
+            console.error("Error fetching check-ins:", checkInsError);
           }
         }
         
@@ -114,8 +139,10 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
     };
     
-    fetchClientData();
-  }, [user]);
+    if (clientId) {
+      fetchClientData();
+    }
+  }, [clientId]);
 
   // Calculate progress percentage based on start date and program duration
   const calculateProgress = () => {

@@ -14,6 +14,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
+import ClientProgress from "./pages/ClientProgress"; // Add this import
+import ClientProgramDetails from "./pages/ClientProgramDetails"; // Add this import
 import CoachDashboard from "./pages/CoachDashboard";
 import ClientPortal from "./pages/ClientPortal";
 import CheckIn from "./pages/CheckIn";
@@ -96,8 +98,8 @@ const AppContent = () => {
           <Route path="/client-dashboard" element={<ClientDashboard />} />
           <Route path="/client-portal" element={<ClientPortal />} />
           <Route path="/check-in" element={<CheckIn />} />
-          <Route path="/progress" element={<ClientDashboard />} />
-          <Route path="/my-program" element={<ClientDashboard />} />
+          <Route path="/progress" element={<ClientProgress />} />
+          <Route path="/my-program" element={<ClientProgramDetails />} />
           <Route path="/profile" element={<ClientDashboard />} />
           <Route path="/client/resources" element={<ResourcesPage />} />
         </Route>

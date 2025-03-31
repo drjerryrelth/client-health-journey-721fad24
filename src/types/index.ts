@@ -111,7 +111,6 @@ export const mapClientToDbClient = (client: Omit<Client, 'id'>): Omit<ClientRow,
   coach_id: client.coachId || null
 });
 
-// Correctly updated mapping function for Program to include supplements
 export const mapDbProgramToProgram = (dbProgram: ProgramRow): Program => ({
   id: dbProgram.id,
   name: dbProgram.name,

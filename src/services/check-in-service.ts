@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { CheckIn } from '@/types';
 import { toast } from 'sonner';
@@ -15,6 +14,11 @@ export const CheckInService = {
         .order('date', { ascending: false });
 
       if (checkInsError) throw checkInsError;
+      
+      // Ensure we have some data
+      if (!checkInsData || checkInsData.length === 0) {
+        return [];
+      }
       
       // For each check-in, get photos
       const checkInsWithPhotos = await Promise.all(
@@ -41,7 +45,7 @@ export const CheckInService = {
             },
             moodScore: checkIn.mood_score,
             energyScore: checkIn.energy_score,
-            sleepHours: checkIn.sleep_hours,
+            sleepHours: checkIn.sleep_hours || undefined, // Handle sleep hours safely
             waterIntake: checkIn.water_intake,
             meals: {
               breakfast: checkIn.breakfast,
@@ -50,7 +54,7 @@ export const CheckInService = {
               snacks: checkIn.snacks,
             },
             notes: checkIn.notes,
-            photos: photosData.map(photo => photo.photo_url),
+            photos: photosData ? photosData.map(photo => photo.photo_url) : [],
           } as CheckIn;
         })
       );
@@ -203,19 +207,7 @@ export const CheckInService = {
       let uploadedPhotos: string[] = [];
       if (photos && photos.length > 0) {
         // We'd need a proper file upload implementation here
-        // For now, this is a placeholder
-        // uploadedPhotos = await Promise.all(photos.map(async (photo) => {
-        //   return await uploadCheckInPhoto(photo, checkIn.clientId, data.id);
-        // }));
-        
-        // Store photo URLs in check_in_photos table
-        // const photoEntries = uploadedPhotos.map(url => ({
-        //   check_in_id: data.id,
-        //   photo_url: url,
-        //   photo_type: 'progress'
-        // }));
-        
-        // await supabase.from('check_in_photos').insert(photoEntries);
+        // This is a placeholder for future functionality
       }
       
       // Format and return complete check-in data
@@ -233,6 +225,7 @@ export const CheckInService = {
         },
         moodScore: data.mood_score,
         energyScore: data.energy_score,
+        sleepHours: data.sleep_hours,
         waterIntake: data.water_intake,
         meals: {
           breakfast: data.breakfast,
@@ -307,6 +300,7 @@ export const CheckInService = {
         },
         moodScore: data.mood_score,
         energyScore: data.energy_score,
+        sleepHours: data.sleep_hours,
         waterIntake: data.water_intake,
         meals: {
           breakfast: data.breakfast,
