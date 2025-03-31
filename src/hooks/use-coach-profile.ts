@@ -21,12 +21,19 @@ export const useCoachProfile = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCoachProfile = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        setError("User authentication required");
+        setLoading(false);
+        return;
+      }
       
       setLoading(true);
+      setError(null);
+      
       try {
         console.log('Fetching coach profile for user ID:', user.id);
         
@@ -35,11 +42,12 @@ export const useCoachProfile = () => {
           .from('coaches')
           .select('*')
           .eq('id', user.id)
-          .maybeSingle(); // Use maybeSingle instead of single to prevent errors when no data is found
+          .maybeSingle();
         
         if (coachError) {
           console.error('Error fetching coach data:', coachError);
-          throw coachError;
+          setError("Failed to retrieve coach profile data");
+          return;
         }
         
         if (coachData) {
@@ -56,28 +64,39 @@ export const useCoachProfile = () => {
             
           if (profileError) {
             console.error('Error fetching profile data:', profileError);
-            throw profileError;
+            setError("Failed to retrieve profile data");
+            return;
           }
           
           if (!profileData) {
-            console.log('No profile data found, creating fallback profile');
-            // Create fallback profile from user object
-            setProfileData({
-              name: user.name || "",
-              email: user.email || "",
-              phone: "",
-            });
+            console.log('No profile data found, creating fallback profile from user object');
+            
+            // Check if we have user information to create fallback
+            if (user?.email) {
+              // Create fallback profile from user object
+              const fallbackProfile = {
+                name: user.name || user.email.split('@')[0] || "Coach",
+                email: user.email,
+                phone: "",
+              };
+              
+              console.log('Created fallback profile:', fallbackProfile);
+              setProfileData(fallbackProfile);
+            } else {
+              setError("Could not create profile - insufficient user data");
+            }
           } else {
             console.log('Profile data found:', profileData);
             setProfileData({
               name: profileData.full_name || "",
               email: profileData.email || "",
-              phone: "",
+              phone: profileData.phone || "",
             });
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading coach profile:', error);
+        setError(error.message || "Failed to load profile information");
         toast.error("Failed to load your profile information");
       } finally {
         setLoading(false);
@@ -85,10 +104,13 @@ export const useCoachProfile = () => {
     };
     
     fetchCoachProfile();
-  }, [user?.id]);
+  }, [user?.id, user?.email, user?.name]);
 
   const updateCoachProfile = async (data: ProfileFormValues) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      toast.error("User authentication required");
+      return;
+    }
     
     try {
       toast.info("Updating profile...");
@@ -99,29 +121,45 @@ export const useCoachProfile = () => {
         phone: data.phone || null,
       };
       
-      const { error } = await supabase
-        .from('coaches')
-        .update(updates)
-        .eq('id', user.id);
+      // Check if we're updating a coach profile or a regular profile
+      if (profileData) {
+        // Determine which table to update based on the data we have
+        const table = profileData.hasOwnProperty('clinic_id') ? 'coaches' : 'profiles';
+        const nameField = table === 'profiles' ? 'full_name' : 'name';
         
-      if (error) throw error;
-      
-      // Update the local state with the new data
-      setProfileData({
-        ...profileData,
-        ...updates
-      });
-      
-      toast.success("Profile updated successfully");
-    } catch (error) {
+        const updateData = table === 'profiles' 
+          ? { full_name: data.fullName, email: data.email, phone: data.phone || null }
+          : updates;
+          
+        const { error } = await supabase
+          .from(table)
+          .update(updateData)
+          .eq('id', user.id);
+          
+        if (error) throw error;
+        
+        // Update the local state with the new data
+        setProfileData({
+          ...profileData,
+          [nameField]: data.fullName,
+          email: data.email,
+          phone: data.phone || null
+        });
+        
+        toast.success("Profile updated successfully");
+      } else {
+        throw new Error("No profile data available for update");
+      }
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error("Failed to update profile");
+      toast.error(error.message || "Failed to update profile");
     }
   };
 
   return {
     profileData,
     loading,
+    error,
     updateCoachProfile
   };
 };

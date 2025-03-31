@@ -9,20 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
 const CoachSettingsPage = () => {
-  const { profileData, loading, updateCoachProfile } = useCoachProfile();
-  const [error, setError] = React.useState<string | null>(null);
-  
-  React.useEffect(() => {
-    // Clear error when profile data loads successfully
-    if (profileData) {
-      setError(null);
-    }
-    
-    // Set error if loading completes without data
-    if (!loading && !profileData) {
-      setError("Failed to load profile information. Please refresh the page.");
-    }
-  }, [profileData, loading]);
+  const { profileData, loading, error, updateCoachProfile } = useCoachProfile();
   
   return (
     <div className="space-y-6">
@@ -50,7 +37,8 @@ const CoachSettingsPage = () => {
         <TabsContent value="profile" className="space-y-4">
           <ProfileTabContent 
             loading={loading} 
-            profileData={profileData} 
+            profileData={profileData}
+            error={error}
             onSubmit={updateCoachProfile} 
           />
         </TabsContent>

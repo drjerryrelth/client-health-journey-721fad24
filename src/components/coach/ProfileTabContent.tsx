@@ -8,16 +8,20 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileFormValues, profileSchema } from '@/hooks/use-coach-profile';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ProfileTabContentProps {
   loading: boolean;
   profileData: any;
+  error?: string | null;
   onSubmit: (data: ProfileFormValues) => Promise<void>;
 }
 
 export const ProfileTabContent: React.FC<ProfileTabContentProps> = ({ 
   loading,
   profileData,
+  error,
   onSubmit
 }) => {
   // Initialize profile form with default values
@@ -65,6 +69,11 @@ export const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
               <Skeleton className="h-10 w-24" />
             </div>
           </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         ) : !profileData ? (
           <div className="text-center py-8 text-muted-foreground">
             Could not load profile information. Please refresh the page and try again.
