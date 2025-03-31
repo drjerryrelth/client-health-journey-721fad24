@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/context/auth';
 import { Button } from '@/components/ui/button';
@@ -14,11 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/context/ThemeContext';
 
 const TopBar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme } = useTheme();
   
   const handleLogout = async () => {
     await logout();
@@ -46,7 +47,15 @@ const TopBar = () => {
     <header className="bg-white border-b border-gray-200 px-4 py-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <h2 className="text-lg md:text-xl font-medium text-gray-800 mr-4">Client Health Tracker™</h2>
+          {theme.logo ? (
+            <img 
+              src={theme.logo} 
+              alt={theme.clinicName || 'Clinic logo'} 
+              className="h-8 w-auto"
+            />
+          ) : (
+            <h2 className="text-lg md:text-xl font-medium text-gray-800 mr-4">Client Health Tracker™</h2>
+          )}
           <span className="hidden md:inline-block bg-primary-100 text-primary-800 text-xs font-medium py-1 px-2 rounded">
             {user?.role === 'client' ? 'Client Portal' : 'Staff Portal'}
           </span>

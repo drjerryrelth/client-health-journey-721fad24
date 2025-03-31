@@ -13,6 +13,7 @@ import ReportsPage from '@/pages/admin/ReportsPage';
 import SettingsPage from '@/pages/admin/SettingsPage';
 import ActivitiesPage from '@/pages/admin/ActivitiesPage';
 import AdminUsersPage from '@/pages/admin/AdminUsersPage';
+import ClinicCustomizationPage from '@/pages/admin/ClinicCustomizationPage';
 
 const AdminRoutes = () => {
   return (
@@ -29,6 +30,7 @@ const AdminRoutes = () => {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="activities" element={<ActivitiesPage />} />
         <Route path="admin-users" element={<AdminUsersPage />} />
+        <Route path="clinic-customization" element={<ClinicCustomizationPage />} />
       </Route>
     </Routes>
   );

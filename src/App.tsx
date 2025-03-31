@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,19 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { initializeDemoRelationships } from "./services/demo-data-initializer";
-
-// Pages
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
-import Unauthorized from "./pages/Unauthorized";
-import MealPlanGenerator from "./pages/MealPlanGenerator";
-import MyProfile from "./pages/MyProfile";
-import ClinicSignup from "./pages/ClinicSignup";
-
-// Layouts
-import MainLayout from "./components/layout/MainLayout";
+import { ThemeProvider } from "./context/ThemeContext";
+import { ClinicThemeProvider } from "./components/theme/ClinicThemeProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,7 +19,6 @@ const queryClient = new QueryClient({
 });
 
 const AppContent = () => {
-  // Initialize demo relationships on app start
   useEffect(() => {
     initializeDemoRelationships()
       .catch(err => console.error('Error initializing demo data:', err));
@@ -39,40 +26,42 @@ const AppContent = () => {
   
   return (
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/signup/clinic" element={<ClinicSignup />} />
-        
-        {/* Dashboard - handles role-based routing internally */}
-        <Route path="/dashboard/*" element={<Dashboard />} />
-        <Route path="/coach-dashboard/*" element={<Dashboard />} />
-        <Route path="/client-dashboard/*" element={<Dashboard />} />
-        
-        {/* Client routes that are handled by ClientRoutes */}
-        <Route path="/client/*" element={<Dashboard />} />
-        <Route path="/check-in" element={<Dashboard />} />
-        <Route path="/progress" element={<Dashboard />} />
-        <Route path="/my-program" element={<Dashboard />} />
-        <Route path="/profile" element={<Dashboard />} />
-        
-        {/* Coach specific routes outside dashboard */}
-        <Route element={<MainLayout requiredRoles={['coach']} />}>
-          <Route path="/coach/meal-plan-generator" element={<MealPlanGenerator />} />
-        </Route>
+      <ClinicThemeProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/signup/clinic" element={<ClinicSignup />} />
+          
+          {/* Dashboard - handles role-based routing internally */}
+          <Route path="/dashboard/*" element={<Dashboard />} />
+          <Route path="/coach-dashboard/*" element={<Dashboard />} />
+          <Route path="/client-dashboard/*" element={<Dashboard />} />
+          
+          {/* Client routes that are handled by ClientRoutes */}
+          <Route path="/client/*" element={<Dashboard />} />
+          <Route path="/check-in" element={<Dashboard />} />
+          <Route path="/progress" element={<Dashboard />} />
+          <Route path="/my-program" element={<Dashboard />} />
+          <Route path="/profile" element={<Dashboard />} />
+          
+          {/* Coach specific routes outside dashboard */}
+          <Route element={<MainLayout requiredRoles={['coach']} />}>
+            <Route path="/coach/meal-plan-generator" element={<MealPlanGenerator />} />
+          </Route>
 
-        {/* Admin specific routes outside dashboard */}
-        <Route element={<MainLayout requiredRoles={['admin', 'super_admin']} />}>
-          <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
-        </Route>
-        
-        {/* Catch-all route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* Admin specific routes outside dashboard */}
+          <Route element={<MainLayout requiredRoles={['admin', 'super_admin']} />}>
+            <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
+          </Route>
+          
+          {/* Catch-all route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </ClinicThemeProvider>
     </TooltipProvider>
   );
 };
@@ -81,7 +70,9 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
-        <AppContent />
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>
