@@ -4,6 +4,7 @@ import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { DashboardStats } from '@/types/dashboard';
 import { toast } from 'sonner';
 import { getCoachCount } from '@/services/coaches/admin-coach-service';
+import { CoachService } from '@/services/coaches';
 
 // Function to fetch dashboard statistics
 export async function fetchDashboardStats(): Promise<DashboardStats> {
@@ -89,11 +90,10 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       // If we have real clinic data, fetch additional info for each
       const clinicPromises = clinics.slice(0, 5).map(async (clinic) => {
         try {
-          // Get coach count for this clinic
-          const { count: coachesCount } = await supabase
-            .from('coaches')
-            .select('*', { count: 'exact', head: true })
-            .eq('clinic_id', clinic.id);
+          // Get coach count for this clinic using CoachService instead of direct DB query
+          const clinicCoaches = await CoachService.getClinicCoaches(clinic.id);
+          const coachesCount = clinicCoaches ? clinicCoaches.length : 0;
+          console.log(`[DashboardStats] Clinic ${clinic.id} has ${coachesCount} coaches`);
             
           // Get client count for this clinic
           const { count: clientsCount } = await supabase
@@ -104,7 +104,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
           return {
             id: clinic.id,
             name: clinic.name,
-            coaches: coachesCount || 0,
+            coaches: coachesCount,
             clients: clientsCount || 0,
             status: clinic.status
           };
