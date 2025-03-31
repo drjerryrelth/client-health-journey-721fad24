@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { useProgramsQuery } from '@/hooks/use-queries';
+import { useProgramsQuery } from '@/hooks/queries/use-program-queries';
 import { Program } from '@/types';
 import ProgramTable from '@/components/programs/ProgramTable';
 import AddProgramDialog from '@/components/programs/AddProgramDialog';

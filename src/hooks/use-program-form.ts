@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useCreateProgramMutation } from '@/hooks/use-queries';
+import { useCreateProgramMutation } from '@/hooks/queries/use-program-queries';
 import { useToast } from '@/hooks/use-toast';
 
 export const useProgramForm = () => {
