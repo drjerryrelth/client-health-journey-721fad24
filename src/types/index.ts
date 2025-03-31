@@ -12,18 +12,18 @@ export interface User {
 
 export type Client = {
   id: string;
-  userId: string;
+  userId?: string | null;
   name: string;
   email: string;
-  phone?: string;
-  programId?: string;
+  phone?: string | null;
+  programId?: string | null;
+  programCategory?: 'A' | 'B' | 'C' | null; // Added program category for Practice Naturals
   startDate: string;
-  lastCheckIn?: string;
-  notes?: string;
-  profileImage?: string;
+  lastCheckIn?: string | null;
+  notes?: string | null;
+  profileImage?: string | null;
   clinicId: string;
-  coachId?: string;
-  programCategory?: 'A' | 'B' | 'C'; // For Practice Naturals program
+  coachId?: string | null;
 };
 
 export type Program = {
@@ -84,31 +84,34 @@ export type Clinic = {
 // Helper functions to convert between database and application types
 export const mapDbClientToClient = (dbClient: ClientRow): Client => ({
   id: dbClient.id,
-  userId: dbClient.user_id || '',
+  userId: dbClient.user_id,
   name: dbClient.name,
   email: dbClient.email,
-  phone: dbClient.phone || undefined,
-  programId: dbClient.program_id || undefined,
+  phone: dbClient.phone,
+  programId: dbClient.program_id,
+  programCategory: dbClient.program_category as 'A' | 'B' | 'C' | null,
   startDate: dbClient.start_date,
-  lastCheckIn: dbClient.last_check_in || undefined,
-  notes: dbClient.notes || undefined,
-  profileImage: dbClient.profile_image || undefined,
+  lastCheckIn: dbClient.last_check_in,
+  notes: dbClient.notes,
+  profileImage: dbClient.profile_image,
   clinicId: dbClient.clinic_id,
-  coachId: dbClient.coach_id || undefined,
+  coachId: dbClient.coach_id,
 });
 
-export const mapClientToDbClient = (client: Omit<Client, 'id'>): Omit<ClientRow, 'id' | 'created_at'> => ({
+export const mapClientToDbClient = (client: Omit<Client, 'id'> & { id?: string }): ClientRow => ({
+  id: client.id || crypto.randomUUID(),
   user_id: client.userId || null,
   name: client.name,
   email: client.email,
   phone: client.phone || null,
   program_id: client.programId || null,
+  program_category: client.programCategory || null,
   start_date: client.startDate,
   last_check_in: client.lastCheckIn || null,
   notes: client.notes || null,
   profile_image: client.profileImage || null,
   clinic_id: client.clinicId,
-  coach_id: client.coachId || null
+  coach_id: client.coachId || null,
 });
 
 export const mapDbProgramToProgram = (dbProgram: ProgramRow): Program => ({

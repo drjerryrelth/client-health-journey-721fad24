@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Client, mapDbClientToClient, mapClientToDbClient } from '@/types';
 import { ClientRow } from '@/types/database';
@@ -74,13 +75,14 @@ export const ClientService = {
       if (updates.email) dbUpdates.email = updates.email;
       if ('phone' in updates) dbUpdates.phone = updates.phone || null;
       if ('programId' in updates) dbUpdates.program_id = updates.programId || null;
+      if ('programCategory' in updates) dbUpdates.program_category = updates.programCategory || null;
       if (updates.startDate) dbUpdates.start_date = updates.startDate;
       if ('lastCheckIn' in updates) dbUpdates.last_check_in = updates.lastCheckIn || null;
       if ('notes' in updates) dbUpdates.notes = updates.notes || null;
       if ('profileImage' in updates) dbUpdates.profile_image = updates.profileImage || null;
       if (updates.clinicId) dbUpdates.clinic_id = updates.clinicId;
       if ('userId' in updates) dbUpdates.user_id = updates.userId || null;
-      if ('coachId' in updates) dbUpdates.coach_id = updates.coachId || null; // Handle coachId updates
+      if ('coachId' in updates) dbUpdates.coach_id = updates.coachId || null;
       
       const { data, error } = await supabase
         .from('clients')
