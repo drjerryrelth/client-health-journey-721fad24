@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUp, ArrowDown, BarChart2, Scale, Droplets } from 'lucide-react';
+import { ArrowUp, ArrowDown, BarChart2, Scale, Droplets, Moon } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useClientData } from './ClientDataProvider';
 
@@ -31,6 +31,16 @@ const LatestStats: React.FC = () => {
                   {weightTrend === 'down' && <ArrowDown className="h-4 w-4 text-green-500" />}
                   {weightTrend === 'up' && <ArrowUp className="h-4 w-4 text-red-500" />}
                 </div>
+              </div>
+            )}
+            
+            {checkIns[0].sleep_hours && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Moon className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-600">Sleep</span>
+                </div>
+                <span className="font-medium">{checkIns[0].sleep_hours} hrs</span>
               </div>
             )}
             

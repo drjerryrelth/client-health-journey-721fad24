@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useAuth } from '@/context/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +16,7 @@ interface ClientDataContextType {
 }
 
 // Create the context with default values
-const ClientDataContext = createContext<ClientDataContextType>({
+export const ClientDataContext = createContext<ClientDataContextType>({
   checkIns: [],
   loading: true,
   programName: "",

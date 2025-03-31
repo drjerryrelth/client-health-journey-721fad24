@@ -5,6 +5,7 @@ import ClientDataProvider from '@/components/client/ClientDataProvider';
 import ProgressChart from '@/components/progress/ProgressChart';
 import { Separator } from '@/components/ui/separator';
 import { CheckIn } from '@/types';
+import { ClientDataContext } from '@/components/client/ClientDataProvider';
 
 const ClientProgress = () => {
   return (
@@ -36,9 +37,8 @@ const ClientProgress = () => {
 
 // Component to display a table of check-in history
 const CheckInHistoryTable = () => {
-  const { checkIns } = React.useContext(
-    require('@/components/client/ClientDataProvider').ClientDataContext
-  );
+  // Properly use the context type
+  const { checkIns } = React.useContext(ClientDataContext);
   
   if (checkIns.length === 0) {
     return (
@@ -58,6 +58,7 @@ const CheckInHistoryTable = () => {
             <th className="text-left py-3 px-2">Waist</th>
             <th className="text-left py-3 px-2">Energy</th>
             <th className="text-left py-3 px-2">Mood</th>
+            <th className="text-left py-3 px-2">Sleep</th>
           </tr>
         </thead>
         <tbody>
@@ -68,6 +69,7 @@ const CheckInHistoryTable = () => {
               <td className="py-3 px-2">{checkIn.waist ? `${checkIn.waist} in` : '-'}</td>
               <td className="py-3 px-2">{checkIn.energy_score ? `${checkIn.energy_score}/10` : '-'}</td>
               <td className="py-3 px-2">{checkIn.mood_score ? `${checkIn.mood_score}/10` : '-'}</td>
+              <td className="py-3 px-2">{checkIn.sleep_hours ? `${checkIn.sleep_hours} hrs` : '-'}</td>
             </tr>
           ))}
         </tbody>
