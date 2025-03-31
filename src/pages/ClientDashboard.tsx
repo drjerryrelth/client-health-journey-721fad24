@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/auth';
@@ -7,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
 import ProgressChart from '@/components/progress/ProgressChart';
 import { useToast } from '@/hooks/use-toast';
+import ClientDailyDrip from '@/components/client/ClientDailyDrip';
 
 // Motivational quotes
 const motivationalQuotes = [
@@ -59,6 +61,9 @@ const ClientDashboard = () => {
         <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
         <p className="text-gray-500">Welcome back, {user?.name}!</p>
       </div>
+
+      {/* Daily Drip Message */}
+      <ClientDailyDrip />
 
       {/* Motivational Quote */}
       <Card className="mb-6 border-l-4 border-l-primary-500">

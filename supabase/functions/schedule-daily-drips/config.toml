@@ -1,0 +1,10 @@
+
+project_id = "bgnoaxdomwkwvgcwccry"
+tendermint_url = "https://v2.supavisor.com/tendermint/bgnoaxdomwkwvgcwccry"
+name = "schedule-daily-drips"
+entrypoint = "index.ts"
+logLevel = "info"
+
+[serve]
+hostname = "0.0.0.0"
+port = 54321
