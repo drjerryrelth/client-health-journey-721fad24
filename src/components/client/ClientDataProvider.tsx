@@ -61,7 +61,7 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           
           // Safely access program name with proper type checking
           const programsData = clientData.programs;
-          if (programsData && typeof programsData === 'object') {
+          if (programsData !== null && typeof programsData === 'object') {
             // Check if 'name' property exists in programsData
             if ('name' in programsData && programsData.name) {
               setProgramName(programsData.name);
