@@ -81,15 +81,15 @@ Deno.serve(async (req) => {
 
       console.log(`Found ${coaches.length} coaches via RPC function`);
 
-      // Ensure the response data is properly typed
-      const typedCoaches: CoachData[] = coaches.map((coach: any) => ({
-        id: coach.id,
-        name: coach.name,
-        email: coach.email,
+      // Type safety with validation
+      const typedCoaches: CoachData[] = (coaches as any[]).map((coach: any) => ({
+        id: String(coach.id || ''),
+        name: String(coach.name || ''),
+        email: String(coach.email || ''),
         phone: coach.phone,
-        status: coach.status || 'inactive',
-        clinic_id: coach.clinic_id,
-        client_count: coach.client_count || 0
+        status: String(coach.status || 'inactive'),
+        clinic_id: String(coach.clinic_id || ''),
+        client_count: typeof coach.client_count === 'number' ? coach.client_count : 0
       }));
 
       return new Response(

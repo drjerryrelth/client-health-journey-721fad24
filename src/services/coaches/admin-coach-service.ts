@@ -59,18 +59,29 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
     
     console.log(`[AdminCoachService] Found ${coachesData.length} coaches via RPC`);
     
-    // Process coaches from the RPC function - properly typed now
-    return (coachesData as CoachRPCResponse[]).map(coach => ({
-      id: coach.id,
-      name: coach.name,
-      email: coach.email,
-      phone: coach.phone || '',
-      status: (coach.status === 'active' || coach.status === 'inactive') 
-        ? coach.status as 'active' | 'inactive' 
-        : 'inactive' as const,
-      clinicId: coach.clinic_id,
-      clients: coach.client_count || 0
-    }));
+    // Proper type assertion with validation
+    // First cast to unknown, then to the target type for safer conversion
+    const typedCoaches = (coachesData as any[]).map(coach => {
+      // Validate the coach object has expected properties
+      if (!coach || typeof coach !== 'object') {
+        console.warn('[AdminCoachService] Invalid coach data in RPC response');
+        return null;
+      }
+      
+      return {
+        id: String(coach.id || ''),
+        name: String(coach.name || ''),
+        email: String(coach.email || ''),
+        phone: coach.phone ? String(coach.phone) : '',
+        status: (coach.status === 'active' || coach.status === 'inactive') 
+          ? coach.status as 'active' | 'inactive' 
+          : 'inactive' as const,
+        clinicId: String(coach.clinic_id || ''),
+        clients: typeof coach.client_count === 'number' ? coach.client_count : 0
+      } as Coach;
+    }).filter(Boolean) as Coach[];
+    
+    return typedCoaches;
     
   } catch (error) {
     console.error('[AdminCoachService] Failed to get all coaches:', error);
