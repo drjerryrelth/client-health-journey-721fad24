@@ -103,7 +103,17 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
       
       console.log('Submitting clinic data:', clinicData);
       
-      const newClinic = await ClinicService.addClinic(clinicData);
+      const { data: newClinic, error } = await ClinicService.createClinic(clinicData);
+
+      if (error) {
+        console.error("Error creating clinic:", error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to add clinic. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
 
       if (newClinic) {
         toast({
@@ -124,11 +134,11 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
           variant: "destructive"
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding clinic:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     } finally {

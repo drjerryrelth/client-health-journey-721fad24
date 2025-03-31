@@ -5,30 +5,47 @@ import { mapClinicToDb, mapDbToClinic } from './mappers';
 
 export const addClinic = async (clinic: Partial<Clinic>): Promise<Clinic | null> => {
   try {
+    // Use RPC function to bypass RLS for admin users
     const { data, error } = await supabase
-      .from('clinics')
-      .insert(mapClinicToDb(clinic))
-      .select()
-      .single();
+      .rpc('admin_add_clinic', {
+        clinic_data: mapClinicToDb(clinic)
+      });
 
-    if (error) throw error;
-    return mapDbToClinic(data);
+    if (error) {
+      console.error('RPC admin_add_clinic error:', error);
+      
+      // Fallback to direct insert (for backward compatibility)
+      const { data: insertData, error: insertError } = await supabase
+        .from('clinics')
+        .insert(mapClinicToDb(clinic))
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error adding clinic:', insertError);
+        throw insertError;
+      }
+
+      return mapDbToClinic(insertData);
+    }
+
+    // If RPC succeeded, return the mapped clinic data
+    if (data) {
+      return mapDbToClinic(data);
+    }
+
+    return null;
   } catch (error) {
     console.error('Error adding clinic:', error);
-    return null;
+    throw error;
   }
 };
 
 export const createClinic = async (clinic: Partial<Clinic>): Promise<{ data: Clinic | null, error: any }> => {
   try {
-    const { data, error } = await supabase
-      .from('clinics')
-      .insert(mapClinicToDb(clinic))
-      .select()
-      .single();
-
-    if (error) throw error;
-    return { data: mapDbToClinic(data), error: null };
+    // Try to use addClinic which attempts RPC first then falls back to direct insert
+    const newClinic = await addClinic(clinic);
+    return { data: newClinic, error: null };
   } catch (error) {
     console.error('Error creating clinic:', error);
     return { data: null, error };
