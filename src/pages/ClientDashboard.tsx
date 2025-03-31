@@ -1,215 +1,221 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Link } from 'react-router-dom';
+import { ArrowUp, ArrowDown, BarChart2, Scale, Droplets, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/auth';
-import { Button } from '@/components/ui/button';
-import { Calendar, Activity, Weight, PlusCircle, Droplets } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Progress } from '@/components/ui/progress';
-import ProgressChart from '@/components/progress/ProgressChart';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client'; 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from '@/components/ui/separator';
 import ClientDailyDrip from '@/components/client/ClientDailyDrip';
-
-// Motivational quotes
-const motivationalQuotes = [
-  "The only bad workout is the one that didn't happen.",
-  "Small daily improvements lead to stunning results.",
-  "Your health is an investment, not an expense.",
-  "Take care of your body. It's the only place you have to live.",
-  "The greatest wealth is health.",
-  "Strive for progress, not perfection.",
-  "Wellness is the complete integration of body, mind, and spirit.",
-  "Your body hears everything your mind says.",
-  "Health is not about the weight you lose, but about the life you gain.",
-  "Wellness is a connection of paths: knowledge and action."
-];
 
 const ClientDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [checkIns, setCheckIns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [programName, setProgramName] = useState("");
+  const [clientStartDate, setClientStartDate] = useState("");
+  const [waterProgress, setWaterProgress] = useState(0);
+  const [weightTrend, setWeightTrend] = useState('neutral');
   
-  // Get a random motivational quote
-  const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+  useEffect(() => {
+    const fetchClientData = async () => {
+      try {
+        if (!user) return;
+        
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select(`
+            id,
+            name,
+            start_date,
+            programs:program_id (name, duration)
+          `)
+          .eq('user_id', user.id)
+          .single();
+        
+        if (clientError) throw clientError;
+        
+        if (clientData) {
+          setClientStartDate(clientData.start_date);
+          if (clientData.programs) {
+            setProgramName(clientData.programs.name);
+          }
+          
+          // Fetch check-ins for this client
+          const { data: checkInsData, error: checkInsError } = await supabase
+            .from('check_ins')
+            .select('*')
+            .eq('client_id', clientData.id)
+            .order('date', { ascending: false })
+            .limit(10);
+            
+          if (checkInsError) throw checkInsError;
+          
+          if (checkInsData && checkInsData.length > 0) {
+            setCheckIns(checkInsData);
+            
+            // Calculate water progress from latest check-in
+            const latestCheckIn = checkInsData[0];
+            if (latestCheckIn.water_intake) {
+              const waterIntake = latestCheckIn.water_intake;
+              const waterTarget = 8; // 8 glasses as default target
+              setWaterProgress(Math.min(100, (waterIntake / waterTarget) * 100));
+            }
+            
+            // Calculate weight trend
+            if (checkInsData.length >= 2) {
+              const latest = checkInsData[0].weight;
+              const previous = checkInsData[1].weight;
+              
+              if (latest < previous) {
+                setWeightTrend('down');
+              } else if (latest > previous) {
+                setWeightTrend('up');
+              } else {
+                setWeightTrend('neutral');
+              }
+            }
+          }
+        }
+        
+      } catch (error) {
+        console.error("Error fetching client data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchClientData();
+  }, [user]);
   
-  // Mock data
-  const currentWeight = 172;
-  const startWeight = 185;
-  const goalWeight = 160;
-  const weightProgress = Math.floor(((startWeight - currentWeight) / (startWeight - goalWeight)) * 100);
-  
-  // Mock check-in streak
-  const streak = 5;
-  
-  const daysLeft = 21;
-
-  // Mock water intake data for the week
-  const waterIntakeData = [56, 64, 72, 48, 80, 64, 72];
-  const averageWaterIntake = Math.round(waterIntakeData.reduce((a, b) => a + b, 0) / waterIntakeData.length);
-  
-  const handleNewCheckIn = () => {
-    navigate('/check-in');
+  // Calculate progress percentage based on start date and program duration
+  const calculateProgress = () => {
+    if (!clientStartDate || !programName) return 0;
+    
+    const startDate = new Date(clientStartDate);
+    const currentDate = new Date();
+    const daysPassed = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+    const programDuration = 30; // Default to 30 days if not specified
+    
+    const progressPercent = Math.min(100, Math.max(0, (daysPassed / programDuration) * 100));
+    return Math.round(progressPercent);
   };
   
-  const handleViewProgress = () => {
-    navigate('/progress');
-  };
+  const progressPercent = calculateProgress();
   
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
-        <p className="text-gray-500">Welcome back, {user?.name}!</p>
-      </div>
-
-      {/* Daily Drip Message */}
+    <div className="space-y-6">
+      {/* Add daily drip message */}
       <ClientDailyDrip />
 
-      {/* Motivational Quote */}
-      <Card className="mb-6 border-l-4 border-l-primary-500">
-        <CardContent className="py-4">
-          <blockquote className="italic text-gray-700">"{randomQuote}"</blockquote>
-        </CardContent>
-      </Card>
-      
-      {/* Program Progress Overview */}
-      <Card className="mb-6">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between">
-            <span>Current Program: <span className="text-primary-600">Practice Naturals</span></span>
-            <span className="text-sm text-gray-500">{daysLeft} days left</span>
-          </CardTitle>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Program Progress</CardTitle>
+          <CardDescription>
+            {programName ? `${programName}` : "Your current program"}
+            {clientStartDate && ` - Started ${new Date(clientStartDate).toLocaleDateString()}`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <div className="flex justify-between mb-1 text-sm">
-              <span className="font-medium">Program Progress</span>
-              <span>55%</span>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Progress</span>
+              <span>{progressPercent}%</span>
             </div>
-            <Progress value={55} className="h-2" />
+            <Progress value={progressPercent} className="h-2" />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <div className="text-xl font-bold text-primary-600">{startWeight} lbs</div>
-              <div className="text-xs text-gray-500">Starting Weight</div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <div className="text-xl font-bold text-primary-600">{currentWeight} lbs</div>
-              <div className="text-xs text-gray-500">Current Weight</div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <div className="text-xl font-bold text-primary-600">{goalWeight} lbs</div>
-              <div className="text-xs text-gray-500">Goal Weight</div>
-            </div>
+          <div className="mt-6">
+            <Button asChild size="sm" className="gap-2">
+              <Link to="/check-in">
+                Record Today's Check-In <ArrowRight size={16} />
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
       
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleViewProgress}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Weight Loss</CardTitle>
-            <Weight className="text-primary-500" size={20} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Today's stats */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BarChart2 className="h-4 w-4" />
+              Latest Stats
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-{startWeight - currentWeight} lbs</div>
-            <Progress value={weightProgress} className="h-1 mt-2" />
-            <p className="text-xs text-gray-500 mt-2">{weightProgress}% to goal</p>
+          <CardContent className="space-y-4">
+            {checkIns.length > 0 ? (
+              <>
+                {checkIns[0].weight && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Scale className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">Weight</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{checkIns[0].weight} lbs</span>
+                      {weightTrend === 'down' && <ArrowDown className="h-4 w-4 text-green-500" />}
+                      {weightTrend === 'up' && <ArrowUp className="h-4 w-4 text-red-500" />}
+                    </div>
+                  </div>
+                )}
+                
+                {checkIns[0].water_intake && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <Droplets className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">Water Intake</span>
+                      </div>
+                      <span className="text-sm">{checkIns[0].water_intake} glasses</span>
+                    </div>
+                    <Progress value={waterProgress} className="h-1" />
+                  </div>
+                )}
+                
+                <Separator />
+                
+                <div className="pt-2">
+                  <span className="text-xs text-gray-500">
+                    Last updated: {new Date(checkIns[0].date).toLocaleDateString()}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="text-sm text-gray-500 py-2">
+                No check-ins recorded yet. Start tracking your progress!
+              </div>
+            )}
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleViewProgress}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Average Energy</CardTitle>
-            <Activity className="text-secondary-500" size={20} />
+        {/* Quick actions */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">7.5/10</div>
-            <Progress value={75} className="h-1 mt-2" />
-            <p className="text-xs text-gray-500 mt-2">Last 7 days</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleViewProgress}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Water Intake</CardTitle>
-            <Droplets className="text-blue-500" size={20} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{averageWaterIntake} oz</div>
-            <Progress value={(averageWaterIntake / 100) * 100} className="h-1 mt-2 bg-blue-100" />
-            <p className="text-xs text-gray-500 mt-2">Daily average</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleNewCheckIn}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Check-in Streak</CardTitle>
-            <Calendar className="text-orange-500" size={20} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{streak} days</div>
-            <div className="flex mt-2">
-              {Array(7).fill(0).map((_, i) => (
-                <div 
-                  key={i}
-                  className={`h-1 flex-1 mx-0.5 rounded-full ${i < streak ? 'bg-orange-500' : 'bg-gray-200'}`}
-                />
-              ))}
-            </div>
-            <p className="text-xs text-gray-500 mt-2">Keep it up!</p>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Chart and Check-in */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-lg">Weight Progress</CardTitle>
-              <Button onClick={handleViewProgress} variant="outline" size="sm">
-                View All
+            <div className="grid grid-cols-2 gap-4">
+              <Button asChild variant="outline" className="h-20 flex flex-col">
+                <Link to="/check-in">
+                  <Scale className="h-5 w-5 mb-1" />
+                  <span>Check-In</span>
+                </Link>
               </Button>
-            </CardHeader>
-            <CardContent className="h-[300px]">
-              <ProgressChart />
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Daily Check-in</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center space-y-4">
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-2">Don't forget to log your daily progress!</p>
-                <Button onClick={handleNewCheckIn} className="w-full">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  New Check-in
-                </Button>
-              </div>
               
-              <div className="w-full pt-4 border-t border-gray-200">
-                <h4 className="font-medium text-sm mb-2">Today's Supplements</h4>
-                <ul className="space-y-2">
-                  <li className="flex items-center justify-between text-sm">
-                    <span>Metabolic Booster</span>
-                    <span className="text-xs bg-primary-100 text-primary-800 py-1 px-2 rounded">Morning</span>
-                  </li>
-                  <li className="flex items-center justify-between text-sm">
-                    <span>Omega Complex</span>
-                    <span className="text-xs bg-secondary-100 text-secondary-800 py-1 px-2 rounded">Evening</span>
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Button asChild variant="outline" className="h-20 flex flex-col">
+                <Link to="/client/program">
+                  <BarChart2 className="h-5 w-5 mb-1" />
+                  <span>My Program</span>
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

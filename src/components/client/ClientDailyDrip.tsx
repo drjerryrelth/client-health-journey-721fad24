@@ -26,13 +26,13 @@ const ClientDailyDrip = () => {
         if (!user) return;
         
         // Fetch the client's information to get their ID
-        const { data: clientData } = await supabase
+        const { data: clientData, error: clientError } = await supabase
           .from('clients')
           .select('id, start_date, program_id')
           .eq('user_id', user.id)
           .single();
           
-        if (!clientData || !clientData.start_date || !clientData.program_id) {
+        if (clientError || !clientData || !clientData.start_date || !clientData.program_id) {
           setLoading(false);
           return;
         }
@@ -43,47 +43,35 @@ const ClientDailyDrip = () => {
         const daysDiff = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
         const currentDay = daysDiff + 1; // Day 1 is the first day
         
-        // First check if we already have a message for today
-        const { data: clientMessages } = await supabase
-          .from('client_drip_messages')
-          .select(`
-            id,
-            is_read,
-            day_number,
-            drip_template_id,
-            drip_templates:drip_template_id (
-              subject,
-              content
-            )
-          `)
-          .eq('client_id', clientData.id)
-          .eq('day_number', currentDay)
-          .order('sent_at', { ascending: false })
-          .limit(1);
-          
-        if (clientMessages && clientMessages.length > 0) {
+        // First try to get the client's message for today
+        const { data: messageData, error: messageError } = await supabase.rpc(
+          'get_client_daily_drip',
+          { client_id_param: clientData.id }
+        );
+        
+        if (!messageError && messageData) {
           setTodaysDrip({
-            id: clientMessages[0].id,
-            subject: clientMessages[0].drip_templates.subject,
-            content: clientMessages[0].drip_templates.content,
-            day_number: clientMessages[0].day_number,
-            is_read: clientMessages[0].is_read
+            id: messageData.id,
+            subject: messageData.subject,
+            content: messageData.content,
+            day_number: messageData.day_number,
+            is_read: messageData.is_read
           });
           setLoading(false);
           return;
         }
         
-        // If no message for today, try to generate one
+        // If no message is found, generate one via the edge function
         try {
           const { data, error } = await supabase.functions.invoke("generate-daily-drips", {
             body: { clientId: clientData.id }
           });
           
-          if (!error && data?.template) {
+          if (!error && data?.message) {
             setTodaysDrip({
               id: data.id || 'new',
-              subject: data.template.subject,
-              content: data.template.content,
+              subject: data.message.subject,
+              content: data.message.content,
               day_number: currentDay,
               is_read: false
             });
@@ -104,7 +92,7 @@ const ClientDailyDrip = () => {
   }, [user]);
   
   const markAsRead = async () => {
-    if (!todaysDrip) return;
+    if (!todaysDrip || todaysDrip.id === 'new') return;
     
     try {
       const { data: clientData } = await supabase
@@ -115,10 +103,9 @@ const ClientDailyDrip = () => {
         
       if (!clientData) return;
       
-      await supabase
-        .from('client_drip_messages')
-        .update({ is_read: true })
-        .eq('id', todaysDrip.id);
+      await supabase.rpc('mark_message_as_read', { 
+        message_id_param: todaysDrip.id 
+      });
         
       setTodaysDrip({ ...todaysDrip, is_read: true });
       

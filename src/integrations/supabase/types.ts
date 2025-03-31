@@ -145,6 +145,48 @@ export type Database = {
           },
         ]
       }
+      client_drip_messages: {
+        Row: {
+          client_id: string
+          day_number: number
+          drip_template_id: string
+          id: string
+          is_read: boolean
+          sent_at: string
+        }
+        Insert: {
+          client_id: string
+          day_number: number
+          drip_template_id: string
+          id?: string
+          is_read?: boolean
+          sent_at?: string
+        }
+        Update: {
+          client_id?: string
+          day_number?: number
+          drip_template_id?: string
+          id?: string
+          is_read?: boolean
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_drip_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_drip_messages_drip_template_id_fkey"
+            columns: ["drip_template_id"]
+            isOneToOne: false
+            referencedRelation: "drip_content_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           clinic_id: string
@@ -323,6 +365,36 @@ export type Database = {
           },
         ]
       }
+      drip_content_templates: {
+        Row: {
+          content: string
+          created_at: string
+          day_number: number
+          id: string
+          program_type: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          day_number: number
+          id?: string
+          program_type: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          day_number?: number
+          id?: string
+          program_type?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           clinic_id: string | null
@@ -448,6 +520,12 @@ export type Database = {
           role?: string
         }
         Returns: string
+      }
+      get_client_program_day: {
+        Args: {
+          client_id_param: string
+        }
+        Returns: number
       }
       get_clinic_coaches: {
         Args: {
