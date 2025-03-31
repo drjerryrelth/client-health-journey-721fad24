@@ -19,7 +19,22 @@ export const ProgramService = {
       const programsWithSupplements = await Promise.all(
         (data || []).map(async (program) => {
           const supplements = await this.getProgramSupplements(program.id);
-          return mapDbProgramToProgram(program, supplements);
+          
+          // Get client count for each program
+          const { count: clientCount, error: countError } = await supabase
+            .from('clients')
+            .select('*', { count: 'exact', head: true })
+            .eq('program_id', program.id);
+            
+          if (countError) {
+            console.error('Error fetching client count:', countError);
+          }
+          
+          const mappedProgram = mapDbProgramToProgram(program, supplements);
+          // Add client count to the program object
+          mappedProgram.clientCount = clientCount || 0;
+          
+          return mappedProgram;
         })
       );
       

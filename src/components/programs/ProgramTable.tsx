@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Utensils, FileText, Calendar, ListCheck, Loader2 } from 'lucide-react';
+import { Utensils, FileText, Calendar, ListCheck, Loader2, Users } from 'lucide-react';
 import { Program } from '@/types';
 
 interface ProgramTableProps {
@@ -71,6 +71,12 @@ const ProgramTable = ({ programs, isLoading, isError, onSelectProgram }: Program
             <TableHead>Type</TableHead>
             <TableHead>Duration</TableHead>
             <TableHead>Check-in</TableHead>
+            <TableHead>
+              <div className="flex items-center gap-1">
+                <Users size={16} />
+                <span>Clients</span>
+              </div>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -95,6 +101,7 @@ const ProgramTable = ({ programs, isLoading, isError, onSelectProgram }: Program
               </TableCell>
               <TableCell>{formatDuration(program.duration)}</TableCell>
               <TableCell>{program.checkInFrequency === 'daily' ? 'Daily' : 'Weekly'}</TableCell>
+              <TableCell>{program.clientCount || 0}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -1,4 +1,3 @@
-
 import { ProfileRow, ClientRow, ProgramRow, SupplementRow, CheckInRow, ClinicRow } from './database';
 
 export type UserRole = 'admin' | 'coach' | 'client' | 'super_admin';
@@ -36,6 +35,7 @@ export type Program = {
   supplements: Supplement[];
   checkInFrequency: 'daily' | 'weekly';
   clinicId: string;
+  clientCount?: number; // Add this field to track number of enrolled clients
 };
 
 export type Supplement = {
