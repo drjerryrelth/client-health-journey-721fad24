@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/auth';
@@ -135,7 +134,7 @@ const ClientDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{averageWaterIntake} oz</div>
-            <Progress value={(averageWaterIntake / 100) * 100} className="h-1 mt-2 bg-blue-100" indicatorClassName="bg-blue-500" />
+            <Progress value={(averageWaterIntake / 100) * 100} className="h-1 mt-2 bg-blue-100" />
             <p className="text-xs text-gray-500 mt-2">Daily average</p>
           </CardContent>
         </Card>
