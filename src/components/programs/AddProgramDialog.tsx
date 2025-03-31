@@ -17,11 +17,13 @@ interface AddProgramDialogProps {
     duration: string;
     checkInFrequency: 'daily' | 'weekly';
     description: string;
+    clinicId?: string;  // Optional parameter to override user's clinicId
   }) => Promise<void>;
   isSubmitting: boolean;
+  clinicId?: string;  // Added clinicId prop
 }
 
-const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting }: AddProgramDialogProps) => {
+const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting, clinicId }: AddProgramDialogProps) => {
   const [programType, setProgramType] = useState<'practice_naturals' | 'chirothin' | 'nutrition' | 'fitness' | 'keto' | 'custom'>('nutrition');
   const [customName, setCustomName] = useState('');
   const [programDuration, setProgramDuration] = useState('');
@@ -53,7 +55,8 @@ const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting }: AddProgra
       type: programType,
       duration: programDuration,
       checkInFrequency,
-      description: programDescription
+      description: programDescription,
+      clinicId // Pass the clinicId to the submit handler
     });
   };
 

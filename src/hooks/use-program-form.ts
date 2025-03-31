@@ -25,9 +25,18 @@ export const useProgramForm = () => {
     duration: string;
     checkInFrequency: 'daily' | 'weekly';
     description: string;
+    clinicId?: string;  // Optional parameter to override user's clinicId
   }) => {
     if (!formData.name || !formData.type || !formData.duration || !formData.checkInFrequency) {
       toast("Please fill in all required fields");
+      return;
+    }
+    
+    // Get clinicId from formData or user
+    const clinicId = formData.clinicId || user?.clinicId;
+    
+    if (!clinicId) {
+      toast("No clinic selected. Please select a clinic first.");
       return;
     }
 
@@ -52,7 +61,7 @@ export const useProgramForm = () => {
           type: formData.type,
           duration: durationInDays,
           checkInFrequency: formData.checkInFrequency,
-          clinicId: user?.clinicId || ''
+          clinicId: clinicId
         },
         supplements: [] // No supplements for now, will add later
       });
