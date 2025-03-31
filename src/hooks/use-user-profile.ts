@@ -24,7 +24,50 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       .single();
     
     if (error) {
-      console.log('Profile not found in database, creating fallback profile');
+      console.log('Profile not found in database, checking if this is a clinic registration');
+      
+      // Check if this user is associated with a clinic as an owner/admin
+      const { data: clinicData } = await supabase
+        .from('clinics')
+        .select('id, name, email')
+        .eq('email', email)
+        .single();
+      
+      if (clinicData) {
+        console.log('User is associated with clinic:', clinicData);
+        
+        // Create a fallback profile for clinic users - assign as coach instead of admin
+        const clinicProfile: UserData = {
+          id: userId,
+          name: clinicData.name || "Clinic Coach",
+          email: email,
+          role: "coach", // Assign coach role instead of admin
+          clinicId: clinicData.id,
+        };
+        
+        try {
+          // Try to insert the profile into the database
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: userId,
+              full_name: clinicData.name || "Clinic Coach",
+              email: email,
+              role: "coach", // Set role as coach
+              clinic_id: clinicData.id,
+            });
+          
+          if (insertError) {
+            console.warn('Could not save clinic profile to database:', insertError.message);
+          } else {
+            console.log('Clinic coach profile created in database successfully');
+          }
+        } catch (insertErr) {
+          console.error('Error during clinic profile insertion:', insertErr);
+        }
+        
+        return clinicProfile;
+      }
       
       // List of demo emails
       const demoEmails = {
@@ -47,9 +90,9 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
         userRole = 'client';
         userName = 'Client User';
       } else {
-        // Default fallback
-        userRole = 'admin';
-        userName = 'Demo User';
+        // Default fallback - changed from 'admin' to 'coach'
+        userRole = 'coach';
+        userName = 'New Coach';
       }
       
       // Create a fallback profile object
