@@ -77,7 +77,7 @@ export const useCoachProfile = () => {
               const fallbackProfile = {
                 name: user.name || user.email.split('@')[0] || "Coach",
                 email: user.email,
-                phone: "",
+                phone: "", // Include an empty phone property
               };
               
               console.log('Created fallback profile:', fallbackProfile);
@@ -87,10 +87,11 @@ export const useCoachProfile = () => {
             }
           } else {
             console.log('Profile data found:', profileData);
+            // Make sure we add the phone property even if it doesn't exist in the profiles table
             setProfileData({
               name: profileData.full_name || "",
               email: profileData.email || "",
-              phone: profileData.phone || "",
+              phone: "", // Ensure the phone property is always present
             });
           }
         }
