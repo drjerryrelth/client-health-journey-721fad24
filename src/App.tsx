@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { initializeDemoRelationships } from "./services/demo-data-initializer";
@@ -48,15 +48,22 @@ const AppContent = () => {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/signup/clinic" element={<ClinicSignup />} />
           
-          {/* Dashboard routes that handle role-based routing internally */}
+          {/* Dashboard routes with role-based redirects */}
           <Route path="/dashboard/*" element={<Dashboard />} />
           
-          {/* Direct access to role-specific dashboards */}
+          {/* Admin routes */}
           <Route path="/admin/*" element={<AdminRoutes />} />
-          <Route path="/coach/*" element={<CoachRoutes />} />
-          <Route path="/client/*" element={<ClientRoutes />} />
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           
-          {/* Legacy routes - redirected through Dashboard */}
+          {/* Coach routes */}
+          <Route path="/coach/*" element={<CoachRoutes />} />
+          <Route path="/coach" element={<Navigate to="/coach/dashboard" replace />} />
+          
+          {/* Client routes */}
+          <Route path="/client/*" element={<ClientRoutes />} />
+          <Route path="/client" element={<Navigate to="/client/dashboard" replace />} />
+          
+          {/* Legacy routes */}
           <Route path="/coach-dashboard/*" element={<Dashboard />} />
           <Route path="/client-dashboard/*" element={<Dashboard />} />
           <Route path="/check-in" element={<Dashboard />} />

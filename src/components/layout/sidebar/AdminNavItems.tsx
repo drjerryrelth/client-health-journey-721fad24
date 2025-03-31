@@ -27,62 +27,62 @@ export interface NavItem {
 export const adminNavItems: NavItem[] = [
   {
     title: "Dashboard",
-    href: "/dashboard",
+    href: "/admin/dashboard",
     icon: Home,
   },
   {
     title: "Clients",
-    href: "/clients",
+    href: "/admin/clients",
     icon: Users,
   },
   {
     title: "Clinics",
-    href: "/clinics",
+    href: "/admin/clinics",
     icon: Building,
   },
   {
     title: "Coaches",
-    href: "/coaches",
+    href: "/admin/coaches",
     icon: User,
   },
   {
     title: "Programs",
-    href: "/programs",
+    href: "/admin/programs",
     icon: Package,
   },
   {
     title: "Check-ins",
-    href: "/check-ins",
+    href: "/admin/check-ins",
     icon: CalendarCheck,
   },
   {
     title: "Reports",
-    href: "/reports",
+    href: "/admin/reports",
     icon: BarChart3,
   },
   {
     title: "Activities",
-    href: "/activities",
+    href: "/admin/activities",
     icon: Activity,
   },
   {
     title: "Resources",
-    href: "/resources",
+    href: "/admin/resources",
     icon: BookOpen,
   },
   {
     title: "Clinic Customization",
-    href: "/clinic-customization",
+    href: "/admin/clinic-customization",
     icon: Palette,
   },
   {
     title: "Meal Plan Generator",
-    href: "/meal-plan-generator",
+    href: "/admin/meal-plan-generator",
     icon: ClipboardList,
   },
   {
     title: "Settings",
-    href: "/settings",
+    href: "/admin/settings",
     icon: Settings,
   },
 ];
