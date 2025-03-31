@@ -23,7 +23,7 @@ const CheckInsPage = () => {
       <Card>
         <CardHeader>
           <CardTitle>
-            {isCoach ? 'Your Clients' Check-ins' : 'Recent Check-ins'}
+            {isCoach ? 'Your Clients\' Check-ins' : 'Recent Check-ins'}
           </CardTitle>
         </CardHeader>
         <CardContent>
