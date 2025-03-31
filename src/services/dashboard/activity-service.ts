@@ -30,10 +30,15 @@ export async function fetchRecentActivities(limit: number = 5): Promise<Activity
         
       if (!checkInsError && checkInsData) {
         for (const checkIn of checkInsData) {
+          // Handle clients data safely - it might be an object, not an array
+          const clientName = typeof checkIn.clients === 'object' ? 
+            (checkIn.clients as { name?: string })?.name || 'A client' : 
+            'A client';
+            
           activities.push({
             id: checkIn.id,
             type: 'check_in',
-            description: `${checkIn.clients?.name || 'A client'} submitted a check-in`,
+            description: `${clientName} submitted a check-in`,
             timestamp: new Date(checkIn.created_at).toLocaleString(),
             userId: checkIn.client_id
           });
@@ -82,10 +87,15 @@ export async function fetchRecentActivities(limit: number = 5): Promise<Activity
         
       if (!coachesError && coachesData) {
         for (const coach of coachesData) {
+          // Handle clinics data safely - it might be an object, not an array
+          const clinicName = typeof coach.clinics === 'object' ? 
+            (coach.clinics as { name?: string })?.name || 'a clinic' : 
+            'a clinic';
+            
           activities.push({
             id: coach.id,
             type: 'coach_added',
-            description: `New coach added: ${coach.name} to ${coach.clinics?.name || 'a clinic'}`,
+            description: `New coach added: ${coach.name} to ${clinicName}`,
             timestamp: new Date(coach.created_at).toLocaleString(),
             clinicId: coach.clinic_id
           });
