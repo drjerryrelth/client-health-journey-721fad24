@@ -24,11 +24,16 @@ const Sidebar = () => {
     setCollapsed(isMobile);
   }, [isMobile]);
 
-  const isAdmin = hasRole('admin');
+  const isAdmin = hasRole('admin') || hasRole('super_admin');
   const isCoach = hasRole('coach');
   const isClient = hasRole('client');
+  
+  console.log('User role in sidebar:', user?.role);
+  console.log('Is admin:', isAdmin);
+  console.log('Is coach:', isCoach);
+  console.log('Is client:', isClient);
 
-  // Updated admin links with Reports link re-added and Admin Users link added
+  // Admin links
   const adminLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Clinics', path: '/clinics', icon: <Building size={20} /> },
@@ -41,7 +46,7 @@ const Sidebar = () => {
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
 
-  // Updated coach links with Resources link
+  // Updated coach links with proper paths
   const coachLinks = [
     { name: 'Dashboard', path: '/coach-dashboard', icon: <Home size={20} /> },
     { name: 'Clients', path: '/coach/clients', icon: <Users size={20} /> },
@@ -52,7 +57,7 @@ const Sidebar = () => {
     { name: 'Settings', path: '/coach/settings', icon: <Settings size={20} /> },
   ];
 
-  // Updated client links with Resources link
+  // Client links
   const clientLinks = [
     { name: 'Dashboard', path: '/client-dashboard', icon: <Home size={20} /> },
     { name: 'Check-in', path: '/check-in', icon: <Calendar size={20} /> },
@@ -70,10 +75,10 @@ const Sidebar = () => {
         description: "Create a new clinic for your organization",
       });
     } else if (isCoach) {
-      navigate('/add-client');
+      navigate('/coach/clients');
       toast({
-        title: "Coming Soon",
-        description: "The Add Client feature is under development",
+        title: "Add Client",
+        description: "Add a new client to your roster",
       });
     }
   };

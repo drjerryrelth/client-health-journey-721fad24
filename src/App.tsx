@@ -27,7 +27,7 @@ import SettingsPage from "./pages/admin/SettingsPage";
 import CoachesPage from "./pages/admin/CoachesPage";
 import ActivitiesPage from "./pages/admin/ActivitiesPage"; 
 import ResourcesPage from "./pages/admin/ResourcesPage";
-import AdminUsersPage from "./pages/admin/AdminUsersPage"; // Import the new AdminUsersPage
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
 
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
@@ -55,7 +55,7 @@ const App = () => (
             <Route path="/unauthorized" element={<Unauthorized />} />
             
             {/* Admin routes */}
-            <Route element={<MainLayout requiredRoles={['admin']} />}>
+            <Route element={<MainLayout requiredRoles={['admin', 'super_admin']} />}>
               <Route path="/dashboard" element={<AdminDashboard />} />
               <Route path="/clients" element={<ClientsPage />} />
               <Route path="/clinics" element={<ClinicsPage />} />
@@ -66,19 +66,19 @@ const App = () => (
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/activities" element={<ActivitiesPage />} />
               <Route path="/resources" element={<ResourcesPage />} />
-              <Route path="/admin-users" element={<AdminUsersPage />} /> {/* Add the AdminUsersPage route */}
+              <Route path="/admin-users" element={<AdminUsersPage />} />
             </Route>
             
             {/* Coach routes */}
             <Route element={<MainLayout requiredRoles={['coach']} />}>
               <Route path="/coach-dashboard" element={<Dashboard />} />
-              <Route path="/coach/clients" element={<Dashboard />} />
-              <Route path="/coach/programs" element={<Dashboard />} />
-              <Route path="/coach/check-ins" element={<Dashboard />} />
-              <Route path="/coach/reports" element={<Dashboard />} />
-              <Route path="/coach/settings" element={<Dashboard />} />
+              <Route path="/coach/clients" element={<ClientsPage />} />
+              <Route path="/coach/programs" element={<ProgramsPage />} />
+              <Route path="/coach/check-ins" element={<CheckInsPage />} />
+              <Route path="/coach/reports" element={<ReportsPage />} />
+              <Route path="/coach/settings" element={<SettingsPage />} />
               <Route path="/coach/resources" element={<ResourcesPage />} />
-              <Route path="/add-client" element={<Dashboard />} />
+              <Route path="/add-client" element={<ClientsPage />} />
             </Route>
             
             {/* Client routes */}

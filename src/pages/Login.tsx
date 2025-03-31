@@ -3,24 +3,31 @@ import React, { useEffect } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import { useAuth } from '@/context/auth';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Login = () => {
-  const { isAuthenticated, hasRole, isLoading } = useAuth();
+  const { isAuthenticated, hasRole, isLoading, user } = useAuth();
   const navigate = useNavigate();
   
   // Effect for navigation when auth status changes
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      console.log('User authenticated, redirecting...');
-      if (hasRole('admin')) {
+    if (isAuthenticated && !isLoading && user) {
+      console.log('User authenticated, redirecting...', user.role);
+      
+      // Added toast notification for clarity during debugging
+      toast.success(`Logged in as ${user.role}`);
+      
+      if (hasRole('admin') || hasRole('super_admin')) {
         navigate('/dashboard'); // Admin dashboard
       } else if (hasRole('coach')) {
         navigate('/coach-dashboard'); // Coach dashboard
       } else if (hasRole('client')) {
         navigate('/client-dashboard'); // Client dashboard
+      } else {
+        toast.error(`Unknown role: ${user.role}`);
       }
     }
-  }, [isAuthenticated, isLoading, hasRole, navigate]);
+  }, [isAuthenticated, isLoading, hasRole, navigate, user]);
   
   // Modified to prevent infinite loading - Add a timeout
   useEffect(() => {
@@ -46,9 +53,10 @@ const Login = () => {
   }
   
   // Already logged in - this is a fallback in case the effect doesn't trigger
-  if (isAuthenticated) {
-    console.log('Already authenticated, redirecting directly');
-    if (hasRole('admin')) {
+  if (isAuthenticated && user) {
+    console.log('Already authenticated, redirecting directly', user.role);
+    
+    if (hasRole('admin') || hasRole('super_admin')) {
       return <Navigate to="/dashboard" replace />;
     } else if (hasRole('coach')) {
       return <Navigate to="/coach-dashboard" replace />;

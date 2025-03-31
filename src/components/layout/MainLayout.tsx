@@ -5,6 +5,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import { UserRole } from '@/types';
+import { toast } from 'sonner';
 
 interface MainLayoutProps {
   requiredRoles?: UserRole[];
@@ -27,9 +28,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'coac
     return <Navigate to="/login" replace />;
   }
   
-  // Check role permissions
+  // Check role permissions - updated to log useful debugging info
   const hasPermission = requiredRoles.some(role => hasRole(role));
+  console.log('User role:', user?.role);
+  console.log('Required roles:', requiredRoles);
+  console.log('Has permission:', hasPermission);
+  
   if (!hasPermission) {
+    toast.error("Access denied. You don't have permission to access this page.");
     return <Navigate to="/unauthorized" replace />;
   }
   
