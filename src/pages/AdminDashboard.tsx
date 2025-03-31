@@ -52,25 +52,25 @@ const AdminDashboard = () => {
     }
   }, [statsError, activitiesError]);
   
-  // Stats with different navigation paths
+  // Stats with different navigation paths - UPDATED to use correct paths
   const stats = [
     { 
       title: 'Active Clinics', 
       value: dashboardStats?.activeClinicCount || 0, 
       icon: <Building className="text-primary-500" size={24} />,
-      path: '/clinics'
+      path: '/admin/clinics'
     },
     { 
       title: 'Total Coaches', 
       value: dashboardStats?.totalCoachCount || 0, 
       icon: <Users className="text-secondary-500" size={24} />,
-      path: '/coaches'
+      path: '/admin/coaches'
     },
     { 
       title: 'Weekly Activities', 
       value: dashboardStats?.weeklyActivitiesCount || 0, 
       icon: <Activity className="text-purple-500" size={24} />,
-      path: '/activities'
+      path: '/admin/activities'
     },
   ];
   
@@ -79,11 +79,11 @@ const AdminDashboard = () => {
   };
   
   const handleManageClinics = () => {
-    navigate("/clinics");
+    navigate("/admin/clinics");
   };
   
   const handleViewAllActivities = () => {
-    navigate("/activities");
+    navigate("/admin/activities");
   };
 
   const handleRefresh = () => {
@@ -291,3 +291,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
