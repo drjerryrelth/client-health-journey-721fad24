@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,8 +8,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  email: string;
-  name: string;
+  to: string;
   subject: string;
   mealPlan: string;
   shoppingList: string;
@@ -20,110 +19,149 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-
+  
   try {
-    const { email, name, subject, mealPlan, shoppingList } = await req.json() as EmailRequest;
+    const { to, subject, mealPlan, shoppingList } = await req.json() as EmailRequest;
     
-    console.log(`Sending meal plan to ${name} at ${email}`);
+    console.log(`Attempting to send meal plan email to ${to}`);
     
-    // Convert plain text to HTML for email
-    const convertToHtml = (text: string) => {
-      return text
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br />')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/# (.*?)\n/g, '<h2>$1</h2>')
-        .replace(/## (.*?)\n/g, '<h3>$1</h3>')
-        .replace(/### (.*?)\n/g, '<h4>$1</h4>')
-        .replace(/- (.*?)\n/g, '<li>$1</li>')
-        .replace(/<li>(.*?)<\/li>/g, '<ul><li>$1</li></ul>')
-        .replace(/<\/ul><ul>/g, '')
-    };
+    // Format meal plan text for email
+    const formattedMealPlan = mealPlan.replace(/\n/g, "<br>");
+    const formattedShoppingList = shoppingList.replace(/\n/g, "<br>");
     
-    const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Your Custom Meal Plan</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          h1 { color: #2563eb; }
-          h2 { color: #3b82f6; margin-top: 30px; }
-          h3 { color: #60a5fa; }
-          ul { margin-left: 20px; }
-          .section { margin-bottom: 30px; }
-          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; }
-        </style>
-      </head>
-      <body>
-        <h1>Your Custom 7-Day Meal Plan</h1>
-        <p>Hello ${name},</p>
-        <p>Here's your personalized meal plan as requested. If you have any questions or need adjustments, please contact your health coach.</p>
-        
-        <div class="section">
-          <h2>Meal Plan</h2>
-          <div>${convertToHtml(mealPlan)}</div>
-        </div>
-        
-        <div class="section">
-          <h2>Shopping List</h2>
-          <div>${convertToHtml(shoppingList)}</div>
-        </div>
-        
-        <div class="section">
-          <h3>Daily Reminders:</h3>
-          <ul>
-            <li>Drink 80-100 oz of water daily</li>
-            <li>Take all supplements as prescribed</li>
-            <li>Record your meals in your check-in app</li>
-          </ul>
-        </div>
-        
-        <div class="footer">
-          <p>This meal plan was created specifically for your dietary needs and program guidelines.</p>
-        </div>
-      </body>
-    </html>
+    // Add food prep reminder section
+    const foodPrepReminder = `
+      <div style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border-left: 5px solid #ffc107; border-radius: 4px;">
+        <h3 style="color: #856404; margin-top: 0;">Important Food Prep Reminders</h3>
+        <ul style="color: #856404;">
+          <li><strong>Avoid cooking oils</strong> - use dry rubs and seasonings instead</li>
+          <li>For salads, avoid dairy-based dressings</li>
+          <li>If needed, use only 1 tablespoon of olive oil or avocado oil for salad dressing</li>
+          <li>Recommended cooking methods: grilling, baking (without oil), steaming, or poaching</li>
+        </ul>
+      </div>
     `;
+
+    // Create the email HTML
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            .container {
+              padding: 20px;
+            }
+            h1 {
+              color: #2c3e50;
+              border-bottom: 1px solid #eee;
+              padding-bottom: 10px;
+            }
+            h2 {
+              color: #3498db;
+              margin-top: 30px;
+            }
+            .section {
+              margin-bottom: 30px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>${subject}</h1>
+            
+            ${foodPrepReminder}
+            
+            <div class="section">
+              <h2>Your Meal Plan</h2>
+              <div>${formattedMealPlan}</div>
+            </div>
+            
+            <div class="section">
+              <h2>Shopping List</h2>
+              <div>${formattedShoppingList}</div>
+            </div>
+            
+            <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; font-size: 14px; color: #777;">
+              <p>This meal plan was generated based on your preferences and dietary needs. 
+              Always consult with your healthcare provider before making significant changes to your diet.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Create SMTP client and send email
+    // Note: This is just example code - you would need to set up actual SMTP credentials
+    // For production, consider using a service like SendGrid, Mailgun, etc.
+    const client = new SmtpClient();
     
-    // For demo purposes, we'll just log what would be sent
-    // In a real implementation, you would use a service like SendGrid, Resend, etc.
-    console.log(`Would send email to ${email} with subject: ${subject}`);
-    console.log(`HTML Content: ${htmlContent.substring(0, 100)}...`);
-    
-    // Simulate email sending success
-    // In a real implementation, you would return the actual response from the email service
-    
-    return new Response(JSON.stringify({
-      success: true,
-      message: `Meal plan successfully sent to ${email}`,
-    }), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        ...corsHeaders 
-      },
-    });
+    try {
+      await client.connect({
+        hostname: Deno.env.get("SMTP_HOST") || "smtp.example.com",
+        port: parseInt(Deno.env.get("SMTP_PORT") || "587"),
+        username: Deno.env.get("SMTP_USERNAME") || "user@example.com",
+        password: Deno.env.get("SMTP_PASSWORD") || "password",
+      });
+      
+      await client.send({
+        from: Deno.env.get("SMTP_FROM") || "mealplan@example.com",
+        to: to,
+        subject: subject,
+        content: "Your meal plan is attached.",
+        html: emailHtml,
+      });
+      
+      await client.close();
+      
+      console.log("Email sent successfully");
+      
+      return new Response(
+        JSON.stringify({ success: true, message: "Meal plan email sent" }),
+        {
+          status: 200,
+          headers: { 
+            'Content-Type': 'application/json',
+            ...corsHeaders 
+          },
+        }
+      );
+    } catch (smtpError) {
+      console.error("SMTP Error:", smtpError);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "Failed to send email. This is likely due to missing SMTP configuration.",
+          error: smtpError.message
+        }),
+        {
+          status: 500,
+          headers: { 
+            'Content-Type': 'application/json',
+            ...corsHeaders 
+          },
+        }
+      );
+    }
   } catch (error) {
-    console.error("Error sending email with meal plan:", error);
-    return new Response(JSON.stringify({ 
-      success: false,
-      error: error.message 
-    }), {
-      status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        ...corsHeaders 
-      },
-    });
+    console.error("Error in email-meal-plan function:", error);
+    
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders 
+        },
+      }
+    );
   }
 });

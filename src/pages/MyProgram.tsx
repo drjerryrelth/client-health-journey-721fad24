@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -86,6 +85,31 @@ const MyProgram = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Food Preparation Rules</h3>
+                  <div className="border border-amber-200 bg-amber-50 rounded-lg p-4">
+                    <h4 className="font-medium text-amber-800 mb-2">Important Food Prep Guidelines</h4>
+                    <ul className="space-y-2">
+                      <li className="flex items-start">
+                        <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span><strong>Avoid cooking oils</strong> - Use dry rubs and seasonings instead</span>
+                      </li>
+                      <li className="flex items-start">
+                        <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>For salads, avoid dairy-based dressings</span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>If needed, use only 1 tablespoon of olive oil or avocado oil for salad dressing</span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>Recommended cooking methods: grilling, baking, steaming, or poaching</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                
                 <div>
                   <h3 className="text-lg font-medium mb-3">Recommended Foods</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

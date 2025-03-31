@@ -97,6 +97,11 @@ serve(async (req) => {
     // Add program-specific dietary guidelines
     systemPrompt += "Both Practice Naturals and ChiroThin focus on high protein, low carb, low fat. They are not Keto and prefer lean proteins. No bacon! ";
     systemPrompt += "Coffee and tea are fine, but watch the creamer. No dairy or alcohol allowed for either Practice Naturals or ChiroThin. ";
+    
+    // Add food prep rules
+    systemPrompt += "IMPORTANT FOOD PREP RULES: Avoid cooking oils completely and instead focus on dry rubs and seasonings for flavor. ";
+    systemPrompt += "If salads are included, avoid dairy-based dressings and use only 1 tablespoon of a healthy oil like olive oil or avocado oil as dressing. ";
+    systemPrompt += "All recipes should follow these cooking guidelines - suggest grilling, baking without oil, steaming, or poaching. ";
 
     const userPrompt = `Please create a detailed ${days}-day meal plan based on my dietary restrictions, preferences, and program guidelines. For each day, include breakfast, lunch, dinner, and any allowed snacks with exact portions. Also, provide a complete shopping list organized by category (produce, protein, etc.) with exact quantities needed for the entire plan.`;
 
