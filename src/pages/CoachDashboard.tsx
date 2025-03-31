@@ -40,7 +40,7 @@ const CoachDashboard = () => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card 
-          className="hover:shadow-md transition-shadow cursor-pointer"
+          className="hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
           onClick={() => handleCardClick('/coach/clients')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -56,7 +56,7 @@ const CoachDashboard = () => {
         </Card>
 
         <Card 
-          className="hover:shadow-md transition-shadow cursor-pointer"
+          className="hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
           onClick={() => handleCardClick('/coach/check-ins')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -72,7 +72,7 @@ const CoachDashboard = () => {
         </Card>
 
         <Card 
-          className="hover:shadow-md transition-shadow cursor-pointer"
+          className="hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
           onClick={() => handleCardClick('/coach/reports')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -88,7 +88,7 @@ const CoachDashboard = () => {
         </Card>
 
         <Card 
-          className="hover:shadow-md transition-shadow cursor-pointer"
+          className="hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
           onClick={() => handleCardClick('/coach/reports')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

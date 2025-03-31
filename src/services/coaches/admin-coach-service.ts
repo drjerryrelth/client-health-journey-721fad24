@@ -1,5 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Coach } from './types';
+import { toast } from 'sonner';
 
 /**
  * Associates the demo coach user with a clinic for testing purposes

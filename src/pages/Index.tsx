@@ -1,78 +1,59 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { Weight, LineChart, Pill, CheckCircle, ArrowRight } from 'lucide-react';
-import { useAuth } from '@/context/auth';
+import { Button } from '@/components/ui/button';
+import { DemoLoginButtons } from '@/components/auth/DemoLoginButtons';
 
 const Index = () => {
-  const { isAuthenticated, hasRole } = useAuth();
   const navigate = useNavigate();
-  
-  const handleLoginClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+
+  const handleLogin = () => {
     navigate('/login');
   };
-  
-  const handleGetStartedClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    navigate('/login');
-  };
-  
+
   return (
     <div className="min-h-screen bg-white">
-      <header className="bg-gradient-to-r from-primary/90 to-primary px-4 py-16">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="w-full md:w-1/2 text-white mb-8 md:mb-0">
-              <h1 className="text-3xl md:text-5xl font-bold mb-4">
-                Track Client Progress for Better Health Outcomes
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-primary-50 to-secondary-50 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative z-10 py-8 sm:py-16 md:py-20 lg:py-28 lg:max-w-2xl lg:w-full">
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+                <span className="block">Wellness and Nutrition</span>
+                <span className="block text-primary-500">Tracking Platform</span>
               </h1>
-              <p className="text-lg md:text-xl mb-8 opacity-90">
-                The all-in-one progress tracking solution for health clinics, med spas, and wellness providers.
+              <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto lg:mx-0">
+                A comprehensive platform for healthcare providers, coaches, 
+                and clients to track progress, manage wellness programs, and achieve health goals.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  size="lg"
-                  className="bg-white text-primary hover:bg-gray-100"
-                  onClick={handleLoginClick}
+              <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start space-x-3">
+                <Button 
+                  onClick={handleLogin} 
+                  className="w-full sm:w-auto px-8 py-3 text-base font-medium bg-primary-600 hover:bg-primary-700 text-white"
                 >
-                  Log In
+                  Sign In
                 </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-white text-white hover:bg-white/10"
-                  onClick={(e) => {
-                    const element = document.getElementById('features');
-                    if (element) {
-                      e.preventDefault();
-                      element.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
+                <Button 
+                  asChild variant="outline"
+                  className="w-full sm:w-auto px-8 py-3 text-base font-medium border-2 border-primary-600 text-primary-600 bg-white hover:bg-primary-50 hover:text-primary-700 hover:border-primary-700"
                 >
-                  Learn More
+                  <a href="#features">Learn More</a>
                 </Button>
-              </div>
-            </div>
-            <div className="w-full md:w-1/2 flex justify-center">
-              <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-md transform rotate-2">
-                <div className="bg-primary/10 p-3 rounded-md mb-3">
-                  <LineChart className="h-6 w-6 text-primary" />
-                  <h3 className="font-medium">Client Weight Progress</h3>
-                </div>
-                <div className="bg-green-50 h-40 rounded-md mb-3"></div>
-                <div className="flex justify-between">
-                  <div className="bg-gray-100 w-20 h-6 rounded"></div>
-                  <div className="bg-primary/20 w-20 h-6 rounded"></div>
-                </div>
               </div>
             </div>
           </div>
         </div>
-      </header>
-
-      <section id="features" className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
+          <img
+            className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
+            src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80"
+            alt="Health tracking"
+          />
+        </div>
+      </div>
+      
+      {/* Features Section */}
+      <div id="features" className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12">Key Features</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -123,9 +104,27 @@ const Index = () => {
             </Button>
           </div>
         </div>
-      </section>
+      </div>
       
-      <footer className="bg-gray-50 py-8 px-4 border-t border-gray-200">
+      {/* Demo Login Section */}
+      <div className="bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+              Try Our Demo
+            </h2>
+            <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+              Experience the platform with our demo accounts. No sign-up required.
+            </p>
+          </div>
+          <div className="mt-10">
+            <DemoLoginButtons />
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-12">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-4 md:mb-0">
             <Weight className="h-6 w-6 text-primary mr-2" />

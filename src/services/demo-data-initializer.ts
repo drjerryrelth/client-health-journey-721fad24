@@ -8,6 +8,8 @@ import { toast } from 'sonner';
  */
 export const initializeDemoRelationships = async () => {
   try {
+    console.log('Initializing demo relationships...');
+    
     // Find the demo coach user ID
     const { data: coachUser, error: coachError } = await supabase
       .from('profiles')
@@ -20,6 +22,8 @@ export const initializeDemoRelationships = async () => {
       return;
     }
     
+    console.log('Found demo coach user:', coachUser.id);
+    
     // Find Genesis Red Light clinic ID
     const { data: clinic, error: clinicError } = await supabase
       .from('clinics')
@@ -31,6 +35,8 @@ export const initializeDemoRelationships = async () => {
       console.log('Genesis Red Light clinic not found:', clinicError);
       return;
     }
+    
+    console.log('Found Genesis Red Light clinic:', clinic.id);
     
     // Assign the coach to the clinic
     await assignDemoCoachToClinic(coachUser.id, clinic.id);
@@ -63,7 +69,17 @@ export const initializeDemoRelationships = async () => {
             status: 'active',
             clinic_id: clinic.id
           });
+        
+        console.log('Coach record created successfully');
       }
+    } else {
+      // Update existing coach record to ensure clinic association
+      await supabase
+        .from('coaches')
+        .update({ clinic_id: clinic.id, status: 'active' })
+        .eq('id', coachUser.id);
+      
+      console.log('Existing coach record updated with clinic association');
     }
   } catch (error) {
     console.error('Error initializing demo relationships:', error);

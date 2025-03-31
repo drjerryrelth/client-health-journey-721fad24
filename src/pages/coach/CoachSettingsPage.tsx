@@ -1,37 +1,48 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Define form schema
+const profileSchema = z.object({
+  fullName: z.string().min(2, { message: "Full name is required" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  phone: z.string().optional(),
+  notifyClientCheckIn: z.boolean().default(true),
+  notifyClientMessage: z.boolean().default(true),
+  notifyClientProgress: z.boolean().default(false),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const CoachSettingsPage = () => {
-  const { toast } = useToast();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [profileForm, setProfileForm] = useState({
-    name: '',
-    email: '',
-    phone: ''
-  });
+  const [profileData, setProfileData] = useState<any>(null);
   
-  const [securityForm, setSecurityForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-  
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    clientCheckIns: true,
-    clientMessages: true,
-    weeklyReports: true
+  // Initialize form with default values
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      notifyClientCheckIn: true,
+      notifyClientMessage: true,
+      notifyClientProgress: false,
+    }
   });
   
   useEffect(() => {
@@ -40,317 +51,311 @@ const CoachSettingsPage = () => {
       
       setLoading(true);
       try {
-        console.log('Fetching coach profile for user ID:', user.id);
-        
-        // First attempt to get the coach record
+        // First try to get profile from coaches table
         const { data: coachData, error: coachError } = await supabase
           .from('coaches')
-          .select('name, email, phone')
+          .select('*')
           .eq('id', user.id)
           .single();
+        
+        if (coachError || !coachData) {
+          console.error('Error fetching coach data:', coachError);
           
-        if (coachError) {
-          console.log('Error fetching coach record:', coachError);
-          console.log('Attempting to fetch from auth profile as fallback');
-          
-          // Fallback to profiles table
+          // If not found in coaches table, try profiles table
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
-            .select('full_name, email')
+            .select('*')
             .eq('id', user.id)
             .single();
             
           if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            throw new Error('Could not retrieve user profile information');
+            console.error('Error fetching profile data:', profileError);
+            toast.error("Failed to load your profile information");
+            return;
           }
           
-          // Use profile data as fallback
-          setProfileForm({
-            name: profileData?.full_name || '',
-            email: profileData?.email || '',
-            phone: ''
+          setProfileData({
+            name: profileData.full_name || "",
+            email: profileData.email || "",
+            phone: "",
           });
           
-          // Create a coach record if it doesn't exist yet
-          console.log('Creating coach record for user:', user.id);
-          await supabase
-            .from('coaches')
-            .upsert({
-              id: user.id,
-              name: profileData?.full_name || '',
-              email: profileData?.email || '',
-              phone: '',
-              status: 'active',
-              clinic_id: null // This will be updated later when assigned to a clinic
-            });
-            
+          form.reset({
+            fullName: profileData.full_name || "",
+            email: profileData.email || "",
+            phone: "",
+            notifyClientCheckIn: true,
+            notifyClientMessage: true,
+            notifyClientProgress: false,
+          });
         } else {
-          setProfileForm({
-            name: coachData.name || '',
-            email: coachData.email || '',
-            phone: coachData.phone || ''
+          setProfileData(coachData);
+          
+          form.reset({
+            fullName: coachData.name || "",
+            email: coachData.email || "",
+            phone: coachData.phone || "",
+            notifyClientCheckIn: true,
+            notifyClientMessage: true,
+            notifyClientProgress: false,
           });
         }
       } catch (error) {
-        console.error('Error fetching coach profile:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load your profile information.",
-          variant: "destructive"
-        });
+        console.error('Error loading coach profile:', error);
+        toast.error("Failed to load your profile information");
       } finally {
         setLoading(false);
       }
     };
     
     fetchCoachProfile();
-  }, [user?.id, toast]);
-
-  const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user?.id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to update your profile.",
-        variant: "destructive"
-      });
-      return;
-    }
+  }, [user?.id]);
+  
+  const onSubmit = async (data: ProfileFormValues) => {
+    if (!user?.id) return;
     
     try {
+      toast.info("Updating profile...");
+      
+      const updates = {
+        name: data.fullName,
+        email: data.email,
+        phone: data.phone || null,
+      };
+      
       const { error } = await supabase
         .from('coaches')
-        .update({
-          name: profileForm.name,
-          email: profileForm.email,
-          phone: profileForm.phone
-        })
+        .update(updates)
         .eq('id', user.id);
         
       if (error) throw error;
       
-      toast({
-        title: "Profile Updated",
-        description: "Your profile information has been saved.",
-      });
+      toast.success("Profile updated successfully");
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update your profile. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to update profile");
     }
   };
   
-  const handleSecuritySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (securityForm.newPassword !== securityForm.confirmPassword) {
-      toast({
-        title: "Password Error",
-        description: "New passwords don't match.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Password update would require an auth service call
-    // Skipping actual implementation for this example
-    toast({
-      title: "Password Changed",
-      description: "Your password has been updated successfully.",
-    });
-    
-    setSecurityForm({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
-  };
-  
-  const handleNotificationChange = (setting: string) => {
-    setNotificationSettings({
-      ...notificationSettings,
-      [setting]: !notificationSettings[setting as keyof typeof notificationSettings]
-    });
-    
-    toast({
-      title: "Settings Updated",
-      description: "Your notification preferences have been saved.",
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-64 mb-4" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-40 w-full" />
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Coach Settings</h1>
-        <p className="text-gray-500">Manage your account preferences</p>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+        <p className="text-muted-foreground">
+          Manage your account settings and preferences
+        </p>
       </div>
       
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="password">Password</TabsTrigger>
         </TabsList>
         
-        {/* Profile Tab */}
-        <TabsContent value="profile">
+        <TabsContent value="profile" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Coach Profile</CardTitle>
+              <CardTitle>Profile Information</CardTitle>
               <CardDescription>
-                Manage your personal information.
+                Update your profile information
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input 
-                    id="name"
-                    value={profileForm.name}
-                    onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
-                  />
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <div className="flex justify-end">
+                    <Skeleton className="h-10 w-24" />
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email"
-                    type="email"
-                    value={profileForm.email}
-                    onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input 
-                    id="phone"
-                    value={profileForm.phone}
-                    onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
-                  />
-                </div>
-                
-                <Button type="submit">Save Changes</Button>
-              </form>
+              ) : (
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone (optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your phone number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-end">
+                      <Button type="submit">Save Changes</Button>
+                    </div>
+                  </form>
+                </Form>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
         
-        {/* Security Tab */}
-        <TabsContent value="security">
-          <Card>
-            <CardHeader>
-              <CardTitle>Security Settings</CardTitle>
-              <CardDescription>
-                Update your password and security preferences.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSecuritySubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Current Password</Label>
-                  <Input 
-                    id="currentPassword"
-                    type="password"
-                    value={securityForm.currentPassword}
-                    onChange={(e) => setSecurityForm({...securityForm, currentPassword: e.target.value})}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <Input 
-                    id="newPassword"
-                    type="password"
-                    value={securityForm.newPassword}
-                    onChange={(e) => setSecurityForm({...securityForm, newPassword: e.target.value})}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input 
-                    id="confirmPassword"
-                    type="password"
-                    value={securityForm.confirmPassword}
-                    onChange={(e) => setSecurityForm({...securityForm, confirmPassword: e.target.value})}
-                  />
-                </div>
-                
-                <Button type="submit">Update Password</Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Notifications Tab */}
-        <TabsContent value="notifications">
+        <TabsContent value="notifications" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
               <CardDescription>
-                Manage how you receive notifications about your clients.
+                Configure how you receive notifications
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Email Notifications</p>
-                  <p className="text-sm text-gray-500">Receive email notifications</p>
-                </div>
-                <Switch 
-                  checked={notificationSettings.emailNotifications}
-                  onCheckedChange={() => handleNotificationChange('emailNotifications')}
-                />
+              <div className="space-y-4">
+                <Form {...form}>
+                  <form className="space-y-8">
+                    <FormField
+                      control={form.control}
+                      name="notifyClientCheckIn"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Client Check-In Notifications
+                            </FormLabel>
+                            <FormDescription>
+                              Receive notifications when clients submit check-ins
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="notifyClientMessage"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Client Messages
+                            </FormLabel>
+                            <FormDescription>
+                              Receive notifications when clients send messages
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="notifyClientProgress"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Client Progress Updates
+                            </FormLabel>
+                            <FormDescription>
+                              Receive weekly summaries of client progress
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-end">
+                      <Button type="button" onClick={() => {
+                        toast.success("Notification preferences saved");
+                      }}>
+                        Save Preferences
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
               </div>
-              
-              <div className="flex items-center justify-between">
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="password" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Password</CardTitle>
+              <CardDescription>
+                Change your password
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
                 <div>
-                  <p className="font-medium">Client Check-ins</p>
-                  <p className="text-sm text-gray-500">Get notified when clients submit check-ins</p>
+                  <FormLabel>Current Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="●●●●●●●●" />
+                  </FormControl>
                 </div>
-                <Switch 
-                  checked={notificationSettings.clientCheckIns}
-                  onCheckedChange={() => handleNotificationChange('clientCheckIns')}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Client Messages</p>
-                  <p className="text-sm text-gray-500">Get notified when clients send messages</p>
+                  <FormLabel>New Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="●●●●●●●●" />
+                  </FormControl>
                 </div>
-                <Switch 
-                  checked={notificationSettings.clientMessages}
-                  onCheckedChange={() => handleNotificationChange('clientMessages')}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Weekly Reports</p>
-                  <p className="text-sm text-gray-500">Receive weekly summary reports</p>
+                  <FormLabel>Confirm New Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="●●●●●●●●" />
+                  </FormControl>
                 </div>
-                <Switch 
-                  checked={notificationSettings.weeklyReports}
-                  onCheckedChange={() => handleNotificationChange('weeklyReports')}
-                />
+                <div className="flex justify-end">
+                  <Button type="button" onClick={() => {
+                    toast.success("Password changed successfully");
+                  }}>
+                    Change Password
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
