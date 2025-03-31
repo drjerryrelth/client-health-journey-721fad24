@@ -98,7 +98,6 @@ export const ProgramInitializer = {
       if (programsToCreate.length > 0) {
         console.log(`${programsToCreate.length} default programs created`);
         toast({
-          title: "Default Programs Created",
           description: `${programsToCreate.length} default programs have been added to your account.`,
         });
       } else {
@@ -107,7 +106,6 @@ export const ProgramInitializer = {
     } catch (error) {
       console.error('Error initializing default programs:', error);
       toast({
-        title: "Error",
         description: "Failed to initialize default programs.",
         variant: "destructive"
       });

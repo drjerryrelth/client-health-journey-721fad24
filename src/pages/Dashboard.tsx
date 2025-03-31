@@ -43,31 +43,29 @@ const Dashboard = () => {
   }
 
   return (
-    <MainLayout>
-      <Routes>
-        {user.role === 'admin' || user.role === 'super_admin' ? (
-          <>
-            <Route index element={<AdminDashboard />} />
-            <Route path="clients" element={<ClientsPage />} />
-            <Route path="programs" element={<ProgramsPage />} />
-            <Route path="coaches" element={<CoachesPage />} />
-            <Route path="check-ins" element={<CheckInsPage />} />
-            <Route path="clinics" element={<ClinicsPage />} />
-            <Route path="resources" element={<ResourcesPage />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="activities" element={<ActivitiesPage />} />
-            <Route path="admin-users" element={<AdminUsersPage />} />
-          </>
-        ) : user.role === 'client' ? (
-          <>
-            <Route index element={<ClientDashboard />} />
-          </>
-        ) : (
-          <Route index element={<Unauthorized />} />
-        )}
-      </Routes>
-    </MainLayout>
+    <Routes>
+      {user.role === 'admin' || user.role === 'super_admin' ? (
+        <Route element={<MainLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="clients" element={<ClientsPage />} />
+          <Route path="programs" element={<ProgramsPage />} />
+          <Route path="coaches" element={<CoachesPage />} />
+          <Route path="check-ins" element={<CheckInsPage />} />
+          <Route path="clinics" element={<ClinicsPage />} />
+          <Route path="resources" element={<ResourcesPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="activities" element={<ActivitiesPage />} />
+          <Route path="admin-users" element={<AdminUsersPage />} />
+        </Route>
+      ) : user.role === 'client' ? (
+        <Route element={<MainLayout />}>
+          <Route index element={<ClientDashboard />} />
+        </Route>
+      ) : (
+        <Route index element={<Unauthorized />} />
+      )}
+    </Routes>
   );
 };
 

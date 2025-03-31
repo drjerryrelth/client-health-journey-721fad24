@@ -25,9 +25,9 @@ const ProgramsPage = () => {
   
   const [showAddProgramDialog, setShowAddProgramDialog] = useState(false);
   const [programName, setProgramName] = useState('');
-  const [programType, setProgramType] = useState('');
+  const [programType, setProgramType] = useState<'practice_naturals' | 'chirothin' | 'nutrition' | 'fitness' | 'keto' | 'custom'>('nutrition');
   const [programDuration, setProgramDuration] = useState('');
-  const [checkInFrequency, setCheckInFrequency] = useState('');
+  const [checkInFrequency, setCheckInFrequency] = useState<'daily' | 'weekly'>('daily');
   const [programDescription, setProgramDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -81,9 +81,9 @@ const ProgramsPage = () => {
 
       // Reset form and close dialog
       setProgramName('');
-      setProgramType('');
+      setProgramType('nutrition');
       setProgramDuration('');
-      setCheckInFrequency('');
+      setCheckInFrequency('daily');
       setProgramDescription('');
       setShowAddProgramDialog(false);
     } catch (error) {
@@ -223,7 +223,10 @@ const ProgramsPage = () => {
               <Label htmlFor="program-type" className="text-right">
                 Type
               </Label>
-              <Select value={programType} onValueChange={setProgramType}>
+              <Select 
+                value={programType} 
+                onValueChange={(value: 'practice_naturals' | 'chirothin' | 'nutrition' | 'fitness' | 'keto' | 'custom') => setProgramType(value)}
+              >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
@@ -259,7 +262,10 @@ const ProgramsPage = () => {
               <Label htmlFor="check-in-frequency" className="text-right">
                 Check-in
               </Label>
-              <Select value={checkInFrequency} onValueChange={setCheckInFrequency}>
+              <Select 
+                value={checkInFrequency} 
+                onValueChange={(value: 'daily' | 'weekly') => setCheckInFrequency(value)}
+              >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select check-in frequency" />
                 </SelectTrigger>
