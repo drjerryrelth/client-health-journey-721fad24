@@ -3,3 +3,5 @@
 export * from './use-check-in-queries';
 export * from './use-client-queries';
 export * from './use-program-queries';
+export * from './use-client-program-info';
+export * from './use-program-details';
