@@ -50,15 +50,21 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
     console.log(`[AdminCoachService] Found ${coachesData.length} coaches in database`);
     
     // Transform the coaches data to match our expected format
-    const transformedCoaches = coachesData.map(coach => ({
-      id: coach.id,
-      name: coach.name,
-      email: coach.email,
-      phone: coach.phone || '',
-      status: coach.status === 'active' ? 'active' : 'inactive' as 'active' | 'inactive',
-      clinicId: coach.clinic_id,
-      clients: coach.client_count || 0
-    }));
+    // Using type assertion to inform TypeScript about the structure
+    const transformedCoaches = coachesData.map(coach => {
+      // Use type assertion to access properties safely
+      const coachObj = coach as any;
+      
+      return {
+        id: String(coachObj.id || ''),
+        name: String(coachObj.name || ''),
+        email: String(coachObj.email || ''),
+        phone: coachObj.phone || '',
+        status: (coachObj.status === 'active' ? 'active' : 'inactive') as 'active' | 'inactive',
+        clinicId: String(coachObj.clinic_id || ''),
+        clients: Number(coachObj.client_count || 0)
+      };
+    });
     
     console.log('[AdminCoachService] Returning real coaches data with client counts');
     return transformedCoaches;

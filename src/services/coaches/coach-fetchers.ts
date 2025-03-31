@@ -39,16 +39,21 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
       throw new Error('Invalid data format returned from server');
     }
     
-    // Transform and return the coaches data
-    return data.map(coach => ({
-      id: coach.id,
-      name: coach.name,
-      email: coach.email,
-      phone: coach.phone,
-      status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status as 'active' | 'inactive' : 'inactive' as const,
-      clinicId: coach.clinic_id,
-      clients: coach.client_count || 0
-    }));
+    // Transform and return the coaches data using type assertions
+    return data.map(coach => {
+      const coachObj = coach as any;
+      return {
+        id: String(coachObj.id || ''),
+        name: String(coachObj.name || ''),
+        email: String(coachObj.email || ''),
+        phone: coachObj.phone || null,
+        status: ((coachObj.status === 'active' || coachObj.status === 'inactive') 
+          ? coachObj.status as 'active' | 'inactive' 
+          : 'inactive') as 'active' | 'inactive',
+        clinicId: String(coachObj.clinic_id || ''),
+        clients: Number(coachObj.client_count || 0)
+      };
+    });
   } catch (error) {
     console.error('[CoachService] Error fetching clinic coaches:', error);
     toast.error('Failed to fetch coaches data. Please try again.');
@@ -89,16 +94,21 @@ export async function getAllCoaches(): Promise<Coach[]> {
     
     console.log('[CoachService] Successfully retrieved', data.length, 'coaches via RPC');
     
-    // Transform and return the coaches data
-    const coaches = data.map(coach => ({
-      id: coach.id,
-      name: coach.name,
-      email: coach.email,
-      phone: coach.phone || null,
-      status: (coach.status === 'active' || coach.status === 'inactive') ? coach.status as 'active' | 'inactive' : 'inactive' as const,
-      clinicId: coach.clinic_id,
-      clients: coach.client_count || 0
-    }));
+    // Transform and return the coaches data using type assertions
+    const coaches = data.map(coach => {
+      const coachObj = coach as any;
+      return {
+        id: String(coachObj.id || ''),
+        name: String(coachObj.name || ''),
+        email: String(coachObj.email || ''),
+        phone: coachObj.phone || null,
+        status: ((coachObj.status === 'active' || coachObj.status === 'inactive') 
+          ? coachObj.status as 'active' | 'inactive' 
+          : 'inactive') as 'active' | 'inactive',
+        clinicId: String(coachObj.clinic_id || ''),
+        clients: Number(coachObj.client_count || 0)
+      };
+    });
     
     console.log('[CoachService] Transformed coaches data:', coaches);
     return coaches;
