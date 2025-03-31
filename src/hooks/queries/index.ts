@@ -7,6 +7,6 @@ export * from './use-client-program-info';
 export * from './use-program-details';
 export * from './use-messages-queries';
 export * from './use-clinic-customization';
+export * from './use-admin-coaches';
 // Adding the dashboard stats hooks
 export * from '../use-dashboard-stats';
-
