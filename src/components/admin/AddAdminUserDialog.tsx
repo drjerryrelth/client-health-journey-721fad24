@@ -24,9 +24,10 @@ const formSchema = z.object({
 interface AddAdminUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isSuperAdmin?: boolean;
 }
 
-export function AddAdminUserDialog({ open, onOpenChange }: AddAdminUserDialogProps) {
+export function AddAdminUserDialog({ open, onOpenChange, isSuperAdmin = false }: AddAdminUserDialogProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const form = useForm<AdminUserFormData>({
@@ -44,6 +45,12 @@ export function AddAdminUserDialog({ open, onOpenChange }: AddAdminUserDialogPro
   
   const onSubmit = async (data: AdminUserFormData) => {
     setErrorMessage(null);
+    
+    // Prevent non-super-admins from creating super-admin accounts
+    if (!isSuperAdmin && data.role === 'super_admin') {
+      setErrorMessage('You do not have permission to create Super Admin accounts');
+      return;
+    }
     
     try {
       await createAdminUser.mutateAsync(data);
@@ -138,7 +145,10 @@ export function AddAdminUserDialog({ open, onOpenChange }: AddAdminUserDialogPro
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="super_admin">Super Admin</SelectItem>
+                      {/* Only show Super Admin option if current user is a Super Admin */}
+                      {isSuperAdmin && (
+                        <SelectItem value="super_admin">Super Admin</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormDescription>

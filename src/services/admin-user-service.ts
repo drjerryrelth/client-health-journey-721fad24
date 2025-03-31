@@ -80,6 +80,19 @@ export const AdminUserService = {
         });
       }
       
+      // Get current user's role to check authorization
+      const { data: currentUserProfile } = await supabase.auth.getUser();
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUserProfile?.user?.id)
+        .maybeSingle();
+      
+      // If trying to create super_admin but user is not a super_admin
+      if (userData.role === 'super_admin' && profileData?.role !== 'super_admin') {
+        throw new Error('Only Super Admins can create other Super Admin accounts');
+      }
+      
       // Call our edge function instead of using client-side admin API
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
         body: {
@@ -111,31 +124,52 @@ export const AdminUserService = {
    * Update an existing admin user
    */
   async updateAdminUser(id: string, updates: Partial<AdminUser>): Promise<AdminUser> {
-    // Use the edge function for more comprehensive updates
-    const { data, error } = await supabase.functions.invoke('create-admin-user', {
-      body: {
-        action: 'update',
-        userId: id,
-        updates: updates
+    try {
+      // First check if the current user is allowed to make this update
+      if (updates.role === 'super_admin') {
+        // Get current user's role
+        const { data: currentUserProfile } = await supabase.auth.getUser();
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUserProfile?.user?.id)
+          .maybeSingle();
+        
+        // Only super_admin can promote to super_admin
+        if (profileData?.role !== 'super_admin') {
+          throw new Error('Only Super Admins can promote users to Super Admin role');
+        }
       }
-    });
-    
-    if (error) {
-      console.error(`Error updating admin user with ID ${id}:`, error);
+      
+      // Use the edge function for more comprehensive updates
+      const { data, error } = await supabase.functions.invoke('create-admin-user', {
+        body: {
+          action: 'update',
+          userId: id,
+          updates: updates
+        }
+      });
+      
+      if (error) {
+        console.error(`Error updating admin user with ID ${id}:`, error);
+        throw error;
+      }
+      
+      return data as AdminUser;
+    } catch (error: any) {
+      console.error('Error in updateAdminUser:', error);
       throw error;
     }
-    
-    return data as AdminUser;
   },
 
   /**
    * Delete an admin user
    */
   async deleteAdminUser(id: string): Promise<void> {
-    // First get the auth_user_id
+    // First get the auth_user_id and role
     const { data: adminUser, error: fetchError } = await supabase
       .from('admin_users')
-      .select('auth_user_id')
+      .select('auth_user_id, role')
       .eq('id', id)
       .maybeSingle();
     
@@ -146,6 +180,22 @@ export const AdminUserService = {
     
     if (!adminUser) {
       throw new Error(`Admin user with ID ${id} not found`);
+    }
+    
+    // Check if the user being deleted is a super_admin
+    if (adminUser.role === 'super_admin') {
+      // Get current user's role
+      const { data: currentUserProfile } = await supabase.auth.getUser();
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUserProfile?.user?.id)
+        .maybeSingle();
+      
+      // Only super_admin can delete another super_admin
+      if (profileData?.role !== 'super_admin') {
+        throw new Error('Only Super Admins can delete Super Admin accounts');
+      }
     }
     
     // Call the edge function to delete the user with admin privileges

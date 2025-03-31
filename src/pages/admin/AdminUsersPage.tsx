@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { EditAdminUserDialog } from '@/components/admin/EditAdminUserDialog';
 import { useAdminUsersQuery, useDeleteAdminUserMutation, useUpdateAdminUserMutation } from '@/hooks/use-admin-users';
 import { Badge } from '@/components/ui/badge';
 import { toast as sonnerToast } from 'sonner';
+import { useAuth } from '@/context/auth';
 
 const AdminUsersPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -20,12 +20,14 @@ const AdminUsersPage = () => {
   const [isPromoteDialogOpen, setIsPromoteDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  const isSuperAdmin = user?.role === 'super_admin';
   
   const { data: adminUsers, isLoading, isError, refetch, isFetching } = useAdminUsersQuery();
   const deleteAdminUser = useDeleteAdminUserMutation();
   const updateAdminUser = useUpdateAdminUserMutation();
 
-  // Refresh data when component mounts
   useEffect(() => {
     refetch();
   }, [refetch]);
@@ -45,22 +47,32 @@ const AdminUsersPage = () => {
   };
 
   const handlePromoteToSuperAdmin = (userId: string) => {
+    if (!isSuperAdmin) {
+      sonnerToast.error('Unauthorized', {
+        description: 'Only Super Admins can promote users to Super Admin role.',
+      });
+      return;
+    }
     setSelectedUserId(userId);
     setIsPromoteDialogOpen(true);
   };
 
   const confirmPromote = async () => {
+    if (!isSuperAdmin) {
+      sonnerToast.error('Unauthorized action');
+      setIsPromoteDialogOpen(false);
+      return;
+    }
+    
     if (selectedUserId) {
       try {
         await updateAdminUser.mutateAsync({
           userId: selectedUserId,
           updates: { role: 'super_admin' }
         });
-        // Explicitly refetch after update
         await refetch();
         sonnerToast.success('User promoted to Super Admin successfully');
       } catch (error) {
-        // Error handled by mutation hook
         console.error('Error promoting user:', error);
       }
     }
@@ -72,11 +84,9 @@ const AdminUsersPage = () => {
     if (selectedUserId) {
       try {
         await deleteAdminUser.mutateAsync(selectedUserId);
-        // Explicitly refetch after delete
         await refetch();
         sonnerToast.success('Admin user deleted successfully');
       } catch (error) {
-        // Error handled by mutation hook
         console.error('Error deleting admin user:', error);
       }
     }
@@ -84,11 +94,9 @@ const AdminUsersPage = () => {
     setSelectedUserId(undefined);
   };
 
-  // Handle dialog close events to refresh data
   const handleAddDialogClose = (open: boolean) => {
     setIsAddDialogOpen(open);
     if (!open) {
-      // Immediate refetch when dialog closes
       refetch();
     }
   };
@@ -96,7 +104,6 @@ const AdminUsersPage = () => {
   const handleEditDialogClose = (open: boolean) => {
     setIsEditDialogOpen(open);
     if (!open) {
-      // Immediate refetch when dialog closes
       refetch();
     }
   };
@@ -192,7 +199,7 @@ const AdminUsersPage = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        {user.role !== 'super_admin' && (
+                        {isSuperAdmin && user.role !== 'super_admin' && (
                           <Button 
                             size="sm" 
                             variant="outline" 
@@ -218,43 +225,29 @@ const AdminUsersPage = () => {
         </CardContent>
       </Card>
 
-      {/* Add Admin Dialog */}
       <AddAdminUserDialog 
         open={isAddDialogOpen} 
         onOpenChange={handleAddDialogClose} 
+        isSuperAdmin={isSuperAdmin}
       />
 
-      {/* Edit Admin Dialog */}
       <EditAdminUserDialog 
         userId={selectedUserId} 
         open={isEditDialogOpen} 
-        onOpenChange={handleEditDialogClose} 
+        onOpenChange={handleEditDialogClose}
+        isSuperAdmin={isSuperAdmin}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this admin user? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
-            <Button 
-              variant="destructive" 
-              onClick={confirmDelete}
-              disabled={deleteAdminUser.isPending}
-            >
-              {deleteAdminUser.isPending ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Promote to Super Admin Dialog */}
-      <Dialog open={isPromoteDialogOpen} onOpenChange={setIsPromoteDialogOpen}>
+      <Dialog 
+        open={isPromoteDialogOpen && isSuperAdmin} 
+        onOpenChange={(open) => {
+          if (isSuperAdmin) {
+            setIsPromoteDialogOpen(open);
+          } else {
+            setIsPromoteDialogOpen(false);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Promote to Super Admin</DialogTitle>
