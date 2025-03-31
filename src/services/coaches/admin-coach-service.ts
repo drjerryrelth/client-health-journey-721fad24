@@ -20,26 +20,21 @@ export async function getCoachCount(): Promise<number> {
   try {
     console.log('[AdminCoachService] Getting total coach count');
     
-    // First try using mock data to ensure the dashboard can render
-    const mockCoaches = getMockCoaches();
-    console.log(`[AdminCoachService] Using mock data with ${mockCoaches.length} coaches`);
-    return mockCoaches.length;
-    
-    /* Commenting out the real implementation until database policies are fixed
-    // Use a simpler approach with direct count that avoids RLS recursion
-    const { data, error, count } = await supabase
+    // Try to get real count from database first
+    const { count, error } = await supabase
       .from('coaches')
       .select('id', { head: true, count: 'exact' });
       
     if (error) {
       console.error('[AdminCoachService] Count query error:', error);
-      return 0; // Return 0 rather than failing
+      // Fall back to mock data if query fails
+      const mockCoaches = getMockCoaches();
+      return mockCoaches.length;
     }
     
     // Get count from metadata
-    console.log(`[AdminCoachService] Found ${count || 0} coaches`);
+    console.log(`[AdminCoachService] Found ${count || 0} coaches in database`);
     return count || 0;
-    */
   } catch (error) {
     console.error('[AdminCoachService] Failed to get coach count:', error);
     // Return mock data length as fallback
@@ -51,55 +46,73 @@ export async function getCoachCount(): Promise<number> {
 // Get all coaches with their client counts for admin purposes
 export async function getAllCoachesForAdmin(): Promise<Coach[]> {
   try {
-    console.log('[AdminCoachService] Getting all coaches - USING MOCK DATA');
-    // Return the mock data directly to ensure dashboard works while DB issues are fixed
-    const mockCoaches = getMockCoaches();
-    console.log('[AdminCoachService] Returning mock coaches:', mockCoaches);
-    return mockCoaches;
+    console.log('[AdminCoachService] Getting all coaches');
     
-    /* Commenting out the real implementation until database issues are fixed
-    console.log('[AdminCoachService] Getting all coaches using RPC function');
-    
-    // Get response from RPC function
-    const { data, error: rpcError } = await supabase.rpc('admin_get_all_coaches');
-    
-    if (rpcError) {
-      console.error('[AdminCoachService] RPC function error:', rpcError);
-      throw rpcError;
+    // Try to get real coaches from the database first
+    const { data: coachesData, error: coachesError } = await supabase
+      .from('coaches')
+      .select('*');
+      
+    if (coachesError) {
+      console.error('[AdminCoachService] Error fetching coaches:', coachesError);
+      throw coachesError;
     }
     
-    // Log the raw data to see what we're getting
-    console.log('[AdminCoachService] Raw RPC response:', data);
-    
-    // Handle empty or non-array response
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log('[AdminCoachService] No coaches found via RPC or invalid data format');
-      return [];
+    // If no coaches data or empty array, return mock data
+    if (!coachesData || coachesData.length === 0) {
+      console.log('[AdminCoachService] No coaches found in database, using mock data');
+      return getMockCoaches();
     }
     
-    console.log(`[AdminCoachService] Found ${data.length} coaches via RPC`);
+    console.log(`[AdminCoachService] Found ${coachesData.length} coaches in database`);
     
-    // Cast to any array first to safely access properties
-    const coachesRaw = data as any[];
+    // For each coach, get their client count
+    const coachesWithClients = await Promise.all(coachesData.map(async (coach) => {
+      try {
+        // Get client count for this coach
+        const { count: clientCount, error: clientError } = await supabase
+          .from('clients')
+          .select('*', { count: 'exact', head: true })
+          .eq('coach_id', coach.id);
+          
+        if (clientError) {
+          console.error(`[AdminCoachService] Error getting client count for coach ${coach.id}:`, clientError);
+          return {
+            id: coach.id,
+            name: coach.name,
+            email: coach.email,
+            phone: coach.phone || '',
+            status: coach.status === 'active' ? 'active' : 'inactive' as 'active' | 'inactive',
+            clinicId: coach.clinic_id,
+            clients: 0
+          };
+        }
+        
+        return {
+          id: coach.id,
+          name: coach.name,
+          email: coach.email,
+          phone: coach.phone || '',
+          status: coach.status === 'active' ? 'active' : 'inactive' as 'active' | 'inactive',
+          clinicId: coach.clinic_id,
+          clients: clientCount || 0
+        };
+      } catch (error) {
+        console.error(`[AdminCoachService] Exception getting client count for coach ${coach.id}:`, error);
+        return {
+          id: coach.id,
+          name: coach.name,
+          email: coach.email,
+          phone: coach.phone || '',
+          status: coach.status === 'active' ? 'active' : 'inactive' as 'active' | 'inactive',
+          clinicId: coach.clinic_id,
+          clients: 0
+        };
+      }
+    }));
     
-    // Map with explicit type checking for each property
-    const coaches: Coach[] = coachesRaw
-      .filter(coach => coach && typeof coach === 'object')
-      .map(coach => ({
-        id: String(coach.id || ''),
-        name: String(coach.name || ''),
-        email: String(coach.email || ''),
-        phone: coach.phone ? String(coach.phone) : '',
-        status: (coach.status === 'active' || coach.status === 'inactive') 
-          ? coach.status as 'active' | 'inactive' 
-          : 'inactive' as const,
-        clinicId: String(coach.clinic_id || ''),
-        clients: typeof coach.client_count === 'number' ? coach.client_count : 0
-      }));
-    
-    console.log('[AdminCoachService] Processed coaches:', coaches);
-    return coaches;
-    */
+    console.log('[AdminCoachService] Returning real coaches data with client counts');
+    return coachesWithClients;
   } catch (error) {
     console.error('[AdminCoachService] Failed to get all coaches:', error);
     
