@@ -4,17 +4,6 @@ import { Coach } from './types';
 import { toast } from 'sonner';
 import { getMockCoaches } from './mock-data';
 
-// Define a type for the RPC function response
-interface CoachRPCResponse {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  status: string;
-  clinic_id: string;
-  client_count?: number;
-}
-
 // Special service function to get total coach count for admin dashboard
 export async function getCoachCount(): Promise<number> {
   try {
@@ -44,7 +33,7 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
   try {
     console.log('[AdminCoachService] Getting all coaches using RPC function');
     
-    // Attempt to use the new RPC function first (from our SQL migration)
+    // Properly type the response from RPC function as generic JSON data
     const { data: coachesData, error: rpcError } = await supabase.rpc('admin_get_all_coaches');
     
     if (rpcError) {
@@ -52,17 +41,19 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
       throw rpcError;
     }
     
-    if (!coachesData || coachesData.length === 0) {
+    if (!coachesData || !Array.isArray(coachesData) || coachesData.length === 0) {
       console.log('[AdminCoachService] No coaches found via RPC');
       return [];
     }
     
     console.log(`[AdminCoachService] Found ${coachesData.length} coaches via RPC`);
     
-    // Proper type assertion with validation
-    // First cast to unknown, then to the target type for safer conversion
-    const typedCoaches = (coachesData as any[]).map(coach => {
-      // Validate the coach object has expected properties
+    // First explicitly cast to any[] which is safer than unknown[] for this operation
+    const coaches = coachesData as any[];
+    
+    // Map with validation to ensure type safety
+    const typedCoaches = coaches.map(coach => {
+      // Validate coach object
       if (!coach || typeof coach !== 'object') {
         console.warn('[AdminCoachService] Invalid coach data in RPC response');
         return null;

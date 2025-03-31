@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
         throw coachesError;
       }
       
-      if (!coaches || coaches.length === 0) {
+      if (!coaches || !Array.isArray(coaches) || coaches.length === 0) {
         console.log('No coaches found with RPC function');
         return new Response(
           JSON.stringify([]),
@@ -81,16 +81,32 @@ Deno.serve(async (req) => {
 
       console.log(`Found ${coaches.length} coaches via RPC function`);
 
-      // Type safety with validation
-      const typedCoaches: CoachData[] = (coaches as any[]).map((coach: any) => ({
-        id: String(coach.id || ''),
-        name: String(coach.name || ''),
-        email: String(coach.email || ''),
-        phone: coach.phone,
-        status: String(coach.status || 'inactive'),
-        clinic_id: String(coach.clinic_id || ''),
-        client_count: typeof coach.client_count === 'number' ? coach.client_count : 0
-      }));
+      // Type safety with validation - explicit cast to any[] first
+      const coachesArray = coaches as any[];
+      const typedCoaches: CoachData[] = coachesArray.map(coach => {
+        if (!coach || typeof coach !== 'object') {
+          console.warn('Invalid coach data in response');
+          return {
+            id: '',
+            name: '',
+            email: '',
+            phone: null,
+            status: 'inactive',
+            clinic_id: '',
+            client_count: 0
+          };
+        }
+        
+        return {
+          id: String(coach.id || ''),
+          name: String(coach.name || ''),
+          email: String(coach.email || ''),
+          phone: coach.phone,
+          status: String(coach.status || 'inactive'),
+          clinic_id: String(coach.clinic_id || ''),
+          client_count: typeof coach.client_count === 'number' ? coach.client_count : 0
+        };
+      });
 
       return new Response(
         JSON.stringify(typedCoaches),
@@ -129,7 +145,7 @@ Deno.serve(async (req) => {
       }
       
       // Process each coach to add client counts
-      const coachesWithClientCount = [];
+      const coachesWithClientCount: CoachData[] = [];
       
       for (const coach of directData) {
         // Get client count
@@ -146,14 +162,14 @@ Deno.serve(async (req) => {
         }
         
         coachesWithClientCount.push({
-          id: coach.id,
-          name: coach.name,
-          email: coach.email,
+          id: String(coach.id || ''),
+          name: String(coach.name || ''),
+          email: String(coach.email || ''),
           phone: coach.phone,
           status: (coach.status === 'active' || coach.status === 'inactive') 
             ? coach.status 
             : "inactive",
-          clinic_id: coach.clinic_id,
+          clinic_id: String(coach.clinic_id || ''),
           client_count: clientCount
         });
       }
