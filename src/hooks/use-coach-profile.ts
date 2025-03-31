@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
+import { ProfileRow } from '@/types/database';
 
 // Define the profile schema
 export const profileSchema = z.object({
@@ -54,7 +55,7 @@ export const useCoachProfile = () => {
           return;
         }
         
-        // Try to get profile from profiles table first - avoid the coaches table due to RLS issues
+        // Get profile from profiles table
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -87,11 +88,11 @@ export const useCoachProfile = () => {
           }
         } else {
           console.log('Profile data found:', profileData);
-          // Make sure we add the phone property even if it doesn't exist in the profiles table
+          // Create profile data with correct property types
           setProfileData({
             name: profileData.full_name || "",
             email: profileData.email || "",
-            phone: profileData.phone || "", // Ensure the phone property is always present
+            phone: profileData.phone || "", // Use the phone property from profile data
           });
         }
       } catch (error: any) {
@@ -115,7 +116,7 @@ export const useCoachProfile = () => {
     try {
       toast.info("Updating profile...");
       
-      // Update the profiles table directly - avoid coaches table due to RLS issues
+      // Update the profiles table directly
       const { error } = await supabase
         .from('profiles')
         .update({
