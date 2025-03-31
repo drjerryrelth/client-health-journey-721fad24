@@ -1,3 +1,4 @@
+
 import { ProfileRow, ClientRow, ProgramRow, SupplementRow, CheckInRow, ClinicRow } from './database';
 
 export type UserRole = 'admin' | 'coach' | 'client' | 'super_admin';
@@ -35,6 +36,7 @@ export type Program = {
   checkInFrequency: 'daily' | 'weekly';
   clinicId: string;
   clientCount?: number; // Add this field to track number of enrolled clients
+  supplements: Supplement[]; // Add back the supplements property
 };
 
 export type Supplement = {
@@ -110,7 +112,7 @@ export const mapClientToDbClient = (client: Omit<Client, 'id'>): Omit<ClientRow,
   coach_id: client.coachId || null
 });
 
-// Update the mapping function for Program to not include supplements
+// Correctly updated mapping function for Program to include supplements
 export const mapDbProgramToProgram = (dbProgram: ProgramRow): Program => ({
   id: dbProgram.id,
   name: dbProgram.name,

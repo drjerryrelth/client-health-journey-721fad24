@@ -20,6 +20,8 @@ export const useProgramsQuery = (clinicId?: string) => {
       return ProgramService.getClinicPrograms(activeClinicId as string);
     },
     enabled: !!activeClinicId,
+    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
@@ -37,7 +39,7 @@ export const useCreateProgramMutation = () => {
   return useMutation({
     mutationFn: ({ program, supplements }: { 
       program: Omit<Program, 'id' | 'supplements'>; 
-      supplements: any[] 
+      supplements: Omit<Program['supplements'][0], 'id'>[] 
     }) => ProgramService.createProgram(program, supplements),
     onSuccess: (data) => {
       // Update programs query cache
@@ -53,7 +55,7 @@ export const useUpdateProgramMutation = () => {
     mutationFn: ({ programId, updates, supplements }: { 
       programId: string; 
       updates: Partial<Omit<Program, 'supplements'>>; 
-      supplements?: any[] 
+      supplements?: Partial<Program['supplements'][0]>[] 
     }) => ProgramService.updateProgram(programId, updates, supplements),
     onSuccess: (data) => {
       // Update both the program and programs queries

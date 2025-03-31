@@ -1,109 +1,102 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ProgramService } from './programs';
 import { toast } from 'sonner';
+import { ProgramService } from './programs';
 
-/**
- * Service to initialize default programs in the system if they don't exist
- */
+// Initialize default programs for newly created clinics
 export const ProgramInitializer = {
   async initializeDefaultPrograms(clinicId: string): Promise<void> {
     try {
-      console.log('Checking for default programs...');
-      
-      // Check if Practice Naturals program exists
+      // First check if the clinic already has any programs
       const { data: existingPrograms } = await supabase
         .from('programs')
-        .select('name')
-        .in('name', ['Practice Naturals', 'ChiroThin']);
-      
-      const programsToCreate = [];
-      
-      // Practice Naturals
-      if (!existingPrograms?.some(p => p.name === 'Practice Naturals')) {
-        programsToCreate.push({
-          program: {
-            name: 'Practice Naturals',
-            description: 'A 30 or 60-day nutrition program with personalized food portions based on client categories (A, B, or C). Focuses on proteins, fruits, and vegetables for breakfast, lunch, and dinner.',
-            type: 'practice_naturals',
-            duration: 30, // Default to 30-day version
-            checkInFrequency: 'daily',
-            clinicId
+        .select('id')
+        .eq('clinic_id', clinicId)
+        .limit(1);
+
+      // If programs already exist, don't create defaults
+      if (existingPrograms && existingPrograms.length > 0) {
+        console.log('Default programs not created: Clinic already has programs');
+        return;
+      }
+
+      // Create Practice Naturals program with supplements
+      await ProgramService.createProgram(
+        {
+          name: 'Practice Naturals',
+          description: 'A comprehensive program focusing on natural nutrition and wellness.',
+          duration: 84, // 12 weeks
+          type: 'practice_naturals',
+          checkInFrequency: 'weekly',
+          clinicId: clinicId
+        },
+        [
+          {
+            name: 'Vitamin D3',
+            description: 'Important for immune function and bone health.',
+            dosage: '2000 IU',
+            frequency: 'daily',
+            timeOfDay: 'morning'
           },
-          supplements: [
-            {
-              name: 'Multivitamin',
-              description: 'Daily multivitamin supplement',
-              dosage: '1 tablet',
-              frequency: 'daily',
-              timeOfDay: 'morning'
-            },
-            {
-              name: 'Omega-3',
-              description: 'Essential fatty acids',
-              dosage: '1 capsule',
-              frequency: 'daily',
-              timeOfDay: 'evening'
-            },
-            {
-              name: 'Probiotic',
-              description: 'Gut health support',
-              dosage: '1 capsule',
-              frequency: 'daily',
-              timeOfDay: 'morning'
-            }
-          ]
-        });
-      }
-      
-      // ChiroThin
-      if (!existingPrograms?.some(p => p.name === 'ChiroThin')) {
-        programsToCreate.push({
-          program: {
-            name: 'ChiroThin',
-            description: 'A 6-week program with uniform meal plans. Clients fast overnight with no breakfast, consuming 4oz each of protein, fruits, and vegetables for lunch and dinner.',
-            type: 'chirothin',
-            duration: 42, // 6 weeks
-            checkInFrequency: 'daily',
-            clinicId
+          {
+            name: 'Omega-3',
+            description: 'Supports heart and brain health.',
+            dosage: '1000mg',
+            frequency: 'daily',
+            timeOfDay: 'with meals'
           },
-          supplements: [
-            {
-              name: 'ChiroThin Drops',
-              description: 'Proprietary formula to support weight loss',
-              dosage: '10 drops',
-              frequency: '3x daily',
-              timeOfDay: 'before meals'
-            },
-            {
-              name: 'B12 Complex',
-              description: 'Energy support',
-              dosage: '1 capsule',
-              frequency: 'daily',
-              timeOfDay: 'morning'
-            }
-          ]
-        });
-      }
-      
-      // Create any missing default programs
-      for (const programData of programsToCreate) {
-        console.log(`Creating default program: ${programData.program.name}`);
-        await ProgramService.createProgram(
-          programData.program,
-          programData.supplements
-        );
-      }
-      
-      if (programsToCreate.length > 0) {
-        console.log(`${programsToCreate.length} default programs created`);
-        toast(`${programsToCreate.length} default programs have been added to your account.`);
-      } else {
-        console.log('Default programs already exist');
-      }
+          {
+            name: 'Magnesium',
+            description: 'Helps with muscle and nerve function.',
+            dosage: '400mg',
+            frequency: 'daily',
+            timeOfDay: 'evening'
+          }
+        ]
+      );
+
+      // Create ChiroThin program
+      await ProgramService.createProgram(
+        {
+          name: 'ChiroThin',
+          description: 'A doctor-supervised weight loss program.',
+          duration: 42, // 6 weeks
+          type: 'chirothin',
+          checkInFrequency: 'weekly',
+          clinicId: clinicId
+        },
+        [
+          {
+            name: 'ChiroThin Drops',
+            description: 'Proprietary formula to support the ChiroThin program.',
+            dosage: '15 drops',
+            frequency: '3x daily',
+            timeOfDay: 'before meals'
+          }
+        ]
+      );
+
+      // Create Basic Nutrition program
+      await ProgramService.createProgram(
+        {
+          name: 'Essential Nutrition',
+          description: 'Focus on balanced diet and proper nutritional intake.',
+          duration: 30, // 30 days
+          type: 'nutrition',
+          checkInFrequency: 'weekly',
+          clinicId: clinicId
+        },
+        []
+      );
+
+      console.log('Default programs created successfully for clinic:', clinicId);
+
     } catch (error) {
-      console.error('Error initializing default programs:', error);
-      toast("Failed to initialize default programs.");
+      console.error('Failed to initialize default programs:', error);
+      toast({
+        description: "Failed to create default programs. Please try again.",
+        variant: "destructive"
+      });
     }
   }
 };

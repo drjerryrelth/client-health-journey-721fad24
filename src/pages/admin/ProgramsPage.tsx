@@ -10,6 +10,8 @@ import ProgramTable from '@/components/programs/ProgramTable';
 import AddProgramDialog from '@/components/programs/AddProgramDialog';
 import ProgramDetailsDialog from '@/components/programs/ProgramDetailsDialog';
 import { useProgramForm } from '@/hooks/use-program-form';
+import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ProgramsPage = () => {
   const { user } = useAuth();
@@ -20,11 +22,13 @@ const ProgramsPage = () => {
     if (user?.clinicId) {
       setClinicId(user.clinicId);
       console.log("Setting clinic ID:", user.clinicId);
+    } else {
+      console.log("No clinic ID available from user:", user);
     }
   }, [user]);
   
   // Only fetch programs when we have a valid clinicId
-  const { data: programs, isLoading, isError } = useProgramsQuery(clinicId);
+  const { data: programs, isLoading, isError, error } = useProgramsQuery(clinicId);
   
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [showProgramDetails, setShowProgramDetails] = useState(false);
@@ -41,6 +45,17 @@ const ProgramsPage = () => {
     setSelectedProgram(program);
     setShowProgramDetails(true);
   };
+
+  // Display error toast if there's an error fetching programs
+  useEffect(() => {
+    if (isError) {
+      console.error("Error fetching programs:", error);
+      toast({
+        description: "Failed to load programs. Please try again.",
+        variant: "destructive"
+      });
+    }
+  }, [isError, error]);
 
   console.log("Current programs:", programs); // Keep this log to debug
   console.log("Current user:", user); // Add user info log for debugging
@@ -60,12 +75,20 @@ const ProgramsPage = () => {
           <CardTitle>All Programs</CardTitle>
         </CardHeader>
         <CardContent>
-          <ProgramTable
-            programs={programs || []}
-            isLoading={isLoading || !clinicId}
-            isError={isError}
-            onSelectProgram={handleViewProgramDetails}
-          />
+          {isLoading || !clinicId ? (
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : (
+            <ProgramTable
+              programs={programs || []}
+              isLoading={false}
+              isError={isError}
+              onSelectProgram={handleViewProgramDetails}
+            />
+          )}
         </CardContent>
       </Card>
 
