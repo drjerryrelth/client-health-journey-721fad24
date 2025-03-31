@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { ProgramService } from '@/services/programs';
@@ -13,13 +14,8 @@ export const useProgramsQuery = (clinicId?: string) => {
       console.log("Fetching programs, clinic ID:", clinicId);
       try {
         let programs;
-        if (clinicId) {
-          // If a clinic ID is specified, fetch programs for that clinic
-          programs = await ProgramService.getClinicPrograms(clinicId);
-        } else {
-          // Otherwise, fetch all programs
-          programs = await ProgramService.getAllPrograms();
-        }
+        // Always fetch all programs for global statistics
+        programs = await ProgramService.getAllPrograms();
         console.log("Fetched programs:", programs);
         return programs;
       } catch (error) {
@@ -51,6 +47,7 @@ export const useCreateProgramMutation = () => {
     }) => ProgramService.createProgram(program, supplements),
     onSuccess: (data) => {
       // Update programs query cache
+      queryClient.invalidateQueries({ queryKey: ['programs'] });
       queryClient.invalidateQueries({ queryKey: ['programs', data.clinicId] });
     },
   });
@@ -68,6 +65,7 @@ export const useUpdateProgramMutation = () => {
     onSuccess: (data) => {
       // Update both the program and programs queries
       queryClient.invalidateQueries({ queryKey: ['program', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['programs'] });
       queryClient.invalidateQueries({ queryKey: ['programs', data.clinicId] });
     },
   });
@@ -82,6 +80,7 @@ export const useDeleteProgramMutation = () => {
       // Get the program data from cache to know which clinic to invalidate
       const program = queryClient.getQueryData<Program>(['program', variables]);
       if (program?.clinicId) {
+        queryClient.invalidateQueries({ queryKey: ['programs'] });
         queryClient.invalidateQueries({ queryKey: ['programs', program.clinicId] });
       }
       // Remove program from cache

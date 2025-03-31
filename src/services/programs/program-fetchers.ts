@@ -45,7 +45,7 @@ export async function getClinicPrograms(clinicId: string): Promise<Program[]> {
         // Add client count to the program object
         mappedProgram.clientCount = clientCount || 0;
         
-        console.log(`Program ${program.id} has ${clientCount || 0} clients`);
+        console.log(`Program ${program.id} (${program.name}) has ${clientCount || 0} clients`);
         
         return mappedProgram;
       })
@@ -77,9 +77,14 @@ export async function getAllPrograms(): Promise<Program[]> {
     
     console.log("All programs data returned:", data?.length || 0, "programs");
     
+    if (!data || data.length === 0) {
+      console.log("No programs found in database");
+      return [];
+    }
+    
     // Fetch supplements for each program and add client count
     const programsWithSupplements = await Promise.all(
-      (data || []).map(async (program) => {
+      data.map(async (program) => {
         const supplements = await getSupplementsByProgramId(program.id);
         
         // Get client count for each program
@@ -89,7 +94,7 @@ export async function getAllPrograms(): Promise<Program[]> {
           .eq('program_id', program.id);
           
         if (countError) {
-          console.error('Error fetching client count:', countError);
+          console.error(`Error fetching client count for program ${program.id}:`, countError);
         }
         
         const mappedProgram = mapDbProgramToProgram(program);
@@ -98,12 +103,13 @@ export async function getAllPrograms(): Promise<Program[]> {
         // Add client count to the program object
         mappedProgram.clientCount = clientCount || 0;
         
-        console.log(`Program ${program.id} has ${clientCount || 0} clients`);
+        console.log(`Program ${program.id} (${program.name}) has ${clientCount || 0} clients`);
         
         return mappedProgram;
       })
     );
     
+    console.log("Final programs data with supplements and client counts:", programsWithSupplements);
     return programsWithSupplements;
   } catch (error) {
     console.error('Error fetching all programs:', error);
@@ -132,6 +138,18 @@ export async function getProgramById(programId: string): Promise<Program | null>
     const program = mapDbProgramToProgram(data);
     // Add supplements to the program
     program.supplements = supplements;
+    
+    // Get client count for the program
+    const { count: clientCount, error: countError } = await supabase
+      .from('clients')
+      .select('*', { count: 'exact', head: true })
+      .eq('program_id', programId);
+      
+    if (countError) {
+      console.error('Error fetching client count:', countError);
+    }
+    
+    program.clientCount = clientCount || 0;
     
     return program;
   } catch (error) {

@@ -42,9 +42,17 @@ const ProgramsPage = () => {
     }
   }, [isError, error]);
 
-  // Add debugging logging to help identify issues
+  // Add detailed debugging logging to help identify issues
   useEffect(() => {
     console.log("Programs data in component:", programs);
+    if (programs) {
+      console.log(`Number of programs: ${programs.length}`);
+      programs.forEach((program, index) => {
+        console.log(`Program ${index + 1}:`, program.name, "Client count:", program.clientCount || 0);
+      });
+    } else {
+      console.log("No programs data available");
+    }
   }, [programs]);
 
   return (
