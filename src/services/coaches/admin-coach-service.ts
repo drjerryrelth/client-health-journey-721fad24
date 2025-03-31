@@ -8,19 +8,36 @@ export async function getCoachCount(): Promise<number> {
   try {
     console.log('[AdminCoachService] Getting total coach count');
     
-    const { count, error } = await supabase
-      .from('coaches')
-      .select('id', { head: true, count: 'exact' });
-      
+    // Try using a direct count with RLS bypass first
+    const { data, error } = await supabase.rpc('admin_get_all_coaches');
+    
     if (error) {
-      console.error('[AdminCoachService] Count query error:', error);
-      // Return zero but don't throw - allow the UI to show zero instead of erroring
-      return 0;
+      console.error('[AdminCoachService] RPC function error:', error);
+      
+      // Fallback to a direct count if RPC fails
+      const { count, error: countError } = await supabase
+        .from('coaches')
+        .select('id', { head: true, count: 'exact' });
+        
+      if (countError) {
+        console.error('[AdminCoachService] Count query error:', countError);
+        // Return zero but don't throw - allow the UI to show zero instead of erroring
+        return 0;
+      }
+      
+      // Get count from metadata
+      console.log(`[AdminCoachService] Found ${count || 0} coaches in database`);
+      return count || 0;
     }
     
-    // Get count from metadata
-    console.log(`[AdminCoachService] Found ${count || 0} coaches in database`);
-    return count || 0;
+    // If RPC succeeded, count the returned coaches
+    if (Array.isArray(data)) {
+      console.log(`[AdminCoachService] Found ${data.length} coaches via RPC`);
+      return data.length;
+    }
+    
+    console.log('[AdminCoachService] No coaches found');
+    return 0;
   } catch (error) {
     console.error('[AdminCoachService] Failed to get coach count:', error);
     toast.error('Failed to get coach count');
