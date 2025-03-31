@@ -1,56 +1,55 @@
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { PasswordFormValues, passwordSchema, usePasswordForm } from '@/hooks/use-password-form';
+import { useForm } from 'react-hook-form';
+import { usePasswordForm, passwordSchema, PasswordFormValues } from '@/hooks/use-password-form';
 
-export const PasswordTabContent = () => {
+export function PasswordTabContent() {
   const { loading, updatePassword } = usePasswordForm();
-  
-  // Initialize password form
-  const passwordForm = useForm<PasswordFormValues>({
+
+  const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
     }
   });
-
-  const handlePasswordSubmit = async (data: PasswordFormValues) => {
+  
+  const onSubmit = async (data: PasswordFormValues) => {
     const success = await updatePassword(data);
     if (success) {
-      passwordForm.reset({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
+      form.reset();
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Password</CardTitle>
+        <CardTitle>Change Password</CardTitle>
         <CardDescription>
-          Change your password
+          Update your password
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <Form {...passwordForm}>
-          <form onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)} className="space-y-4">
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
-              control={passwordForm.control}
+              control={form.control}
               name="currentPassword"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Current Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="●●●●●●●●" {...field} />
+                    <Input 
+                      type="password" 
+                      placeholder="Enter your current password" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -58,13 +57,17 @@ export const PasswordTabContent = () => {
             />
             
             <FormField
-              control={passwordForm.control}
+              control={form.control}
               name="newPassword"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>New Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="●●●●●●●●" {...field} />
+                    <Input 
+                      type="password" 
+                      placeholder="Enter your new password" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -72,27 +75,29 @@ export const PasswordTabContent = () => {
             />
             
             <FormField
-              control={passwordForm.control}
+              control={form.control}
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Confirm New Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="●●●●●●●●" {...field} />
+                    <Input 
+                      type="password" 
+                      placeholder="Confirm your new password" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
-            <div className="flex justify-end">
-              <Button type="submit" disabled={loading}>
-                {loading ? "Changing..." : "Change Password"}
-              </Button>
-            </div>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Updating...' : 'Update Password'}
+            </Button>
           </form>
         </Form>
       </CardContent>
     </Card>
   );
-};
+}
