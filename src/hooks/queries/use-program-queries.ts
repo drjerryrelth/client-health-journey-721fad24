@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { ProgramService } from '@/services/programs';
@@ -10,15 +9,18 @@ export const useProgramsQuery = (clinicId?: string) => {
   const activeClinicId = clinicId || user?.clinicId;
 
   return useQuery({
-    queryKey: ['programs', activeClinicId],
+    queryKey: ['programs', activeClinicId ? 'clinic' : 'all'],
     queryFn: async () => {
-      console.log("Fetching programs for clinic:", activeClinicId);
-      if (!activeClinicId) {
-        console.error("No clinic ID available for fetching programs");
-        return [];
-      }
+      console.log("Fetching programs, clinic ID:", activeClinicId);
       try {
-        const programs = await ProgramService.getClinicPrograms(activeClinicId);
+        let programs;
+        if (activeClinicId) {
+          // If a clinic ID is specified, fetch programs for that clinic
+          programs = await ProgramService.getClinicPrograms(activeClinicId);
+        } else {
+          // Otherwise, fetch all programs
+          programs = await ProgramService.getAllPrograms();
+        }
         console.log("Fetched programs:", programs);
         return programs;
       } catch (error) {
@@ -26,7 +28,6 @@ export const useProgramsQuery = (clinicId?: string) => {
         throw error;
       }
     },
-    enabled: !!activeClinicId,
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
     staleTime: 1000 * 60 * 5, // 5 minutes
