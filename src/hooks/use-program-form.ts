@@ -51,8 +51,8 @@ export const useProgramForm = () => {
       
       await createProgramMutation.mutateAsync({
         program: {
-          name: formData.name || `${formData.type.replace('_', ' ')} Program`,
-          description: formData.description || `${formData.name} program`,
+          name: formData.name,
+          description: formData.description || `${formData.name}`,
           type: formData.type,
           duration: durationInDays,
           checkInFrequency: formData.checkInFrequency,
@@ -62,7 +62,7 @@ export const useProgramForm = () => {
       });
 
       toast({
-        description: `${formData.name} program has been created successfully.`
+        description: `${formData.name} has been created successfully.`
       });
 
       // Close dialog

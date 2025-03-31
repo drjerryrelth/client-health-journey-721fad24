@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,27 +22,39 @@ interface AddProgramDialogProps {
 }
 
 const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting }: AddProgramDialogProps) => {
-  const [programName, setProgramName] = useState('');
   const [programType, setProgramType] = useState<'practice_naturals' | 'chirothin' | 'nutrition' | 'fitness' | 'keto' | 'custom'>('nutrition');
+  const [customName, setCustomName] = useState('');
   const [programDuration, setProgramDuration] = useState('');
   const [checkInFrequency, setCheckInFrequency] = useState<'daily' | 'weekly'>('daily');
   const [programDescription, setProgramDescription] = useState('');
 
+  // Reset form when dialog opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setProgramType('nutrition');
+      setCustomName('');
+      setProgramDuration('');
+      setCheckInFrequency('daily');
+      setProgramDescription('');
+    }
+  }, [isOpen]);
+
+  const getProgramName = () => {
+    if (programType === 'custom') {
+      return customName;
+    } else {
+      return `${programType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Program`;
+    }
+  };
+
   const handleSubmit = async () => {
     await onSubmit({
-      name: programName,
+      name: getProgramName(),
       type: programType,
       duration: programDuration,
       checkInFrequency,
       description: programDescription
     });
-    
-    // Reset form
-    setProgramName('');
-    setProgramType('nutrition');
-    setProgramDuration('');
-    setCheckInFrequency('daily');
-    setProgramDescription('');
   };
 
   return (
@@ -77,18 +89,22 @@ const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting }: AddProgra
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="program-name" className="text-right">
-              Name
-            </Label>
-            <Input
-              id="program-name"
-              value={programName}
-              onChange={(e) => setProgramName(e.target.value)}
-              className="col-span-3"
-              placeholder={programType === 'custom' ? "Enter program name" : `${programType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Program`}
-            />
-          </div>
+          
+          {programType === 'custom' && (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="custom-name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="custom-name"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                className="col-span-3"
+                placeholder="Enter custom program name"
+              />
+            </div>
+          )}
+          
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="program-duration" className="text-right">
               Duration
@@ -143,7 +159,15 @@ const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting }: AddProgra
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !programName || !programType || !programDuration || !checkInFrequency}>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={
+              isSubmitting || 
+              !programDuration || 
+              !checkInFrequency || 
+              (programType === 'custom' && !customName)
+            }
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
