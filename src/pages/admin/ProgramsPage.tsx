@@ -47,7 +47,7 @@ const ProgramsPage = () => {
         </CardHeader>
         <CardContent>
           <ProgramTable
-            programs={programs}
+            programs={programs || []}
             isLoading={isLoading}
             isError={isError}
             onSelectProgram={handleViewProgramDetails}

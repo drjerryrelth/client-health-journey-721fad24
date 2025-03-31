@@ -6,7 +6,7 @@ import { Utensils, FileText, Calendar, ListCheck, Loader2 } from 'lucide-react';
 import { Program } from '@/types';
 
 interface ProgramTableProps {
-  programs: Program[] | undefined;
+  programs: Program[];
   isLoading: boolean;
   isError: boolean;
   onSelectProgram: (program: Program) => void;
@@ -54,7 +54,7 @@ const ProgramTable = ({ programs, isLoading, isError, onSelectProgram }: Program
     );
   }
 
-  if (!programs || programs.length === 0) {
+  if (programs.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
         No programs found. Click "Add Program" to create one.
