@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
-import { ProgramService } from '@/services/program-service';
+import { ProgramService } from '@/services/programs';
 import { Program } from '@/types';
 
 // Program Queries
