@@ -45,11 +45,40 @@ export const AdminUserService = {
   },
 
   /**
+   * Find admin user by email
+   */
+  async findAdminUserByEmail(email: string): Promise<AdminUser | null> {
+    const { data, error } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .maybeSingle();
+    
+    if (error) {
+      console.error(`Error finding admin user with email ${email}:`, error);
+      throw error;
+    }
+    
+    return data;
+  },
+
+  /**
    * Create a new admin user with auth credentials
    */
   async createAdminUser(userData: AdminUserFormData): Promise<AdminUser> {
     try {
       console.log('Creating admin user with data:', userData);
+      
+      // First check if user already exists
+      const existingUser = await this.findAdminUserByEmail(userData.email).catch(() => null);
+      
+      if (existingUser) {
+        console.log('User already exists, updating instead:', existingUser.id);
+        return await this.updateAdminUser(existingUser.id, {
+          full_name: userData.fullName,
+          role: userData.role || 'admin'
+        });
+      }
       
       // Call our edge function instead of using client-side admin API
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
@@ -82,17 +111,14 @@ export const AdminUserService = {
    * Update an existing admin user
    */
   async updateAdminUser(id: string, updates: Partial<AdminUser>): Promise<AdminUser> {
-    const { data, error } = await supabase
-      .from('admin_users')
-      .update({
-        full_name: updates.full_name,
-        role: updates.role,
-        is_active: updates.is_active,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .maybeSingle();
+    // Use the edge function for more comprehensive updates
+    const { data, error } = await supabase.functions.invoke('create-admin-user', {
+      body: {
+        action: 'update',
+        userId: id,
+        updates: updates
+      }
+    });
     
     if (error) {
       console.error(`Error updating admin user with ID ${id}:`, error);

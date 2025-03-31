@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Pencil, Trash2, AlertCircle, RefreshCw } from 'lucide-react';
+import { UserPlus, Pencil, Trash2, AlertCircle, RefreshCw, ShieldCheck } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AddAdminUserDialog } from '@/components/admin/AddAdminUserDialog';
 import { EditAdminUserDialog } from '@/components/admin/EditAdminUserDialog';
-import { useAdminUsersQuery, useDeleteAdminUserMutation } from '@/hooks/use-admin-users';
+import { useAdminUsersQuery, useDeleteAdminUserMutation, useUpdateAdminUserMutation } from '@/hooks/use-admin-users';
 import { Badge } from '@/components/ui/badge';
 import { toast as sonnerToast } from 'sonner';
 
@@ -17,11 +17,13 @@ const AdminUsersPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isPromoteDialogOpen, setIsPromoteDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   
   const { data: adminUsers, isLoading, isError, refetch, isFetching } = useAdminUsersQuery();
   const deleteAdminUser = useDeleteAdminUserMutation();
+  const updateAdminUser = useUpdateAdminUserMutation();
 
   // Refresh data when component mounts
   useEffect(() => {
@@ -40,6 +42,30 @@ const AdminUsersPage = () => {
   const handleDelete = (userId: string) => {
     setSelectedUserId(userId);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handlePromoteToSuperAdmin = (userId: string) => {
+    setSelectedUserId(userId);
+    setIsPromoteDialogOpen(true);
+  };
+
+  const confirmPromote = async () => {
+    if (selectedUserId) {
+      try {
+        await updateAdminUser.mutateAsync({
+          userId: selectedUserId,
+          updates: { role: 'super_admin' }
+        });
+        // Explicitly refetch after update
+        await refetch();
+        sonnerToast.success('User promoted to Super Admin successfully');
+      } catch (error) {
+        // Error handled by mutation hook
+        console.error('Error promoting user:', error);
+      }
+    }
+    setIsPromoteDialogOpen(false);
+    setSelectedUserId(undefined);
   };
 
   const confirmDelete = async () => {
@@ -166,6 +192,16 @@ const AdminUsersPage = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
+                        {user.role !== 'super_admin' && (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-blue-600"
+                            onClick={() => handlePromoteToSuperAdmin(user.id)}
+                          >
+                            <ShieldCheck size={14} className="mr-1" /> Make Super
+                          </Button>
+                        )}
                         <Button size="sm" variant="outline" onClick={() => handleEdit(user.id)}>
                           <Pencil size={14} className="mr-1" /> Edit
                         </Button>
@@ -212,6 +248,28 @@ const AdminUsersPage = () => {
               disabled={deleteAdminUser.isPending}
             >
               {deleteAdminUser.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Promote to Super Admin Dialog */}
+      <Dialog open={isPromoteDialogOpen} onOpenChange={setIsPromoteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Promote to Super Admin</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to promote this user to Super Admin? Super Admins have unrestricted access to all system functions.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPromoteDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={confirmPromote}
+              disabled={updateAdminUser.isPending}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {updateAdminUser.isPending ? "Promoting..." : "Yes, Promote"}
             </Button>
           </DialogFooter>
         </DialogContent>
