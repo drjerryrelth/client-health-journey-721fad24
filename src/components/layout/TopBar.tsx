@@ -46,7 +46,7 @@ const TopBar = () => {
     <header className="bg-white border-b border-gray-200 px-4 py-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <h2 className="text-lg md:text-xl font-medium text-gray-800 mr-4">Client Health Tracker</h2>
+          <h2 className="text-lg md:text-xl font-medium text-gray-800 mr-4">Client Health Tracker™</h2>
           <span className="hidden md:inline-block bg-primary-100 text-primary-800 text-xs font-medium py-1 px-2 rounded">
             {user?.role === 'client' ? 'Client Portal' : 'Staff Portal'}
           </span>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -134,10 +133,10 @@ const Index = () => {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center px-4">
           <div className="flex items-center mb-4 md:mb-0">
             <Weight className="h-6 w-6 text-primary-400 mr-2" />
-            <span className="font-bold text-white">Client Health Tracker</span>
+            <span className="font-bold text-white">Client Health Tracker™</span>
           </div>
           <p className="text-gray-400 text-sm">
-            &copy; {new Date().getFullYear()} Client Health Tracker. All rights reserved.
+            &copy; {new Date().getFullYear()} Client Health Tracker™. All rights reserved.
           </p>
         </div>
       </footer>

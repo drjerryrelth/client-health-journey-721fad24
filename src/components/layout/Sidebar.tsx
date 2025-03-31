@@ -195,7 +195,7 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
       <div className="flex items-center justify-between p-4 border-b">
         <Link to="/" className="flex items-center gap-2">
           <BookMarked className="h-6 w-6 text-primary" />
-          <span className="font-semibold">Client Health Tracker</span>
+          <span className="font-semibold">Client Health Tracker™</span>
         </Link>
         {isMobile && (
           <Button variant="ghost" size="icon" onClick={onClose}>
