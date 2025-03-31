@@ -51,22 +51,11 @@ const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting }: AddProgra
         <DialogHeader>
           <DialogTitle>Add New Program</DialogTitle>
           <DialogDescription>
-            Create a new program for your clinics. Fill in the details below.
+            Create a new program for your clients. Fill in the details below.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="program-name" className="text-right">
-              Name
-            </Label>
-            <Input
-              id="program-name"
-              value={programName}
-              onChange={(e) => setProgramName(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="program-type" className="text-right">
               Type
@@ -87,6 +76,18 @@ const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting }: AddProgra
                 <SelectItem value="custom">Custom</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="program-name" className="text-right">
+              Name
+            </Label>
+            <Input
+              id="program-name"
+              value={programName}
+              onChange={(e) => setProgramName(e.target.value)}
+              className="col-span-3"
+              placeholder={programType === 'custom' ? "Enter program name" : `${programType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Program`}
+            />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="program-duration" className="text-right">
@@ -133,6 +134,7 @@ const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting }: AddProgra
               onChange={(e) => setProgramDescription(e.target.value)}
               className="col-span-3"
               rows={4}
+              placeholder="Describe the program and its goals"
             />
           </div>
         </div>
@@ -141,7 +143,7 @@ const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting }: AddProgra
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button onClick={handleSubmit} disabled={isSubmitting || !programName || !programType || !programDuration || !checkInFrequency}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

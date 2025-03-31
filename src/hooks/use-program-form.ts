@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useCreateProgramMutation } from '@/hooks/queries/use-program-queries';
+import { useCreateProgramMutation } from '@/hooks/queries';
 import { useToast } from '@/hooks/use-toast';
 
 export const useProgramForm = () => {
@@ -51,7 +51,7 @@ export const useProgramForm = () => {
       
       await createProgramMutation.mutateAsync({
         program: {
-          name: formData.name,
+          name: formData.name || `${formData.type.replace('_', ' ')} Program`,
           description: formData.description || `${formData.name} program`,
           type: formData.type,
           duration: durationInDays,
