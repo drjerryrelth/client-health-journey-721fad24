@@ -63,7 +63,7 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           const programsData = clientData.programs;
           if (programsData !== null && typeof programsData === 'object') {
             // Check if 'name' property exists in programsData
-            if ('name' in programsData && programsData.name) {
+            if ('name' in programsData && typeof programsData.name === 'string') {
               setProgramName(programsData.name);
             }
           }
