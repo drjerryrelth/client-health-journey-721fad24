@@ -32,7 +32,6 @@ export type Program = {
   description: string;
   duration: number; // in days
   type: 'practice_naturals' | 'chirothin' | 'keto' | 'nutrition' | 'fitness' | 'custom';
-  supplements: Supplement[];
   checkInFrequency: 'daily' | 'weekly';
   clinicId: string;
   clientCount?: number; // Add this field to track number of enrolled clients
@@ -111,8 +110,8 @@ export const mapClientToDbClient = (client: Omit<Client, 'id'>): Omit<ClientRow,
   coach_id: client.coachId || null
 });
 
-// Add mapping functions for Program and Supplement
-export const mapDbProgramToProgram = (dbProgram: ProgramRow, supplements: SupplementRow[] = []): Program => ({
+// Update the mapping function for Program to not include supplements
+export const mapDbProgramToProgram = (dbProgram: ProgramRow): Program => ({
   id: dbProgram.id,
   name: dbProgram.name,
   description: dbProgram.description,
@@ -120,7 +119,7 @@ export const mapDbProgramToProgram = (dbProgram: ProgramRow, supplements: Supple
   type: dbProgram.type as 'practice_naturals' | 'chirothin' | 'keto' | 'nutrition' | 'fitness' | 'custom',
   checkInFrequency: dbProgram.check_in_frequency as 'daily' | 'weekly',
   clinicId: dbProgram.clinic_id,
-  supplements: supplements.map(mapDbSupplementToSupplement),
+  supplements: [], // Initialize with empty array, will be populated separately
 });
 
 export const mapProgramToDbProgram = (program: Omit<Program, 'id' | 'supplements'>): Omit<ProgramRow, 'id' | 'created_at'> => ({

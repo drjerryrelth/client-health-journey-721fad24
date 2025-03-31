@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Supplement } from '@/types';
+import { Supplement, mapDbSupplementToSupplement } from '@/types';
 
 /**
  * Fetches all supplements for a specific program
@@ -15,14 +14,7 @@ export async function getSupplementsByProgramId(programId: string): Promise<Supp
     if (error) throw error;
     
     // Map database supplement rows to Supplement objects
-    return data?.map(item => ({
-      id: item.id,
-      name: item.name,
-      description: item.description,
-      dosage: item.dosage,
-      frequency: item.frequency,
-      timeOfDay: item.time_of_day || undefined
-    })) || [];
+    return data?.map(item => mapDbSupplementToSupplement(item)) || [];
   } catch (error) {
     console.error('Error fetching program supplements:', error);
     throw error;

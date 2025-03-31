@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Program, mapDbProgramToProgram } from '@/types';
+import { SupplementRow } from '@/types/database';
 import { getSupplementsByProgramId } from './supplement-service';
 
 /**
@@ -38,7 +39,9 @@ export async function getClinicPrograms(clinicId: string): Promise<Program[]> {
           console.error('Error fetching client count:', countError);
         }
         
-        const mappedProgram = mapDbProgramToProgram(program, supplements);
+        const mappedProgram = mapDbProgramToProgram(program);
+        // Add supplements to the program object
+        mappedProgram.supplements = supplements;
         // Add client count to the program object
         mappedProgram.clientCount = clientCount || 0;
         
@@ -72,7 +75,12 @@ export async function getProgramById(programId: string): Promise<Program | null>
     // Fetch supplements for the program
     const supplements = await getSupplementsByProgramId(programId);
     
-    return mapDbProgramToProgram(data, supplements);
+    // Map the database program to application Program type
+    const program = mapDbProgramToProgram(data);
+    // Add supplements to the program
+    program.supplements = supplements;
+    
+    return program;
   } catch (error) {
     console.error('Error fetching program details:', error);
     throw error;
