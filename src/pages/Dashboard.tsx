@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import AdminDashboard from './AdminDashboard';
-import CoachDashboard from './CoachDashboard'; // Add import for CoachDashboard
+import CoachDashboard from './CoachDashboard';
 import ClientDashboard from './ClientDashboard';
 import Unauthorized from './Unauthorized';
 import MainLayout from '@/components/layout/MainLayout';
@@ -45,9 +45,10 @@ const Dashboard = () => {
 
   console.log('Dashboard component - user role:', user.role);
 
-  return (
-    <Routes>
-      {hasRole('admin') || hasRole('super_admin') ? (
+  // Only render routes specific to the user's role
+  if (hasRole('admin') || hasRole('super_admin')) {
+    return (
+      <Routes>
         <Route element={<MainLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="clients" element={<ClientsPage />} />
@@ -61,23 +62,34 @@ const Dashboard = () => {
           <Route path="activities" element={<ActivitiesPage />} />
           <Route path="admin-users" element={<AdminUsersPage />} />
         </Route>
-      ) : hasRole('coach') ? (
+      </Routes>
+    );
+  } else if (hasRole('coach')) {
+    return (
+      <Routes>
         <Route element={<MainLayout />}>
           <Route index element={<CoachDashboard />} />
           <Route path="clients" element={<ClientsPage />} />
-          <Route path="programs" element={<ProgramsPage />} />
           <Route path="check-ins" element={<CheckInsPage />} />
           <Route path="resources" element={<ResourcesPage />} />
         </Route>
-      ) : hasRole('client') ? (
+      </Routes>
+    );
+  } else if (hasRole('client')) {
+    return (
+      <Routes>
         <Route element={<MainLayout />}>
           <Route index element={<ClientDashboard />} />
         </Route>
-      ) : (
+      </Routes>
+    );
+  } else {
+    return (
+      <Routes>
         <Route index element={<Unauthorized />} />
-      )}
-    </Routes>
-  );
+      </Routes>
+    );
+  }
 };
 
 export default Dashboard;

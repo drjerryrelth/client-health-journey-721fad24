@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,8 @@ const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
       
       setLoading(true);
       try {
+        console.log('Fetching clients for coach:', user.id);
+        
         // Fetch clients assigned to this coach
         const { data, error } = await supabase
           .from('clients')
@@ -50,6 +53,8 @@ const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
           .order('name');
           
         if (error) throw error;
+        
+        console.log('Fetched clients:', data.length);
         
         // Transform data to match the expected format
         const formattedClients = data.map(client => {

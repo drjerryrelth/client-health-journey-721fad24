@@ -28,11 +28,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'coac
     return <Navigate to="/login" replace />;
   }
   
-  // Check role permissions - updated to log useful debugging info
+  // Check role permissions with improved logging
+  console.log('MainLayout - User role:', user?.role);
+  console.log('MainLayout - Required roles:', requiredRoles);
+  
+  // Check if user has ANY of the required roles (OR logic, not AND)
   const hasPermission = requiredRoles.some(role => hasRole(role));
-  console.log('User role:', user?.role);
-  console.log('Required roles:', requiredRoles);
-  console.log('Has permission:', hasPermission);
+  console.log('MainLayout - Has permission:', hasPermission);
   
   if (!hasPermission) {
     toast.error("Access denied. You don't have permission to access this page.");

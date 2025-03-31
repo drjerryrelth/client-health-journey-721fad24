@@ -84,17 +84,27 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     }
   };
 
-  // Modified to handle array of roles properly
-  const hasRole = (role: UserRole | UserRole[]) => (user: UserData | null) => {
-    if (!user) return false;
+  // Enhanced hasRole function with improved role checking logic
+  const hasRole = (requiredRole: UserRole | UserRole[]) => (user: UserData | null) => {
+    console.log('Checking role:', requiredRole, 'for user:', user);
     
-    // If role is an array, check if user's role is in that array
-    if (Array.isArray(role)) {
-      return role.includes(user.role);
+    // If no user or no role, no permissions
+    if (!user) {
+      console.log('No user, so no role');
+      return false;
     }
     
-    // Otherwise just check if user's role matches the specified role
-    return user.role === role;
+    // If checking for multiple roles (OR logic)
+    if (Array.isArray(requiredRole)) {
+      const hasAnyRole = requiredRole.includes(user.role);
+      console.log(`User has any of [${requiredRole.join(', ')}]?`, hasAnyRole);
+      return hasAnyRole;
+    }
+    
+    // Single role check
+    const hasSpecificRole = user.role === requiredRole;
+    console.log(`User has role ${requiredRole}?`, hasSpecificRole);
+    return hasSpecificRole;
   };
 
   return {

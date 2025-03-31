@@ -74,7 +74,7 @@ const App = () => (
               <Route path="/admin-users" element={<AdminUsersPage />} />
             </Route>
             
-            {/* Coach routes */}
+            {/* Coach routes - clearly separated from admin routes */}
             <Route element={<MainLayout requiredRoles={['coach']} />}>
               <Route path="/coach-dashboard" element={<CoachDashboard />} />
               <Route path="/coach/clients" element={<ClientsPage />} />
@@ -85,7 +85,7 @@ const App = () => (
               <Route path="/add-client" element={<ClientsPage />} />
             </Route>
             
-            {/* Client routes */}
+            {/* Client routes - completely separate from admin and coach routes */}
             <Route element={<MainLayout requiredRoles={['client']} />}>
               <Route path="/client-dashboard" element={<ClientDashboard />} />
               <Route path="/client-portal" element={<ClientPortal />} />
