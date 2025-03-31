@@ -43,17 +43,29 @@ const ClientDailyDrip = () => {
         const daysDiff = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
         const currentDay = daysDiff + 1; // Day 1 is the first day
         
-        // First try to get the client's message for today
-        const { data: messageData, error: messageError } = await supabase.rpc(
-          'get_client_daily_drip',
-          { client_id_param: clientData.id }
-        );
+        // First try to get the client's message for today using direct query instead of RPC
+        const { data: messageData, error: messageError } = await supabase
+          .from('client_drip_messages')
+          .select(`
+            id,
+            day_number,
+            is_read,
+            drip_template_id,
+            drip_content_templates:drip_template_id (
+              subject,
+              content
+            )
+          `)
+          .eq('client_id', clientData.id)
+          .order('sent_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
         
         if (!messageError && messageData) {
           setTodaysDrip({
             id: messageData.id,
-            subject: messageData.subject,
-            content: messageData.content,
+            subject: messageData.drip_content_templates.subject,
+            content: messageData.drip_content_templates.content,
             day_number: messageData.day_number,
             is_read: messageData.is_read
           });
@@ -95,18 +107,14 @@ const ClientDailyDrip = () => {
     if (!todaysDrip || todaysDrip.id === 'new') return;
     
     try {
-      const { data: clientData } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('user_id', user?.id)
-        .single();
+      // Update the is_read status directly instead of using RPC
+      const { error } = await supabase
+        .from('client_drip_messages')
+        .update({ is_read: true })
+        .eq('id', todaysDrip.id);
         
-      if (!clientData) return;
+      if (error) throw error;
       
-      await supabase.rpc('mark_message_as_read', { 
-        message_id_param: todaysDrip.id 
-      });
-        
       setTodaysDrip({ ...todaysDrip, is_read: true });
       
     } catch (error) {

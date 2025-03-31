@@ -31,7 +31,8 @@ const ClientDashboard = () => {
             id,
             name,
             start_date,
-            programs:program_id (name, duration)
+            program_id,
+            programs:programs (name, duration)
           `)
           .eq('user_id', user.id)
           .single();
@@ -40,8 +41,8 @@ const ClientDashboard = () => {
         
         if (clientData) {
           setClientStartDate(clientData.start_date);
-          if (clientData.programs) {
-            setProgramName(clientData.programs.name);
+          if (clientData.programs && typeof clientData.programs === 'object') {
+            setProgramName(clientData.programs.name || "");
           }
           
           // Fetch check-ins for this client
@@ -93,11 +94,11 @@ const ClientDashboard = () => {
   
   // Calculate progress percentage based on start date and program duration
   const calculateProgress = () => {
-    if (!clientStartDate || !programName) return 0;
+    if (!clientStartDate) return 0;
     
     const startDate = new Date(clientStartDate);
     const currentDate = new Date();
-    const daysPassed = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+    const daysPassed = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const programDuration = 30; // Default to 30 days if not specified
     
     const progressPercent = Math.min(100, Math.max(0, (daysPassed / programDuration) * 100));
