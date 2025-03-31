@@ -61,10 +61,12 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           
           // Handle programs data safely to fix TypeScript errors
           if (clientData.programs) {
-            const programs = clientData.programs as { name?: string };
-            const programName = programs.name;
-            if (programName) {
-              setProgramName(programName);
+            // Type assertion to fix TypeScript errors
+            const programsData = clientData.programs as { name?: string } | null;
+            
+            // Check if programsData exists and has a name property
+            if (programsData && typeof programsData.name === 'string') {
+              setProgramName(programsData.name);
             }
           }
           
