@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
@@ -26,6 +25,7 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       
       return result;
     } catch (error: any) {
+      console.error('Login error details:', error);
       toast({
         title: 'Login failed',
         description: error.message || 'An error occurred during login.',
@@ -95,7 +95,7 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     
     // If checking for multiple roles (OR logic)
     if (Array.isArray(requiredRole)) {
-      const hasAnyRole = requiredRole.includes(user.role);
+      const hasAnyRole = requiredRole.some(role => user.role === role);
       console.log(`User has any of [${requiredRole.join(', ')}]?`, hasAnyRole);
       return hasAnyRole;
     }

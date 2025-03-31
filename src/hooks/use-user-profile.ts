@@ -27,31 +27,33 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       console.log('Profile not found in database, checking if this is a clinic registration');
       
       // Check if this user is associated with a clinic as an owner/admin
-      const { data: clinicData } = await supabase
+      const { data: clinicData, error: clinicError } = await supabase
         .from('clinics')
         .select('id, name, email')
         .eq('email', email)
         .single();
       
-      if (clinicData) {
+      if (clinicError) {
+        console.log('Not a clinic user, checking demo accounts');
+      } else if (clinicData) {
         console.log('User is associated with clinic:', clinicData);
         
-        // Create a fallback profile for clinic users - assign as coach instead of admin
+        // Create a profile for clinic users with coach role
         const clinicProfile: UserData = {
           id: userId,
-          name: clinicData.name || "Clinic Coach",
+          name: clinicData.name || "Clinic User",
           email: email,
-          role: "coach", // Assign coach role instead of admin
+          role: "coach", // Assign coach role for clinic users
           clinicId: clinicData.id,
         };
         
         try {
-          // Try to insert the profile into the database
+          // Create the profile in the database
           const { error: insertError } = await supabase
             .from('profiles')
             .upsert({
               id: userId,
-              full_name: clinicData.name || "Clinic Coach",
+              full_name: clinicData.name || "Clinic User",
               email: email,
               role: "coach", // Set role as coach
               clinic_id: clinicData.id,
@@ -60,7 +62,7 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
           if (insertError) {
             console.warn('Could not save clinic profile to database:', insertError.message);
           } else {
-            console.log('Clinic coach profile created in database successfully');
+            console.log('Clinic user profile created in database successfully');
           }
         } catch (insertErr) {
           console.error('Error during clinic profile insertion:', insertErr);
@@ -134,12 +136,12 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
     
     // Validate the role from the database
     let userRole: UserRole;
-    if (profile.role === 'admin' || profile.role === 'coach' || profile.role === 'client') {
+    if (profile.role === 'admin' || profile.role === 'coach' || profile.role === 'client' || profile.role === 'super_admin') {
       userRole = profile.role as UserRole;
     } else {
-      // Default to admin if the role from the database is not valid
-      userRole = 'admin';
-      console.warn(`Invalid role "${profile.role}" found in database, defaulting to admin`);
+      // Default to coach if the role from the database is not valid
+      userRole = 'coach';
+      console.warn(`Invalid role "${profile.role}" found in database, defaulting to coach`);
     }
     
     // Transform the profile data to match UserData structure

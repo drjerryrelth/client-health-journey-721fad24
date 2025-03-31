@@ -93,6 +93,43 @@ const performLoginRequest = async (email: string, password: string) => {
   ]);
 };
 
+// Helper to ensure clinic profile exists
+const ensureClinicProfileExists = async (userId: string, email: string) => {
+  try {
+    // Check if this email is associated with a clinic
+    const { data: clinicData, error: clinicError } = await supabase
+      .from('clinics')
+      .select('id, name')
+      .eq('email', email)
+      .single();
+    
+    if (clinicError) {
+      return false; // Not a clinic user
+    }
+    
+    // Create or update the profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: userId,
+        full_name: clinicData.name || 'Clinic User',
+        email: email,
+        role: 'coach', // Default role for clinic users
+        clinic_id: clinicData.id,
+      });
+    
+    if (profileError) {
+      console.error('Error creating clinic profile:', profileError);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error ensuring clinic profile exists:', error);
+    return false;
+  }
+};
+
 export async function loginWithEmail(email: string, password: string) {
   console.log('Attempting login with email:', email);
   
@@ -112,6 +149,9 @@ export async function loginWithEmail(email: string, password: string) {
     // For demo accounts, ensure the profile exists
     if (isDemoEmail(email)) {
       await ensureDemoProfileExists(result.data.user.id, email);
+    } else {
+      // Check if this might be a clinic user
+      await ensureClinicProfileExists(result.data.user.id, email);
     }
     
     console.log('Login successful');

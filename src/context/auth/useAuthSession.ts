@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { UserData } from '@/types/auth';
@@ -32,12 +31,22 @@ export const useAuthSession = ({
         console.log('Setting user data', userData);
         setUser(userData);
       } else {
-        console.warn('No user data found, signing out');
+        console.warn('No user data found, this may cause issues with authentication');
+        toast({
+          title: 'Profile Error',
+          description: 'Could not retrieve your user profile. Please contact support.',
+          variant: 'destructive',
+        });
       }
     } catch (profileError) {
       console.error('Error fetching user profile:', profileError);
+      toast({
+        title: 'Profile Error',
+        description: 'An error occurred while retrieving your profile data.',
+        variant: 'destructive',
+      });
     }
-  }, [setUser]);
+  }, [setUser, toast]);
 
   const setupAuth = useCallback(async () => {
     let isMounted = true;
