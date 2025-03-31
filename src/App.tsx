@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,16 @@ import { useEffect } from "react";
 import { initializeDemoRelationships } from "./services/demo-data-initializer";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ClinicThemeProvider } from "./components/theme/ClinicThemeProvider";
+
+// Import all page components
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Unauthorized from "./pages/Unauthorized";
+import ClinicSignup from "./pages/ClinicSignup";
+import Dashboard from "./pages/Dashboard";
+import NotFound from "./pages/NotFound";
+import MealPlanGenerator from "./pages/MealPlanGenerator";
+import MainLayout from "./components/layout/MainLayout";
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -39,7 +39,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const fetchClinicTheme = async () => {
-      if (!user?.clinic_id) {
+      if (!user?.clinicId) {
         setIsLoading(false);
         return;
       }
@@ -48,7 +48,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const { data, error } = await supabase
           .from('clinics')
           .select('name, logo, primary_color, secondary_color')
-          .eq('id', user.clinic_id)
+          .eq('id', user.clinicId)
           .single();
 
         if (error) throw error;
@@ -68,7 +68,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     fetchClinicTheme();
-  }, [user?.clinic_id]);
+  }, [user?.clinicId]);
 
   return (
     <ThemeContext.Provider value={{ theme, isLoading, error }}>

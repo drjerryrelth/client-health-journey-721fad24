@@ -36,7 +36,7 @@ const ClinicDetailsTab = ({ clinic, onEditClick }: ClinicDetailsTabProps) => {
                 </div>
                 <div>
                   <span className="text-sm text-gray-500 block">Primary Contact</span>
-                  <span>{clinic.primary_contact || 'Not provided'}</span>
+                  <span>{clinic.primaryContact || 'Not provided'}</span>
                 </div>
               </div>
             </div>
@@ -46,7 +46,7 @@ const ClinicDetailsTab = ({ clinic, onEditClick }: ClinicDetailsTabProps) => {
               <div className="space-y-2">
                 <div>
                   <span className="text-sm text-gray-500 block">Address</span>
-                  <span>{clinic.street_address || 'Not provided'}</span>
+                  <span>{clinic.streetAddress || 'Not provided'}</span>
                 </div>
                 <div>
                   <span className="text-sm text-gray-500 block">City, State ZIP</span>
@@ -74,13 +74,13 @@ const ClinicDetailsTab = ({ clinic, onEditClick }: ClinicDetailsTabProps) => {
                   <div>
                     <span className="text-sm text-gray-500 block">Primary Color</span>
                     <div className="flex items-center mt-1">
-                      {clinic.primary_color ? (
+                      {clinic.primaryColor ? (
                         <div className="flex items-center">
                           <div 
                             className="w-5 h-5 rounded-full mr-2 border"
-                            style={{ backgroundColor: clinic.primary_color }}
+                            style={{ backgroundColor: clinic.primaryColor }}
                           ></div>
-                          <span>{clinic.primary_color}</span>
+                          <span>{clinic.primaryColor}</span>
                         </div>
                       ) : (
                         <span className="text-gray-400">Default</span>
@@ -91,13 +91,13 @@ const ClinicDetailsTab = ({ clinic, onEditClick }: ClinicDetailsTabProps) => {
                   <div>
                     <span className="text-sm text-gray-500 block">Secondary Color</span>
                     <div className="flex items-center mt-1">
-                      {clinic.secondary_color ? (
+                      {clinic.secondaryColor ? (
                         <div className="flex items-center">
                           <div 
                             className="w-5 h-5 rounded-full mr-2 border"
-                            style={{ backgroundColor: clinic.secondary_color }}
+                            style={{ backgroundColor: clinic.secondaryColor }}
                           ></div>
-                          <span>{clinic.secondary_color}</span>
+                          <span>{clinic.secondaryColor}</span>
                         </div>
                       ) : (
                         <span className="text-gray-400">Default</span>
