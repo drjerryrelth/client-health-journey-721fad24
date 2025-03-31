@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,8 +6,8 @@ import { User, Mail, Phone, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Coach, CoachService } from '@/services/coaches';
-import { ClinicService } from '@/services/clinic-service';
-import { Clinic } from '@/services/clinics/types';
+import ClinicService from '@/services/clinic-service';
+import { Clinic } from '@/services/clinic-service';
 
 interface CoachListProps {
   limit?: number;
@@ -24,7 +23,6 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch all clinics to get clinic names
     const fetchClinics = async () => {
       try {
         const allClinics = await ClinicService.getClinics();

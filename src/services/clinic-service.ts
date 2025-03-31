@@ -121,6 +121,23 @@ const ClinicService = {
     }
   },
 
+  // Add the addClinic method to match what's being used in AddClinicDialog
+  addClinic: async (clinic: Partial<Clinic>): Promise<Clinic | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('clinics')
+        .insert(mapClinicToDb(clinic))
+        .select()
+        .single();
+
+      if (error) throw error;
+      return mapDbToClinic(data);
+    } catch (error) {
+      console.error('Error adding clinic:', error);
+      return null;
+    }
+  },
+
   createClinic: async (clinic: Partial<Clinic>): Promise<{ data: Clinic | null, error: any }> => {
     try {
       const { data, error } = await supabase
@@ -189,4 +206,6 @@ const ClinicService = {
   }
 };
 
+// Export as both default and named export to support both import styles
+export { ClinicService };
 export default ClinicService;

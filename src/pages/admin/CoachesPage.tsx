@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CoachService } from '@/services/coaches';
-import { ClinicService } from '@/services/clinic-service';
+import ClinicService from '@/services/clinic-service'; // Correct import
 import { toast } from 'sonner';
 import ErrorDialog from '@/components/coaches/ErrorDialog';
 
