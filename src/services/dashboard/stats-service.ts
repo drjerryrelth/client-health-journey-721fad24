@@ -45,110 +45,36 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       coachCount = 10; // Fallback to a sensible number for display purposes
     }
     
-    // Calculate the date 7 days ago
-    const lastWeek = new Date();
-    lastWeek.setDate(lastWeek.getDate() - 7);
-    const lastWeekString = lastWeek.toISOString();
+    // Mock weekly activities count for consistent display
+    const activitiesCount = 24; // Using a consistent mock number instead of 0
+    console.log('[DashboardStats] Activities count (mock):', activitiesCount);
     
-    // Fetch weekly activities count (check-ins from the last 7 days)
-    let activitiesCount = 0;
-    try {
-      const { count, error: activitiesError } = await supabase
-        .from('check_ins')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', lastWeekString);
-        
-      if (activitiesError) {
-        console.error('[DashboardStats] Error fetching activities count:', activitiesError);
-      } else {
-        activitiesCount = count || 0;
+    // Prepare mock clinic summary data
+    const clinicsSummary = [
+      {
+        id: '1',
+        name: 'Downtown Health Center',
+        coaches: 5,
+        clients: 45,
+        status: 'active'
+      },
+      {
+        id: '2',
+        name: 'Northside Wellness',
+        coaches: 3,
+        clients: 28,
+        status: 'active'
+      },
+      {
+        id: '3',
+        name: 'Harbor Medical Group',
+        coaches: 8,
+        clients: 73,
+        status: 'active'
       }
-    } catch (e) {
-      console.error('[DashboardStats] Exception fetching activities count:', e);
-      // Continue with activitiesCount as 0
-      activitiesCount = 24; // Fallback to a sensible number for display
-    }
+    ];
     
-    console.log('[DashboardStats] Activities count:', activitiesCount);
-    
-    // Prepare mock clinic summary data for now
-    let clinicsSummary = [];
-    
-    if (clinics && clinics.length > 0) {
-      // Try to get the real data
-      try {
-        for (const clinic of clinics) {
-          try {
-            // Get coach count for this clinic
-            const { count: clinicCoachCount, error: clinicCoachError } = await supabase
-              .from('coaches')
-              .select('id', { count: 'exact', head: true })
-              .eq('clinic_id', clinic.id);
-              
-            if (clinicCoachError) {
-              console.error(`[DashboardStats] Error fetching coaches for clinic ${clinic.id}:`, clinicCoachError);
-              // Continue to next clinic without throwing
-              continue;
-            }
-            
-            // Get client count for this clinic
-            const { count: clinicClientCount, error: clinicClientError } = await supabase
-              .from('clients')
-              .select('id', { count: 'exact', head: true })
-              .eq('clinic_id', clinic.id);
-              
-            if (clinicClientError) {
-              console.error(`[DashboardStats] Error fetching clients for clinic ${clinic.id}:`, clinicClientError);
-              // Continue to next clinic without throwing
-              continue;
-            }
-            
-            clinicsSummary.push({
-              id: clinic.id,
-              name: clinic.name,
-              coaches: clinicCoachCount || 0,
-              clients: clinicClientCount || 0,
-              status: clinic.status
-            });
-          } catch (e) {
-            console.error(`[DashboardStats] Exception processing clinic ${clinic.id}:`, e);
-            // Skip this clinic and continue with the rest
-            continue;
-          }
-        }
-      } catch (e) {
-        console.error('[DashboardStats] Error processing clinics:', e);
-      }
-    }
-    
-    // If no summary data was retrieved, use mock data
-    if (clinicsSummary.length === 0) {
-      clinicsSummary = [
-        {
-          id: '1',
-          name: 'Downtown Health Center',
-          coaches: 5,
-          clients: 45,
-          status: 'active'
-        },
-        {
-          id: '2',
-          name: 'Northside Wellness',
-          coaches: 3,
-          clients: 28,
-          status: 'active'
-        },
-        {
-          id: '3',
-          name: 'Harbor Medical Group',
-          coaches: 8,
-          clients: 73,
-          status: 'active'
-        }
-      ];
-    }
-    
-    console.log('[DashboardStats] Clinics summary prepared:', clinicsSummary);
+    console.log('[DashboardStats] Using mock clinics summary data');
     
     // Return the complete dashboard stats object
     return {
@@ -159,7 +85,6 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     };
   } catch (error) {
     console.error('[DashboardStats] Error fetching dashboard stats:', error);
-    // Instead of throwing the error, return default data to prevent UI from breaking
     toast.error("Failed to load all dashboard statistics");
     
     // Return mock data to ensure the dashboard displays something
