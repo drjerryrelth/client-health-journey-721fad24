@@ -14,13 +14,14 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
-import ClientProgress from "./pages/ClientProgress"; // Add this import
-import ClientProgramDetails from "./pages/ClientProgramDetails"; // Add this import
+import ClientProgress from "./pages/ClientProgress"; 
+import ClientProgramDetails from "./pages/ClientProgramDetails";
 import CoachDashboard from "./pages/CoachDashboard";
 import ClientPortal from "./pages/ClientPortal";
 import CheckIn from "./pages/CheckIn";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
+import MyProfile from "./pages/MyProfile";
 
 // Admin Pages
 import ClientsPage from "./pages/admin/ClientsPage";
@@ -97,11 +98,16 @@ const AppContent = () => {
         <Route element={<MainLayout requiredRoles={['client']} />}>
           <Route path="/client-dashboard" element={<ClientDashboard />} />
           <Route path="/client-portal" element={<ClientPortal />} />
+          <Route path="/client" element={<ClientPortal />} /> 
+          <Route path="/client/messages" element={<ClientPortal />} />
+          <Route path="/client/journal" element={<ClientPortal />} />
+          <Route path="/client/resources" element={<ClientPortal />} />
+          <Route path="/client/program" element={<ClientPortal />} />
+          <Route path="/client/profile" element={<ClientPortal />} />
           <Route path="/check-in" element={<CheckIn />} />
           <Route path="/progress" element={<ClientProgress />} />
           <Route path="/my-program" element={<ClientProgramDetails />} />
-          <Route path="/profile" element={<ClientDashboard />} />
-          <Route path="/client/resources" element={<ResourcesPage />} />
+          <Route path="/profile" element={<MyProfile />} />
         </Route>
         
         {/* Catch-all route */}

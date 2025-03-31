@@ -57,7 +57,7 @@ const Sidebar = () => {
     { name: 'Settings', path: '/coach/settings', icon: <Settings size={20} /> },
   ];
 
-  // Client links
+  // Client links - updated the My Profile path
   const clientLinks = [
     { name: 'Dashboard', path: '/client-dashboard', icon: <Home size={20} /> },
     { name: 'Check-in', path: '/check-in', icon: <Calendar size={20} /> },
