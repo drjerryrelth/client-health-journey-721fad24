@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -12,12 +11,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Clinic, Plus, Trash } from 'lucide-react';
+import { ArrowLeft, Building, Plus, Trash } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 
 const clinicSignupSchema = z.object({
-  // Clinic Information
   clinicName: z.string().min(1, "Clinic name is required"),
   clinicEmail: z.string().email("Invalid email format").min(1, "Email is required"),
   clinicPhone: z.string().min(1, "Phone number is required"),
@@ -27,7 +25,6 @@ const clinicSignupSchema = z.object({
   zipCode: z.string().min(1, "ZIP code is required"),
   primaryContact: z.string().min(1, "Primary contact is required"),
   
-  // Account Information
   email: z.string().email("Invalid email format").min(1, "Email is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Confirm password is required"),
@@ -52,7 +49,6 @@ const ClinicSignup = () => {
   const [additionalCoaches, setAdditionalCoaches] = useState<CoachFormData[]>([]);
   const [createAccount, setCreateAccount] = useState(true);
 
-  // Setup form with validation
   const form = useForm<ClinicSignupFormValues>({
     resolver: zodResolver(clinicSignupSchema),
     defaultValues: {
@@ -91,7 +87,6 @@ const ClinicSignup = () => {
     setIsSubmitting(true);
     
     try {
-      // 1. Create the clinic
       const { data: clinicData, error: clinicError } = await supabase
         .from('clinics')
         .insert({
@@ -110,12 +105,10 @@ const ClinicSignup = () => {
 
       if (clinicError) throw new Error(`Failed to create clinic: ${clinicError.message}`);
       
-      // Store the clinic ID for coach creation
       const clinicId = clinicData.id;
       
       let userId = null;
       
-      // 2. Create user account if requested
       if (createAccount) {
         const { data: userData, error: signUpError } = await supabase.auth.signUp({
           email: values.email,
@@ -132,7 +125,6 @@ const ClinicSignup = () => {
         if (signUpError) throw new Error(`Failed to create account: ${signUpError.message}`);
         userId = userData.user?.id;
         
-        // Update profile with clinic ID
         if (userId) {
           const { error: profileError } = await supabase
             .from('profiles')
@@ -150,12 +142,11 @@ const ClinicSignup = () => {
         }
       }
       
-      // 3. Create the primary coach (clinic contact)
       const { error: primaryCoachError } = await supabase
         .from('coaches')
         .insert({
           name: values.primaryContact,
-          email: values.email || values.clinicEmail, // Use account email if provided, otherwise clinic email
+          email: values.email || values.clinicEmail,
           phone: values.clinicPhone,
           status: 'active',
           clinic_id: clinicId
@@ -163,7 +154,6 @@ const ClinicSignup = () => {
         
       if (primaryCoachError) throw new Error(`Failed to create primary coach: ${primaryCoachError.message}`);
       
-      // 4. Create additional coaches if any
       if (additionalCoaches.length > 0) {
         const coachRecords = additionalCoaches.map(coach => ({
           name: coach.name,
@@ -187,7 +177,6 @@ const ClinicSignup = () => {
         }
       }
       
-      // Success!
       toast({
         title: "Clinic created successfully",
         description: createAccount
@@ -195,7 +184,6 @@ const ClinicSignup = () => {
           : "Your clinic has been created. You can now log in with your credentials.",
       });
       
-      // Redirect to login or dashboard
       navigate('/login');
       
     } catch (error: any) {
@@ -223,7 +211,7 @@ const ClinicSignup = () => {
         <Card className="w-full">
           <CardHeader>
             <div className="flex items-center">
-              <Clinic className="mr-2 h-6 w-6 text-primary" />
+              <Building className="mr-2 h-6 w-6 text-primary" />
               <CardTitle>Clinic Signup</CardTitle>
             </div>
             <CardDescription>
