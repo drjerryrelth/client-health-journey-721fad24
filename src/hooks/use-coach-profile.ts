@@ -88,11 +88,13 @@ export const useCoachProfile = () => {
           }
         } else {
           console.log('Profile data found:', profileData);
-          // Create profile data with correct property types
+          
+          // Create profile data with correct property types, handling potential missing phone property
           setProfileData({
             name: profileData.full_name || "",
             email: profileData.email || "",
-            phone: profileData.phone || "", // Use the phone property from profile data
+            // Use type assertion to handle the case where phone might not be in the type yet
+            phone: (profileData as any).phone || "", 
           });
         }
       } catch (error: any) {
