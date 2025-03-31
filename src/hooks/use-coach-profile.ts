@@ -54,69 +54,45 @@ export const useCoachProfile = () => {
           return;
         }
         
-        // First try to get profile from coaches table
-        const { data: coachData, error: coachError } = await supabase
-          .from('coaches')
+        // Try to get profile from profiles table first - avoid the coaches table due to RLS issues
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
           .select('*')
           .eq('id', user.id)
           .maybeSingle();
-        
-        if (coachError) {
-          console.error('Error fetching coach data:', coachError);
+            
+        if (profileError) {
+          console.error('Error fetching profile data:', profileError);
           setError("Failed to retrieve coach profile data");
           setLoading(false);
           return;
         }
         
-        if (coachData) {
-          console.log('Coach data found:', coachData);
-          setProfileData({
-            name: coachData.name || "",
-            email: coachData.email || "",
-            phone: coachData.phone || "",
-          });
-        } else {
-          // If not found in coaches table, try profiles table
-          console.log('No coach data found, checking profiles table');
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (profileError) {
-            console.error('Error fetching profile data:', profileError);
-            setError("Failed to retrieve coach profile data");
-            setLoading(false);
-            return;
-          }
+        if (!profileData) {
+          console.log('No profile data found, creating fallback profile from user object');
           
-          if (!profileData) {
-            console.log('No profile data found, creating fallback profile from user object');
+          // Check if we have user information to create fallback
+          if (user?.email) {
+            // Create fallback profile from user object
+            const fallbackProfile: ProfileData = {
+              name: user.name || user.email.split('@')[0] || "Coach",
+              email: user.email,
+              phone: "", // Always include phone property
+            };
             
-            // Check if we have user information to create fallback
-            if (user?.email) {
-              // Create fallback profile from user object
-              const fallbackProfile: ProfileData = {
-                name: user.name || user.email.split('@')[0] || "Coach",
-                email: user.email,
-                phone: "", // Always include phone property
-              };
-              
-              console.log('Created fallback profile:', fallbackProfile);
-              setProfileData(fallbackProfile);
-            } else {
-              setError("Could not create profile - insufficient user data");
-            }
+            console.log('Created fallback profile:', fallbackProfile);
+            setProfileData(fallbackProfile);
           } else {
-            console.log('Profile data found:', profileData);
-            // Make sure we add the phone property even if it doesn't exist in the profiles table
-            setProfileData({
-              name: profileData.full_name || "",
-              email: profileData.email || "",
-              phone: "", // Ensure the phone property is always present
-            });
+            setError("Could not create profile - insufficient user data");
           }
+        } else {
+          console.log('Profile data found:', profileData);
+          // Make sure we add the phone property even if it doesn't exist in the profiles table
+          setProfileData({
+            name: profileData.full_name || "",
+            email: profileData.email || "",
+            phone: profileData.phone || "", // Ensure the phone property is always present
+          });
         }
       } catch (error: any) {
         console.error('Error loading coach profile:', error);
@@ -139,45 +115,33 @@ export const useCoachProfile = () => {
     try {
       toast.info("Updating profile...");
       
-      const updates = {
-        name: data.fullName,
-        email: data.email,
-        phone: data.phone || "",
-      };
+      // Update the profiles table directly - avoid coaches table due to RLS issues
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: data.fullName,
+          email: data.email,
+          phone: data.phone || ""
+        })
+        .eq('id', user.id);
+          
+      if (error) {
+        console.error('Error updating profile:', error);
+        toast.error("Failed to update profile");
+        throw error;
+      }
       
-      // Check if we're updating a coach profile or a regular profile
+      // Update the local state with the new data
       if (profileData) {
-        // Determine which table to update based on the data we have
-        const table = profileData.hasOwnProperty('clinic_id') ? 'coaches' : 'profiles';
-        const nameField = table === 'profiles' ? 'full_name' : 'name';
-        
-        const updateData = table === 'profiles' 
-          ? { full_name: data.fullName, email: data.email, phone: data.phone || "" }
-          : updates;
-          
-        const { error } = await supabase
-          .from(table)
-          .update(updateData)
-          .eq('id', user.id);
-          
-        if (error) {
-          console.error('Error updating profile:', error);
-          toast.error("Failed to update profile");
-          throw error;
-        }
-        
-        // Update the local state with the new data
         setProfileData({
           ...profileData,
-          [nameField]: data.fullName,
+          name: data.fullName,
           email: data.email,
           phone: data.phone || ""
         });
-        
-        toast.success("Profile updated successfully");
-      } else {
-        throw new Error("No profile data available for update");
       }
+      
+      toast.success("Profile updated successfully");
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error(error.message || "Failed to update profile");
