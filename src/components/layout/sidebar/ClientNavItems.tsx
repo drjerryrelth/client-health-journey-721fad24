@@ -14,22 +14,22 @@ import { NavItem } from "./AdminNavItems";
 export const clientNavItems: NavItem[] = [
   {
     title: "Dashboard",
-    href: "/client-dashboard",
+    href: "/client",
     icon: Home,
   },
   {
     title: "Check-in",
-    href: "/check-in",
+    href: "/client/check-in",
     icon: CalendarCheck,
   },
   {
     title: "Progress",
-    href: "/progress",
+    href: "/client/progress",
     icon: BarChart3,
   },
   {
     title: "My Program",
-    href: "/my-program",
+    href: "/client/my-program",
     icon: Package,
   },
   {
@@ -44,7 +44,7 @@ export const clientNavItems: NavItem[] = [
   },
   {
     title: "Profile",
-    href: "/profile",
+    href: "/client/profile",
     icon: UserCircle,
   },
 ];
