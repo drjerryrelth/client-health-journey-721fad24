@@ -18,43 +18,37 @@ export async function loginWithEmail(email: string, password: string) {
     
     // For demo accounts, we'll try to ensure the account exists first
     try {
-      // Check if user exists by trying to get user by email
-      const { data: existingUser, error: userError } = await supabase.auth.admin.listUsers({
-        filter: {
-          email: email
-        }
-      }).catch(() => ({ data: null, error: new Error("Cannot check user existence") }));
-      
-      if (userError || !existingUser?.users?.length) {
-        console.log('Demo user does not exist yet, creating...');
-        // Create the demo user
-        try {
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                full_name: email === demoEmails.admin ? 'Admin User' : 
-                           email === demoEmails.coach ? 'Coach User' : 'Client User',
-                role: email === demoEmails.admin ? 'admin' : 
-                      email === demoEmails.coach ? 'coach' : 'client',
-              }
+      // Since we can't check if a user exists directly with the client SDK,
+      // we'll try to create the user and handle "already exists" errors
+      try {
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: email === demoEmails.admin ? 'Admin User' : 
+                        email === demoEmails.coach ? 'Coach User' : 'Client User',
+              role: email === demoEmails.admin ? 'admin' : 
+                    email === demoEmails.coach ? 'coach' : 'client',
             }
-          });
-          
-          if (signUpError) {
-            console.warn('Could not create demo user:', signUpError.message);
-          } else {
-            console.log('Demo user created successfully');
           }
-        } catch (createErr) {
-          console.error('Error creating demo account:', createErr);
+        });
+        
+        if (signUpError) {
+          // If error is because user already exists, that's fine - we'll continue with login
+          if (signUpError.message?.includes('already registered')) {
+            console.log('Demo user already exists, will proceed with login');
+          } else {
+            console.warn('Could not create demo user:', signUpError.message);
+          }
+        } else {
+          console.log('Demo user created successfully');
         }
-      } else {
-        console.log('Demo user already exists');
+      } catch (createErr) {
+        console.error('Error creating demo account:', createErr);
       }
     } catch (err) {
-      console.error('Error checking if demo user exists:', err);
+      console.error('Error preparing demo login:', err);
     }
   }
   
