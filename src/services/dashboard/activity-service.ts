@@ -47,7 +47,6 @@ export async function fetchRecentActivities(limit: number = 5): Promise<Activity
     }
     
     // 2. Get clinics as activities 
-    // Skip coaches for now due to policy error
     try {
       const { data: clinicsData, error: clinicsError } = await supabase
         .from('clinics')
@@ -71,6 +70,32 @@ export async function fetchRecentActivities(limit: number = 5): Promise<Activity
       }
     } catch (error) {
       console.error('[RecentActivities] Error processing clinics:', error);
+    }
+    
+    // 3. Get coaches as activities
+    try {
+      const { data: coachesData, error: coachesError } = await supabase
+        .from('coaches')
+        .select('id, name, created_at, clinic_id, clinics(name)')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+        
+      if (!coachesError && coachesData) {
+        for (const coach of coachesData) {
+          activities.push({
+            id: coach.id,
+            type: 'coach_added',
+            description: `New coach added: ${coach.name} to ${coach.clinics?.name || 'a clinic'}`,
+            timestamp: new Date(coach.created_at).toLocaleString(),
+            clinicId: coach.clinic_id
+          });
+        }
+        console.log(`[RecentActivities] Added ${coachesData.length} coaches as activities`);
+      } else if (coachesError) {
+        console.error('[RecentActivities] Error fetching coaches:', coachesError);
+      }
+    } catch (error) {
+      console.error('[RecentActivities] Error processing coaches:', error);
     }
     
     // Sort all activities by timestamp (newest first)

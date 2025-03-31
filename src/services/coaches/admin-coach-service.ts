@@ -33,73 +33,35 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
   try {
     console.log('[AdminCoachService] Getting all coaches');
     
-    // Get coaches data from the database
-    const { data: coachesData, error: coachesError } = await supabase
-      .from('coaches')
-      .select('*')
-      .order('name', { ascending: true });
-      
+    // Use the RPC function that avoids RLS issues
+    const { data: coachesData, error: coachesError } = await supabase.rpc('admin_get_all_coaches');
+    
     if (coachesError) {
-      console.error('[AdminCoachService] Error fetching coaches:', coachesError);
-      toast.error('Error fetching coaches: ' + coachesError.message);
-      return [];
+      console.error('[AdminCoachService] Error fetching coaches via RPC:', coachesError);
+      throw coachesError;
     }
     
     // If no coaches data, return empty array
-    if (!coachesData || coachesData.length === 0) {
+    if (!coachesData || !Array.isArray(coachesData) || coachesData.length === 0) {
       console.log('[AdminCoachService] No coaches found in database');
       return [];
     }
     
     console.log(`[AdminCoachService] Found ${coachesData.length} coaches in database`);
     
-    // For each coach, get their client count
-    const coachesWithClients = await Promise.all(coachesData.map(async (coach) => {
-      try {
-        // Get client count for this coach
-        const { count: clientCount, error: clientError } = await supabase
-          .from('clients')
-          .select('*', { count: 'exact', head: true })
-          .eq('coach_id', coach.id);
-          
-        if (clientError) {
-          console.error(`[AdminCoachService] Error getting client count for coach ${coach.id}:`, clientError);
-          return {
-            id: coach.id,
-            name: coach.name,
-            email: coach.email,
-            phone: coach.phone || '',
-            status: coach.status === 'active' ? 'active' : 'inactive' as 'active' | 'inactive',
-            clinicId: coach.clinic_id,
-            clients: 0
-          };
-        }
-        
-        return {
-          id: coach.id,
-          name: coach.name,
-          email: coach.email,
-          phone: coach.phone || '',
-          status: coach.status === 'active' ? 'active' : 'inactive' as 'active' | 'inactive',
-          clinicId: coach.clinic_id,
-          clients: clientCount || 0
-        };
-      } catch (error) {
-        console.error(`[AdminCoachService] Exception getting client count for coach ${coach.id}:`, error);
-        return {
-          id: coach.id,
-          name: coach.name,
-          email: coach.email,
-          phone: coach.phone || '',
-          status: coach.status === 'active' ? 'active' : 'inactive' as 'active' | 'inactive',
-          clinicId: coach.clinic_id,
-          clients: 0
-        };
-      }
+    // Transform the coaches data to match our expected format
+    const transformedCoaches = coachesData.map(coach => ({
+      id: coach.id,
+      name: coach.name,
+      email: coach.email,
+      phone: coach.phone || '',
+      status: coach.status === 'active' ? 'active' : 'inactive' as 'active' | 'inactive',
+      clinicId: coach.clinic_id,
+      clients: coach.client_count || 0
     }));
     
     console.log('[AdminCoachService] Returning real coaches data with client counts');
-    return coachesWithClients;
+    return transformedCoaches;
   } catch (error) {
     console.error('[AdminCoachService] Failed to get all coaches:', error);
     toast.error('Failed to load coaches');
