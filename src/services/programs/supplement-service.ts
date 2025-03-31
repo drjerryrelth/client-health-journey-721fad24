@@ -1,12 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SupplementRow, mapSupplementToDbSupplement } from '@/types';
 import { Supplement } from '@/types';
 
 /**
  * Fetches all supplements for a specific program
  */
-export async function getSupplementsByProgramId(programId: string): Promise<SupplementRow[]> {
+export async function getSupplementsByProgramId(programId: string): Promise<Supplement[]> {
   try {
     const { data, error } = await supabase
       .from('supplements')
@@ -15,7 +14,15 @@ export async function getSupplementsByProgramId(programId: string): Promise<Supp
 
     if (error) throw error;
     
-    return data || [];
+    // Map database supplement rows to Supplement objects
+    return data?.map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      dosage: item.dosage,
+      frequency: item.frequency,
+      timeOfDay: item.time_of_day || undefined
+    })) || [];
   } catch (error) {
     console.error('Error fetching program supplements:', error);
     throw error;
@@ -32,9 +39,14 @@ export async function createSupplements(
   if (!supplements || supplements.length === 0) return;
   
   try {
-    const supplementsWithProgramId = supplements.map(supplement => 
-      mapSupplementToDbSupplement(supplement, programId)
-    );
+    const supplementsWithProgramId = supplements.map(supplement => ({
+      name: supplement.name,
+      description: supplement.description,
+      dosage: supplement.dosage,
+      frequency: supplement.frequency,
+      time_of_day: supplement.timeOfDay || null,
+      program_id: programId
+    }));
     
     const { error } = await supabase
       .from('supplements')
@@ -70,13 +82,14 @@ export async function updateSupplements(
         throw new Error('Supplement is missing required fields');
       }
       
-      return mapSupplementToDbSupplement({
+      return {
         name: supplement.name,
         description: supplement.description,
         dosage: supplement.dosage,
         frequency: supplement.frequency,
-        timeOfDay: supplement.timeOfDay
-      }, programId);
+        time_of_day: supplement.timeOfDay || null,
+        program_id: programId
+      };
     });
     
     await supabase
