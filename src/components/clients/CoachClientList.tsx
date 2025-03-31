@@ -82,9 +82,13 @@ const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
             else lastCheckInDisplay = lastCheckIn.toLocaleDateString();
           }
           
-          // Safely get program name
+          // Safely get program name - fix for TypeScript error
           let programName = 'No Program';
-          if (client.programs && typeof client.programs === 'object' && client.programs !== null) {
+          // Check if programs exists, is an object (not null), and has a name property
+          if (client.programs && 
+              typeof client.programs === 'object' && 
+              client.programs !== null && 
+              'name' in client.programs) {
             programName = client.programs.name || 'No Program';
           }
           
