@@ -54,8 +54,17 @@ const ProgramsPage = () => {
     }
   }, [isError, error]);
 
+  // Add debugging logging to help identify issues
+  useEffect(() => {
+    if (programs) {
+      console.log("Programs loaded successfully:", programs);
+    }
+  }, [programs]);
+
   console.log("Current programs:", programs); // Keep this log to debug
   console.log("Current user:", user); // Add user info log for debugging
+  console.log("Loading state:", isLoading);
+  console.log("Error state:", isError);
 
   return (
     <div>
@@ -78,13 +87,21 @@ const ProgramsPage = () => {
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
             </div>
-          ) : (
+          ) : isError ? (
+            <div className="text-center py-8 text-red-500">
+              Failed to load programs. Please try again.
+            </div>
+          ) : programs && programs.length > 0 ? (
             <ProgramTable
-              programs={programs || []}
+              programs={programs}
               isLoading={false}
-              isError={isError}
+              isError={false}
               onSelectProgram={handleViewProgramDetails}
             />
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No programs found. Click "Add Program" to create one.
+            </div>
           )}
         </CardContent>
       </Card>

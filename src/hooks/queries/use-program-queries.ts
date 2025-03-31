@@ -11,16 +11,24 @@ export const useProgramsQuery = (clinicId?: string) => {
 
   return useQuery({
     queryKey: ['programs', activeClinicId],
-    queryFn: () => {
+    queryFn: async () => {
       console.log("Fetching programs for clinic:", activeClinicId);
       if (!activeClinicId) {
         console.error("No clinic ID available for fetching programs");
-        return Promise.resolve([]);
+        return [];
       }
-      return ProgramService.getClinicPrograms(activeClinicId as string);
+      try {
+        const programs = await ProgramService.getClinicPrograms(activeClinicId);
+        console.log("Fetched programs:", programs);
+        return programs;
+      } catch (error) {
+        console.error("Error in queryFn when fetching programs:", error);
+        throw error;
+      }
     },
     enabled: !!activeClinicId,
-    retry: 2,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };

@@ -2,10 +2,9 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useCreateProgramMutation } from '@/hooks/queries';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const useProgramForm = () => {
-  const { toast } = useToast();
   const { user } = useAuth();
   const createProgramMutation = useCreateProgramMutation();
   
@@ -28,10 +27,7 @@ export const useProgramForm = () => {
     description: string;
   }) => {
     if (!formData.name || !formData.type || !formData.duration || !formData.checkInFrequency) {
-      toast({
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
+      toast("Please fill in all required fields");
       return;
     }
 
@@ -61,18 +57,13 @@ export const useProgramForm = () => {
         supplements: [] // No supplements for now, will add later
       });
 
-      toast({
-        description: `${formData.name} has been created successfully.`
-      });
+      toast(`${formData.name} has been created successfully.`);
 
       // Close dialog
       setShowAddProgramDialog(false);
     } catch (error) {
       console.error("Error creating program:", error);
-      toast({
-        description: "Failed to create program. Please try again.",
-        variant: "destructive"
-      });
+      toast("Failed to create program. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
