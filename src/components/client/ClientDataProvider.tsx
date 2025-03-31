@@ -59,15 +59,13 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (clientData) {
           setClientStartDate(clientData.start_date);
           
-          // Extract program name safely - handle the nullable programsData properly
-          const programsData = clientData.programs;
+          // Extract program name using type assertion to ensure TypeScript knows we're handling null
+          const programsData = clientData.programs as { name?: string } | null;
           
-          // Only proceed if programsData exists and is an object
-          if (programsData && typeof programsData === 'object') {
-            // Only access name property if it exists and is a string
-            if ('name' in programsData && typeof programsData.name === 'string') {
-              setProgramName(programsData.name);
-            }
+          // Use optional chaining and nullish coalescing to safely access the name
+          const name = programsData?.name ?? "";
+          if (name) {
+            setProgramName(name);
           }
           
           // Fetch check-ins for this client
