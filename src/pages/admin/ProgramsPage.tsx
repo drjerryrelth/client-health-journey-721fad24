@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const ProgramsPage = () => {
   const { user } = useAuth();
+  // Always fetch all programs to show global usage statistics
   const { data: programs, isLoading, isError, error } = useProgramsQuery();
   
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
@@ -35,9 +36,9 @@ const ProgramsPage = () => {
 
   // Display error toast if there's an error fetching programs
   React.useEffect(() => {
-    if (isError) {
+    if (isError && error) {
       console.error("Error fetching programs:", error);
-      toast("Failed to load programs. Please try again.");
+      toast.error("Failed to load programs. Please try again.");
     }
   }, [isError, error]);
 

@@ -6,17 +6,16 @@ import { Program } from '@/types';
 // Program Queries
 export const useProgramsQuery = (clinicId?: string) => {
   const { user } = useAuth();
-  const activeClinicId = clinicId || user?.clinicId;
-
+  
   return useQuery({
-    queryKey: ['programs', activeClinicId ? 'clinic' : 'all'],
+    queryKey: ['programs', clinicId ? 'clinic' : 'all'],
     queryFn: async () => {
-      console.log("Fetching programs, clinic ID:", activeClinicId);
+      console.log("Fetching programs, clinic ID:", clinicId);
       try {
         let programs;
-        if (activeClinicId) {
+        if (clinicId) {
           // If a clinic ID is specified, fetch programs for that clinic
-          programs = await ProgramService.getClinicPrograms(activeClinicId);
+          programs = await ProgramService.getClinicPrograms(clinicId);
         } else {
           // Otherwise, fetch all programs
           programs = await ProgramService.getAllPrograms();
