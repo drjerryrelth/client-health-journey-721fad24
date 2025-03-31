@@ -54,6 +54,9 @@ export const useLoginHandler = () => {
         case 'client':
           fullName = 'Client User';
           break;
+        case 'super_admin':
+          fullName = 'Super Admin User';
+          break;
       }
       
       console.log(`Attempting demo login as ${type} with email: ${email}`);
@@ -96,15 +99,25 @@ export const useLoginHandler = () => {
         }
         
         // If login fails for other reasons, try to sign up the demo user first
-        await signUp(email, password, {
-          full_name: fullName,
-          role: role
-        });
-        
-        console.log('Demo account created, now logging in');
-        
-        // Now try logging in again
-        await login(email, password);
+        try {
+          await signUp(email, password, {
+            full_name: fullName,
+            role: role
+          });
+          
+          console.log('Demo account created, now logging in');
+          
+          // Now try logging in again
+          await login(email, password);
+        } catch (signupError: any) {
+          // If the signup fails because the user already exists, try logging in again
+          if (signupError.message?.includes('already registered')) {
+            console.log('User already exists, trying login again with different handling');
+            await login(email, password);
+          } else {
+            throw signupError;
+          }
+        }
       }
       
       toast({

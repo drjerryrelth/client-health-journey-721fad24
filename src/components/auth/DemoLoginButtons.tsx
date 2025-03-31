@@ -14,20 +14,20 @@ const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsPro
   // Define demo emails for each role
   const demoEmails = {
     admin: 'drrelth@contourlight.com',
-    coach: 'support@practicenaturals.com', // Fixed the email typo here
+    coach: 'support@practicenaturals.com',
     client: 'drjerryrelth@gmail.com'
   };
   
   return (
     <div className="mt-8">
-      <p className="text-sm text-center text-gray-500 mb-4">Demo Account Login</p>
+      <p className="text-sm text-center text-gray-500 mb-4">Quick Demo Account Access</p>
       
       <Alert className="mb-4 bg-yellow-50 border-yellow-200">
         <InfoIcon className="h-4 w-4 text-yellow-800" />
-        <AlertTitle className="text-yellow-800">Important Note</AlertTitle>
+        <AlertTitle className="text-yellow-800">Demo Accounts</AlertTitle>
         <AlertDescription className="text-xs text-yellow-800">
-          These demo accounts require confirmation in Supabase. After clicking a button, if login fails, 
-          please go to the Supabase Auth dashboard to confirm the email manually or disable email confirmation in the settings.
+          Use these buttons to instantly access demo accounts. All demo accounts use the password "password123".
+          If login fails, it may be because email confirmation is required in Supabase.
         </AlertDescription>
       </Alert>
       

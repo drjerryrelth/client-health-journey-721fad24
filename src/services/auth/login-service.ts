@@ -15,6 +15,47 @@ export async function loginWithEmail(email: string, password: string) {
   const isDemoLogin = Object.values(demoEmails).includes(email);
   if (isDemoLogin) {
     console.log('This is a demo login attempt');
+    
+    // For demo accounts, we'll try to ensure the account exists first
+    try {
+      // Check if user exists by trying to get user by email
+      const { data: existingUser, error: userError } = await supabase.auth.admin.listUsers({
+        filter: {
+          email: email
+        }
+      }).catch(() => ({ data: null, error: new Error("Cannot check user existence") }));
+      
+      if (userError || !existingUser?.users?.length) {
+        console.log('Demo user does not exist yet, creating...');
+        // Create the demo user
+        try {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: email === demoEmails.admin ? 'Admin User' : 
+                           email === demoEmails.coach ? 'Coach User' : 'Client User',
+                role: email === demoEmails.admin ? 'admin' : 
+                      email === demoEmails.coach ? 'coach' : 'client',
+              }
+            }
+          });
+          
+          if (signUpError) {
+            console.warn('Could not create demo user:', signUpError.message);
+          } else {
+            console.log('Demo user created successfully');
+          }
+        } catch (createErr) {
+          console.error('Error creating demo account:', createErr);
+        }
+      } else {
+        console.log('Demo user already exists');
+      }
+    } catch (err) {
+      console.error('Error checking if demo user exists:', err);
+    }
   }
   
   // Add timeout to prevent hanging
