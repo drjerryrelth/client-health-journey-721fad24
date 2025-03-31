@@ -15,7 +15,7 @@ const ClinicsPage = () => {
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [showAddClinicDialog, setShowAddClinicDialog] = useState(false);
   
-  const { handleDeleteCoach, handleReassignAndDelete } = useCoachActions('', toast);
+  const { handleDeleteCoach, handleReassignAndDelete } = useCoachActions();
 
   useEffect(() => {
     fetchClinics();

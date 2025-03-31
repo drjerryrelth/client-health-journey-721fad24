@@ -82,11 +82,17 @@ const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
             else lastCheckInDisplay = lastCheckIn.toLocaleDateString();
           }
           
+          // Safely get program name
+          let programName = 'No Program';
+          if (client.programs && typeof client.programs === 'object' && client.programs !== null) {
+            programName = client.programs.name || 'No Program';
+          }
+          
           return {
             id: client.id,
             name: client.name,
             email: client.email,
-            program: client.programs?.name || 'No Program',
+            program: programName,
             program_id: client.program_id,
             progress,
             lastCheckIn: lastCheckInDisplay,

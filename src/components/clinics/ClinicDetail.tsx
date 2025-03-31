@@ -30,7 +30,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   const [replacementCoachId, setReplacementCoachId] = useState<string>('');
   const [coachListRefreshTrigger, setCoachListRefreshTrigger] = useState(0);
   
-  const { handleDeleteCoach, handleReassignAndDelete } = useCoachActions(clinic.name, toast);
+  const { handleDeleteCoach, handleReassignAndDelete } = useCoachActions();
 
   const getStatusColor = (status: string) => {
     switch (status) {
