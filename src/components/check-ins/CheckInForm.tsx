@@ -35,6 +35,7 @@ const CheckInForm = () => {
   const [exercise, setExercise] = useState("");
   const [exerciseTime, setExerciseTime] = useState("");
   const [exerciseType, setExerciseType] = useState("steps");
+  const [sleepHours, setSleepHours] = useState("");
   
   // Nutrition state with portions for each item
   const [breakfastProtein, setBreakfastProtein] = useState("");
@@ -238,6 +239,24 @@ const CheckInForm = () => {
                     <div className="flex justify-between text-xs text-gray-500">
                       <span>Poor Mood</span>
                       <span>Great Mood</span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="sleepHours">Last Night's Sleep (hours)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="sleepHours"
+                        type="number"
+                        placeholder="Hours of sleep"
+                        value={sleepHours}
+                        onChange={(e) => setSleepHours(e.target.value)}
+                        className="max-w-[120px]"
+                        min="0"
+                        max="24"
+                        step="0.5"
+                      />
+                      <span className="text-sm text-gray-500">hours</span>
                     </div>
                   </div>
                 </div>

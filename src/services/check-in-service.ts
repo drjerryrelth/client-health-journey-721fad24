@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { CheckIn } from '@/types';
 import { toast } from 'sonner';
@@ -40,6 +41,7 @@ export const CheckInService = {
             },
             moodScore: checkIn.mood_score,
             energyScore: checkIn.energy_score,
+            sleepHours: checkIn.sleep_hours,
             waterIntake: checkIn.water_intake,
             meals: {
               breakfast: checkIn.breakfast,
@@ -144,6 +146,7 @@ export const CheckInService = {
         },
         moodScore: checkIn.mood_score,
         energyScore: checkIn.energy_score,
+        sleepHours: checkIn.sleep_hours, 
         waterIntake: checkIn.water_intake,
         meals: {
           breakfast: checkIn.breakfast,
@@ -178,6 +181,7 @@ export const CheckInService = {
         arms: measurements?.arms,
         mood_score: restCheckIn.moodScore,
         energy_score: restCheckIn.energyScore,
+        sleep_hours: restCheckIn.sleepHours,
         water_intake: restCheckIn.waterIntake,
         breakfast: meals?.breakfast,
         lunch: meals?.lunch,
@@ -354,6 +358,7 @@ const mockCheckIns: CheckIn[] = [
     },
     moodScore: 4,
     energyScore: 4,
+    sleepHours: 7.5,
     waterIntake: 8,
     meals: {
       breakfast: 'Oatmeal with fruits',
@@ -378,6 +383,7 @@ const mockCheckIns: CheckIn[] = [
     },
     moodScore: 3,
     energyScore: 3,
+    sleepHours: 6,
     waterIntake: 7,
     meals: {
       breakfast: 'Protein shake',
@@ -402,6 +408,7 @@ const mockCheckIns: CheckIn[] = [
     },
     moodScore: 5,
     energyScore: 5,
+    sleepHours: 8,
     waterIntake: 10,
     meals: {
       breakfast: 'Eggs and avocado toast',

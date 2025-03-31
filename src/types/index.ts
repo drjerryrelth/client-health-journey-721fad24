@@ -1,4 +1,3 @@
-
 import { ProfileRow, ClientRow, ProgramRow, SupplementRow, CheckInRow, ClinicRow } from './database';
 
 export type UserRole = 'admin' | 'coach' | 'client' | 'super_admin';
@@ -62,6 +61,7 @@ export type CheckIn = {
   };
   moodScore?: number;
   energyScore?: number;
+  sleepHours?: number;
   waterIntake?: number;
   meals?: {
     breakfast?: string;
@@ -69,7 +69,6 @@ export type CheckIn = {
     dinner?: string;
     snacks?: string;
   };
-  supplementsTaken?: string[];
   notes?: string;
   photos?: string[];
 };
