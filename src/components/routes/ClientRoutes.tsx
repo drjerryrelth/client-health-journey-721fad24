@@ -11,13 +11,13 @@ import MyProfile from '@/pages/MyProfile';
 const ClientRoutes = () => {
   return (
     <Routes>
-      <Route element={<MainLayout />}>
+      <Route element={<MainLayout requiredRoles={['client']} />}>
         <Route index element={<ClientPortal />} />
         <Route path="messages" element={<ClientPortal />} />
         <Route path="journal" element={<ClientPortal />} />
         <Route path="resources" element={<ClientPortal />} />
         <Route path="program" element={<ClientPortal />} />
-        <Route path="profile" element={<ClientPortal />} />
+        <Route path="profile" element={<MyProfile />} />
         <Route path="check-in" element={<CheckIn />} />
         <Route path="progress" element={<ClientProgress />} />
         <Route path="my-program" element={<ClientProgramDetails />} />
