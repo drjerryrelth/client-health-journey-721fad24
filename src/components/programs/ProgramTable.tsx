@@ -62,6 +62,8 @@ const ProgramTable = ({ programs, isLoading, isError, onSelectProgram }: Program
     );
   }
 
+  console.log("ProgramTable rendering with programs:", programs);
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -101,7 +103,7 @@ const ProgramTable = ({ programs, isLoading, isError, onSelectProgram }: Program
               </TableCell>
               <TableCell>{formatDuration(program.duration)}</TableCell>
               <TableCell>{program.checkInFrequency === 'daily' ? 'Daily' : 'Weekly'}</TableCell>
-              <TableCell>{program.clientCount || 0}</TableCell>
+              <TableCell>{program.clientCount !== undefined ? program.clientCount : 0}</TableCell>
             </TableRow>
           ))}
         </TableBody>

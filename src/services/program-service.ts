@@ -7,13 +7,20 @@ export const ProgramService = {
   // Fetch all programs for a specific clinic
   async getClinicPrograms(clinicId: string): Promise<Program[]> {
     try {
+      console.log("ProgramService: Fetching programs for clinic ID:", clinicId);
+      
       const { data, error } = await supabase
         .from('programs')
         .select('*')
         .eq('clinic_id', clinicId)
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching programs:", error);
+        throw error;
+      }
+      
+      console.log("Programs data returned:", data?.length || 0, "programs");
       
       // Fetch supplements for each program
       const programsWithSupplements = await Promise.all(
@@ -33,6 +40,8 @@ export const ProgramService = {
           const mappedProgram = mapDbProgramToProgram(program, supplements);
           // Add client count to the program object
           mappedProgram.clientCount = clientCount || 0;
+          
+          console.log(`Program ${program.id} has ${clientCount || 0} clients`);
           
           return mappedProgram;
         })

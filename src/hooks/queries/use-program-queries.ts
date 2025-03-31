@@ -11,7 +11,14 @@ export const useProgramsQuery = (clinicId?: string) => {
 
   return useQuery({
     queryKey: ['programs', activeClinicId],
-    queryFn: () => ProgramService.getClinicPrograms(activeClinicId as string),
+    queryFn: () => {
+      console.log("Fetching programs for clinic:", activeClinicId);
+      if (!activeClinicId) {
+        console.error("No clinic ID available for fetching programs");
+        return Promise.resolve([]);
+      }
+      return ProgramService.getClinicPrograms(activeClinicId as string);
+    },
     enabled: !!activeClinicId,
   });
 };

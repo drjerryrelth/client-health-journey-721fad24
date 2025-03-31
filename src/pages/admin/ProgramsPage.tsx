@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -13,7 +13,18 @@ import { useProgramForm } from '@/hooks/use-program-form';
 
 const ProgramsPage = () => {
   const { user } = useAuth();
-  const { data: programs, isLoading, isError } = useProgramsQuery(user?.clinicId);
+  const [clinicId, setClinicId] = useState<string | undefined>(undefined);
+  
+  // Set clinic ID when user data is available
+  useEffect(() => {
+    if (user?.clinicId) {
+      setClinicId(user.clinicId);
+      console.log("Setting clinic ID:", user.clinicId);
+    }
+  }, [user]);
+  
+  // Only fetch programs when we have a valid clinicId
+  const { data: programs, isLoading, isError } = useProgramsQuery(clinicId);
   
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [showProgramDetails, setShowProgramDetails] = useState(false);
@@ -31,7 +42,8 @@ const ProgramsPage = () => {
     setShowProgramDetails(true);
   };
 
-  console.log("Current programs:", programs); // Adding a log to see what data is available
+  console.log("Current programs:", programs); // Keep this log to debug
+  console.log("Current user:", user); // Add user info log for debugging
 
   return (
     <div>
@@ -50,7 +62,7 @@ const ProgramsPage = () => {
         <CardContent>
           <ProgramTable
             programs={programs || []}
-            isLoading={isLoading}
+            isLoading={isLoading || !clinicId}
             isError={isError}
             onSelectProgram={handleViewProgramDetails}
           />
