@@ -19,7 +19,6 @@ interface ClinicsOverviewProps {
   clinics: FormattedClinic[];
   onClinicSelect: (clinicId: string) => void;
   onAddClinic: () => void;
-  onResetPassword: () => void;
   getStatusColor: (status: string) => string;
 }
 
@@ -27,7 +26,6 @@ const ClinicsOverview = ({
   clinics,
   onClinicSelect,
   onAddClinic,
-  onResetPassword,
   getStatusColor
 }: ClinicsOverviewProps) => {
   return (
@@ -39,10 +37,7 @@ const ClinicsOverview = ({
             Manage clinics, their coaches, and billing information.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={onResetPassword} variant="outline">
-            Reset Password
-          </Button>
+        <div>
           <Button onClick={onAddClinic} className="flex items-center gap-2">
             <Building size={18} />
             <span>Add Clinic</span>

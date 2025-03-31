@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Coach, CoachService, getMockCoaches } from '@/services/coaches';
 import AddClinicDialog from '@/components/clinics/AddClinicDialog';
-import ResetPasswordDialog from '@/components/auth/ResetPasswordDialog';
 import ClinicService, { Clinic } from '@/services/clinic-service';
 import ClinicsOverview from '@/components/clinics/ClinicsOverview';
 import ClinicDetail from '@/components/clinics/ClinicDetail';
@@ -16,7 +14,6 @@ const ClinicsPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [showAddClinicDialog, setShowAddClinicDialog] = useState(false);
-  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
   
   // Coach actions from extracted hook
   const { selectedCoach, handleDeleteCoach, handleReassignAndDelete } = useCoachActions(
@@ -112,10 +109,6 @@ const ClinicsPage = () => {
     setShowAddClinicDialog(true);
   };
 
-  const handleOpenResetPassword = () => {
-    setShowResetPasswordDialog(true);
-  };
-
   const formattedClinics = clinics.map(clinic => ({
     id: clinic.id,
     name: clinic.name,
@@ -150,7 +143,6 @@ const ClinicsPage = () => {
         clinics={formattedClinics}
         onClinicSelect={handleClinicSelect}
         onAddClinic={handleAddClinic}
-        onResetPassword={handleOpenResetPassword}
         getStatusColor={getStatusColor}
       />
 
@@ -158,11 +150,6 @@ const ClinicsPage = () => {
         open={showAddClinicDialog} 
         onOpenChange={setShowAddClinicDialog}
         onClinicAdded={fetchClinics}
-      />
-      
-      <ResetPasswordDialog 
-        open={showResetPasswordDialog}
-        onOpenChange={setShowResetPasswordDialog}
       />
     </>
   );
