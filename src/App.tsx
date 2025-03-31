@@ -12,33 +12,15 @@ import { initializeDemoRelationships } from "./services/demo-data-initializer";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import ClientDashboard from "./pages/ClientDashboard";
-import ClientProgress from "./pages/ClientProgress"; 
-import ClientProgramDetails from "./pages/ClientProgramDetails";
-import CoachDashboard from "./pages/CoachDashboard";
-import ClientPortal from "./pages/ClientPortal";
-import CheckIn from "./pages/CheckIn";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 import MyProfile from "./pages/MyProfile";
 import MealPlanGenerator from "./pages/MealPlanGenerator";
-
-// Admin Pages
-import ClientsPage from "./pages/admin/ClientsPage";
-import ClinicsPage from "./pages/admin/ClinicsPage";
-import CheckInsPage from "./pages/admin/CheckInsPage";
-import ProgramsPage from "./pages/admin/ProgramsPage";
-import ReportsPage from "./pages/admin/ReportsPage";
-import SettingsPage from "./pages/admin/SettingsPage";
-import CoachesPage from "./pages/admin/CoachesPage";
-import ActivitiesPage from "./pages/admin/ActivitiesPage"; 
-import ResourcesPage from "./pages/admin/ResourcesPage";
-import AdminUsersPage from "./pages/admin/AdminUsersPage";
-
-// Coach Pages
-import CoachReportsPage from "./pages/coach/CoachReportsPage";
-import CoachSettingsPage from "./pages/coach/CoachSettingsPage";
+import ClientPortal from "./pages/ClientPortal";
+import CheckIn from "./pages/CheckIn";
+import ClientProgress from "./pages/ClientProgress";
+import ClientProgramDetails from "./pages/ClientProgramDetails";
+import ClientsPage from "./pages/admin/ClientsPage"; // Added for route usage
 
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
@@ -69,37 +51,13 @@ const AppContent = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         
-        {/* Admin routes */}
-        <Route element={<MainLayout requiredRoles={['admin', 'super_admin']} />}>
-          <Route path="/dashboard" element={<AdminDashboard />} />
-          <Route path="/clients" element={<ClientsPage />} />
-          <Route path="/clinics" element={<ClinicsPage />} />
-          <Route path="/coaches" element={<CoachesPage />} />
-          <Route path="/programs" element={<ProgramsPage />} />
-          <Route path="/check-ins" element={<CheckInsPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/activities" element={<ActivitiesPage />} />
-          <Route path="/resources" element={<ResourcesPage />} />
-          <Route path="/admin-users" element={<AdminUsersPage />} />
-          <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
-        </Route>
+        {/* Dashboard - handles role-based routing internally */}
+        <Route path="/dashboard/*" element={<Dashboard />} />
+        <Route path="/coach-dashboard/*" element={<Dashboard />} />
+        <Route path="/client-dashboard/*" element={<Dashboard />} />
         
-        {/* Coach routes - clearly separated from admin routes */}
-        <Route element={<MainLayout requiredRoles={['coach']} />}>
-          <Route path="/coach-dashboard" element={<CoachDashboard />} />
-          <Route path="/coach/clients" element={<ClientsPage />} />
-          <Route path="/coach/check-ins" element={<CheckInsPage />} />
-          <Route path="/coach/reports" element={<CoachReportsPage />} />
-          <Route path="/coach/settings" element={<CoachSettingsPage />} />
-          <Route path="/coach/resources" element={<ResourcesPage />} />
-          <Route path="/coach/meal-plan-generator" element={<MealPlanGenerator />} />
-          <Route path="/add-client" element={<ClientsPage />} />
-        </Route>
-        
-        {/* Client routes - completely separate from admin and coach routes */}
+        {/* Client routes that need the layout but aren't under dashboard */}
         <Route element={<MainLayout requiredRoles={['client']} />}>
-          <Route path="/client-dashboard" element={<ClientDashboard />} />
           <Route path="/client-portal" element={<ClientPortal />} />
           <Route path="/client" element={<ClientPortal />} /> 
           <Route path="/client/messages" element={<ClientPortal />} />
@@ -111,6 +69,17 @@ const AppContent = () => {
           <Route path="/progress" element={<ClientProgress />} />
           <Route path="/my-program" element={<ClientProgramDetails />} />
           <Route path="/profile" element={<MyProfile />} />
+        </Route>
+        
+        {/* Coach specific routes outside dashboard */}
+        <Route element={<MainLayout requiredRoles={['coach']} />}>
+          <Route path="/coach/meal-plan-generator" element={<MealPlanGenerator />} />
+          <Route path="/add-client" element={<ClientsPage />} />
+        </Route>
+
+        {/* Admin specific routes outside dashboard */}
+        <Route element={<MainLayout requiredRoles={['admin', 'super_admin']} />}>
+          <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
         </Route>
         
         {/* Catch-all route */}
