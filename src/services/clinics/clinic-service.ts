@@ -9,6 +9,7 @@ import {
   updateClinicBranding
 } from './mutation-service';
 
+// Define the service object once, then export it in different ways
 export const ClinicService = {
   getClinic: fetchClinic,
   getClinics: fetchClinics,
@@ -19,6 +20,5 @@ export const ClinicService = {
   updateClinicBranding
 };
 
-// Export as both default and named export to support both import styles
-export { ClinicService };
+// Export as default for default import style
 export default ClinicService;

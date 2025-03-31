@@ -1,6 +1,7 @@
 
 // Re-export from new location for backward compatibility
-import { ClinicService, Clinic } from './clinics';
+import { ClinicService } from './clinics';
+import type { Clinic } from './clinics';
 
 export type { Clinic };
 export { ClinicService };

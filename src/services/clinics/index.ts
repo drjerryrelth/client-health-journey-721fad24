@@ -1,6 +1,7 @@
 
 import { ClinicService } from './clinic-service';
-import { Clinic } from './types';
+import type { Clinic } from './types';
 
-export { ClinicService, Clinic };
+export { ClinicService };
+export type { Clinic };
 export default ClinicService;

@@ -24,7 +24,11 @@ export const getMockClinics = (): Clinic[] => [
     billingZip: '10001',
     paymentMethod: 'Credit Card',
     subscriptionTier: 'Premium',
-    subscriptionStatus: 'active'
+    subscriptionStatus: 'active',
+    // Adding the missing properties
+    logo: null,
+    primaryColor: '#1eaedb',
+    secondaryColor: '#22bc6c'
   },
   { 
     id: '2',
@@ -47,7 +51,11 @@ export const getMockClinics = (): Clinic[] => [
     billingZip: '90001',
     paymentMethod: 'Bank Transfer',
     subscriptionTier: 'Standard',
-    subscriptionStatus: 'active'
+    subscriptionStatus: 'active',
+    // Adding the missing properties
+    logo: null,
+    primaryColor: '#1eaedb',
+    secondaryColor: '#22bc6c'
   },
   { 
     id: '3',
@@ -70,6 +78,10 @@ export const getMockClinics = (): Clinic[] => [
     billingZip: '60601',
     paymentMethod: 'Credit Card',
     subscriptionTier: 'Basic',
-    subscriptionStatus: 'active'
+    subscriptionStatus: 'active',
+    // Adding the missing properties
+    logo: null,
+    primaryColor: '#1eaedb',
+    secondaryColor: '#22bc6c'
   }
 ];
