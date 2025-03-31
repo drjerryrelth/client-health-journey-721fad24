@@ -42,3 +42,14 @@ export type CheckInPhotoUpdate = TablesUpdate<'check_in_photos'>;
 export type ClinicRow = TablesRow<'clinics'>;
 export type ClinicInsert = TablesInsert<'clinics'>;
 export type ClinicUpdate = TablesUpdate<'clinics'>;
+
+// Program category types (for Practice Naturals program)
+export type ProgramClientCategory = 'A' | 'B' | 'C';
+
+// Program meal planning types
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+export type FoodCategory = 'protein' | 'fruit' | 'vegetable';
+
+// Supplement frequency and timing types
+export type SupplementFrequency = 'daily' | '2x daily' | '3x daily' | 'weekly';
+export type SupplementTimeOfDay = 'morning' | 'afternoon' | 'evening' | 'before meals' | 'after meals';

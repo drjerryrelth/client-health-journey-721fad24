@@ -1,3 +1,4 @@
+
 import { ProfileRow, ClientRow, ProgramRow, SupplementRow, CheckInRow, ClinicRow } from './database';
 
 export type UserRole = 'admin' | 'coach' | 'client' | 'super_admin';
@@ -22,7 +23,8 @@ export type Client = {
   notes?: string;
   profileImage?: string;
   clinicId: string;
-  coachId?: string; // Added coachId field
+  coachId?: string;
+  programCategory?: 'A' | 'B' | 'C'; // For Practice Naturals program
 };
 
 export type Program = {
@@ -30,7 +32,7 @@ export type Program = {
   name: string;
   description: string;
   duration: number; // in days
-  type: 'practice_naturals' | 'keto' | 'custom';
+  type: 'practice_naturals' | 'chirothin' | 'keto' | 'nutrition' | 'fitness' | 'custom';
   supplements: Supplement[];
   checkInFrequency: 'daily' | 'weekly';
   clinicId: string;
@@ -92,7 +94,7 @@ export const mapDbClientToClient = (dbClient: ClientRow): Client => ({
   notes: dbClient.notes || undefined,
   profileImage: dbClient.profile_image || undefined,
   clinicId: dbClient.clinic_id,
-  coachId: dbClient.coach_id || undefined, // Map the coach_id field
+  coachId: dbClient.coach_id || undefined,
 });
 
 export const mapClientToDbClient = (client: Omit<Client, 'id'>): Omit<ClientRow, 'id' | 'created_at'> => ({
@@ -106,7 +108,7 @@ export const mapClientToDbClient = (client: Omit<Client, 'id'>): Omit<ClientRow,
   notes: client.notes || null,
   profile_image: client.profileImage || null,
   clinic_id: client.clinicId,
-  coach_id: client.coachId || null // Map the coachId field
+  coach_id: client.coachId || null
 });
 
 // Add mapping functions for Program and Supplement
@@ -115,7 +117,7 @@ export const mapDbProgramToProgram = (dbProgram: ProgramRow, supplements: Supple
   name: dbProgram.name,
   description: dbProgram.description,
   duration: dbProgram.duration,
-  type: dbProgram.type as 'practice_naturals' | 'keto' | 'custom',
+  type: dbProgram.type as 'practice_naturals' | 'chirothin' | 'keto' | 'nutrition' | 'fitness' | 'custom',
   checkInFrequency: dbProgram.check_in_frequency as 'daily' | 'weekly',
   clinicId: dbProgram.clinic_id,
   supplements: supplements.map(mapDbSupplementToSupplement),
