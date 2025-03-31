@@ -61,8 +61,11 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           
           // Safely access program name with proper type checking
           const programsData = clientData.programs;
-          if (programsData && typeof programsData === 'object' && 'name' in programsData) {
-            setProgramName(programsData.name || "");
+          if (programsData && typeof programsData === 'object') {
+            // Check if 'name' property exists in programsData
+            if ('name' in programsData && programsData.name) {
+              setProgramName(programsData.name);
+            }
           }
           
           // Fetch check-ins for this client
