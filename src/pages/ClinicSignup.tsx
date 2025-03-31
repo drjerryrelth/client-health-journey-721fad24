@@ -540,8 +540,8 @@ const ClinicSignup = () => {
               </Tabs>
             </form>
           </Form>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };
