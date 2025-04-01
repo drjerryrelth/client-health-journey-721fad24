@@ -101,7 +101,7 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       return null;
     }
     
-    // Prepare the update payload
+    // Prepare the update payload - convert to snake_case for database
     const updates: Record<string, any> = {};
     if (coach.name !== undefined) updates.name = coach.name;
     if (coach.email !== undefined) updates.email = coach.email;
@@ -117,103 +117,56 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       return null;
     }
     
-    // Direct database update - Try this first as it's simpler
-    try {
-      const { data, error } = await supabase
-        .from('coaches')
-        .update(updates)
-        .eq('id', id)
-        .select(`
-          id, 
-          name, 
-          email, 
-          phone, 
-          status, 
-          clinic_id
-        `)
-        .single();
+    // Direct database update
+    const { data, error } = await supabase
+      .from('coaches')
+      .update(updates)
+      .eq('id', id)
+      .select(`
+        id, 
+        name, 
+        email, 
+        phone, 
+        status, 
+        clinic_id
+      `)
+      .single();
 
-      if (error) {
-        console.error('[Coach Service] Error updating coach via direct update:', error);
-        throw new Error(`Failed to update coach: ${error.message}`);
-      }
-      
-      if (!data) {
-        console.error('[Coach Service] No data returned from coach update');
-        throw new Error('Failed to update coach: No data returned from server');
-      }
-      
-      console.log('[Coach Service] Updated coach successfully:', data);
-      
-      // Get the client count for this coach
-      let clientCount = 0;
-      try {
-        const { count } = await supabase
-          .from('clients')
-          .select('*', { count: 'exact', head: true })
-          .eq('coach_id', id);
-          
-        clientCount = count || 0;
-      } catch (countError) {
-        console.warn('[Coach Service] Error counting clients:', countError);
-      }
-      
-      // Return the updated coach with proper structure
-      return {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        status: data.status as 'active' | 'inactive',
-        clinicId: data.clinic_id,
-        clients: clientCount
-      };
-    } catch (directUpdateError) {
-      console.warn('[Coach Service] Direct update failed, trying RPC:', directUpdateError);
-      
-      // Fallback to RPC if direct update fails
-      const { data: rpcData, error: rpcError } = await supabase.rpc(
-        'admin_update_coach',
-        {
-          coach_id: id,
-          coach_updates: updates
-        }
-      );
-      
-      if (rpcError) {
-        console.error('[Coach Service] RPC update error:', rpcError);
-        throw new Error(`Failed to update coach: ${rpcError.message}`);
-      }
-      
-      if (!rpcData) {
-        console.error('[Coach Service] No data returned from RPC update');
-        throw new Error('Failed to update coach: No data returned from server');
-      }
-      
-      // Transform the response into our expected Coach format
-      const responseData = rpcData as {
-        id: string;
-        name: string;
-        email: string;
-        phone: string | null;
-        status: string;
-        clinic_id: string;
-        client_count: number;
-      };
-      
-      const updatedCoach = {
-        id: responseData.id,
-        name: responseData.name,
-        email: responseData.email,
-        phone: responseData.phone,
-        status: responseData.status as 'active' | 'inactive',
-        clinicId: responseData.clinic_id,
-        clients: responseData.client_count || 0
-      };
-      
-      console.log('[Coach Service] Transformed coach data from RPC:', updatedCoach);
-      return updatedCoach;
+    if (error) {
+      console.error('[Coach Service] Error updating coach via direct update:', error);
+      throw new Error(`Failed to update coach: ${error.message}`);
     }
+    
+    if (!data) {
+      console.error('[Coach Service] No data returned from coach update');
+      throw new Error('Failed to update coach: No data returned from server');
+    }
+    
+    console.log('[Coach Service] Updated coach successfully:', data);
+    
+    // Get the client count for this coach
+    let clientCount = 0;
+    try {
+      const { count } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('coach_id', id);
+        
+      clientCount = count || 0;
+    } catch (countError) {
+      console.warn('[Coach Service] Error counting clients:', countError);
+    }
+    
+    // Return the updated coach with proper structure
+    return {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      status: data.status as 'active' | 'inactive',
+      clinicId: data.clinic_id,
+      clients: clientCount
+    };
   } catch (error) {
     console.error('[Coach Service] Error updating coach:', error);
     if (error instanceof Error) {
