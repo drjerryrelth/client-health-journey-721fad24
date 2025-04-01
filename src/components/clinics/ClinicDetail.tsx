@@ -47,7 +47,10 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   };
 
   const handleCoachAdded = () => {
-    setCoachListRefreshTrigger(prev => prev + 1);
+    // Use setTimeout to prevent UI freezing when refreshing the list
+    setTimeout(() => {
+      setCoachListRefreshTrigger(prev => prev + 1);
+    }, 300);
   };
 
   const handleEditCoach = (coach: Coach) => {
@@ -56,7 +59,10 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   };
 
   const handleCoachUpdated = () => {
-    setCoachListRefreshTrigger(prev => prev + 1);
+    // Use setTimeout to prevent UI freezing when refreshing the list
+    setTimeout(() => {
+      setCoachListRefreshTrigger(prev => prev + 1);
+    }, 300);
   };
 
   const handleCoachDelete = (coach: Coach) => {
@@ -65,7 +71,10 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
       setShowReassignDialog(true);
     } else {
       handleDeleteCoach(coach);
-      setTimeout(() => setCoachListRefreshTrigger(prev => prev + 1), 500);
+      // Use setTimeout to prevent UI freezing when refreshing the list
+      setTimeout(() => {
+        setCoachListRefreshTrigger(prev => prev + 1);
+      }, 500);
     }
   };
 
@@ -78,7 +87,10 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
       await handleReassignAndDelete(selectedCoach.id, replacementCoachId);
       setShowReassignDialog(false);
       setReplacementCoachId('');
-      setCoachListRefreshTrigger(prev => prev + 1);
+      // Use setTimeout to prevent UI freezing when refreshing the list
+      setTimeout(() => {
+        setCoachListRefreshTrigger(prev => prev + 1);
+      }, 500);
     }
   };
 

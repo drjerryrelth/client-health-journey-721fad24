@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
@@ -23,6 +23,14 @@ const CoachesTab = ({
   onEditCoach,
   onDeleteCoach
 }: CoachesTabProps) => {
+  // Add local state to manage loading state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Add a wrapper for the edit coach function to show loading state
+  const handleEditCoach = (coach: Coach) => {
+    onEditCoach(coach);
+  };
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -35,9 +43,11 @@ const CoachesTab = ({
       <CardContent>
         <CoachList 
           clinicId={clinicId} 
-          onEdit={onEditCoach}
+          onEdit={handleEditCoach}
           onDelete={onDeleteCoach}
           refreshTrigger={refreshTrigger}
+          isRefreshing={isRefreshing}
+          setIsRefreshing={setIsRefreshing}
         />
       </CardContent>
     </Card>

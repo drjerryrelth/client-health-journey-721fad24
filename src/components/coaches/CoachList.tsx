@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,9 +16,19 @@ interface CoachListProps {
   onEdit?: (coach: Coach) => void;
   onDelete?: (coach: Coach) => void;
   refreshTrigger?: number;
+  isRefreshing?: boolean;
+  setIsRefreshing?: (isRefreshing: boolean) => void;
 }
 
-const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete, refreshTrigger = 0 }) => {
+const CoachList: React.FC<CoachListProps> = ({ 
+  limit, 
+  clinicId, 
+  onEdit, 
+  onDelete, 
+  refreshTrigger = 0, 
+  isRefreshing = false,
+  setIsRefreshing
+}) => {
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [clinics, setClinics] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +53,12 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
   useEffect(() => {
     const loadCoaches = async () => {
       if (clinicId) {
-        setIsLoading(true);
+        if (setIsRefreshing) {
+          setIsRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
+        
         try {
           console.log('Loading coaches for clinic:', clinicId);
           const coachesData = await CoachService.getClinicCoaches(clinicId);
@@ -51,16 +67,22 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
         } catch (error) {
           console.error('Error loading coaches:', error);
         } finally {
+          if (setIsRefreshing) {
+            setIsRefreshing(false);
+          }
           setIsLoading(false);
         }
       } else {
         setCoaches([]);
         setIsLoading(false);
+        if (setIsRefreshing) {
+          setIsRefreshing(false);
+        }
       }
     };
 
     loadCoaches();
-  }, [clinicId, refreshTrigger]);
+  }, [clinicId, refreshTrigger, setIsRefreshing]);
 
   const displayedCoaches = limit ? coaches.slice(0, limit) : coaches;
 
@@ -79,7 +101,7 @@ const CoachList: React.FC<CoachListProps> = ({ limit, clinicId, onEdit, onDelete
     return clinics[clinicId] || `Clinic ${clinicId ? clinicId.slice(-4) : ''}`;
   };
 
-  if (isLoading) {
+  if (isLoading || isRefreshing) {
     return <div className="flex justify-center py-4">Loading coaches...</div>;
   }
 
