@@ -25,6 +25,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'coac
   
   // Redirect if not authenticated
   if (!isAuthenticated) {
+    console.log('MainLayout - User not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
   

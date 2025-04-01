@@ -1,13 +1,12 @@
 
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useCoachDashboardStats, useCoachRecentActivities } from '@/hooks/use-coach-dashboard-stats';
 import { useCoachActions } from '@/hooks/use-coach-actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 
 const CoachDashboard = () => {
   const { user } = useAuth();
@@ -15,6 +14,8 @@ const CoachDashboard = () => {
   const { data: activities, isLoading: activitiesLoading } = useCoachRecentActivities(5);
   const { addClient, isLoading: actionLoading } = useCoachActions();
   const navigate = useNavigate();
+
+  console.log('Rendering CoachDashboard, user:', user);
 
   // Define clickable card paths
   const cardActions = [

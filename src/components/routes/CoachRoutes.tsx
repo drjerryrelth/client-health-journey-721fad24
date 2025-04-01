@@ -12,6 +12,7 @@ const CoachRoutes = () => {
     <Routes>
       <Route element={<MainLayout />}>
         <Route index element={<CoachDashboard />} />
+        <Route path="dashboard" element={<CoachDashboard />} />
         <Route path="clients" element={<ClientsPage />} />
         <Route path="check-ins" element={<CheckInsPage />} />
         <Route path="resources" element={<ResourcesPage />} />
