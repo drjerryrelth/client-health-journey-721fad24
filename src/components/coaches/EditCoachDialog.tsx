@@ -34,16 +34,13 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
     if (!coach) return;
     
     try {
-      setIsSubmitting(true);
-      setError(null);
-      
-      // First close the dialog to prevent UI blocking
+      // First close the dialog immediately to prevent UI blocking
       onOpenChange(false);
       
       // Show a loading toast to indicate the update is in progress
-      toast.loading("Updating coach information...");
+      const toastId = toast.loading("Updating coach information...");
       
-      // Update coach in a non-blocking way
+      // Process the update in the background
       setTimeout(async () => {
         try {
           const result = await CoachService.updateCoach(coach.id, {
@@ -55,23 +52,21 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
           });
           
           if (result) {
-            // Dismiss the loading toast and show success
-            toast.dismiss();
+            toast.dismiss(toastId);
             toast.success(`${values.name}'s information has been updated`);
             
-            // Notify parent with delay to prevent UI freezing
+            // Notify parent component of the update with a delay
             if (onCoachUpdated) {
-              // Use a longer delay to ensure UI has time to update
-              setTimeout(onCoachUpdated, 500);
+              setTimeout(() => onCoachUpdated(), 500);
             }
           } else {
-            toast.dismiss();
+            toast.dismiss(toastId);
             toast.error("Failed to update coach information");
             setError("Failed to update coach information. Please try again.");
             setShowErrorDialog(true);
           }
         } catch (err) {
-          toast.dismiss();
+          toast.dismiss(toastId);
           console.error("Error updating coach:", err);
           const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
           toast.error(`Update failed: ${errorMessage}`);

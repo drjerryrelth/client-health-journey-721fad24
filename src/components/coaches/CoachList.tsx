@@ -37,7 +37,7 @@ const CoachList: React.FC<CoachListProps> = ({
   
   const showActions = !!onEdit || !!onDelete;
 
-  // Show custom messaging based on state
+  // Show loading state when initially loading
   if (isLoading && !isRefreshing) {
     return <CoachListLoader />;
   }

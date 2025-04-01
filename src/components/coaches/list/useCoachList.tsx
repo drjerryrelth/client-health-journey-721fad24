@@ -20,9 +20,10 @@ export const useCoachList = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isLoadingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Use a callback to allow re-triggering the load
-  const loadCoaches = useCallback(async () => {
+  const loadCoaches = useCallback(async (signal?: AbortSignal) => {
     if (!clinicId) {
       setCoaches([]);
       setIsLoading(false);
@@ -49,7 +50,13 @@ export const useCoachList = ({
       console.log('Loading coaches for clinic:', clinicId);
       const coachesData = await CoachService.getClinicCoaches(clinicId);
       
-      // Update state without blocking the UI
+      // Check if operation was aborted
+      if (signal?.aborted) {
+        console.log('Coach loading aborted');
+        return;
+      }
+
+      // Update state with a non-blocking approach
       window.requestAnimationFrame(() => {
         setCoaches(coachesData);
         
@@ -60,9 +67,15 @@ export const useCoachList = ({
           }
           setIsLoading(false);
           isLoadingRef.current = false;
-        }, 300);
+        }, 100);
       });
     } catch (error) {
+      // Check if operation was aborted
+      if (signal?.aborted) {
+        console.log('Coach loading aborted due to cleanup');
+        return;
+      }
+      
       console.error('Error loading coaches:', error);
       setError('Failed to load coaches. Please try again.');
       
@@ -77,88 +90,31 @@ export const useCoachList = ({
         }
         setIsLoading(false);
         isLoadingRef.current = false;
-      }, 300);
+      }, 100);
     }
   }, [clinicId, setIsRefreshing]);
 
   // Load coaches when dependencies change
   useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
+    // Cancel any in-progress requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     
-    const safeLoadCoaches = async () => {
-      try {
-        if (!clinicId || !isMounted) {
-          if (isMounted) {
-            setCoaches([]);
-            setIsLoading(false);
-            if (setIsRefreshing) setIsRefreshing(false);
-          }
-          return;
-        }
-        
-        // Set loading states
-        if (isMounted) {
-          if (setIsRefreshing) {
-            setIsRefreshing(true);
-          } else {
-            setIsLoading(true);
-          }
-          setError(null);
-        }
-        
-        console.log('Loading coaches for clinic:', clinicId);
-        const coachesData = await CoachService.getClinicCoaches(clinicId);
-        
-        if (isMounted) {
-          // Use RAF to schedule UI updates
-          window.requestAnimationFrame(() => {
-            if (isMounted) {
-              setCoaches(coachesData);
-              setError(null);
-              
-              // Use setTimeout to ensure UI updates smoothly
-              setTimeout(() => {
-                if (isMounted) {
-                  if (setIsRefreshing) {
-                    setIsRefreshing(false);
-                  }
-                  setIsLoading(false);
-                  isLoadingRef.current = false;
-                }
-              }, 300);
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error loading coaches:', error);
-        if (isMounted) {
-          setError('Failed to load coaches. Please try again.');
-          if (!setIsRefreshing) {
-            toast.error("Error loading coaches. Please try again.");
-          }
-          
-          setTimeout(() => {
-            if (isMounted) {
-              if (setIsRefreshing) {
-                setIsRefreshing(false);
-              }
-              setIsLoading(false);
-              isLoadingRef.current = false;
-            }
-          }, 300);
-        }
-      }
-    };
-
-    safeLoadCoaches();
+    // Create a new abort controller for this request
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
+    
+    loadCoaches(signal);
     
     return () => {
-      isMounted = false;
-      controller.abort();
+      // Clean up on unmount or when dependencies change
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
       isLoadingRef.current = false;
     };
-  }, [clinicId, refreshTrigger, setIsRefreshing]);
+  }, [clinicId, refreshTrigger, loadCoaches]);
 
   const displayedCoaches = limit ? coaches.slice(0, limit) : coaches;
 
@@ -166,6 +122,6 @@ export const useCoachList = ({
     coaches: displayedCoaches,
     isLoading,
     error,
-    refresh: loadCoaches
+    refresh: () => loadCoaches()
   };
 };

@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Loader2 } from 'lucide-react';
 import CoachList from '@/components/coaches/CoachList';
 import { Coach } from '@/services/coaches';
 
@@ -36,8 +36,8 @@ const CoachesTab = ({
           className="flex items-center gap-2"
           disabled={isRefreshing}
         >
-          <UserPlus size={18} />
-          <span>Add Coach</span>
+          {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus size={18} />}
+          <span>{isRefreshing ? "Processing..." : "Add Coach"}</span>
         </Button>
       </CardHeader>
       <CardContent>
