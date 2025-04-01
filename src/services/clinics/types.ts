@@ -27,4 +27,6 @@ export interface Clinic {
   logo: string | null;
   primaryColor: string | null;
   secondaryColor: string | null;
+  // Auth related
+  tempPassword?: string;
 }

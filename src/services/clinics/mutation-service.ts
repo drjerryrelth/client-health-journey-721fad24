@@ -37,10 +37,20 @@ export const addClinic = async (clinic: Partial<Clinic>): Promise<Clinic | null>
         const newClinicData = mapDbToClinic(data);
         
         if (newClinicData && newClinicData.id) {
-          await createCoachAccountForClinic(newClinicData);
+          const coachResult = await createCoachAccountForClinic(newClinicData);
+          
+          // If we have a temporary password, add it to the clinic object
+          if (coachResult && coachResult.success && coachResult.tempPassword) {
+            return {
+              ...newClinicData,
+              tempPassword: coachResult.tempPassword
+            };
+          }
+          
+          return newClinicData;
         }
         
-        return newClinicData;
+        return mapDbToClinic(data);
       } catch (coachError) {
         console.error('Error creating coach for new clinic:', coachError);
         // Continue returning the clinic even if coach creation failed
