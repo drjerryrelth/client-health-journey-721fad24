@@ -23,19 +23,17 @@ const CoachesTab = ({
   onEditCoach,
   onDeleteCoach
 }: CoachesTabProps) => {
-  // Add local state to manage loading state
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  // Add a wrapper for the edit coach function to show loading state
-  const handleEditCoach = (coach: Coach) => {
-    onEditCoach(coach);
-  };
   
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Coaches at {clinicName}</CardTitle>
-        <Button onClick={onAddCoach} className="flex items-center gap-2">
+        <Button 
+          onClick={onAddCoach} 
+          className="flex items-center gap-2"
+          disabled={isRefreshing}
+        >
           <UserPlus size={18} />
           <span>Add Coach</span>
         </Button>
@@ -43,7 +41,7 @@ const CoachesTab = ({
       <CardContent>
         <CoachList 
           clinicId={clinicId} 
-          onEdit={handleEditCoach}
+          onEdit={onEditCoach}
           onDelete={onDeleteCoach}
           refreshTrigger={refreshTrigger}
           isRefreshing={isRefreshing}

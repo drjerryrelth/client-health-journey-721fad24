@@ -48,18 +48,17 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
       });
       
       if (result) {
-        toast.success(`${values.name}'s information has been updated.`);
-        
-        // Close the dialog immediately
+        // First close the dialog to prevent UI blocking
         onOpenChange(false);
         
-        // Delay the refresh to prevent UI freezing
+        // Then show success message
+        toast.success(`${values.name}'s information has been updated.`);
+        
+        // Finally, notify parent with a significant delay to prevent UI freezing
         if (onCoachUpdated) {
-          // Use a longer delay to ensure the dialog animation completes
-          // and the UI thread is free before doing potentially heavy refresh operations
           setTimeout(() => {
             onCoachUpdated();
-          }, 300);
+          }, 500);
         }
       } else {
         setError("Failed to update coach information. Please try again.");

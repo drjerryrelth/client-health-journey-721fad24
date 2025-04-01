@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -42,15 +42,19 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
     }
   };
 
+  const triggerCoachListRefresh = useCallback(() => {
+    // Use setTimeout to prevent UI freezing when refreshing the list
+    setTimeout(() => {
+      setCoachListRefreshTrigger(prev => prev + 1);
+    }, 500);
+  }, []);
+
   const handleAddCoach = () => {
     setShowAddCoachDialog(true);
   };
 
   const handleCoachAdded = () => {
-    // Use setTimeout to prevent UI freezing when refreshing the list
-    setTimeout(() => {
-      setCoachListRefreshTrigger(prev => prev + 1);
-    }, 300);
+    triggerCoachListRefresh();
   };
 
   const handleEditCoach = (coach: Coach) => {
@@ -59,10 +63,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   };
 
   const handleCoachUpdated = () => {
-    // Use setTimeout to prevent UI freezing when refreshing the list
-    setTimeout(() => {
-      setCoachListRefreshTrigger(prev => prev + 1);
-    }, 300);
+    triggerCoachListRefresh();
   };
 
   const handleCoachDelete = (coach: Coach) => {
@@ -71,10 +72,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
       setShowReassignDialog(true);
     } else {
       handleDeleteCoach(coach);
-      // Use setTimeout to prevent UI freezing when refreshing the list
-      setTimeout(() => {
-        setCoachListRefreshTrigger(prev => prev + 1);
-      }, 500);
+      triggerCoachListRefresh();
     }
   };
 
@@ -87,10 +85,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
       await handleReassignAndDelete(selectedCoach.id, replacementCoachId);
       setShowReassignDialog(false);
       setReplacementCoachId('');
-      // Use setTimeout to prevent UI freezing when refreshing the list
-      setTimeout(() => {
-        setCoachListRefreshTrigger(prev => prev + 1);
-      }, 500);
+      triggerCoachListRefresh();
     }
   };
 
