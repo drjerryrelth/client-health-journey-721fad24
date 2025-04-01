@@ -10,9 +10,9 @@ import EditClinicDialog from './EditClinicDialog';
 import ClinicDetailsTab from './ClinicDetailsTab';
 import CoachesTab from './CoachesTab';
 import { Coach } from '@/services/coaches';
-import { AddCoachDialog } from '@/components/coaches/AddCoachDialog';
-import { EditCoachDialog } from '@/components/coaches/EditCoachDialog';
-import { ReassignClientsDialog } from '@/components/coaches/ReassignClientsDialog';
+import AddCoachDialog from '@/components/coaches/AddCoachDialog';
+import EditCoachDialog from '@/components/coaches/EditCoachDialog';
+import ReassignClientsDialog from '@/components/coaches/ReassignClientsDialog';
 
 interface ClinicDetailProps {
   clinic: Clinic;
@@ -88,6 +88,10 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
     setRefreshCoachTrigger(prev => prev + 1);
   }, [toast]);
 
+  const handleEditClick = () => {
+    setShowEditDialog(true);
+  };
+
   return (
     <>
       <div className="mb-4 flex justify-between items-center">
@@ -115,7 +119,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
             </TabsList>
 
             <TabsContent value="details">
-              <ClinicDetailsTab clinic={clinic} />
+              <ClinicDetailsTab clinic={clinic} onEditClick={handleEditClick} />
             </TabsContent>
 
             <TabsContent value="coaches">
