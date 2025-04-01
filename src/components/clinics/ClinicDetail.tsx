@@ -30,6 +30,9 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [refreshCoachTrigger, setRefreshCoachTrigger] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  // For reassigning clients
+  const [availableCoaches, setAvailableCoaches] = useState<Coach[]>([]);
+  const [replacementCoachId, setReplacementCoachId] = useState('');
 
   const handleClinicUpdate = () => {
     toast({
@@ -76,8 +79,20 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
 
   const handleDeleteCoach = useCallback((coach: Coach) => {
     setSelectedCoach(coach);
+    
+    // We need to fetch available coaches for reassignment
+    // This would typically be done with an API call
+    // For now, we'll simulate it with a simple filter
+    if (getMockCoaches) {
+      const coaches = getMockCoaches().filter(c => c.id !== coach.id && c.clinicId === clinic.id);
+      setAvailableCoaches(coaches);
+    } else {
+      // In a real app, fetch coaches from API
+      setAvailableCoaches([]);
+    }
+    
     setShowReassignDialog(true);
-  }, []);
+  }, [clinic.id, getMockCoaches]);
 
   const handleCoachDeleted = useCallback(() => {
     toast({
@@ -86,11 +101,23 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
     });
     setShowReassignDialog(false);
     setRefreshCoachTrigger(prev => prev + 1);
+    // Reset the replacement coach ID
+    setReplacementCoachId('');
   }, [toast]);
 
   const handleEditClick = () => {
     setShowEditDialog(true);
   };
+
+  // Function to handle the reassign and delete action
+  const handleReassignAndDelete = useCallback(() => {
+    // In a real app, this would call an API to reassign clients
+    // and then delete the coach
+    console.log(`Reassigning clients from coach ${selectedCoach?.id} to coach ${replacementCoachId}`);
+    
+    // After successful reassignment and deletion
+    handleCoachDeleted();
+  }, [selectedCoach, replacementCoachId, handleCoachDeleted]);
 
   return (
     <>
@@ -172,6 +199,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
         open={showAddCoachDialog}
         onOpenChange={setShowAddCoachDialog}
         clinicId={clinic.id}
+        clinicName={clinic.name}
         onCoachAdded={handleCoachAdded}
       />
       
@@ -181,6 +209,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
           open={showEditCoachDialog}
           onOpenChange={setShowEditCoachDialog}
           coach={selectedCoach}
+          clinicName={clinic.name}
           onCoachUpdated={handleCoachUpdated}
         />
       )}
@@ -190,8 +219,11 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
         <ReassignClientsDialog
           open={showReassignDialog}
           onOpenChange={setShowReassignDialog}
-          coach={selectedCoach}
-          onClientsReassigned={handleCoachDeleted}
+          selectedCoach={selectedCoach}
+          availableCoaches={availableCoaches}
+          replacementCoachId={replacementCoachId}
+          setReplacementCoachId={setReplacementCoachId}
+          onReassignAndDelete={handleReassignAndDelete}
         />
       )}
     </>
