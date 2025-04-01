@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CoachForm, CoachFormValues } from './CoachForm';
 import ErrorDialog from './ErrorDialog';
@@ -30,7 +30,7 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
     phone: ''
   };
 
-  const handleSubmit = async (values: CoachFormValues) => {
+  const handleSubmit = useCallback(async (values: CoachFormValues) => {
     if (!coach) return;
     
     try {
@@ -39,39 +39,51 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
       
       console.log('Updating coach with values:', values);
       
-      const result = await CoachService.updateCoach(coach.id, {
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        clinicId: coach.clinicId,
-        status: coach.status
-      });
+      // First close the dialog to prevent UI blocking
+      onOpenChange(false);
       
-      if (result) {
-        // First close the dialog to prevent UI blocking
-        onOpenChange(false);
-        
-        // Then show success message
-        toast.success(`${values.name}'s information has been updated.`);
-        
-        // Finally, notify parent with a significant delay to prevent UI freezing
-        if (onCoachUpdated) {
-          setTimeout(() => {
-            onCoachUpdated();
-          }, 500);
+      // Then update the coach in a separate thread
+      setTimeout(async () => {
+        try {
+          const result = await CoachService.updateCoach(coach.id, {
+            name: values.name,
+            email: values.email,
+            phone: values.phone,
+            clinicId: coach.clinicId,
+            status: coach.status
+          });
+          
+          if (result) {
+            // Show success message
+            toast.success(`${values.name}'s information has been updated.`);
+            
+            // Finally, notify parent with a significant delay to prevent UI freezing
+            if (onCoachUpdated) {
+              requestAnimationFrame(() => {
+                setTimeout(() => {
+                  onCoachUpdated();
+                }, 300);
+              });
+            }
+          } else {
+            setError("Failed to update coach information. Please try again.");
+            setShowErrorDialog(true);
+          }
+        } catch (err) {
+          console.error("Error updating coach:", err);
+          setError(err instanceof Error ? err.message : "An unknown error occurred");
+          setShowErrorDialog(true);
+        } finally {
+          setIsSubmitting(false);
         }
-      } else {
-        setError("Failed to update coach information. Please try again.");
-        setShowErrorDialog(true);
-      }
+      }, 100);
     } catch (error) {
-      console.error("Error updating coach:", error);
+      console.error("Error preparing coach update:", error);
       setError(error instanceof Error ? error.message : "An unknown error occurred");
       setShowErrorDialog(true);
-    } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [coach, onOpenChange, onCoachUpdated]);
 
   const handleCancel = () => {
     onOpenChange(false);

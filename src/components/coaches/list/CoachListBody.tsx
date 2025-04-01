@@ -10,11 +10,26 @@ interface CoachListBodyProps {
   getClinicName: (clinicId: string) => string;
   onEdit?: (coach: Coach) => void;
   onDelete?: (coach: Coach) => void;
+  error?: string | null;
 }
 
-const CoachListBody: React.FC<CoachListBodyProps> = ({ coaches, getClinicName, onEdit, onDelete }) => {
+const CoachListBody: React.FC<CoachListBodyProps> = ({ 
+  coaches, 
+  getClinicName, 
+  onEdit, 
+  onDelete,
+  error 
+}) => {
   const showActions = !!onEdit || !!onDelete;
   const colSpan = showActions ? 7 : 6;
+  
+  if (error) {
+    return (
+      <TableBody>
+        <EmptyCoachList colSpan={colSpan} error={error} />
+      </TableBody>
+    );
+  }
   
   return (
     <TableBody>

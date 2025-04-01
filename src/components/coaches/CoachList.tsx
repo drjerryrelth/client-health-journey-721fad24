@@ -28,7 +28,7 @@ const CoachList: React.FC<CoachListProps> = ({
   setIsRefreshing
 }) => {
   const { getClinicName } = useClinicNames();
-  const { coaches, isLoading } = useCoachList({ 
+  const { coaches, isLoading, error } = useCoachList({ 
     clinicId, 
     limit, 
     refreshTrigger, 
@@ -37,6 +37,7 @@ const CoachList: React.FC<CoachListProps> = ({
   
   const showActions = !!onEdit || !!onDelete;
 
+  // Show loader when initially loading or when refreshing
   if (isLoading || isRefreshing) {
     return <CoachListLoader />;
   }
@@ -50,6 +51,7 @@ const CoachList: React.FC<CoachListProps> = ({
           getClinicName={getClinicName}
           onEdit={onEdit}
           onDelete={onDelete}
+          error={error}
         />
       </Table>
     </div>
