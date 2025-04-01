@@ -1,7 +1,7 @@
 
 // Demo email addresses used throughout the application
 export const demoEmails = {
-  admin: 'admin@gmail.com', // Changed to a widely accepted email format
+  admin: 'admin@example.com', // Changed to a universally accepted test domain
   coach: 'support@practicenaturals.com',
   client: 'drjerryrelth@gmail.com'
 };

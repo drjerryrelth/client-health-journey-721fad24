@@ -38,15 +38,15 @@ export const useLoginHandler = () => {
   const handleDemoLogin = async (type: UserRole, email: string) => {
     setIsSubmitting(true);
     
-    // Fix the coach email if it's the incorrect version
-    if (email === 'support@practicenaturals.cm') {
-      email = demoEmails.coach;
+    // Admin demo account special handling
+    if (type === 'admin') {
+      email = demoEmails.admin; // Always use the correct admin email from constants
+      console.log(`Using admin demo account: ${email}`);
     }
     
-    // Ensure we're using the correct demo admin email
-    if (type === 'admin' && email !== demoEmails.admin) {
-      console.log('Correcting admin email to use proper demo account');
-      email = demoEmails.admin;
+    // Fix the coach email if it's the incorrect version
+    if (type === 'coach' && email === 'support@practicenaturals.cm') {
+      email = demoEmails.coach;
     }
     
     try {
