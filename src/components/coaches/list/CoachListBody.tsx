@@ -11,6 +11,7 @@ interface CoachListBodyProps {
   onEdit?: (coach: Coach) => void;
   onDelete?: (coach: Coach) => void;
   error?: string | null;
+  onRetry?: () => void;
 }
 
 const CoachListBody: React.FC<CoachListBodyProps> = ({ 
@@ -18,7 +19,8 @@ const CoachListBody: React.FC<CoachListBodyProps> = ({
   getClinicName, 
   onEdit, 
   onDelete,
-  error 
+  error,
+  onRetry
 }) => {
   const showActions = !!onEdit || !!onDelete;
   const colSpan = showActions ? 7 : 6;
@@ -26,7 +28,7 @@ const CoachListBody: React.FC<CoachListBodyProps> = ({
   if (error) {
     return (
       <TableBody>
-        <EmptyCoachList colSpan={colSpan} error={error} />
+        <EmptyCoachList colSpan={colSpan} error={error} onRetry={onRetry} />
       </TableBody>
     );
   }
@@ -44,7 +46,7 @@ const CoachListBody: React.FC<CoachListBodyProps> = ({
           />
         ))
       ) : (
-        <EmptyCoachList colSpan={colSpan} />
+        <EmptyCoachList colSpan={colSpan} onRetry={onRetry} />
       )}
     </TableBody>
   );

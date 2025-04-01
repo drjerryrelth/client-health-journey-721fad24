@@ -42,9 +42,12 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
       // First close the dialog to prevent UI blocking
       onOpenChange(false);
       
-      // Then update the coach in a separate thread
-      setTimeout(async () => {
+      // Create a separate promise to handle the update in background
+      const updatePromise = new Promise<void>(async (resolve, reject) => {
         try {
+          // Add a small delay to ensure UI updates first
+          await new Promise(r => setTimeout(r, 100));
+          
           const result = await CoachService.updateCoach(coach.id, {
             name: values.name,
             email: values.email,
@@ -57,26 +60,28 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
             // Show success message
             toast.success(`${values.name}'s information has been updated.`);
             
-            // Finally, notify parent with a significant delay to prevent UI freezing
+            // Notify parent with a delay to prevent UI freezing
             if (onCoachUpdated) {
-              requestAnimationFrame(() => {
-                setTimeout(() => {
-                  onCoachUpdated();
-                }, 300);
-              });
+              setTimeout(onCoachUpdated, 300);
             }
+            resolve();
           } else {
-            setError("Failed to update coach information. Please try again.");
-            setShowErrorDialog(true);
+            reject(new Error("Failed to update coach information. Please try again."));
           }
         } catch (err) {
           console.error("Error updating coach:", err);
-          setError(err instanceof Error ? err.message : "An unknown error occurred");
-          setShowErrorDialog(true);
+          reject(err instanceof Error ? err : new Error("An unknown error occurred"));
         } finally {
           setIsSubmitting(false);
         }
-      }, 100);
+      });
+      
+      // Handle errors from the update promise
+      updatePromise.catch((err) => {
+        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        setShowErrorDialog(true);
+      });
+      
     } catch (error) {
       console.error("Error preparing coach update:", error);
       setError(error instanceof Error ? error.message : "An unknown error occurred");

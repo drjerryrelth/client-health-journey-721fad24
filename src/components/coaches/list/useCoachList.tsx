@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Coach, CoachService } from '@/services/coaches';
 import { toast } from 'sonner';
 
@@ -19,26 +19,83 @@ export const useCoachList = ({
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Use a callback to allow re-triggering the load
+  const loadCoaches = useCallback(async () => {
+    if (!clinicId) {
+      setCoaches([]);
+      setIsLoading(false);
+      if (setIsRefreshing) setIsRefreshing(false);
+      return;
+    }
+    
+    try {
+      // Set loading states
+      if (setIsRefreshing) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+      setError(null);
+      
+      console.log('Loading coaches for clinic:', clinicId);
+      const coachesData = await CoachService.getClinicCoaches(clinicId);
+      
+      // Use requestAnimationFrame to ensure UI updates before state changes
+      requestAnimationFrame(() => {
+        console.log('Coaches loaded:', coachesData);
+        setCoaches(coachesData);
+        
+        // Use setTimeout to ensure UI updates smoothly
+        setTimeout(() => {
+          if (setIsRefreshing) {
+            setIsRefreshing(false);
+          }
+          setIsLoading(false);
+        }, 300);
+      });
+    } catch (error) {
+      console.error('Error loading coaches:', error);
+      setError('Failed to load coaches. Please try again.');
+      
+      if (!setIsRefreshing) {
+        toast.error("Error loading coaches. Please try again.");
+      }
+      
+      // Ensure loading states are reset even on error
+      setTimeout(() => {
+        if (setIsRefreshing) {
+          setIsRefreshing(false);
+        }
+        setIsLoading(false);
+      }, 300);
+    }
+  }, [clinicId, setIsRefreshing]);
 
+  // Load coaches when dependencies change
   useEffect(() => {
     let isMounted = true;
     
-    const loadCoaches = async () => {
-      if (!clinicId) {
-        if (isMounted) {
-          setCoaches([]);
-          setIsLoading(false);
-          if (setIsRefreshing) setIsRefreshing(false);
-        }
-        return;
-      }
-      
+    // Create a wrapper function to respect the mounted state
+    const safeLoadCoaches = async () => {
       try {
+        if (!clinicId) {
+          if (isMounted) {
+            setCoaches([]);
+            setIsLoading(false);
+            if (setIsRefreshing) setIsRefreshing(false);
+          }
+          return;
+        }
+        
         // Set loading states
-        if (setIsRefreshing) {
-          setIsRefreshing(true);
-        } else {
-          setIsLoading(true);
+        if (isMounted) {
+          if (setIsRefreshing) {
+            setIsRefreshing(true);
+          } else {
+            setIsLoading(true);
+          }
+          setError(null);
         }
         
         console.log('Loading coaches for clinic:', clinicId);
@@ -46,30 +103,37 @@ export const useCoachList = ({
         
         if (isMounted) {
           console.log('Coaches loaded:', coachesData);
-          setCoaches(coachesData);
-          setError(null);
+          
+          // Use requestAnimationFrame to schedule UI updates
+          requestAnimationFrame(() => {
+            if (isMounted) {
+              setCoaches(coachesData);
+              setError(null);
+            }
+          });
         }
       } catch (error) {
         console.error('Error loading coaches:', error);
         if (isMounted) {
           setError('Failed to load coaches. Please try again.');
-          toast.error("Error loading coaches. Please try again.");
+          if (!setIsRefreshing) {
+            toast.error("Error loading coaches. Please try again.");
+          }
         }
       } finally {
-        // Only update state if component is still mounted
-        if (isMounted) {
-          if (setIsRefreshing) {
-            // Use setTimeout to ensure UI updates smoothly
-            setTimeout(() => {
-              if (isMounted) setIsRefreshing(false);
-            }, 300);
+        // Use setTimeout to ensure UI updates smoothly
+        setTimeout(() => {
+          if (isMounted) {
+            if (setIsRefreshing) {
+              setIsRefreshing(false);
+            }
+            setIsLoading(false);
           }
-          setIsLoading(false);
-        }
+        }, 300);
       }
     };
 
-    loadCoaches();
+    safeLoadCoaches();
     
     // Cleanup function to prevent state updates after unmount
     return () => {
@@ -82,6 +146,7 @@ export const useCoachList = ({
   return {
     coaches: displayedCoaches,
     isLoading,
-    error
+    error,
+    refresh: loadCoaches
   };
 };

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Table } from "@/components/ui/table";
 import { Coach } from '@/services/coaches';
 import CoachListHeader from './list/CoachListHeader';
@@ -28,7 +28,7 @@ const CoachList: React.FC<CoachListProps> = ({
   setIsRefreshing
 }) => {
   const { getClinicName } = useClinicNames();
-  const { coaches, isLoading, error } = useCoachList({ 
+  const { coaches, isLoading, error, refresh } = useCoachList({ 
     clinicId, 
     limit, 
     refreshTrigger, 
@@ -37,9 +37,13 @@ const CoachList: React.FC<CoachListProps> = ({
   
   const showActions = !!onEdit || !!onDelete;
 
-  // Show loader when initially loading or when refreshing
-  if (isLoading || isRefreshing) {
+  // Show custom messaging based on state
+  if (isLoading) {
     return <CoachListLoader />;
+  }
+
+  if (isRefreshing) {
+    return <CoachListLoader message="Refreshing coaches..." />;
   }
 
   return (
@@ -52,6 +56,7 @@ const CoachList: React.FC<CoachListProps> = ({
           onEdit={onEdit}
           onDelete={onDelete}
           error={error}
+          onRetry={refresh}
         />
       </Table>
     </div>
