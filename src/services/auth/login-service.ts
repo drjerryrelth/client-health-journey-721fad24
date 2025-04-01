@@ -1,6 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ensureDemoProfileExists } from './demo-service';
+import { 
+  ensureDemoProfileExists, 
+  isDemoEmail, 
+  getDemoUserNameByEmail, 
+  getDemoRoleByEmail 
+} from './demo';
 
 // Helper function to handle demo account logic
 const handleDemoAccountCreation = async (email: string) => {
@@ -32,45 +37,6 @@ const handleDemoAccountCreation = async (email: string) => {
   } catch (createErr) {
     console.error('Error creating demo account:', createErr);
   }
-};
-
-// Helper to get demo name based on email
-const getDemoUserNameByEmail = (email: string): string => {
-  const demoEmails = {
-    admin: 'drrelth@contourlight.com',
-    coach: 'support@practicenaturals.com',
-    client: 'drjerryrelth@gmail.com'
-  };
-  
-  if (email === demoEmails.admin) return 'Admin User';
-  if (email === demoEmails.coach) return 'Coach User';
-  if (email === demoEmails.client) return 'Client User';
-  return 'Demo User';
-};
-
-// Helper to get demo role based on email
-const getDemoRoleByEmail = (email: string): string => {
-  const demoEmails = {
-    admin: 'drrelth@contourlight.com',
-    coach: 'support@practicenaturals.com',
-    client: 'drjerryrelth@gmail.com'
-  };
-  
-  if (email === demoEmails.admin) return 'admin';
-  if (email === demoEmails.coach) return 'coach';
-  if (email === demoEmails.client) return 'client';
-  return 'client';
-};
-
-// Check if an email belongs to a demo account
-const isDemoEmail = (email: string): boolean => {
-  const demoEmails = {
-    admin: 'drrelth@contourlight.com',
-    coach: 'support@practicenaturals.com',
-    client: 'drjerryrelth@gmail.com'
-  };
-  
-  return Object.values(demoEmails).includes(email);
 };
 
 // Perform actual login request with timeout protection

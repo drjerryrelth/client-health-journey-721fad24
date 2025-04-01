@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLoginHandler } from '@/hooks/use-login-handler';
+import { demoEmails } from '@/services/auth/demo';
 
 interface DemoLoginButtonsProps {
   handleDemoLogin?: (type: UserRole, email: string) => Promise<void>;
@@ -13,13 +14,6 @@ interface DemoLoginButtonsProps {
 }
 
 const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsProps = {}) => {
-  // Define demo emails for each role
-  const demoEmails = {
-    admin: 'drrelth@contourlight.com',
-    coach: 'support@practicenaturals.com',
-    client: 'drjerryrelth@gmail.com'
-  };
-  
   // Use login handler if no handler is provided (for homepage use)
   const navigate = useNavigate();
   const loginHandler = useLoginHandler();

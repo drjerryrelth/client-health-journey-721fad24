@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/context/auth';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole } from '@/types';
 import { LoginFormValues } from '@/components/auth/login-schema';
+import { demoEmails } from '@/services/auth/demo';
 
 export const useLoginHandler = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,7 +39,7 @@ export const useLoginHandler = () => {
     
     // Fix the coach email if it's the incorrect version
     if (email === 'support@practicenaturals.cm') {
-      email = 'support@practicenaturals.com';
+      email = demoEmails.coach;
     }
     
     try {
