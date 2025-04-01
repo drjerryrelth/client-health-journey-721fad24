@@ -116,19 +116,27 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     // For other roles, standard role check
     if (Array.isArray(requiredRole)) {
       const hasAnyRole = requiredRole.some(role => {
-        // Fixing this comparison to handle 'admin' role correctly
+        // Handle special roles
         if (role === 'admin') return isSystemAdmin || isSuperAdmin;
         if (role === 'clinic_admin') return isClinicAdmin;
+        
+        // Direct comparison for other roles
         return user.role === role;
       });
       console.log(`User has any of [${requiredRole.join(', ')}]?`, hasAnyRole);
       return hasAnyRole;
     }
     
-    // Single role check
-    if (requiredRole === 'admin') return isSystemAdmin || isSuperAdmin;
-    if (requiredRole === 'clinic_admin') return isClinicAdmin;
+    // Single role check - handle each specific case
+    if (requiredRole === 'admin') {
+      return isSystemAdmin || isSuperAdmin;
+    }
     
+    if (requiredRole === 'clinic_admin') {
+      return isClinicAdmin;
+    }
+    
+    // Standard direct role comparison for other roles
     const hasSpecificRole = user.role === requiredRole;
     console.log(`User has role ${requiredRole}?`, hasSpecificRole);
     return hasSpecificRole;
