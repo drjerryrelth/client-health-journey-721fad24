@@ -50,7 +50,10 @@ export const createClient = async (client: Omit<Client, 'id'>): Promise<{ data: 
 export const updateClient = async (clientId: string, updates: Partial<Client>): Promise<{ data: Client | null, error: any }> => {
   try {
     // Convert client fields to DB format
-    const dbUpdates = mapClientToDbClient({ ...updates, id: clientId });
+    // Note: We need to explicitly type this as any to avoid TypeScript errors
+    // because mapClientToDbClient expects a more complete object
+    const clientWithId = { ...updates, id: clientId } as Client;
+    const dbUpdates = mapClientToDbClient(clientWithId);
     
     const { data, error } = await supabase
       .from('clients')
