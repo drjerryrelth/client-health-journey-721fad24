@@ -48,7 +48,7 @@ export async function signUpWithEmail(
   console.log('Attempting to create account with email:', email);
   
   // For demo accounts, we need to handle them specially
-  const isDemoAccount = email === 'drrelth@contourlight.com';
+  const isDemoAccount = isDemoEmail(email);
   
   if (isDemoAccount) {
     // Try to sign in first to see if account exists
@@ -67,8 +67,10 @@ export async function signUpWithEmail(
       // Continue with signup if login failed
       console.log('Demo account does not exist or login failed, continuing with signup');
     }
-  } else {
-    // Check if the user already exists
+  }
+  
+  // Check if the user already exists
+  if (!isDemoAccount) {
     const userExists = await checkIfUserExists(email, password);
     if (userExists) {
       console.log('User already exists, no need to sign up');

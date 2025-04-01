@@ -32,6 +32,15 @@ export const handleDemoAccountCreation = async (email: string) => {
       }
     } else {
       console.log('Demo user created successfully');
+      
+      // For demo accounts, we should immediately confirm the email
+      try {
+        // This would require a server-side function in a real app
+        // For now, we'll rely on manual email confirmation in the Supabase dashboard
+        console.log('NOTE: In a production app, you would need to auto-confirm the email');
+      } catch (confirmErr) {
+        console.error('Error confirming demo email:', confirmErr);
+      }
     }
   } catch (createErr) {
     console.error('Error creating demo account:', createErr);
