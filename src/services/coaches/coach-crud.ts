@@ -101,39 +101,22 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       return null;
     }
     
-    // Prepare the update payload - convert to snake_case for database
-    const updates: Record<string, any> = {};
-    if (coach.name !== undefined) updates.name = coach.name;
-    if (coach.email !== undefined) updates.email = coach.email;
-    if (coach.phone !== undefined) updates.phone = coach.phone;
-    if (coach.status !== undefined) updates.status = coach.status;
-    if (coach.clinicId !== undefined) updates.clinic_id = coach.clinicId;
+    // Use RPC function to update coach (similar to add_coach)
+    // This should bypass any RLS policy issues
+    const { data, error } = await supabase.rpc(
+      'update_coach',
+      {
+        coach_id: id,
+        coach_name: coach.name,
+        coach_email: coach.email,
+        coach_phone: coach.phone,
+        coach_status: coach.status,
+        coach_clinic_id: coach.clinicId
+      }
+    );
     
-    console.log('[Coach Service] Prepared updates:', updates);
-    
-    // Check if there are any updates to apply
-    if (Object.keys(updates).length === 0) {
-      console.log('[Coach Service] No updates to apply');
-      return null;
-    }
-    
-    // Direct database update
-    const { data, error } = await supabase
-      .from('coaches')
-      .update(updates)
-      .eq('id', id)
-      .select(`
-        id, 
-        name, 
-        email, 
-        phone, 
-        status, 
-        clinic_id
-      `)
-      .single();
-
     if (error) {
-      console.error('[Coach Service] Error updating coach via direct update:', error);
+      console.error('[Coach Service] Error updating coach via RPC:', error);
       throw new Error(`Failed to update coach: ${error.message}`);
     }
     
@@ -144,29 +127,30 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
     
     console.log('[Coach Service] Updated coach successfully:', data);
     
-    // Get the client count for this coach
-    let clientCount = 0;
-    try {
-      const { count } = await supabase
-        .from('clients')
-        .select('*', { count: 'exact', head: true })
-        .eq('coach_id', id);
-        
-      clientCount = count || 0;
-    } catch (countError) {
-      console.warn('[Coach Service] Error counting clients:', countError);
-    }
+    // Parse the response data
+    const responseData = data as {
+      id: string;
+      name: string;
+      email: string;
+      phone: string | null;
+      status: string;
+      clinic_id: string;
+      client_count: number;
+    };
     
     // Return the updated coach with proper structure
-    return {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      status: data.status as 'active' | 'inactive',
-      clinicId: data.clinic_id,
-      clients: clientCount
+    const updatedCoach: Coach = {
+      id: responseData.id,
+      name: responseData.name,
+      email: responseData.email,
+      phone: responseData.phone,
+      status: responseData.status as 'active' | 'inactive',
+      clinicId: responseData.clinic_id,
+      clients: responseData.client_count || 0
     };
+    
+    toast.success('Coach updated successfully!');
+    return updatedCoach;
   } catch (error) {
     console.error('[Coach Service] Error updating coach:', error);
     if (error instanceof Error) {

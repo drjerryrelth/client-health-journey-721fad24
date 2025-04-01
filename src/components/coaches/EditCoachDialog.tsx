@@ -48,7 +48,7 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
       });
       
       if (result) {
-        toast(`${values.name}'s information has been updated.`);
+        toast.success(`${values.name}'s information has been updated.`);
         
         // Call the onCoachUpdated callback if provided
         if (onCoachUpdated) {
