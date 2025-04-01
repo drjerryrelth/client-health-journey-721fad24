@@ -1,11 +1,10 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserPlus, Loader2 } from 'lucide-react';
 import CoachList from '@/components/coaches/CoachList';
 import { Coach } from '@/services/coaches';
-import { toast } from 'sonner';
 
 interface CoachesTabProps {
   clinicName: string;
@@ -31,53 +30,64 @@ const CoachesTab = ({
   // Use a ref to track action debouncing
   const actionTimeoutRef = useRef<number | null>(null);
   const [isActionPending, setIsActionPending] = useState(false);
+  const actionInProgressRef = useRef(false);
 
-  // Debounced handlers to prevent rapid clicks and UI thrashing
-  const handleAddCoach = () => {
-    if (isActionPending || isRefreshing) return;
+  // Stabilized callback to prevent excessive re-renders
+  const handleAddCoach = useCallback(() => {
+    if (actionInProgressRef.current || isActionPending || isRefreshing) return;
     
+    actionInProgressRef.current = true;
     setIsActionPending(true);
-    onAddCoach();
     
-    // Reset action state after a short delay
-    if (actionTimeoutRef.current) {
-      clearTimeout(actionTimeoutRef.current);
-    }
-    
-    actionTimeoutRef.current = window.setTimeout(() => {
-      setIsActionPending(false);
-    }, 500);
-  };
+    // Debounce the action to prevent rapid clicks
+    setTimeout(() => {
+      onAddCoach();
+      
+      // Reset action state after a short delay
+      setTimeout(() => {
+        actionInProgressRef.current = false;
+        setIsActionPending(false);
+      }, 500);
+    }, 10);
+  }, [onAddCoach, isActionPending, isRefreshing]);
   
-  const handleEditCoach = (coach: Coach) => {
-    if (isActionPending || isRefreshing) return;
+  // Stabilized edit handler
+  const handleEditCoach = useCallback((coach: Coach) => {
+    if (actionInProgressRef.current || isActionPending || isRefreshing) return;
     
+    actionInProgressRef.current = true;
     setIsActionPending(true);
-    onEditCoach(coach);
     
-    if (actionTimeoutRef.current) {
-      clearTimeout(actionTimeoutRef.current);
-    }
-    
-    actionTimeoutRef.current = window.setTimeout(() => {
-      setIsActionPending(false);
-    }, 500);
-  };
+    // Debounce the action
+    setTimeout(() => {
+      onEditCoach(coach);
+      
+      // Reset action state after a delay
+      setTimeout(() => {
+        actionInProgressRef.current = false;
+        setIsActionPending(false);
+      }, 500);
+    }, 10);
+  }, [onEditCoach, isActionPending, isRefreshing]);
   
-  const handleDeleteCoach = (coach: Coach) => {
-    if (isActionPending || isRefreshing) return;
+  // Stabilized delete handler
+  const handleDeleteCoach = useCallback((coach: Coach) => {
+    if (actionInProgressRef.current || isActionPending || isRefreshing) return;
     
+    actionInProgressRef.current = true;
     setIsActionPending(true);
-    onDeleteCoach(coach);
     
-    if (actionTimeoutRef.current) {
-      clearTimeout(actionTimeoutRef.current);
-    }
-    
-    actionTimeoutRef.current = window.setTimeout(() => {
-      setIsActionPending(false);
-    }, 500);
-  };
+    // Debounce the action
+    setTimeout(() => {
+      onDeleteCoach(coach);
+      
+      // Reset action state after a delay
+      setTimeout(() => {
+        actionInProgressRef.current = false;
+        setIsActionPending(false);
+      }, 500);
+    }, 10);
+  }, [onDeleteCoach, isActionPending, isRefreshing]);
 
   return (
     <Card>

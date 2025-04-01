@@ -109,10 +109,13 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
     };
   }, [formValues, coach, onCoachUpdated, isSubmitting]);
 
-  const handleSubmit = useCallback((values: CoachFormValues) => {
+  // Changed to async to match expected type
+  const handleSubmit = useCallback(async (values: CoachFormValues) => {
     // Just store the values and close the dialog immediately
     setFormValues(values);
     onOpenChange(false);
+    // Return a resolved Promise to satisfy type requirements
+    return Promise.resolve();
   }, [onOpenChange]);
 
   const handleCancel = () => {

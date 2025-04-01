@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Table } from "@/components/ui/table";
 import { Coach } from '@/services/coaches';
 import CoachListHeader from './list/CoachListHeader';
@@ -28,6 +28,8 @@ const CoachList: React.FC<CoachListProps> = ({
   setIsRefreshing
 }) => {
   const { getClinicName } = useClinicNames();
+  const operationInProgressRef = useRef(false);
+  
   const { coaches, isLoading, error, refresh } = useCoachList({ 
     clinicId, 
     limit, 
@@ -39,23 +41,33 @@ const CoachList: React.FC<CoachListProps> = ({
   const showActions = !!onEdit || !!onDelete;
 
   const handleEdit = useCallback((coach: Coach) => {
-    if (onEdit) {
+    if (onEdit && !operationInProgressRef.current) {
+      operationInProgressRef.current = true;
       requestAnimationFrame(() => {
         onEdit(coach);
+        // Restore the ability to edit after a delay
+        setTimeout(() => {
+          operationInProgressRef.current = false;
+        }, 1000);
       });
     }
   }, [onEdit]);
 
   const handleDelete = useCallback((coach: Coach) => {
-    if (onDelete) {
+    if (onDelete && !operationInProgressRef.current) {
+      operationInProgressRef.current = true;
       requestAnimationFrame(() => {
         onDelete(coach);
+        // Restore the ability to delete after a delay
+        setTimeout(() => {
+          operationInProgressRef.current = false;
+        }, 1000);
       });
     }
   }, [onDelete]);
 
-  // Show loading state when initially loading
-  if (isLoading && !isRefreshing) {
+  // Show stable loading state when initially loading
+  if (isLoading && !coaches.length && !isRefreshing) {
     return <CoachListLoader />;
   }
 
@@ -76,6 +88,7 @@ const CoachList: React.FC<CoachListProps> = ({
           onDelete={handleDelete}
           error={error}
           onRetry={refresh}
+          isLoading={isLoading && !isRefreshing}
         />
       </Table>
     </div>
