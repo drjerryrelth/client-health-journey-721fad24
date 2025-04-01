@@ -577,6 +577,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      update_coach: {
+        Args: {
+          coach_id: string
+          coach_name?: string
+          coach_email?: string
+          coach_phone?: string
+          coach_status?: string
+          coach_clinic_id?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
