@@ -12,9 +12,16 @@ interface CoachRowProps {
   getClinicName: (clinicId: string) => string;
   onEdit?: (coach: Coach) => void;
   onDelete?: (coach: Coach) => void;
+  onResetPassword?: (coach: Coach) => void;
 }
 
-const CoachRow: React.FC<CoachRowProps> = ({ coach, getClinicName, onEdit, onDelete }) => {
+const CoachRow: React.FC<CoachRowProps> = ({ 
+  coach, 
+  getClinicName, 
+  onEdit, 
+  onDelete,
+  onResetPassword
+}) => {
   return (
     <TableRow key={coach.id} className="cursor-pointer hover:bg-gray-50">
       <TableCell>
@@ -49,8 +56,13 @@ const CoachRow: React.FC<CoachRowProps> = ({ coach, getClinicName, onEdit, onDel
         <CoachStatusBadge status={coach.status} />
       </TableCell>
       <TableCell>{coach.clients}</TableCell>
-      {(onEdit || onDelete) && (
-        <CoachRowActions coach={coach} onEdit={onEdit} onDelete={onDelete} />
+      {(onEdit || onDelete || onResetPassword) && (
+        <CoachRowActions 
+          coach={coach} 
+          onEdit={onEdit} 
+          onDelete={onDelete}
+          onResetPassword={onResetPassword}
+        />
       )}
     </TableRow>
   );

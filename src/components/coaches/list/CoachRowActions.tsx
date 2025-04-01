@@ -10,10 +10,16 @@ interface CoachRowActionsProps {
   coach: Coach;
   onEdit?: (coach: Coach) => void;
   onDelete?: (coach: Coach) => void;
+  onResetPassword?: (coach: Coach) => void;
 }
 
-const CoachRowActions: React.FC<CoachRowActionsProps> = ({ coach, onEdit, onDelete }) => {
-  if (!onEdit && !onDelete) return null;
+const CoachRowActions: React.FC<CoachRowActionsProps> = ({ 
+  coach, 
+  onEdit, 
+  onDelete,
+  onResetPassword
+}) => {
+  if (!onEdit && !onDelete && !onResetPassword) return null;
   
   return (
     <TableCell>
@@ -28,6 +34,11 @@ const CoachRowActions: React.FC<CoachRowActionsProps> = ({ coach, onEdit, onDele
           {onEdit && (
             <DropdownMenuItem onClick={() => onEdit(coach)}>
               Edit
+            </DropdownMenuItem>
+          )}
+          {onResetPassword && (
+            <DropdownMenuItem onClick={() => onResetPassword(coach)}>
+              Reset Password
             </DropdownMenuItem>
           )}
           {onDelete && (

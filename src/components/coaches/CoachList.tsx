@@ -1,94 +1,49 @@
-
-import React, { useCallback, useRef } from 'react';
+import React from 'react';
 import { Table } from "@/components/ui/table";
-import { Coach } from '@/services/coaches';
-import CoachListHeader from './list/CoachListHeader';
-import CoachListBody from './list/CoachListBody';
-import CoachListLoader from './list/CoachListLoader';
+import { CoachListHeader } from './list/CoachListHeader';
+import { CoachListBody } from './list/CoachListBody';
+import { CoachListLoader } from './list/CoachListLoader';
 import { useClinicNames } from './list/useClinicNames';
-import { useCoachList } from './list/useCoachList';
+import { Coach } from '@/services/coaches';
 
 interface CoachListProps {
-  limit?: number;
-  clinicId?: string;
+  coaches: Coach[];
+  loading?: boolean;
+  error?: string | null;
   onEdit?: (coach: Coach) => void;
   onDelete?: (coach: Coach) => void;
-  refreshTrigger?: number;
-  isRefreshing?: boolean;
-  setIsRefreshing?: (isRefreshing: boolean) => void;
+  onResetPassword?: (coach: Coach) => void;
+  onRetry?: () => void;
 }
 
 const CoachList: React.FC<CoachListProps> = ({ 
-  limit, 
-  clinicId, 
-  onEdit, 
-  onDelete, 
-  refreshTrigger = 0, 
-  isRefreshing = false,
-  setIsRefreshing
+  coaches, 
+  loading = false, 
+  error = null,
+  onEdit,
+  onDelete,
+  onResetPassword,
+  onRetry
 }) => {
   const { getClinicName } = useClinicNames();
-  const operationInProgressRef = useRef(false);
   
-  const { coaches, isLoading, error, refresh } = useCoachList({ 
-    clinicId, 
-    limit, 
-    refreshTrigger, 
-    setIsRefreshing,
-    isRefreshing
-  });
-  
-  const showActions = !!onEdit || !!onDelete;
-
-  const handleEdit = useCallback((coach: Coach) => {
-    if (onEdit && !operationInProgressRef.current) {
-      operationInProgressRef.current = true;
-      requestAnimationFrame(() => {
-        onEdit(coach);
-        // Restore the ability to edit after a delay
-        setTimeout(() => {
-          operationInProgressRef.current = false;
-        }, 1000);
-      });
-    }
-  }, [onEdit]);
-
-  const handleDelete = useCallback((coach: Coach) => {
-    if (onDelete && !operationInProgressRef.current) {
-      operationInProgressRef.current = true;
-      requestAnimationFrame(() => {
-        onDelete(coach);
-        // Restore the ability to delete after a delay
-        setTimeout(() => {
-          operationInProgressRef.current = false;
-        }, 1000);
-      });
-    }
-  }, [onDelete]);
-
-  // Show stable loading state when initially loading
-  if (isLoading && !coaches.length && !isRefreshing) {
+  if (loading) {
     return <CoachListLoader />;
   }
-
+  
   return (
-    <div className="overflow-x-auto relative">
-      {isRefreshing && (
-        <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-          <CoachListLoader message="Refreshing coaches..." />
-        </div>
-      )}
-      
+    <div className="rounded-md border">
       <Table>
-        <CoachListHeader showActions={showActions} />
+        <CoachListHeader />
         <CoachListBody 
-          coaches={coaches}
+          coaches={coaches} 
           getClinicName={getClinicName}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onResetPassword={onResetPassword}
           error={error}
-          onRetry={refresh}
-          isLoading={isLoading && !isRefreshing}
+          onRetry={onRetry}
+          isLoading={loading}
         />
       </Table>
     </div>

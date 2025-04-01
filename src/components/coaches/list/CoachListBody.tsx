@@ -11,6 +11,7 @@ interface CoachListBodyProps {
   getClinicName: (clinicId: string) => string;
   onEdit?: (coach: Coach) => void;
   onDelete?: (coach: Coach) => void;
+  onResetPassword?: (coach: Coach) => void;
   error?: string | null;
   onRetry?: () => void;
   isLoading?: boolean;
@@ -21,11 +22,12 @@ const CoachListBody: React.FC<CoachListBodyProps> = ({
   getClinicName, 
   onEdit, 
   onDelete,
+  onResetPassword,
   error,
   onRetry,
   isLoading = false
 }) => {
-  const showActions = !!onEdit || !!onDelete;
+  const showActions = !!onEdit || !!onDelete || !!onResetPassword;
   const colSpan = showActions ? 7 : 6;
   
   // Handle error state
@@ -79,6 +81,7 @@ const CoachListBody: React.FC<CoachListBodyProps> = ({
           getClinicName={getClinicName}
           onEdit={onEdit}
           onDelete={onDelete}
+          onResetPassword={onResetPassword}
         />
       ))}
     </TableBody>
