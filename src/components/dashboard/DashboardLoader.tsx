@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import ProgramInitializer from '@/services/program-initializer';
 import AdminRoutes from '@/components/routes/AdminRoutes';
 import CoachRoutes from '@/components/routes/CoachRoutes';
@@ -28,19 +28,21 @@ const DashboardLoader = () => {
   }
 
   if (!user) {
+    console.log('DashboardLoader - No user, redirecting to login');
     return <Navigate to="/login" />;
   }
 
-  console.log('Dashboard component - user role:', user.role);
-
+  console.log('DashboardLoader - User role:', user.role);
+  
   // Only render routes specific to the user's role
-  if (hasRole('admin') || hasRole('super_admin')) {
+  if (hasRole(['admin', 'super_admin'])) {
     return <AdminRoutes />;
   } else if (hasRole('coach')) {
     return <CoachRoutes />;
   } else if (hasRole('client')) {
     return <ClientRoutes />;
   } else {
+    console.error('Unknown user role:', user.role);
     return <Unauthorized />;
   }
 };

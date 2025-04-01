@@ -21,18 +21,18 @@ export const useLoginRedirection = () => {
       let destination: string;
       
       if (hasRole(['admin', 'super_admin'])) {
-        destination = '/dashboard';
+        destination = '/admin/dashboard';
       } else if (hasRole('coach')) {
-        destination = '/coach-dashboard';
+        destination = '/coach/dashboard';
       } else if (hasRole('client')) {
-        destination = '/client-dashboard';
+        destination = '/client/dashboard';
       } else {
         toast.error(`Unknown role: ${user.role}`);
         return;
       }
       
       setRedirectDestination(destination);
-      navigate(destination);
+      navigate(destination, { replace: true });
     }
   }, [isAuthenticated, isLoading, hasRole, navigate, user]);
   
