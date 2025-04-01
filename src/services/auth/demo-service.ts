@@ -79,8 +79,12 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
         console.error('Unexpected error updating profile:', err);
       }
     }
+    
+    // Return the role that should be used (even if database update failed)
+    return role;
   } catch (error) {
     console.error('Error handling demo profile:', error);
+    return role; // Return the determined role even if there was an error
   }
 }
 

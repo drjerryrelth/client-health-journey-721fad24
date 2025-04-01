@@ -65,19 +65,15 @@ export const useLoginHandler = () => {
       
       console.log(`Attempting demo login as ${type} with email: ${email}`);
       
+      // Special handling for admin login to ensure admin role
+      if (type === 'admin' && email === 'drrelth@contourlight.com') {
+        console.log('Special admin login flow activated');
+      }
+      
       try {
         // First try to login directly
         await login(email, password);
         console.log('Demo login successful');
-        
-        // Force update the user's role in the profile table to ensure it matches
-        // This helps if the profile was previously created with a different role
-        if (email === 'drrelth@contourlight.com') {
-          // Ensure this admin user always has the admin role
-          console.log('Ensuring admin role is set correctly for demo admin account');
-          
-          // Role updates will happen in the auth session handler via ensureDemoProfileExists
-        }
       } catch (loginError: any) {
         console.log('Login failed, attempting to create demo account', loginError);
         

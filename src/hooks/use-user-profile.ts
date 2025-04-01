@@ -29,8 +29,9 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       client: 'drjerryrelth@gmail.com'
     };
     
-    // Special check first - if this is a demo admin, ensure we return admin role
-    if (email === demoEmails.admin) {
+    // Special check first - if this is a demo admin, we'll need to enforce admin role later
+    const isAdminDemoEmail = email === demoEmails.admin;
+    if (isAdminDemoEmail) {
       console.log('This is the demo admin email - forcing admin role');
     }
     
@@ -61,7 +62,7 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
           id: userId,
           name: clinicData.name || "Clinic User",
           email: email,
-          role: "coach", // Assign coach role for clinic users
+          role: isAdminDemoEmail ? "admin" : "coach", // Force admin role for admin email
           clinicId: clinicData.id,
         };
         
@@ -73,7 +74,7 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
               id: userId,
               full_name: clinicData.name || "Clinic User",
               email: email,
-              role: "coach", // Set role as coach
+              role: isAdminDemoEmail ? "admin" : "coach", // Force admin role for admin email
               clinic_id: clinicData.id,
             });
           
@@ -147,40 +148,41 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
     }
     
     // Special case - handle admin demo email explicitly, overriding any stored role
-    if (email === demoEmails.admin && profile.role !== 'admin') {
-      console.log(`Force updating admin demo account role from ${profile.role} to admin`);
+    if (isAdminDemoEmail) {
+      console.log(`Found existing profile for admin demo account. Current role: ${profile.role}`);
       
+      // ALWAYS return admin role for the admin demo account regardless of what's in the database
+      const adminProfile: UserData = {
+        id: profile.id,
+        name: profile.full_name || 'Admin User',
+        email: profile.email,
+        role: 'admin', // Force admin role
+        clinicId: profile.clinic_id,
+      };
+      
+      // Attempt to update the database as well, but continue even if it fails
       try {
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ role: 'admin' })
+          .update({ role: 'admin', full_name: 'Admin User' })
           .eq('id', userId);
           
         if (updateError) {
-          console.warn('Could not update admin profile role:', updateError.message);
+          console.warn('Could not update admin profile role in database:', updateError.message);
+          console.log('Continuing with admin role in memory');
+        } else {
+          console.log('Admin profile role updated successfully in database');
         }
-        
-        // Return admin role regardless of database update success
-        const adminProfile: UserData = {
-          id: profile.id,
-          name: profile.full_name,
-          email: profile.email,
-          role: 'admin',
-          clinicId: profile.clinic_id,
-        };
-        
-        return adminProfile;
       } catch (updateErr) {
-        console.error('Error during admin profile update:', updateErr);
+        console.error('Error updating admin profile:', updateErr);
       }
+      
+      return adminProfile;
     }
     
     // Validate the role from the database
     let userRole: UserRole;
-    if (email === demoEmails.admin) {
-      // For demo admin, ALWAYS use admin role regardless of what's in the database
-      userRole = 'admin';
-    } else if (profile.role === 'admin' || profile.role === 'coach' || profile.role === 'client' || profile.role === 'super_admin') {
+    if (profile.role === 'admin' || profile.role === 'coach' || profile.role === 'client' || profile.role === 'super_admin') {
       userRole = profile.role as UserRole;
     } else {
       // Default to coach if the role from the database is not valid
