@@ -44,6 +44,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('general');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
   
   const form = useForm<AddClinicFormValues>({
     resolver: zodResolver(addClinicSchema),
@@ -97,7 +98,7 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
       
       console.log('Submitting clinic data:', clinicData);
       
-      const { data: newClinic, error } = await ClinicService.createClinic(clinicData);
+      const { data: newClinic, error, tempPassword: newTempPassword } = await ClinicService.createClinic(clinicData);
 
       if (error) {
         console.error("Error creating clinic:", error);
@@ -110,15 +111,21 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
       }
 
       if (newClinic) {
+        if (newTempPassword) {
+          setTempPassword(newTempPassword);
+        }
+
         toast({
           title: "Clinic Added",
           description: `${values.clinicName} has been added successfully. A coach account has been created using the primary contact information.`
         });
         
-        form.reset();
-        onOpenChange(false);
-        
-        if (onClinicAdded) onClinicAdded();
+        if (!newTempPassword) {
+          form.reset();
+          onOpenChange(false);
+          
+          if (onClinicAdded) onClinicAdded();
+        }
       } else {
         toast({
           title: "Error",
@@ -138,344 +145,403 @@ const AddClinicDialog = ({ open, onOpenChange, onClinicAdded }: AddClinicDialogP
     }
   };
 
+  const handleCloseWithReset = () => {
+    form.reset();
+    setTempPassword(null);
+    onOpenChange(false);
+    if (tempPassword && onClinicAdded) {
+      onClinicAdded();
+    }
+  };
+
+  const showSuccessDialog = !!tempPassword;
+
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) form.reset();
-      onOpenChange(newOpen);
+      if (!newOpen) handleCloseWithReset();
+      else onOpenChange(newOpen);
     }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add New Clinic</DialogTitle>
-          <DialogDescription>
-            Add a new clinic to your organization. A coach will automatically be created using the primary contact information.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmitClinic)}>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="general">General Info</TabsTrigger>
-                <TabsTrigger value="billing">Billing Info</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="general" className="space-y-4 mt-4">
-                <div className="grid gap-4">
-                  <FormField
-                    control={form.control}
-                    name="clinicName"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Name <span className="text-red-500">*</span></FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
+        {showSuccessDialog ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Clinic Created Successfully</DialogTitle>
+              <DialogDescription>
+                The clinic has been added to your organization. An account has been created for the clinic using the provided email.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 mt-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                <h3 className="text-amber-800 font-medium mb-1">Temporary Password</h3>
+                <p className="text-amber-700 text-sm mb-2">
+                  The clinic can log in with the following credentials:
+                </p>
+                <div className="flex items-center justify-between bg-white rounded p-2 border border-amber-200">
+                  <code className="text-sm">{tempPassword}</code>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-8"
+                    onClick={() => {
+                      navigator.clipboard.writeText(tempPassword || '');
+                      toast({
+                        title: "Password copied",
+                        description: "The temporary password has been copied to your clipboard.",
+                      });
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+                <p className="text-amber-700 text-xs mt-2">
+                  Please securely share this password with the clinic. They will be able to change it after logging in.
+                </p>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button onClick={handleCloseWithReset}>
+                Close
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>Add New Clinic</DialogTitle>
+              <DialogDescription>
+                Add a new clinic to your organization. A coach will automatically be created using the primary contact information.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmitClinic)}>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="general">General Info</TabsTrigger>
+                    <TabsTrigger value="billing">Billing Info</TabsTrigger>
+                  </TabsList>
                   
-                  <FormField
-                    control={form.control}
-                    name="primaryContact"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Primary Contact <span className="text-red-500">*</span></FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} placeholder="Main contact person's name" />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
+                  <TabsContent value="general" className="space-y-4 mt-4">
+                    <div className="grid gap-4">
+                      <FormField
+                        control={form.control}
+                        name="clinicName"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Name <span className="text-red-500">*</span></FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="primaryContact"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Primary Contact <span className="text-red-500">*</span></FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} placeholder="Main contact person's name" />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="streetAddress"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Street Address <span className="text-red-500">*</span></FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="streetAddress"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Street Address <span className="text-red-500">*</span></FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">City <span className="text-red-500">*</span></FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">State <span className="text-red-500">*</span></FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="zipCode"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">ZIP Code <span className="text-red-500">*</span></FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="clinicEmail"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Email <span className="text-red-500">*</span></FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} type="email" />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="clinicPhone"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Phone <span className="text-red-500">*</span></FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} type="tel" />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </TabsContent>
                   
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">City <span className="text-red-500">*</span></FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
+                  <TabsContent value="billing" className="space-y-4 mt-4">
+                    <div className="grid gap-4">
+                      <FormField
+                        control={form.control}
+                        name="billingContactName"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Billing Contact</FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="billingEmail"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Billing Email</FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="billingPhone"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Billing Phone</FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} type="tel" />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="billingAddress"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Billing Address</FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="billingCity"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Billing City</FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="billingState"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Billing State</FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="billingZip"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Billing ZIP</FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="paymentMethod"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Payment Method</FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <select
+                                  {...field}
+                                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-10"
+                                >
+                                  <option value="">Select Payment Method</option>
+                                  <option value="Credit Card">Credit Card</option>
+                                  <option value="Bank Transfer">Bank Transfer</option>
+                                  <option value="PayPal">PayPal</option>
+                                  <option value="Check">Check</option>
+                                </select>
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="subscriptionTier"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4">
+                            <FormLabel className="text-right">Subscription Tier</FormLabel>
+                            <div className="col-span-3">
+                              <FormControl>
+                                <select
+                                  {...field}
+                                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-10"
+                                >
+                                  <option value="">Select Subscription</option>
+                                  <option value="Basic">Basic</option>
+                                  <option value="Standard">Standard</option>
+                                  <option value="Premium">Premium</option>
+                                  <option value="Enterprise">Enterprise</option>
+                                </select>
+                              </FormControl>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </TabsContent>
                   
-                  <FormField
-                    control={form.control}
-                    name="state"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">State <span className="text-red-500">*</span></FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="zipCode"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">ZIP Code <span className="text-red-500">*</span></FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="clinicEmail"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Email <span className="text-red-500">*</span></FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} type="email" />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="clinicPhone"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Phone <span className="text-red-500">*</span></FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} type="tel" />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="billing" className="space-y-4 mt-4">
-                <div className="grid gap-4">
-                  <FormField
-                    control={form.control}
-                    name="billingContactName"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing Contact</FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="billingEmail"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing Email</FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="billingPhone"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing Phone</FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} type="tel" />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="billingAddress"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing Address</FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="billingCity"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing City</FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="billingState"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing State</FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="billingZip"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Billing ZIP</FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="paymentMethod"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Payment Method</FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <select
-                              {...field}
-                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-10"
-                            >
-                              <option value="">Select Payment Method</option>
-                              <option value="Credit Card">Credit Card</option>
-                              <option value="Bank Transfer">Bank Transfer</option>
-                              <option value="PayPal">PayPal</option>
-                              <option value="Check">Check</option>
-                            </select>
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="subscriptionTier"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Subscription Tier</FormLabel>
-                        <div className="col-span-3">
-                          <FormControl>
-                            <select
-                              {...field}
-                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-10"
-                            >
-                              <option value="">Select Subscription</option>
-                              <option value="Basic">Basic</option>
-                              <option value="Standard">Standard</option>
-                              <option value="Premium">Premium</option>
-                              <option value="Enterprise">Enterprise</option>
-                            </select>
-                          </FormControl>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
-              
-              <DialogFooter className="mt-6">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => onOpenChange(false)}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Adding...' : 'Add Clinic'}
-                </Button>
-              </DialogFooter>
-            </Tabs>
-          </form>
-        </Form>
+                  <DialogFooter className="mt-6">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => onOpenChange(false)}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? 'Adding...' : 'Add Clinic'}
+                    </Button>
+                  </DialogFooter>
+                </Tabs>
+              </form>
+            </Form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

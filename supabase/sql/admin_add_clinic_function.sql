@@ -96,3 +96,37 @@ END $$;
 
 -- Ensure RLS is enabled on clinics table
 ALTER TABLE public.clinics ENABLE ROW LEVEL SECURITY;
+
+-- Function to add a coach to a clinic (used in mutation-service.ts)
+CREATE OR REPLACE FUNCTION public.add_coach(
+  coach_name TEXT,
+  coach_email TEXT,
+  coach_phone TEXT,
+  coach_status TEXT,
+  coach_clinic_id UUID
+) RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  new_coach_id UUID;
+BEGIN
+  INSERT INTO public.coaches (
+    name,
+    email,
+    phone,
+    status,
+    clinic_id
+  ) VALUES (
+    coach_name,
+    coach_email,
+    coach_phone,
+    coach_status,
+    coach_clinic_id
+  )
+  RETURNING id INTO new_coach_id;
+  
+  RETURN new_coach_id;
+END;
+$$;
