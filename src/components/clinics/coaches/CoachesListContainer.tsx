@@ -41,7 +41,7 @@ const CoachesListContainer: React.FC<CoachesListContainerProps> = ({
         setLoading(true);
         setError(null);
         
-        const clinicCoaches = await CoachService.getCoachesByClinic(clinicId);
+        const clinicCoaches = await CoachService.getClinicCoaches(clinicId);
         setCoaches(clinicCoaches);
       } catch (err) {
         console.error('Error fetching coaches:', err);

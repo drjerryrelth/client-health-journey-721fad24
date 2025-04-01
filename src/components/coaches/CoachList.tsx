@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Table } from "@/components/ui/table";
-import { CoachListHeader } from './list/CoachListHeader';
-import { CoachListBody } from './list/CoachListBody';
-import { CoachListLoader } from './list/CoachListLoader';
+import CoachListHeader from './list/CoachListHeader';
+import CoachListBody from './list/CoachListBody';
+import CoachListLoader from './list/CoachListLoader';
 import { useClinicNames } from './list/useClinicNames';
 import { Coach } from '@/services/coaches';
 
@@ -34,7 +35,7 @@ const CoachList: React.FC<CoachListProps> = ({
   return (
     <div className="rounded-md border">
       <Table>
-        <CoachListHeader />
+        <CoachListHeader showActions={!!(onEdit || onDelete || onResetPassword)} />
         <CoachListBody 
           coaches={coaches} 
           getClinicName={getClinicName}
