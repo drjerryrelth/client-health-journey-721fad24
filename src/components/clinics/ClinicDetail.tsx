@@ -1,194 +1,196 @@
+
 import React, { useState, useCallback } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, AlertCircle, Edit, Trash } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import { Coach } from '@/services/coaches';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 import { Clinic } from '@/services/clinic-service';
-import CoachesTab from '@/components/clinics/CoachesTab';
-import AddCoachDialog from '@/components/coaches/AddCoachDialog';
-import EditCoachDialog from '@/components/coaches/EditCoachDialog';
-import ReassignClientsDialog from '@/components/coaches/ReassignClientsDialog';
-import ClinicDetailsTab from '@/components/clinics/ClinicDetailsTab';
-import EditClinicDialog from '@/components/clinics/EditClinicDialog';
-import { useCoachActions } from '@/hooks/use-coach-actions';
+import EditClinicDialog from './EditClinicDialog';
+import ClinicDetailsTab from './ClinicDetailsTab';
+import CoachesTab from './CoachesTab';
+import { Coach } from '@/services/coaches';
+import { AddCoachDialog } from '@/components/coaches/AddCoachDialog';
+import { EditCoachDialog } from '@/components/coaches/EditCoachDialog';
+import { ReassignClientsDialog } from '@/components/coaches/ReassignClientsDialog';
 
 interface ClinicDetailProps {
   clinic: Clinic;
   onBackClick: () => void;
-  getMockCoaches: () => Coach[];
+  getMockCoaches?: () => any[];
 }
 
 const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps) => {
-  const [activeClinicTab, setActiveClinicTab] = useState('coaches');
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('details');
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAddCoachDialog, setShowAddCoachDialog] = useState(false);
   const [showEditCoachDialog, setShowEditCoachDialog] = useState(false);
   const [showReassignDialog, setShowReassignDialog] = useState(false);
-  const [showEditClinicDialog, setShowEditClinicDialog] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
-  const [replacementCoachId, setReplacementCoachId] = useState<string>('');
-  const [coachListRefreshTrigger, setCoachListRefreshTrigger] = useState(0);
+  const [refreshCoachTrigger, setRefreshCoachTrigger] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  const { handleDeleteCoach, handleReassignAndDelete } = useCoachActions();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const triggerCoachListRefresh = useCallback(() => {
-    window.requestAnimationFrame(() => {
-      setTimeout(() => {
-        setCoachListRefreshTrigger(prev => prev + 1);
-      }, 300);
+  const handleClinicUpdate = () => {
+    toast({
+      title: "Clinic Updated",
+      description: "The clinic information has been updated successfully."
     });
-  }, []);
+    setShowEditDialog(false);
+  };
 
   const handleAddCoach = () => {
     setShowAddCoachDialog(true);
   };
 
   const handleCoachAdded = () => {
-    triggerCoachListRefresh();
+    toast({
+      title: "Coach Added",
+      description: "The coach has been added successfully."
+    });
+    setShowAddCoachDialog(false);
+    
+    // Refresh the coach list
+    setRefreshCoachTrigger(prev => prev + 1);
   };
 
-  const handleEditCoach = (coach: Coach) => {
+  const handleEditCoach = useCallback((coach: Coach) => {
     setSelectedCoach(coach);
     setShowEditCoachDialog(true);
-  };
+  }, []);
 
-  const handleCoachUpdated = () => {
-    window.requestAnimationFrame(() => {
-      setTimeout(() => {
-        triggerCoachListRefresh();
-      }, 300);
+  const handleCoachUpdated = useCallback(() => {
+    toast({
+      title: "Coach Updated",
+      description: "The coach information has been updated successfully."
     });
-  };
+    
+    // Close dialog first for better UX
+    setShowEditCoachDialog(false);
+    
+    // Then refresh the list
+    setTimeout(() => {
+      setRefreshCoachTrigger(prev => prev + 1);
+    }, 100);
+  }, [toast]);
 
-  const handleCoachDelete = (coach: Coach) => {
-    if (coach.clients > 0) {
-      setSelectedCoach(coach);
-      setShowReassignDialog(true);
-    } else {
-      handleDeleteCoach(coach);
-      triggerCoachListRefresh();
-    }
-  };
+  const handleDeleteCoach = useCallback((coach: Coach) => {
+    setSelectedCoach(coach);
+    setShowReassignDialog(true);
+  }, []);
 
-  const handleEditClinic = () => {
-    setShowEditClinicDialog(true);
-  };
-
-  const handleReassignCoachClients = async () => {
-    if (selectedCoach) {
-      await handleReassignAndDelete(selectedCoach.id, replacementCoachId);
-      setShowReassignDialog(false);
-      setReplacementCoachId('');
-      triggerCoachListRefresh();
-    }
-  };
-
-  const availableCoaches = selectedCoach
-    ? getMockCoaches()
-        .filter(coach => coach.clinicId === clinic.id && coach.id !== selectedCoach.id)
-    : [];
+  const handleCoachDeleted = useCallback(() => {
+    toast({
+      title: "Coach Deleted",
+      description: "The coach has been deleted and clients reassigned."
+    });
+    setShowReassignDialog(false);
+    setRefreshCoachTrigger(prev => prev + 1);
+  }, [toast]);
 
   return (
-    <div>
-      <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={onBackClick}
-          className="mr-2 flex items-center gap-1"
-        >
-          <ArrowLeft size={18} />
-          <span>Back to All Clinics</span>
+    <>
+      <div className="mb-4 flex justify-between items-center">
+        <Button variant="outline" onClick={onBackClick} className="flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back to All Clinics
         </Button>
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-bold text-gray-900">{clinic.name}</h1>
-          <div className="flex items-center mt-1">
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(clinic.status)}`}>
-              {clinic.status.toUpperCase()}
-            </span>
-            {clinic.subscriptionTier && (
-              <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                {clinic.subscriptionTier.toUpperCase()}
-              </span>
-            )}
-          </div>
+        
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowEditDialog(true)} className="flex items-center gap-2">
+            <Edit className="h-4 w-4" />
+            Edit Clinic
+          </Button>
         </div>
       </div>
-      
-      <Tabs value={activeClinicTab} onValueChange={setActiveClinicTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="coaches">Coaches</TabsTrigger>
-          <TabsTrigger value="details">Clinic Details</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="coaches">
-          <CoachesTab 
-            clinicName={clinic.name}
-            clinicId={clinic.id}
-            onAddCoach={handleAddCoach}
-            refreshTrigger={coachListRefreshTrigger}
-            onEditCoach={handleEditCoach}
-            onDeleteCoach={handleCoachDelete}
-            isRefreshing={isRefreshing}
-            setIsRefreshing={setIsRefreshing}
-          />
-        </TabsContent>
-        
-        <TabsContent value="details">
-          <ClinicDetailsTab 
-            clinic={clinic}
-            onEditClick={handleEditClinic}
-          />
-        </TabsContent>
-      </Tabs>
 
-      <AddCoachDialog 
-        open={showAddCoachDialog} 
-        onOpenChange={setShowAddCoachDialog} 
-        clinicName={clinic.name}
+      <Card>
+        <CardContent className="pt-6">
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="details">Clinic Details</TabsTrigger>
+              <TabsTrigger value="coaches">Coaches</TabsTrigger>
+              <TabsTrigger value="clients">Clients</TabsTrigger>
+              <TabsTrigger value="billing">Billing</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="details">
+              <ClinicDetailsTab clinic={clinic} />
+            </TabsContent>
+
+            <TabsContent value="coaches">
+              <CoachesTab 
+                clinicName={clinic.name} 
+                clinicId={clinic.id} 
+                clinicEmail={clinic.email}
+                onAddCoach={handleAddCoach}
+                onEditCoach={handleEditCoach}
+                onDeleteCoach={handleDeleteCoach}
+                refreshTrigger={refreshCoachTrigger}
+                isRefreshing={isRefreshing}
+                setIsRefreshing={setIsRefreshing}
+              />
+            </TabsContent>
+            
+            <TabsContent value="clients">
+              <div className="py-12 flex flex-col items-center justify-center text-center space-y-2">
+                <AlertCircle className="h-12 w-12 text-muted-foreground" />
+                <h3 className="text-lg font-medium">Clients Management</h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Client management functionality is coming soon. You will be able to view, add, and manage clients for this clinic.
+                </p>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="billing">
+              <div className="py-12 flex flex-col items-center justify-center text-center space-y-2">
+                <AlertCircle className="h-12 w-12 text-muted-foreground" />
+                <h3 className="text-lg font-medium">Billing Information</h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Detailed billing information and payment management is coming soon. You will be able to manage subscriptions and payments for this clinic.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Edit clinic dialog */}
+      <EditClinicDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        clinicId={clinic.id}
+        onClinicUpdated={handleClinicUpdate}
+      />
+      
+      {/* Add coach dialog */}
+      <AddCoachDialog
+        open={showAddCoachDialog}
+        onOpenChange={setShowAddCoachDialog}
         clinicId={clinic.id}
         onCoachAdded={handleCoachAdded}
       />
-
-      <EditCoachDialog 
-        open={showEditCoachDialog} 
-        onOpenChange={setShowEditCoachDialog} 
-        coach={selectedCoach} 
-        clinicName={clinic.name}
-        onCoachUpdated={handleCoachUpdated}
-      />
-
-      <ReassignClientsDialog 
-        open={showReassignDialog}
-        onOpenChange={setShowReassignDialog}
-        selectedCoach={selectedCoach}
-        availableCoaches={availableCoaches}
-        replacementCoachId={replacementCoachId}
-        setReplacementCoachId={setReplacementCoachId}
-        onReassignAndDelete={handleReassignCoachClients}
-      />
-
-      <EditClinicDialog 
-        open={showEditClinicDialog} 
-        onOpenChange={setShowEditClinicDialog} 
-        clinicId={clinic.id}
-        onClinicUpdated={() => {
-          if (clinic.id) {
-            handleEditClinic();
-          }
-        }}
-      />
-    </div>
+      
+      {/* Edit coach dialog */}
+      {selectedCoach && (
+        <EditCoachDialog
+          open={showEditCoachDialog}
+          onOpenChange={setShowEditCoachDialog}
+          coach={selectedCoach}
+          onCoachUpdated={handleCoachUpdated}
+        />
+      )}
+      
+      {/* Reassign clients dialog */}
+      {selectedCoach && (
+        <ReassignClientsDialog
+          open={showReassignDialog}
+          onOpenChange={setShowReassignDialog}
+          coach={selectedCoach}
+          onClientsReassigned={handleCoachDeleted}
+        />
+      )}
+    </>
   );
 };
 

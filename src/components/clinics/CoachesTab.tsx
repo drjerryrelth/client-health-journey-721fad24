@@ -2,13 +2,15 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Loader2 } from 'lucide-react';
+import { UserPlus, Loader2, Key } from 'lucide-react';
 import CoachList from '@/components/coaches/CoachList';
 import { Coach } from '@/services/coaches';
+import ResetClinicPasswordDialog from './ResetClinicPasswordDialog';
 
 interface CoachesTabProps {
   clinicName: string;
   clinicId: string;
+  clinicEmail?: string;
   onAddCoach: () => void;
   refreshTrigger: number;
   onEditCoach: (coach: Coach) => void;
@@ -19,7 +21,8 @@ interface CoachesTabProps {
 
 const CoachesTab = ({ 
   clinicName, 
-  clinicId, 
+  clinicId,
+  clinicEmail, 
   onAddCoach, 
   refreshTrigger,
   onEditCoach,
@@ -31,6 +34,7 @@ const CoachesTab = ({
   const actionTimeoutRef = useRef<number | null>(null);
   const [isActionPending, setIsActionPending] = useState(false);
   const actionInProgressRef = useRef(false);
+  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
 
   // Stabilized callback to prevent excessive re-renders
   const handleAddCoach = useCallback(() => {
@@ -89,18 +93,36 @@ const CoachesTab = ({
     }, 10);
   }, [onDeleteCoach, isActionPending, isRefreshing]);
 
+  const handlePasswordReset = () => {
+    // Additional actions after password reset if needed
+    console.log('Password reset initiated for clinic:', clinicId);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Coaches at {clinicName}</CardTitle>
-        <Button 
-          onClick={handleAddCoach} 
-          className="flex items-center gap-2"
-          disabled={isRefreshing || isActionPending}
-        >
-          {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus size={18} />}
-          <span>{isRefreshing ? "Processing..." : "Add Coach"}</span>
-        </Button>
+        <div className="flex gap-2">
+          {clinicEmail && (
+            <Button 
+              onClick={() => setShowResetPasswordDialog(true)} 
+              variant="outline"
+              className="flex items-center gap-2"
+              disabled={isRefreshing || isActionPending}
+            >
+              <Key size={18} />
+              <span>Reset Password</span>
+            </Button>
+          )}
+          <Button 
+            onClick={handleAddCoach} 
+            className="flex items-center gap-2"
+            disabled={isRefreshing || isActionPending}
+          >
+            {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus size={18} />}
+            <span>{isRefreshing ? "Processing..." : "Add Coach"}</span>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <CoachList 
@@ -112,6 +134,15 @@ const CoachesTab = ({
           setIsRefreshing={setIsRefreshing}
         />
       </CardContent>
+
+      {clinicEmail && (
+        <ResetClinicPasswordDialog
+          open={showResetPasswordDialog}
+          onOpenChange={setShowResetPasswordDialog}
+          clinicEmail={clinicEmail}
+          onPasswordReset={handlePasswordReset}
+        />
+      )}
     </Card>
   );
 };
