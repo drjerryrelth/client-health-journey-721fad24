@@ -3,6 +3,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types';
 import { toast } from 'sonner';
 
+// Helper function to generate a random secure temporary password
+export const generateTemporaryPassword = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*-_+=';
+  let result = '';
+  // Generate a 12-character password
+  for (let i = 0; i < 12; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
 // Helper function to create a client account with auth credentials for a newly created client
 export const createClientAccountForClient = async (client: Client) => {
   if (!client.name || !client.email) {
@@ -11,8 +22,8 @@ export const createClientAccountForClient = async (client: Client) => {
   }
 
   try {
-    // Generate a temporary password (using "password123" as default for ease of use)
-    const tempPassword = "password123";
+    // Generate a random temporary password
+    const tempPassword = generateTemporaryPassword();
     
     // Create auth user for client using the client's email
     const { data: authData, error: authError } = await supabase.auth.signUp({
