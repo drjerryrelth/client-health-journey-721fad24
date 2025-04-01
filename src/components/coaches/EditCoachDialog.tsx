@@ -37,17 +37,15 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
       setIsSubmitting(true);
       setError(null);
       
-      console.log('Updating coach with values:', values);
-      
       // First close the dialog to prevent UI blocking
       onOpenChange(false);
       
-      // Create a separate promise to handle the update in background
-      const updatePromise = new Promise<void>(async (resolve, reject) => {
+      // Show a loading toast to indicate the update is in progress
+      toast.loading("Updating coach information...");
+      
+      // Update coach in a non-blocking way
+      setTimeout(async () => {
         try {
-          // Add a small delay to ensure UI updates first
-          await new Promise(r => setTimeout(r, 100));
-          
           const result = await CoachService.updateCoach(coach.id, {
             name: values.name,
             email: values.email,
@@ -57,36 +55,38 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
           });
           
           if (result) {
-            // Show success message
-            toast.success(`${values.name}'s information has been updated.`);
+            // Dismiss the loading toast and show success
+            toast.dismiss();
+            toast.success(`${values.name}'s information has been updated`);
             
-            // Notify parent with a delay to prevent UI freezing
+            // Notify parent with delay to prevent UI freezing
             if (onCoachUpdated) {
-              setTimeout(onCoachUpdated, 300);
+              // Use a longer delay to ensure UI has time to update
+              setTimeout(onCoachUpdated, 500);
             }
-            resolve();
           } else {
-            reject(new Error("Failed to update coach information. Please try again."));
+            toast.dismiss();
+            toast.error("Failed to update coach information");
+            setError("Failed to update coach information. Please try again.");
+            setShowErrorDialog(true);
           }
         } catch (err) {
+          toast.dismiss();
           console.error("Error updating coach:", err);
-          reject(err instanceof Error ? err : new Error("An unknown error occurred"));
+          const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+          toast.error(`Update failed: ${errorMessage}`);
+          setError(errorMessage);
+          setShowErrorDialog(true);
         } finally {
           setIsSubmitting(false);
         }
-      });
-      
-      // Handle errors from the update promise
-      updatePromise.catch((err) => {
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
-        setShowErrorDialog(true);
-      });
-      
+      }, 100);
     } catch (error) {
       console.error("Error preparing coach update:", error);
       setError(error instanceof Error ? error.message : "An unknown error occurred");
       setShowErrorDialog(true);
       setIsSubmitting(false);
+      onOpenChange(false);
     }
   }, [coach, onOpenChange, onCoachUpdated]);
 

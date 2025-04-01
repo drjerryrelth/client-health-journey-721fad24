@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Table } from "@/components/ui/table";
 import { Coach } from '@/services/coaches';
 import CoachListHeader from './list/CoachListHeader';
@@ -38,16 +38,18 @@ const CoachList: React.FC<CoachListProps> = ({
   const showActions = !!onEdit || !!onDelete;
 
   // Show custom messaging based on state
-  if (isLoading) {
+  if (isLoading && !isRefreshing) {
     return <CoachListLoader />;
   }
 
-  if (isRefreshing) {
-    return <CoachListLoader message="Refreshing coaches..." />;
-  }
-
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto relative">
+      {isRefreshing && (
+        <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+          <CoachListLoader message="Refreshing coaches..." />
+        </div>
+      )}
+      
       <Table>
         <CoachListHeader showActions={showActions} />
         <CoachListBody 

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -28,6 +27,7 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [replacementCoachId, setReplacementCoachId] = useState<string>('');
   const [coachListRefreshTrigger, setCoachListRefreshTrigger] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const { handleDeleteCoach, handleReassignAndDelete } = useCoachActions();
 
@@ -43,10 +43,11 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   };
 
   const triggerCoachListRefresh = useCallback(() => {
-    // Use setTimeout to prevent UI freezing when refreshing the list
-    setTimeout(() => {
-      setCoachListRefreshTrigger(prev => prev + 1);
-    }, 500);
+    window.requestAnimationFrame(() => {
+      setTimeout(() => {
+        setCoachListRefreshTrigger(prev => prev + 1);
+      }, 300);
+    });
   }, []);
 
   const handleAddCoach = () => {
@@ -63,7 +64,11 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
   };
 
   const handleCoachUpdated = () => {
-    triggerCoachListRefresh();
+    window.requestAnimationFrame(() => {
+      setTimeout(() => {
+        triggerCoachListRefresh();
+      }, 300);
+    });
   };
 
   const handleCoachDelete = (coach: Coach) => {
@@ -134,6 +139,8 @@ const ClinicDetail = ({ clinic, onBackClick, getMockCoaches }: ClinicDetailProps
             refreshTrigger={coachListRefreshTrigger}
             onEditCoach={handleEditCoach}
             onDeleteCoach={handleCoachDelete}
+            isRefreshing={isRefreshing}
+            setIsRefreshing={setIsRefreshing}
           />
         </TabsContent>
         

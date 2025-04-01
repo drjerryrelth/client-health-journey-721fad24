@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Coach, CoachService } from '@/services/coaches';
 import { toast } from 'sonner';
 
@@ -19,6 +19,7 @@ export const useCoachList = ({
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isLoadingRef = useRef(false);
   
   // Use a callback to allow re-triggering the load
   const loadCoaches = useCallback(async () => {
@@ -29,8 +30,15 @@ export const useCoachList = ({
       return;
     }
     
+    // Prevent duplicate requests
+    if (isLoadingRef.current) {
+      console.log('Already loading coaches, skipping duplicate request');
+      return;
+    }
+    
     try {
       // Set loading states
+      isLoadingRef.current = true;
       if (setIsRefreshing) {
         setIsRefreshing(true);
       } else {
@@ -41,9 +49,8 @@ export const useCoachList = ({
       console.log('Loading coaches for clinic:', clinicId);
       const coachesData = await CoachService.getClinicCoaches(clinicId);
       
-      // Use requestAnimationFrame to ensure UI updates before state changes
-      requestAnimationFrame(() => {
-        console.log('Coaches loaded:', coachesData);
+      // Update state without blocking the UI
+      window.requestAnimationFrame(() => {
         setCoaches(coachesData);
         
         // Use setTimeout to ensure UI updates smoothly
@@ -52,6 +59,7 @@ export const useCoachList = ({
             setIsRefreshing(false);
           }
           setIsLoading(false);
+          isLoadingRef.current = false;
         }, 300);
       });
     } catch (error) {
@@ -68,6 +76,7 @@ export const useCoachList = ({
           setIsRefreshing(false);
         }
         setIsLoading(false);
+        isLoadingRef.current = false;
       }, 300);
     }
   }, [clinicId, setIsRefreshing]);
@@ -75,11 +84,11 @@ export const useCoachList = ({
   // Load coaches when dependencies change
   useEffect(() => {
     let isMounted = true;
+    const controller = new AbortController();
     
-    // Create a wrapper function to respect the mounted state
     const safeLoadCoaches = async () => {
       try {
-        if (!clinicId) {
+        if (!clinicId || !isMounted) {
           if (isMounted) {
             setCoaches([]);
             setIsLoading(false);
@@ -102,13 +111,22 @@ export const useCoachList = ({
         const coachesData = await CoachService.getClinicCoaches(clinicId);
         
         if (isMounted) {
-          console.log('Coaches loaded:', coachesData);
-          
-          // Use requestAnimationFrame to schedule UI updates
-          requestAnimationFrame(() => {
+          // Use RAF to schedule UI updates
+          window.requestAnimationFrame(() => {
             if (isMounted) {
               setCoaches(coachesData);
               setError(null);
+              
+              // Use setTimeout to ensure UI updates smoothly
+              setTimeout(() => {
+                if (isMounted) {
+                  if (setIsRefreshing) {
+                    setIsRefreshing(false);
+                  }
+                  setIsLoading(false);
+                  isLoadingRef.current = false;
+                }
+              }, 300);
             }
           });
         }
@@ -119,25 +137,26 @@ export const useCoachList = ({
           if (!setIsRefreshing) {
             toast.error("Error loading coaches. Please try again.");
           }
-        }
-      } finally {
-        // Use setTimeout to ensure UI updates smoothly
-        setTimeout(() => {
-          if (isMounted) {
-            if (setIsRefreshing) {
-              setIsRefreshing(false);
+          
+          setTimeout(() => {
+            if (isMounted) {
+              if (setIsRefreshing) {
+                setIsRefreshing(false);
+              }
+              setIsLoading(false);
+              isLoadingRef.current = false;
             }
-            setIsLoading(false);
-          }
-        }, 300);
+          }, 300);
+        }
       }
     };
 
     safeLoadCoaches();
     
-    // Cleanup function to prevent state updates after unmount
     return () => {
       isMounted = false;
+      controller.abort();
+      isLoadingRef.current = false;
     };
   }, [clinicId, refreshTrigger, setIsRefreshing]);
 

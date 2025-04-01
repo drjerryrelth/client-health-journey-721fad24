@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
@@ -13,6 +13,8 @@ interface CoachesTabProps {
   refreshTrigger: number;
   onEditCoach: (coach: Coach) => void;
   onDeleteCoach: (coach: Coach) => void;
+  isRefreshing?: boolean;
+  setIsRefreshing?: (isRefreshing: boolean) => void;
 }
 
 const CoachesTab = ({ 
@@ -21,10 +23,10 @@ const CoachesTab = ({
   onAddCoach, 
   refreshTrigger,
   onEditCoach,
-  onDeleteCoach
+  onDeleteCoach,
+  isRefreshing,
+  setIsRefreshing
 }: CoachesTabProps) => {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
