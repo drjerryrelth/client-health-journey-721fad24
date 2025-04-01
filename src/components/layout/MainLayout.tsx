@@ -31,10 +31,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'coac
   
   // Check role permissions with improved logging
   console.log('MainLayout - User role:', user?.role);
+  console.log('MainLayout - User clinicId:', user?.clinicId);
   console.log('MainLayout - Required roles:', requiredRoles);
   
+  // Special case for clinic admins - convert to clinic_admin role check
+  const adjustedRoles = requiredRoles.map(role => {
+    if (role === 'admin' && user?.role === 'admin' && user?.clinicId) {
+      return 'clinic_admin';
+    }
+    return role;
+  });
+  
   // Check if user has ANY of the required roles (OR logic, not AND)
-  const hasPermission = requiredRoles.some(role => hasRole(role));
+  const hasPermission = adjustedRoles.some(role => hasRole(role));
   console.log('MainLayout - Has permission:', hasPermission);
   
   if (!hasPermission) {

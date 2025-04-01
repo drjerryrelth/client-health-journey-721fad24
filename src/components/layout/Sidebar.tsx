@@ -7,7 +7,7 @@ import { useAuth } from "@/context/auth";
 import { BookMarked, Menu, X } from "lucide-react";
 import SidebarNav from "./sidebar/SidebarNav";
 import SidebarProfile from "./sidebar/SidebarProfile";
-import { adminNavItems } from "./sidebar/AdminNavItems";
+import { adminNavItems, clinicAdminNavItems } from "./sidebar/AdminNavItems";
 import { coachNavItems } from "./sidebar/CoachNavItems";
 import { clientNavItems } from "./sidebar/ClientNavItems";
 
@@ -24,8 +24,14 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
 
   let navItems = clientNavItems;
 
-  if (hasRole("admin") || hasRole("super_admin")) {
+  // Determine if this is a clinic admin (admin with clinicId)
+  const isClinicAdmin = user.role === 'admin' && user.clinicId !== undefined;
+  const isSystemAdmin = (user.role === 'admin' && !user.clinicId) || user.role === 'super_admin';
+  
+  if (isSystemAdmin) {
     navItems = adminNavItems;
+  } else if (isClinicAdmin) {
+    navItems = clinicAdminNavItems;
   } else if (hasRole("coach")) {
     navItems = coachNavItems;
   }
@@ -50,7 +56,11 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
         )}
       </div>
       <SidebarNav items={navItems} onClose={isMobile ? onClose : undefined} />
-      <SidebarProfile user={user} onLogout={logout} />
+      <SidebarProfile 
+        user={user} 
+        onLogout={logout} 
+        userRole={isClinicAdmin ? "Clinic Admin" : user.role}
+      />
     </div>
   );
 }

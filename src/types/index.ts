@@ -1,6 +1,6 @@
 import { ProfileRow, ClientRow, ProgramRow, SupplementRow, CheckInRow, ClinicRow } from './database';
 
-export type UserRole = 'admin' | 'coach' | 'client' | 'super_admin';
+export type UserRole = 'admin' | 'super_admin' | 'coach' | 'client' | 'clinic_admin';
 
 export interface User {
   id: string;

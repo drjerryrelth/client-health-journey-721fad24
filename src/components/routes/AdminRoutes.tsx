@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ClientsPage from '@/pages/admin/ClientsPage';
@@ -16,8 +16,46 @@ import AdminUsersPage from '@/pages/admin/AdminUsersPage';
 import ClinicCustomizationPage from '@/pages/admin/ClinicCustomizationPage';
 import MealPlanGenerator from '@/pages/MealPlanGenerator';
 import NotFound from '@/pages/NotFound';
+import { useAuth } from '@/context/auth';
 
 const AdminRoutes = () => {
+  const { user, hasRole } = useAuth();
+  
+  // Check if the user is a clinic admin (admin with clinicId) vs system admin
+  const isClinicAdmin = user?.role === 'admin' && user?.clinicId !== undefined;
+  const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+
+  // If clinic admin, redirect to the clinic-specific dashboard
+  if (isClinicAdmin) {
+    return (
+      <Routes>
+        <Route element={<MainLayout requiredRoles={['clinic_admin', 'admin']} />}>
+          {/* Clinic admin can only see their own clinic */}
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="clients" element={<ClientsPage />} />
+          <Route path="coaches" element={<CoachesPage />} />
+          <Route path="programs" element={<ProgramsPage />} />
+          <Route path="check-ins" element={<CheckInsPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="activities" element={<ActivitiesPage />} />
+          <Route path="resources" element={<ResourcesPage />} />
+          <Route path="clinic-customization" element={<ClinicCustomizationPage />} />
+          <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
+          <Route path="settings" element={<SettingsPage />} />
+          
+          {/* Clinic admins shouldn't access these routes */}
+          <Route path="clinics" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="admin-users" element={<Navigate to="/admin/dashboard" replace />} />
+          
+          {/* Catch all route */}
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    );
+  }
+  
+  // System admin routes (original behavior)
   return (
     <Routes>
       <Route element={<MainLayout />}>

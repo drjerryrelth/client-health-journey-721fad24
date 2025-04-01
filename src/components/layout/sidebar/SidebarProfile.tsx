@@ -7,9 +7,13 @@ import { UserData } from "@/types/auth";
 interface SidebarProfileProps {
   user: UserData;
   onLogout: () => Promise<void>;
+  userRole?: string;
 }
 
-const SidebarProfile: React.FC<SidebarProfileProps> = ({ user, onLogout }) => {
+const SidebarProfile: React.FC<SidebarProfileProps> = ({ user, onLogout, userRole }) => {
+  // Display the provided userRole if available, otherwise capitalize the user's role
+  const displayRole = userRole || (user.role.charAt(0).toUpperCase() + user.role.slice(1));
+  
   return (
     <div className="mt-auto p-4 border-t">
       <div className="flex items-center gap-3 mb-4">
@@ -18,7 +22,7 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({ user, onLogout }) => {
         </div>
         <div>
           <p className="text-sm font-medium">{user.name}</p>
-          <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+          <p className="text-xs text-muted-foreground capitalize">{displayRole}</p>
         </div>
       </div>
       <Button
