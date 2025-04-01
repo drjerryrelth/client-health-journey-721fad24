@@ -20,11 +20,17 @@ export const useLoginRedirection = () => {
       // Determine redirect destination based on role
       let destination: string;
       
-      if (hasRole(['admin', 'super_admin'])) {
+      // Check if this is a clinic admin (admin with clinicId)
+      const isClinicAdmin = user.role === 'admin' && user.clinicId !== undefined;
+      
+      if ((user.role === 'admin' && !user.clinicId) || user.role === 'super_admin') {
         destination = '/admin/dashboard';
-      } else if (hasRole('coach')) {
+      } else if (isClinicAdmin) {
+        // Clinic admins go to admin dashboard too, but will see limited options
+        destination = '/admin/dashboard';
+      } else if (user.role === 'coach') {
         destination = '/coach/dashboard';
-      } else if (hasRole('client')) {
+      } else if (user.role === 'client') {
         destination = '/client/dashboard';
       } else {
         toast.error(`Unknown role: ${user.role}`);

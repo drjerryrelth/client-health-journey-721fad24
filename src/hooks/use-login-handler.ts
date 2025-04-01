@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/context/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -61,14 +62,13 @@ export const useLoginHandler = () => {
         case 'super_admin':
           fullName = 'Super Admin User';
           break;
+        case 'clinic_admin':
+          role = 'admin'; // For clinic_admin, we still use 'admin' role but with a clinicId
+          fullName = 'Clinic Admin User';
+          break;
       }
       
       console.log(`Attempting demo login as ${type} with email: ${email}`);
-      
-      // Special handling for admin login to ensure admin role
-      if (type === 'admin' && email === 'drrelth@contourlight.com') {
-        console.log('Special admin login flow activated');
-      }
       
       try {
         // First try to login directly

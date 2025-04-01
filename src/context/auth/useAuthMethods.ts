@@ -94,7 +94,7 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       return false;
     }
     
-    // Special case: if user role is "admin" but email contains clinic domain, they're clinic_admin
+    // Special case: if user role is "admin" but has clinicId, they're clinic_admin
     const isClinicAdmin = user.role === 'admin' && user.clinicId !== undefined;
     const isSystemAdmin = user.role === 'admin' && !isClinicAdmin;
     const isSuperAdmin = user.role === 'super_admin';
@@ -116,7 +116,9 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     // For other roles, standard role check
     if (Array.isArray(requiredRole)) {
       const hasAnyRole = requiredRole.some(role => {
+        // Fixing this comparison to handle 'admin' role correctly
         if (role === 'admin') return isSystemAdmin || isSuperAdmin;
+        if (role === 'clinic_admin') return isClinicAdmin;
         return user.role === role;
       });
       console.log(`User has any of [${requiredRole.join(', ')}]?`, hasAnyRole);
@@ -125,6 +127,8 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     
     // Single role check
     if (requiredRole === 'admin') return isSystemAdmin || isSuperAdmin;
+    if (requiredRole === 'clinic_admin') return isClinicAdmin;
+    
     const hasSpecificRole = user.role === requiredRole;
     console.log(`User has role ${requiredRole}?`, hasSpecificRole);
     return hasSpecificRole;
