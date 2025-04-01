@@ -17,13 +17,14 @@ export type Client = {
   email: string;
   phone?: string | null;
   programId?: string | null;
-  programCategory?: 'A' | 'B' | 'C' | null; // Added program category for Practice Naturals
+  programCategory?: 'A' | 'B' | 'C' | null; 
   startDate: string;
   lastCheckIn?: string | null;
   notes?: string | null;
   profileImage?: string | null;
   clinicId: string;
   coachId?: string | null;
+  tempPassword?: string; // Added temp password field for newly created clients
 };
 
 export type Program = {

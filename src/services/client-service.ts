@@ -1,8 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Client, mapDbClientToClient, mapClientToDbClient } from '@/types';
 import { ClientRow } from '@/types/database';
 import { toast } from 'sonner';
+import { createClient, updateClient, deleteClient } from './clients/mutations';
 
 export const ClientService = {
   // Fetch all clients for a specific clinic
@@ -46,74 +46,13 @@ export const ClientService = {
   },
   
   // Create a new client
-  async createClient(client: Omit<Client, 'id'>): Promise<Client> {
-    try {
-      const dbClient = mapClientToDbClient(client);
-      
-      const { data, error } = await supabase
-        .from('clients')
-        .insert([dbClient])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      return mapDbClientToClient(data as ClientRow);
-    } catch (error) {
-      console.error('Error creating client:', error);
-      throw error;
-    }
-  },
+  createClient,
   
   // Update an existing client
-  async updateClient(clientId: string, updates: Partial<Client>): Promise<Client> {
-    try {
-      // Convert any client fields to DB format
-      const dbUpdates: Partial<ClientRow> = {};
-      
-      if (updates.name) dbUpdates.name = updates.name;
-      if (updates.email) dbUpdates.email = updates.email;
-      if ('phone' in updates) dbUpdates.phone = updates.phone || null;
-      if ('programId' in updates) dbUpdates.program_id = updates.programId || null;
-      if ('programCategory' in updates) dbUpdates.program_category = updates.programCategory || null;
-      if (updates.startDate) dbUpdates.start_date = updates.startDate;
-      if ('lastCheckIn' in updates) dbUpdates.last_check_in = updates.lastCheckIn || null;
-      if ('notes' in updates) dbUpdates.notes = updates.notes || null;
-      if ('profileImage' in updates) dbUpdates.profile_image = updates.profileImage || null;
-      if (updates.clinicId) dbUpdates.clinic_id = updates.clinicId;
-      if ('userId' in updates) dbUpdates.user_id = updates.userId || null;
-      if ('coachId' in updates) dbUpdates.coach_id = updates.coachId || null;
-      
-      const { data, error } = await supabase
-        .from('clients')
-        .update(dbUpdates)
-        .eq('id', clientId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      return mapDbClientToClient(data as ClientRow);
-    } catch (error) {
-      console.error('Error updating client:', error);
-      throw error;
-    }
-  },
+  updateClient,
   
   // Delete a client
-  async deleteClient(clientId: string): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', clientId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting client:', error);
-      throw error;
-    }
-  }
+  deleteClient
 };
 
 // Mock data for fallback when API calls fail

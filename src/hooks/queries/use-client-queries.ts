@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { ClientService } from '@/services/client-service';
 import { Client } from '@/types';
+import { toast } from 'sonner';
 
 // Client Queries
 export const useClientsQuery = (clinicId?: string) => {
@@ -30,9 +31,21 @@ export const useCreateClientMutation = () => {
   return useMutation({
     mutationFn: (newClient: Omit<Client, 'id'>) => 
       ClientService.createClient(newClient),
-    onSuccess: (data, variables) => {
+    onSuccess: (result, variables) => {
       // Update clients query cache
       queryClient.invalidateQueries({ queryKey: ['clients', variables.clinicId] });
+      
+      // Show success toast with temp password if available
+      if (result.data) {
+        if (result.tempPassword) {
+          toast.success(
+            `Client ${result.data.name} created successfully. Temporary password: ${result.tempPassword}`, 
+            { duration: 10000 }
+          );
+        } else {
+          toast.success(`Client ${result.data.name} created successfully`);
+        }
+      }
     },
   });
 };
@@ -45,8 +58,8 @@ export const useUpdateClientMutation = () => {
       ClientService.updateClient(clientId, updates),
     onSuccess: (data) => {
       // Update both the client and clients queries
-      queryClient.invalidateQueries({ queryKey: ['client', data.id] });
-      queryClient.invalidateQueries({ queryKey: ['clients', data.clinicId] });
+      queryClient.invalidateQueries({ queryKey: ['client', data.data?.id] });
+      queryClient.invalidateQueries({ queryKey: ['clients', data.data?.clinicId] });
     },
   });
 };

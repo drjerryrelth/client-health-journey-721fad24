@@ -28,10 +28,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCreateClientMutation } from '@/hooks/queries/use-client-queries';
 import { useAuth } from '@/context/AuthContext';
 import { Program } from '@/types';
 import { useProgramsQuery } from '@/hooks/queries/use-program-queries';
+import { toast } from 'sonner';
 
 // Form schema with validation
 const formSchema = z.object({
@@ -53,8 +55,9 @@ interface AddClientDialogProps {
 
 const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange }) => {
   const { user } = useAuth();
-  const { mutate: createClient, isPending } = useCreateClientMutation();
+  const { mutate: createClient, isPending, data: creationResult } = useCreateClientMutation();
   const [selectedProgramType, setSelectedProgramType] = useState<string | null>(null);
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
   
   // Get all programs for the clinic
   const { data: programs = [] } = useProgramsQuery(user?.clinicId);
@@ -98,14 +101,25 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange })
       clinicId: user.clinicId,
       coachId: user.role === 'coach' ? user.id : null,
     }, {
-      onSuccess: () => {
-        onOpenChange(false);
+      onSuccess: (result) => {
+        if (result.tempPassword) {
+          setTempPassword(result.tempPassword);
+        } else {
+          onOpenChange(false);
+        }
       },
     });
   };
 
+  // Close the dialog and reset temp password
+  const handleClose = () => {
+    setTempPassword(null);
+    onOpenChange(false);
+    form.reset();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={tempPassword ? undefined : onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
@@ -114,149 +128,178 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange })
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Client Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="Email address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone (optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Phone number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="programId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Program</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a program" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="">No program</SelectItem>
-                      {programs.map((program: Program) => (
-                        <SelectItem key={program.id} value={program.id}>
-                          {program.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {selectedProgramType === 'practice_naturals' && (
+        {tempPassword ? (
+          <>
+            <div className="py-4">
+              <Alert className="bg-green-50 border-green-200">
+                <AlertDescription>
+                  <div className="flex flex-col gap-2">
+                    <p><strong>Client created successfully!</strong></p>
+                    <p>An account has been created for this client with the following details:</p>
+                    <p><strong>Username:</strong> {form.getValues('email')}</p>
+                    <p><strong>Temporary Password:</strong> {tempPassword}</p>
+                    <p className="text-sm mt-2">
+                      The client will be prompted to change this password when they first log in.
+                      Please share these credentials with them.
+                    </p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </div>
+            <DialogFooter>
+              <Button 
+                onClick={handleClose}
+                className="w-full"
+              >
+                Done
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="programCategory"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Program Category</FormLabel>
+                    <FormLabel>Client Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Full name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="Email address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Phone number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="programId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Program</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
+                          <SelectValue placeholder="Select a program" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="A">Category A - Small Portions</SelectItem>
-                        <SelectItem value="B">Category B - Medium Portions</SelectItem>
-                        <SelectItem value="C">Category C - Large Portions</SelectItem>
+                        <SelectItem value="">No program</SelectItem>
+                        {programs.map((program: Program) => (
+                          <SelectItem key={program.id} value={program.id}>
+                            {program.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
 
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              {selectedProgramType === 'practice_naturals' && (
+                <FormField
+                  control={form.control}
+                  name="programCategory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Program Category</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="A">Category A - Small Portions</SelectItem>
+                          <SelectItem value="B">Category B - Medium Portions</SelectItem>
+                          <SelectItem value="C">Category C - Large Portions</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
 
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Additional notes" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? 'Adding...' : 'Add Client'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Additional notes" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? 'Adding...' : 'Add Client'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   );
