@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CoachForm, CoachFormValues } from './CoachForm';
 import ErrorDialog from './ErrorDialog';
@@ -18,6 +18,7 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [formValues, setFormValues] = useState<CoachFormValues | null>(null);
 
   // Prepare default values for the form
   const defaultValues = coach ? {
@@ -30,30 +31,41 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
     phone: ''
   };
 
-  const handleSubmit = useCallback(async (values: CoachFormValues) => {
-    if (!coach) return;
+  // Reset state when dialog opens or closes
+  useEffect(() => {
+    if (!open) {
+      // Small delay to avoid state updates during unmount
+      setTimeout(() => {
+        setFormValues(null);
+        setError(null);
+      }, 300);
+    }
+  }, [open]);
+
+  // Process update completely separate from the dialog
+  useEffect(() => {
+    let isMounted = true;
+    let updateTimeoutId: number | null = null;
     
-    try {
-      // First close the dialog immediately to prevent UI blocking
-      onOpenChange(false);
+    const processUpdate = async () => {
+      if (!formValues || !coach) return;
       
-      // Show a loading toast to indicate the update is in progress
-      const toastId = toast.loading("Updating coach information...");
-      
-      // Process the update in the background
-      setTimeout(async () => {
-        try {
-          const result = await CoachService.updateCoach(coach.id, {
-            name: values.name,
-            email: values.email,
-            phone: values.phone,
-            clinicId: coach.clinicId,
-            status: coach.status
-          });
-          
+      try {
+        // Show a loading toast to indicate the update is in progress
+        const toastId = toast.loading("Updating coach information...");
+        
+        const result = await CoachService.updateCoach(coach.id, {
+          name: formValues.name,
+          email: formValues.email,
+          phone: formValues.phone,
+          clinicId: coach.clinicId,
+          status: coach.status
+        });
+        
+        if (isMounted) {
           if (result) {
             toast.dismiss(toastId);
-            toast.success(`${values.name}'s information has been updated`);
+            toast.success(`${formValues.name}'s information has been updated`);
             
             // Notify parent component of the update with a delay
             if (onCoachUpdated) {
@@ -65,25 +77,43 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
             setError("Failed to update coach information. Please try again.");
             setShowErrorDialog(true);
           }
-        } catch (err) {
-          toast.dismiss(toastId);
+          
+          // Reset submission state
+          setIsSubmitting(false);
+          setFormValues(null);
+        }
+      } catch (err) {
+        if (isMounted) {
           console.error("Error updating coach:", err);
           const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
           toast.error(`Update failed: ${errorMessage}`);
           setError(errorMessage);
           setShowErrorDialog(true);
-        } finally {
           setIsSubmitting(false);
         }
-      }, 100);
-    } catch (error) {
-      console.error("Error preparing coach update:", error);
-      setError(error instanceof Error ? error.message : "An unknown error occurred");
-      setShowErrorDialog(true);
-      setIsSubmitting(false);
-      onOpenChange(false);
+      }
+    };
+    
+    if (formValues && !isSubmitting) {
+      // Ensure we're not in the middle of a React render cycle
+      updateTimeoutId = window.setTimeout(() => {
+        processUpdate();
+      }, 50);
     }
-  }, [coach, onOpenChange, onCoachUpdated]);
+    
+    return () => {
+      isMounted = false;
+      if (updateTimeoutId) {
+        clearTimeout(updateTimeoutId);
+      }
+    };
+  }, [formValues, coach, onCoachUpdated, isSubmitting]);
+
+  const handleSubmit = useCallback((values: CoachFormValues) => {
+    // Just store the values and close the dialog immediately
+    setFormValues(values);
+    onOpenChange(false);
+  }, [onOpenChange]);
 
   const handleCancel = () => {
     onOpenChange(false);

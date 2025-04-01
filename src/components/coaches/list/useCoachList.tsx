@@ -8,18 +8,21 @@ interface UseCoachListProps {
   limit?: number;
   refreshTrigger?: number;
   setIsRefreshing?: (isRefreshing: boolean) => void;
+  isRefreshing?: boolean;
 }
 
 export const useCoachList = ({ 
   clinicId, 
   limit, 
   refreshTrigger = 0,
-  setIsRefreshing
+  setIsRefreshing,
+  isRefreshing = false
 }: UseCoachListProps) => {
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isLoadingRef = useRef(false);
+  const requestIdRef = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
   
   // Use a callback to allow re-triggering the load
@@ -27,7 +30,7 @@ export const useCoachList = ({
     if (!clinicId) {
       setCoaches([]);
       setIsLoading(false);
-      if (setIsRefreshing) setIsRefreshing(false);
+      if (setIsRefreshing && isRefreshing) setIsRefreshing(false);
       return;
     }
     
@@ -36,6 +39,9 @@ export const useCoachList = ({
       console.log('Already loading coaches, skipping duplicate request');
       return;
     }
+    
+    // Generate unique request ID for this call
+    const currentRequestId = ++requestIdRef.current;
     
     try {
       // Set loading states
@@ -50,14 +56,20 @@ export const useCoachList = ({
       console.log('Loading coaches for clinic:', clinicId);
       const coachesData = await CoachService.getClinicCoaches(clinicId);
       
+      // Check if this is still the most recent request
+      if (currentRequestId !== requestIdRef.current) {
+        console.log('Newer request in progress, discarding results');
+        return;
+      }
+      
       // Check if operation was aborted
       if (signal?.aborted) {
         console.log('Coach loading aborted');
         return;
       }
 
-      // Update state with a non-blocking approach
-      window.requestAnimationFrame(() => {
+      // Schedule UI update in next animation frame
+      requestAnimationFrame(() => {
         setCoaches(coachesData);
         
         // Use setTimeout to ensure UI updates smoothly
@@ -70,6 +82,11 @@ export const useCoachList = ({
         }, 100);
       });
     } catch (error) {
+      // Check if this is still the most recent request
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+      
       // Check if operation was aborted
       if (signal?.aborted) {
         console.log('Coach loading aborted due to cleanup');
@@ -77,22 +94,26 @@ export const useCoachList = ({
       }
       
       console.error('Error loading coaches:', error);
-      setError('Failed to load coaches. Please try again.');
       
-      if (!setIsRefreshing) {
-        toast.error("Error loading coaches. Please try again.");
-      }
-      
-      // Ensure loading states are reset even on error
-      setTimeout(() => {
-        if (setIsRefreshing) {
-          setIsRefreshing(false);
+      // Schedule error state update
+      requestAnimationFrame(() => {
+        setError('Failed to load coaches. Please try again.');
+        
+        if (!setIsRefreshing) {
+          toast.error("Error loading coaches. Please try again.");
         }
-        setIsLoading(false);
-        isLoadingRef.current = false;
-      }, 100);
+        
+        // Ensure loading states are reset even on error
+        setTimeout(() => {
+          if (setIsRefreshing) {
+            setIsRefreshing(false);
+          }
+          setIsLoading(false);
+          isLoadingRef.current = false;
+        }, 100);
+      });
     }
-  }, [clinicId, setIsRefreshing]);
+  }, [clinicId, setIsRefreshing, isRefreshing]);
 
   // Load coaches when dependencies change
   useEffect(() => {
@@ -105,10 +126,14 @@ export const useCoachList = ({
     abortControllerRef.current = new AbortController();
     const { signal } = abortControllerRef.current;
     
-    loadCoaches(signal);
+    // Schedule loading in next frame for better UI responsiveness
+    const frameId = requestAnimationFrame(() => {
+      loadCoaches(signal);
+    });
     
     return () => {
       // Clean up on unmount or when dependencies change
+      cancelAnimationFrame(frameId);
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -118,10 +143,17 @@ export const useCoachList = ({
 
   const displayedCoaches = limit ? coaches.slice(0, limit) : coaches;
 
+  // Create a non-blocking refresh function
+  const refresh = useCallback(() => {
+    requestAnimationFrame(() => {
+      loadCoaches();
+    });
+  }, [loadCoaches]);
+
   return {
     coaches: displayedCoaches,
     isLoading,
     error,
-    refresh: () => loadCoaches()
+    refresh
   };
 };

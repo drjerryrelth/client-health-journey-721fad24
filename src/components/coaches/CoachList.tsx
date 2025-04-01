@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Table } from "@/components/ui/table";
 import { Coach } from '@/services/coaches';
 import CoachListHeader from './list/CoachListHeader';
@@ -32,10 +32,27 @@ const CoachList: React.FC<CoachListProps> = ({
     clinicId, 
     limit, 
     refreshTrigger, 
-    setIsRefreshing 
+    setIsRefreshing,
+    isRefreshing
   });
   
   const showActions = !!onEdit || !!onDelete;
+
+  const handleEdit = useCallback((coach: Coach) => {
+    if (onEdit) {
+      requestAnimationFrame(() => {
+        onEdit(coach);
+      });
+    }
+  }, [onEdit]);
+
+  const handleDelete = useCallback((coach: Coach) => {
+    if (onDelete) {
+      requestAnimationFrame(() => {
+        onDelete(coach);
+      });
+    }
+  }, [onDelete]);
 
   // Show loading state when initially loading
   if (isLoading && !isRefreshing) {
@@ -55,8 +72,8 @@ const CoachList: React.FC<CoachListProps> = ({
         <CoachListBody 
           coaches={coaches}
           getClinicName={getClinicName}
-          onEdit={onEdit}
-          onDelete={onDelete}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
           error={error}
           onRetry={refresh}
         />
