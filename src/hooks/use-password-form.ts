@@ -6,7 +6,6 @@ import { z } from 'zod';
 
 // Password form schema
 export const passwordSchema = z.object({
-  currentPassword: z.string().min(6, { message: "Current password is required" }),
   newPassword: z.string().min(8, { message: "Password must be at least 8 characters" }),
   confirmPassword: z.string().min(8, { message: "Password must be at least 8 characters" })
 }).refine(data => data.newPassword === data.confirmPassword, {
