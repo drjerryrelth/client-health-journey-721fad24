@@ -1,7 +1,7 @@
 
 // Demo email addresses used throughout the application
 export const demoEmails = {
-  admin: 'admin@example.com', // Changed to a universally accepted test domain
+  admin: 'admin@clienthealthtracker.com', // Restored to original working email
   coach: 'support@practicenaturals.com',
   client: 'drjerryrelth@gmail.com'
 };
