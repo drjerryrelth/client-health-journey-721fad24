@@ -128,11 +128,11 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     }
     
     // Single role check - handle each specific case
-    if (requiredRole === 'admin') {
+    if (requiredRole === 'admin' as UserRole) {
       return isSystemAdmin || isSuperAdmin;
     }
     
-    if (requiredRole === 'clinic_admin') {
+    if (requiredRole === 'clinic_admin' as UserRole) {
       return isClinicAdmin;
     }
     

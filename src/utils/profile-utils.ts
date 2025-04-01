@@ -34,6 +34,18 @@ export const createClinicUserProfile = async (
 ): Promise<UserData> => {
   const isAdminDemoEmail = isDemoAdminEmail(email);
   
+  // If this is the admin demo email, do NOT associate with a clinic
+  if (isAdminDemoEmail) {
+    console.log('This is the admin demo email - creating admin profile WITHOUT clinic association');
+    return {
+      id: userId,
+      name: 'Admin User',
+      email: email,
+      role: 'admin',
+      clinicId: undefined,
+    };
+  }
+  
   // Determine role (admin for demo admin email, coach otherwise)
   const role = isAdminDemoEmail ? "admin" : "coach";
   const fullName = clinicData.name || "Clinic User";
@@ -79,11 +91,12 @@ export const createFallbackProfile = async (
   // Determine role based on email for demo accounts
   let userRole: UserRole;
   let userName: string;
+  let clinicId = undefined;
   
   if (email === demoEmails.admin) {
     userRole = 'admin';
     userName = 'Admin User';
-    console.log('Creating admin profile for demo email');
+    console.log('Creating admin profile for demo email without clinic ID');
   } else if (email === demoEmails.coach) {
     userRole = 'coach';
     userName = 'Coach User';
@@ -102,6 +115,7 @@ export const createFallbackProfile = async (
     name: userName,
     email: email,
     role: userRole,
+    clinicId: clinicId,
   };
   
   try {
@@ -113,6 +127,7 @@ export const createFallbackProfile = async (
         full_name: userName,
         email: email,
         role: userRole,
+        clinic_id: clinicId,
       });
     
     if (insertError) {
@@ -133,20 +148,24 @@ export const handleAdminDemoAccount = async (
 ): Promise<UserData> => {
   console.log(`Found existing profile for admin demo account. Current role: ${profile.role}`);
   
-  // Create admin profile object
+  // Create admin profile object WITHOUT clinic association
   const adminProfile: UserData = {
     id: profile.id,
     name: profile.full_name || 'Admin User',
     email: profile.email,
     role: 'admin', // Force admin role
-    clinicId: profile.clinic_id,
+    clinicId: undefined, // Explicitly remove any clinic association
   };
   
   // Attempt to update the database as well
   try {
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ role: 'admin', full_name: 'Admin User' })
+      .update({ 
+        role: 'admin', 
+        full_name: 'Admin User',
+        clinic_id: null  // Set clinic_id to null in the database
+      })
       .eq('id', profile.id);
       
     if (updateError) {

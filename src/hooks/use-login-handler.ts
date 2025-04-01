@@ -43,6 +43,12 @@ export const useLoginHandler = () => {
       email = demoEmails.coach;
     }
     
+    // Ensure we're using the correct demo admin email
+    if (type === 'admin' && email !== demoEmails.admin) {
+      console.log('Correcting admin email to use proper demo account');
+      email = demoEmails.admin;
+    }
+    
     try {
       const password = 'password123'; // Demo password
       let fullName = '';

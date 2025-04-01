@@ -9,11 +9,12 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
   // Determine role based on email - critical for correct role assignment
   let role = 'client'; // default
   let fullName = 'Demo User';
+  let clinicId = undefined; // Ensure admin demo doesn't have clinicId
   
   if (email === demoEmails.admin) {
     role = 'admin';
     fullName = 'Admin User';
-    console.log('This is an admin email - ensuring admin role is applied');
+    console.log('This is the demo admin email - ensuring admin role is applied WITHOUT clinic ID');
   } else if (email === demoEmails.coach) {
     role = 'coach';
     fullName = 'Coach User';
@@ -42,6 +43,7 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
             full_name: fullName,
             email: email,
             role: role,
+            clinic_id: clinicId,
           });
         
         if (insertError) {
@@ -61,7 +63,11 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
       try {
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ role: role, full_name: fullName })
+          .update({ 
+            role: role, 
+            full_name: fullName,
+            clinic_id: clinicId // Important: ensure admin demo has no clinic_id
+          })
           .eq('id', userId);
         
         if (updateError) {

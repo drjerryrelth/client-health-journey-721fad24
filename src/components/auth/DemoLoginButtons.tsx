@@ -19,6 +19,7 @@ const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsPro
   const loginHandler = useLoginHandler();
   
   const handleLogin = async (type: UserRole, email: string) => {
+    console.log(`Demo login clicked for ${type} with email ${email}`);
     if (handleDemoLogin) {
       await handleDemoLogin(type, email);
     } else {
