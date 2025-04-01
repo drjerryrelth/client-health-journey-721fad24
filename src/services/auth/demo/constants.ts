@@ -1,7 +1,7 @@
 
 // Demo email addresses used throughout the application
 export const demoEmails = {
-  admin: 'admin@example.com', // Changed to a valid email format that Supabase will accept
+  admin: 'admin@gmail.com', // Changed to a widely accepted email format
   coach: 'support@practicenaturals.com',
   client: 'drjerryrelth@gmail.com'
 };
