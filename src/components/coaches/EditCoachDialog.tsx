@@ -48,7 +48,6 @@ const EditCoachDialog = ({ open, onOpenChange, coach, clinicName, onCoachUpdated
       });
       
       if (result) {
-        // Using sonner toast correctly with string argument
         toast(`${values.name}'s information has been updated.`);
         
         // Call the onCoachUpdated callback if provided

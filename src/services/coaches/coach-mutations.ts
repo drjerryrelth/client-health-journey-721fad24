@@ -103,13 +103,19 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
     
     // Prepare the update payload
     const updates: Record<string, any> = {};
-    if (coach.name) updates.name = coach.name;
-    if (coach.email) updates.email = coach.email;
+    if (coach.name !== undefined) updates.name = coach.name;
+    if (coach.email !== undefined) updates.email = coach.email;
     if (coach.phone !== undefined) updates.phone = coach.phone;
-    if (coach.status) updates.status = coach.status;
-    if (coach.clinicId) updates.clinic_id = coach.clinicId;
+    if (coach.status !== undefined) updates.status = coach.status;
+    if (coach.clinicId !== undefined) updates.clinic_id = coach.clinicId;
     
     console.log('[Coach Service] Prepared updates:', updates);
+    
+    // Check if there are any updates to apply
+    if (Object.keys(updates).length === 0) {
+      console.log('[Coach Service] No updates to apply');
+      return null;
+    }
     
     // Attempt to update the coach using RPC first to bypass RLS
     try {
@@ -125,7 +131,6 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       // If RPC successful, process its response
       if (!rpcError && rpcData) {
         console.log('[Coach Service] Coach updated successfully via RPC:', rpcData);
-        toast.success('Coach updated successfully!');
         
         // Transform the response into our expected Coach format
         const responseData = rpcData as {
@@ -138,7 +143,7 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
           client_count: number;
         };
         
-        return {
+        const updatedCoach = {
           id: responseData.id,
           name: responseData.name,
           email: responseData.email,
@@ -147,11 +152,18 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
           clinicId: responseData.clinic_id,
           clients: responseData.client_count || 0
         };
+        
+        console.log('[Coach Service] Transformed coach data:', updatedCoach);
+        return updatedCoach;
       }
       
       // If there was an RPC error but it's not a function-not-found error, log it
-      if (rpcError && !rpcError.message.includes('function not found')) {
+      if (rpcError) {
         console.error('[Coach Service] RPC update error:', rpcError);
+        
+        if (!rpcError.message.includes('function not found')) {
+          throw new Error(`RPC update failed: ${rpcError.message}`);
+        }
       }
       
       // Continue with direct update if RPC not available or failed
@@ -177,15 +189,15 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
 
     if (error) {
       console.error('[Coach Service] Error updating coach via direct update:', error);
-      toast.error(`Failed to update coach: ${error.message}`);
-      throw error;
+      throw new Error(`Direct update failed: ${error.message}`);
     }
     
     if (!data) {
       console.error('[Coach Service] No data returned from coach update');
-      toast.error('Failed to update coach: No data returned from server');
-      return null;
+      throw new Error('Failed to update coach: No data returned from server');
     }
+    
+    console.log('[Coach Service] Updated coach successfully:', data);
     
     // Get the client count for this coach
     let clientCount = 0;
@@ -199,9 +211,6 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
     } catch (countError) {
       console.warn('[Coach Service] Error counting clients:', countError);
     }
-    
-    console.log('[Coach Service] Updated coach successfully:', data);
-    toast.success('Coach updated successfully!');
     
     // Return the updated coach with proper structure
     return {
