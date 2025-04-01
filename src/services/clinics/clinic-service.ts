@@ -7,7 +7,7 @@ import {
   updateClinic,
   deleteClinic,
   updateClinicBranding
-} from './mutation-service';
+} from './mutations';
 
 // Define the service object once, then export it in different ways
 export const ClinicService = {
