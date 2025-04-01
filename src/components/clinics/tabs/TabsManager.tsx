@@ -47,7 +47,6 @@ const TabsManager = ({
         <CoachesTab
           clinicName={clinic.name} 
           clinicId={clinic.id}
-          clinicEmail={clinic.email}
           onAddCoach={onAddCoach}
           onEditCoach={onEditCoach}
           onDeleteCoach={onDeleteCoach}
