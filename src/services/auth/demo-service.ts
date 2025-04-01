@@ -5,8 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 export async function ensureDemoProfileExists(userId: string, email: string) {
   console.log('Ensuring demo profile exists for user:', userId);
   
-  // Determine role based on email
-  let role = 'admin'; // default
+  // Determine role based on email - critical for correct role assignment
+  let role = 'client'; // default
   let fullName = 'Demo User';
   
   const demoEmails = {
@@ -18,6 +18,7 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
   if (email === demoEmails.admin) {
     role = 'admin';
     fullName = 'Admin User';
+    console.log('This is an admin email - ensuring admin role is applied');
   } else if (email === demoEmails.coach) {
     role = 'coach';
     fullName = 'Coach User';
@@ -35,7 +36,7 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
       .single();
     
     if (fetchError || !profile) {
-      console.log('Demo profile not found, creating one');
+      console.log('Demo profile not found, creating one with role:', role);
       
       try {
         // Create profile if it doesn't exist
@@ -52,33 +53,30 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
           console.error('Error creating demo profile:', insertError);
           console.log('This may be due to RLS policies. The app will continue with in-memory profile data.');
         } else {
-          console.log('Demo profile created successfully');
+          console.log('Demo profile created successfully with role:', role);
         }
       } catch (err) {
         console.error('Unexpected error creating profile:', err);
       }
     } else {
-      // Update existing profile to ensure role matches the email
-      if (profile.role !== role) {
-        console.log(`Updating profile role from ${profile.role} to ${role} to match email`);
+      // ALWAYS update existing profile to ensure role matches the email 
+      // This is critical - we want to force the role to match the predefined demo emails
+      console.log(`Updating profile role from ${profile.role} to ${role} to match demo email`);
+      
+      try {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ role: role, full_name: fullName })
+          .eq('id', userId);
         
-        try {
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ role: role, full_name: fullName })
-            .eq('id', userId);
-          
-          if (updateError) {
-            console.error('Error updating demo profile:', updateError);
-            console.log('This may be due to RLS policies. The app will continue with in-memory profile data.');
-          } else {
-            console.log('Demo profile updated successfully');
-          }
-        } catch (err) {
-          console.error('Unexpected error updating profile:', err);
+        if (updateError) {
+          console.error('Error updating demo profile:', updateError);
+          console.log('This may be due to RLS policies. The app will continue with in-memory profile data.');
+        } else {
+          console.log('Demo profile updated successfully with role:', role);
         }
-      } else {
-        console.log('Demo profile already exists with correct role');
+      } catch (err) {
+        console.error('Unexpected error updating profile:', err);
       }
     }
   } catch (error) {

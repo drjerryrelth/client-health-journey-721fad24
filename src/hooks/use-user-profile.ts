@@ -22,6 +22,18 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       return null;
     }
     
+    // List of demo emails for special handling
+    const demoEmails = {
+      admin: 'drrelth@contourlight.com',
+      coach: 'support@practicenaturals.com',
+      client: 'drjerryrelth@gmail.com'
+    };
+    
+    // Special check first - if this is a demo admin, ensure we return admin role
+    if (email === demoEmails.admin) {
+      console.log('This is the demo admin email - forcing admin role');
+    }
+    
     // Attempt to get the user profile from the profiles table
     const { data: profile, error } = await supabase
       .from('profiles')
@@ -77,20 +89,14 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
         return clinicProfile;
       }
       
-      // List of demo emails
-      const demoEmails = {
-        admin: 'drrelth@contourlight.com',
-        coach: 'support@practicenaturals.com',
-        client: 'drjerryrelth@gmail.com'
-      };
-      
-      // Determine role based on email
+      // Determine role based on email for demo accounts
       let userRole: UserRole;
       let userName: string;
       
       if (email === demoEmails.admin) {
         userRole = 'admin';
         userName = 'Admin User';
+        console.log('Creating admin profile for demo email');
       } else if (email === demoEmails.coach) {
         userRole = 'coach';
         userName = 'Coach User';
@@ -140,9 +146,41 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       return null;
     }
     
+    // Special case - handle admin demo email explicitly, overriding any stored role
+    if (email === demoEmails.admin && profile.role !== 'admin') {
+      console.log(`Force updating admin demo account role from ${profile.role} to admin`);
+      
+      try {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ role: 'admin' })
+          .eq('id', userId);
+          
+        if (updateError) {
+          console.warn('Could not update admin profile role:', updateError.message);
+        }
+        
+        // Return admin role regardless of database update success
+        const adminProfile: UserData = {
+          id: profile.id,
+          name: profile.full_name,
+          email: profile.email,
+          role: 'admin',
+          clinicId: profile.clinic_id,
+        };
+        
+        return adminProfile;
+      } catch (updateErr) {
+        console.error('Error during admin profile update:', updateErr);
+      }
+    }
+    
     // Validate the role from the database
     let userRole: UserRole;
-    if (profile.role === 'admin' || profile.role === 'coach' || profile.role === 'client' || profile.role === 'super_admin') {
+    if (email === demoEmails.admin) {
+      // For demo admin, ALWAYS use admin role regardless of what's in the database
+      userRole = 'admin';
+    } else if (profile.role === 'admin' || profile.role === 'coach' || profile.role === 'client' || profile.role === 'super_admin') {
       userRole = profile.role as UserRole;
     } else {
       // Default to coach if the role from the database is not valid
