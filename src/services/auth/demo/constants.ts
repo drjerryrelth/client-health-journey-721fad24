@@ -1,7 +1,7 @@
 
 // Demo email addresses used throughout the application
 export const demoEmails = {
-  admin: 'admin@clienthealthtracker.com', // Change to a different email that wouldn't be associated with a clinic
+  admin: 'admin@example.com', // Changed to a valid email format that Supabase will accept
   coach: 'support@practicenaturals.com',
   client: 'drjerryrelth@gmail.com'
 };
