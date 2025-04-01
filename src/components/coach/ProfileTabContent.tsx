@@ -1,135 +1,123 @@
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from "@/components/ui/skeleton";
+import { useForm } from 'react-hook-form';
 import { ProfileFormValues, profileSchema } from '@/hooks/use-coach-profile';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ProfileTabContentProps {
   loading: boolean;
   profileData: any;
-  error?: string | null;
+  error: string | null;
   onSubmit: (data: ProfileFormValues) => Promise<void>;
 }
 
-export const ProfileTabContent: React.FC<ProfileTabContentProps> = ({ 
-  loading,
-  profileData,
-  error,
-  onSubmit
-}) => {
-  // Initialize profile form with default values
-  const profileForm = useForm<ProfileFormValues>({
+export function ProfileTabContent({ loading, profileData, error, onSubmit }: ProfileTabContentProps) {
+  const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      fullName: "",
-      email: "",
-      phone: "",
+      fullName: profileData?.name || "",
+      email: profileData?.email || "",
+      phone: profileData?.phone || "",
       notifyClientCheckIn: true,
       notifyClientMessage: true,
-      notifyClientProgress: false,
+      notifyClientProgress: false
     }
   });
-
-  // Update form values when profile data changes
+  
   React.useEffect(() => {
     if (profileData) {
-      profileForm.reset({
+      form.reset({
         fullName: profileData.name || "",
         email: profileData.email || "",
         phone: profileData.phone || "",
         notifyClientCheckIn: true,
         notifyClientMessage: true,
-        notifyClientProgress: false,
+        notifyClientProgress: false
       });
     }
-  }, [profileData, profileForm]);
+  }, [profileData, form]);
+  
+  const handleSubmit = async (data: ProfileFormValues) => {
+    await onSubmit(data);
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
+        <CardTitle>Profile</CardTitle>
         <CardDescription>
-          Update your profile information
+          Manage your personal information
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <div className="flex justify-end">
-              <Skeleton className="h-10 w-24" />
-            </div>
-          </div>
-        ) : error ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        ) : !profileData ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Could not load profile information. Please refresh the page.
-          </div>
-        ) : (
-          <Form {...profileForm}>
-            <form onSubmit={profileForm.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={profileForm.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Your name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={profileForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Your email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={profileForm.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone (optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Your phone number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex justify-end">
-                <Button type="submit">Save Changes</Button>
-              </div>
-            </form>
-          </Form>
-        )}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Your name" 
+                      {...field} 
+                      disabled={loading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="email" 
+                      placeholder="Your email" 
+                      {...field} 
+                      disabled={loading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="tel" 
+                      placeholder="Your phone number" 
+                      {...field} 
+                      disabled={loading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );
-};
+}

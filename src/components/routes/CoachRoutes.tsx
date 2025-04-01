@@ -6,6 +6,7 @@ import CoachDashboard from '@/pages/CoachDashboard';
 import ClientsPage from '@/pages/admin/ClientsPage';
 import CheckInsPage from '@/pages/admin/CheckInsPage';
 import ResourcesPage from '@/pages/admin/ResourcesPage';
+import CoachSettingsPage from '@/pages/coach/CoachSettingsPage';
 
 const CoachRoutes = () => {
   return (
@@ -16,6 +17,7 @@ const CoachRoutes = () => {
         <Route path="clients" element={<ClientsPage />} />
         <Route path="check-ins" element={<CheckInsPage />} />
         <Route path="resources" element={<ResourcesPage />} />
+        <Route path="settings" element={<CoachSettingsPage />} />
       </Route>
     </Routes>
   );

@@ -11,6 +11,8 @@ import { AlertCircle } from 'lucide-react';
 const CoachSettingsPage = () => {
   const { profileData, loading, error, updateCoachProfile } = useCoachProfile();
   
+  console.log('Rendering CoachSettingsPage, profileData:', profileData);
+  
   return (
     <div className="space-y-6">
       <div>
