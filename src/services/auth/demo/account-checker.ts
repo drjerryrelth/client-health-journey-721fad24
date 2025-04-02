@@ -18,13 +18,17 @@ export const isDemoAccountExists = async (email: string): Promise<boolean> => {
     
     // Try another check against auth users (admin only method, might not work for all cases)
     try {
-      const { data: authData } = await supabase.auth.admin.listUsers({
-        filter: { email }
-      });
+      // Remove the filter parameter which was causing the TypeScript error
+      // The admin.listUsers() method doesn't support filtering by email in the way we were using it
+      const { data: authData } = await supabase.auth.admin.listUsers();
       
-      if (authData?.users && authData.users.length > 0) {
-        console.log(`Demo account for ${email} already exists in auth.users`);
-        return true;
+      // Instead, manually filter the results after fetching
+      if (authData?.users) {
+        const matchingUser = authData.users.find(user => user.email === email);
+        if (matchingUser) {
+          console.log(`Demo account for ${email} already exists in auth.users`);
+          return true;
+        }
       }
     } catch (adminError) {
       // Admin API likely not available to the client, silently continue
