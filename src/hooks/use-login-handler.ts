@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/context/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -44,7 +43,7 @@ export const useLoginHandler = () => {
       console.log(`Using admin demo account: ${email}`);
     }
     
-    // No need to fix coach email - we're now deliberately using .cm domain
+    // No need to fix coach email - we're now using the correct email from constants
     
     try {
       const password = 'password123'; // Demo password
