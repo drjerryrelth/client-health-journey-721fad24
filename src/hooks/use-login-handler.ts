@@ -1,9 +1,10 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/context/auth';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole } from '@/types';
 import { LoginFormValues } from '@/components/auth/login-schema';
-import { demoEmails } from '@/services/auth/demo';
+import { demoEmails, isDemoAccountExists } from '@/services/auth/demo';
 
 export const useLoginHandler = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +36,7 @@ export const useLoginHandler = () => {
   };
 
   const handleDemoLogin = async (type: UserRole, email: string) => {
+    console.log(`Demo login clicked for ${type} with email ${email}`);
     setIsSubmitting(true);
     
     // Admin demo account special handling
@@ -73,7 +75,22 @@ export const useLoginHandler = () => {
       console.log(`Attempting demo login as ${type} with email: ${email}`);
       
       try {
-        // First try to login directly
+        // Check if the account already exists to avoid rate limit errors
+        const accountExists = await isDemoAccountExists(email);
+        
+        if (accountExists) {
+          console.log('Demo account already exists, attempting direct login');
+          await login(email, password);
+          console.log('Demo login successful');
+          toast({
+            title: 'Demo login successful',
+            description: `You're logged in as ${type}!`,
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // First try to login directly - if the account exists but wasn't detected
         await login(email, password);
         console.log('Demo login successful');
       } catch (loginError: any) {
@@ -87,30 +104,13 @@ export const useLoginHandler = () => {
             variant: 'destructive',
           });
           
-          // Still attempt to create the account if it doesn't exist
-          try {
-            await signUp(email, password, {
-              full_name: fullName,
-              role: role
-            });
-            
-            toast({
-              title: 'Demo account created',
-              description: 'Please confirm the email in Supabase User Management to login, or disable email confirmation in the settings.',
-            });
-          } catch (signupError: any) {
-            // If the account already exists, this is expected
-            if (!signupError.message?.includes('already registered')) {
-              throw signupError;
-            }
-          }
-          
           setIsSubmitting(false);
           return;
         }
         
-        // If login fails for other reasons, try to sign up the demo user first
         try {
+          // Try to sign up the demo user
+          console.log('Creating demo account for:', email);
           await signUp(email, password, {
             full_name: fullName,
             role: role
@@ -125,6 +125,17 @@ export const useLoginHandler = () => {
           if (signupError.message?.includes('already registered')) {
             console.log('User already exists, trying login again with different handling');
             await login(email, password);
+          } else if (signupError.message?.includes('after 59 seconds') || 
+                    signupError.message?.includes('rate limit') ||
+                    signupError.message?.includes('security purposes')) {
+            console.error('Rate limit error during demo signup:', signupError);
+            toast({
+              title: 'Demo account setup paused',
+              description: 'Please wait a minute before trying again, or try logging in with a different demo account.',
+              variant: 'destructive',
+            });
+            setIsSubmitting(false);
+            return;
           } else {
             throw signupError;
           }
