@@ -24,7 +24,10 @@ export const isDemoAccountExists = async (email: string): Promise<boolean> => {
       
       // Instead, manually filter the results after fetching
       if (authData?.users) {
-        const matchingUser = authData.users.find(user => user.email === email);
+        // Use type assertion to help TypeScript understand the structure
+        const matchingUser = authData.users.find(user => 
+          user && typeof user === 'object' && 'email' in user && user.email === email
+        );
         if (matchingUser) {
           console.log(`Demo account for ${email} already exists in auth.users`);
           return true;
