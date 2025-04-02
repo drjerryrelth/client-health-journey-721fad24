@@ -1,9 +1,9 @@
 
 // Demo email addresses used throughout the application
 export const demoEmails = {
-  admin: 'admin@clienthealthtracker.com', // Restored to original working email
-  coach: 'support@practicenaturals.com',
-  client: 'drjerryrelth@gmail.com'
+  admin: 'drrelth@contourlight.com', // Updated admin email
+  coach: 'support@practicenaturals.cm', // Updated coach email (note: this uses .cm, not .com)
+  client: 'drjerry@livingbetterhealthcare.com' // Updated client email
 };
 
 // Helper function to check if an email is a demo admin account

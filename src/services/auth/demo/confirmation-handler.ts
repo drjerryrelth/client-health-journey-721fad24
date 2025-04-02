@@ -1,7 +1,7 @@
 
 // Function to bypass email confirmation for demo accounts
 export async function autoConfirmDemoEmail(email: string, password: string) {
-  const isDemoAdminAccount = email === 'admin@clienthealthtracker.com';
+  const isDemoAdminAccount = email === 'drrelth@contourlight.com';
   
   if (!isDemoAdminAccount) {
     return false;

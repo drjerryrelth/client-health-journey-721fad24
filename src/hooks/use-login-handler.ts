@@ -44,10 +44,7 @@ export const useLoginHandler = () => {
       console.log(`Using admin demo account: ${email}`);
     }
     
-    // Fix the coach email if it's the incorrect version
-    if (type === 'coach' && email === 'support@practicenaturals.cm') {
-      email = demoEmails.coach;
-    }
+    // No need to fix coach email - we're now deliberately using .cm domain
     
     try {
       const password = 'password123'; // Demo password
