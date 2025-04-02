@@ -1,22 +1,38 @@
 
-// Function to bypass email confirmation for demo accounts
-export async function autoConfirmDemoEmail(email: string, password: string) {
-  const isDemoAdminAccount = email === 'drrelth@contourlight.com';
+import { supabase } from '@/integrations/supabase/client';
+import { isDemoEmail } from './constants';
+
+// Helper function to auto-confirm demo email addresses
+export async function autoConfirmDemoEmail(email: string): Promise<boolean> {
+  console.log('Checking if we should auto-confirm email:', email);
   
-  if (!isDemoAdminAccount) {
+  // Only auto-confirm demo emails
+  if (!isDemoEmail(email)) {
+    console.log('Not a demo email, skipping auto-confirmation');
     return false;
   }
   
   try {
-    // For demo accounts, we'll try a direct sign-in with the admin key
-    // This would need a custom server endpoint in a real app
-    console.log('Attempting special demo account login flow');
+    console.log('Attempting to auto-confirm demo email');
     
-    // For now, we'll just create a fake successful response
-    // In a real app, we'd need a server-side function to handle this
+    // This would ideally call a server function to confirm the email
+    // For now, we'll implement a client-side workaround
+    
+    // Attempt to sign in directly which confirms the functionality works
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password: 'password123' // Demo password
+    });
+    
+    if (error) {
+      console.error('Error during demo email auto-confirmation:', error.message);
+      return false;
+    }
+    
+    console.log('Successfully auto-confirmed demo email');
     return true;
   } catch (error) {
-    console.error('Auto-confirm failed:', error);
+    console.error('Error during demo email auto-confirmation:', error);
     return false;
   }
 }

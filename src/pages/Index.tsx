@@ -1,11 +1,31 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import DemoLoginButtons from '@/components/auth/DemoLoginButtons';
 import { Weight, Pill, CheckCircle, LineChart, ArrowRight, Building } from 'lucide-react';
+import { useAuth } from '@/context/auth';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+  
+  // If user is already authenticated, redirect to the appropriate dashboard
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('User is already authenticated, redirecting to dashboard');
+      
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (user.role === 'coach') {
+        navigate('/coach/dashboard', { replace: true });
+      } else if (user.role === 'client') {
+        navigate('/client/dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleLogin = () => {
     navigate('/login');

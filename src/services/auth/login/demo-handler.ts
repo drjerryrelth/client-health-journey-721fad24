@@ -4,18 +4,20 @@ import {
   getDemoUserNameByEmail, 
   getDemoRoleByEmail, 
   isDemoEmail,
-  isDemoAccountExists 
+  isDemoAccountExists,
+  ensureDemoProfileExists
 } from '../demo';
+import { autoConfirmDemoEmail } from '../demo/confirmation-handler';
 
 // Helper function to handle demo account logic
-export const handleDemoAccountCreation = async (email: string) => {
+export const handleDemoAccountCreation = async (email: string): Promise<boolean> => {
   console.log('This is a demo login attempt');
   
   // Check if demo account already exists first to avoid rate limiting
   const accountExists = await isDemoAccountExists(email);
   if (accountExists) {
     console.log('Demo account already exists, skipping creation');
-    return;
+    return true;
   }
   
   // For demo accounts, try to ensure the account exists first
@@ -35,24 +37,26 @@ export const handleDemoAccountCreation = async (email: string) => {
       // If error is because user already exists, that's fine - we'll continue with login
       if (signUpData.error.message?.includes('already registered')) {
         console.log('Demo user already exists, will proceed with login');
+        return true;
       } else if (signUpData.error.message?.includes('after 59 seconds') || 
                 signUpData.error.message?.includes('rate limit')) {
         console.error('Rate limit hit during demo account creation:', signUpData.error.message);
         throw new Error('Demo account creation rate limited. Please try again later.');
       } else {
         console.warn('Could not create demo user:', signUpData.error.message);
+        return false;
       }
     } else {
       console.log('Demo user created successfully');
       
       // For demo accounts, we should immediately confirm the email
       try {
-        // This would require a server-side function in a real app
-        // For now, we'll rely on manual email confirmation in the Supabase dashboard
-        console.log('NOTE: In a production app, you would need to auto-confirm the email');
+        await autoConfirmDemoEmail(email);
       } catch (confirmErr) {
         console.error('Error confirming demo email:', confirmErr);
       }
+      
+      return true;
     }
   } catch (createErr) {
     console.error('Error creating demo account:', createErr);

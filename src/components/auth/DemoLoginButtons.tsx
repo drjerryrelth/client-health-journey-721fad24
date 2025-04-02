@@ -13,10 +13,13 @@ interface DemoLoginButtonsProps {
   isSubmitting?: boolean;
 }
 
-const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsProps = {}) => {
+const DemoLoginButtons = ({ handleDemoLogin, isSubmitting: propIsSubmitting }: DemoLoginButtonsProps = {}) => {
   // Use login handler if no handler is provided (for homepage use)
   const navigate = useNavigate();
-  const loginHandler = useLoginHandler();
+  const { handleDemoLogin: hookLoginHandler, isSubmitting: hookIsSubmitting } = useLoginHandler();
+  
+  // Use prop isSubmitting if provided, otherwise use the hook's isSubmitting
+  const isSubmitting = propIsSubmitting !== undefined ? propIsSubmitting : hookIsSubmitting;
   
   const handleLogin = async (type: UserRole, email: string) => {
     console.log(`Demo login clicked for ${type} with email ${email}`);
@@ -24,7 +27,7 @@ const DemoLoginButtons = ({ handleDemoLogin, isSubmitting }: DemoLoginButtonsPro
       await handleDemoLogin(type, email);
     } else {
       // If no handler provided, use the hook's handler
-      await loginHandler.handleDemoLogin(type, email);
+      await hookLoginHandler(type, email);
     }
   };
   

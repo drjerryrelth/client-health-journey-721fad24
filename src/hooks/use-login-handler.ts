@@ -5,11 +5,13 @@ import { useToast } from '@/hooks/use-toast';
 import { UserRole } from '@/types';
 import { LoginFormValues } from '@/components/auth/login-schema';
 import { demoEmails, isDemoAccountExists } from '@/services/auth/demo';
+import { useNavigate } from 'react-router-dom';
 
 export const useLoginHandler = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, signUp } = useAuth();
+  const { login, signUp, user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const handleLogin = async (data: LoginFormValues) => {
     setIsSubmitting(true);
@@ -86,6 +88,20 @@ export const useLoginHandler = () => {
             title: 'Demo login successful',
             description: `You're logged in as ${type}!`,
           });
+          
+          // Force navigation based on the user role
+          setTimeout(() => {
+            if (type === 'admin') {
+              navigate('/admin/dashboard', { replace: true });
+            } else if (type === 'coach') {
+              navigate('/coach/dashboard', { replace: true });
+            } else if (type === 'client') {
+              navigate('/client/dashboard', { replace: true });
+            } else {
+              navigate('/dashboard', { replace: true });
+            }
+          }, 500);
+          
           setIsSubmitting(false);
           return;
         }
@@ -93,6 +109,20 @@ export const useLoginHandler = () => {
         // First try to login directly - if the account exists but wasn't detected
         await login(email, password);
         console.log('Demo login successful');
+        
+        // Force navigation based on the user role
+        setTimeout(() => {
+          if (type === 'admin') {
+            navigate('/admin/dashboard', { replace: true });
+          } else if (type === 'coach') {
+            navigate('/coach/dashboard', { replace: true });
+          } else if (type === 'client') {
+            navigate('/client/dashboard', { replace: true });
+          } else {
+            navigate('/dashboard', { replace: true });
+          }
+        }, 500);
+        
       } catch (loginError: any) {
         console.log('Login failed, attempting to create demo account', loginError);
         
@@ -120,11 +150,39 @@ export const useLoginHandler = () => {
           
           // Now try logging in again
           await login(email, password);
+          
+          // Force navigation based on the user role
+          setTimeout(() => {
+            if (type === 'admin') {
+              navigate('/admin/dashboard', { replace: true });
+            } else if (type === 'coach') {
+              navigate('/coach/dashboard', { replace: true });
+            } else if (type === 'client') {
+              navigate('/client/dashboard', { replace: true });
+            } else {
+              navigate('/dashboard', { replace: true });
+            }
+          }, 500);
+          
         } catch (signupError: any) {
           // If the signup fails because the user already exists, try logging in again
           if (signupError.message?.includes('already registered')) {
             console.log('User already exists, trying login again with different handling');
             await login(email, password);
+            
+            // Force navigation based on the user role
+            setTimeout(() => {
+              if (type === 'admin') {
+                navigate('/admin/dashboard', { replace: true });
+              } else if (type === 'coach') {
+                navigate('/coach/dashboard', { replace: true });
+              } else if (type === 'client') {
+                navigate('/client/dashboard', { replace: true });
+              } else {
+                navigate('/dashboard', { replace: true });
+              }
+            }, 500);
+            
           } else if (signupError.message?.includes('after 59 seconds') || 
                     signupError.message?.includes('rate limit') ||
                     signupError.message?.includes('security purposes')) {
@@ -147,7 +205,6 @@ export const useLoginHandler = () => {
         description: `You're logged in as ${type}!`,
       });
       
-      // Navigation will be handled by the auth state listener
     } catch (error: any) {
       console.error('Demo login error:', error);
       toast({
