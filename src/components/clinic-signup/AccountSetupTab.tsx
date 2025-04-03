@@ -58,6 +58,8 @@ const AccountSetupTab = ({
 
   // Handle plan selection
   const handlePlanSelect = (planId: string) => {
+    console.log('Selected plan:', planId);
+    
     // Set the new plan value with explicit shouldDirty to mark the field as changed
     form.setValue('selectedPlan', planId, { 
       shouldValidate: true,
@@ -101,7 +103,10 @@ const AccountSetupTab = ({
               <FormControl>
                 <RadioGroup
                   value={field.value}
-                  onValueChange={field.onChange}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    handlePlanSelect(value);
+                  }}
                   className="space-y-3"
                 >
                   {planOptions.map((plan) => (

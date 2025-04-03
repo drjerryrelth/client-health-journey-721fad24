@@ -40,6 +40,7 @@ const PlanOption = ({
           id={`plan-${id}`} 
           className="mt-1 mr-2"
           checked={selected}
+          onClick={(e) => e.stopPropagation()} // Prevent triggering parent onClick
         />
         <div className="flex-grow">
           <div className="flex justify-between items-start">
