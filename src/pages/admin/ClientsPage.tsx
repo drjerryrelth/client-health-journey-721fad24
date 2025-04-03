@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
@@ -22,11 +22,6 @@ const ClientsPage = () => {
   // State to control dialog visibility
   const [dialogOpen, setDialogOpen] = useState(action === 'add');
   
-  // Effect to respond to URL parameter changes
-  useEffect(() => {
-    setDialogOpen(action === 'add');
-  }, [action]);
-
   // Handle opening the dialog directly
   const handleAddClientClick = () => {
     setDialogOpen(true);
@@ -37,7 +32,10 @@ const ClientsPage = () => {
   const handleDialogOpenChange = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setSearchParams({});
+      // Remove the action parameter without triggering a loop
+      if (action === 'add') {
+        setSearchParams({});
+      }
     }
   };
 
@@ -56,7 +54,10 @@ const ClientsPage = () => {
           <CardTitle>{isCoach ? 'Your Clients' : 'All Clients'}</CardTitle>
         </CardHeader>
         <CardContent>
-          {isCoach ? <CoachClientList /> : <ClientList />}
+          {isCoach ? 
+            <CoachClientList onAddClient={handleAddClientClick} /> : 
+            <ClientList />
+          }
         </CardContent>
       </Card>
       
