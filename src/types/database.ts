@@ -1,3 +1,4 @@
+
 // Add the sleep_hours field to CheckInRow
 export interface CheckInRow {
   id: string;
