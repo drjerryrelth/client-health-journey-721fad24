@@ -6,11 +6,11 @@ const SignupDemoNotice = () => {
     <div className="bg-blue-50 p-3 rounded-md mb-4">
       <p className="text-sm text-blue-700">
         <span className="font-semibold">Demo Mode:</span> To create a demo clinic without email verification, 
-        use an email containing "demo" (e.g., "my-clinic-demo@example.com" or "demo-clinic@example.com")
+        use an email with a common format like <code>demo-clinic@example.com</code> or <code>clinic@demo.com</code>
       </p>
       <p className="text-xs text-blue-600 mt-1">
-        Note: Supabase may reject certain email formats. If you experience issues, try a standard format like 
-        "demo-clinic@example.com" instead.
+        Note: Some email formats may be rejected by Supabase's validation. If you experience issues, 
+        try a standard format like <code>demo-clinic@example.com</code> or <code>clinic@demo.com</code>.
       </p>
     </div>
   );
