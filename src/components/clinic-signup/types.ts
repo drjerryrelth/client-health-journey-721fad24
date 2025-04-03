@@ -6,22 +6,33 @@ export const planOptions = [
     id: "basic",
     name: "Basic",
     description: "For small clinics just getting started",
-    price: "$49/month",
+    price: "$149/month",
     features: ["Up to 50 clients", "1 coach account", "Basic analytics"]
   },
   {
     id: "professional",
     name: "Professional",
     description: "For established clinics",
-    price: "$99/month",
+    price: "$249/month",
     features: ["Up to 200 clients", "5 coach accounts", "Advanced analytics", "Email support"]
   },
   {
     id: "enterprise",
     name: "Enterprise",
     description: "For large clinics with multiple locations",
-    price: "$199/month",
-    features: ["Unlimited clients", "Unlimited coach accounts", "Custom analytics", "Priority support", "White-labeling"]
+    price: "$399/month",
+    features: ["Unlimited clients", "Unlimited coach accounts", "Custom analytics", "Priority support", "Optional white labeling"]
+  }
+];
+
+// Define the add-on option for white labeling
+export const addOnOptions = [
+  {
+    id: "white-labeling",
+    name: "White Labeling",
+    description: "Custom branding for your clinic's portal",
+    price: "$499 one-time setup fee",
+    availableFor: ["enterprise"]
   }
 ];
 
@@ -45,6 +56,7 @@ export const clinicSignupSchema = z.object({
     message: "You must agree to the Terms and Privacy Policy",
   }),
   selectedPlan: z.string().min(1, "Please select a plan"),
+  addOns: z.array(z.string()).optional().default([]),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],

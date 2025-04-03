@@ -38,6 +38,7 @@ const ClinicSignupForm = ({ isSubmitting, onSubmit }: ClinicSignupFormProps) => 
       hipaaAcknowledgment: false,
       legalAcknowledgment: false,
       selectedPlan: planOptions[1].id, // Default to Professional plan
+      addOns: [],
     },
     mode: 'onChange'
   });

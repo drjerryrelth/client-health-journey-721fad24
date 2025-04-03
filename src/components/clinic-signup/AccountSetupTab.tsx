@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField, FormItem, FormLabel, FormMessage, FormControl, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { ClinicSignupFormValues, planOptions } from './types';
+import { ClinicSignupFormValues, planOptions, addOnOptions } from './types';
 import HipaaNotice from './HipaaNotice';
 import { Link } from 'react-router-dom';
 import { RadioGroup } from '@/components/ui/radio-group';
@@ -33,6 +33,28 @@ const AccountSetupTab = ({
       form.setValue('email', clinicEmail);
     }
   }, [createAccount, form]);
+
+  const selectedPlan = form.watch('selectedPlan');
+  const addOns = form.watch('addOns') || [];
+
+  // Filter add-ons based on selected plan
+  const availableAddOns = addOnOptions.filter(
+    addon => addon.availableFor.includes(selectedPlan)
+  );
+
+  // Handle add-on toggle
+  const handleAddOnToggle = (addOnId: string, checked: boolean) => {
+    const currentAddOns = form.getValues('addOns') || [];
+    let updatedAddOns = [...currentAddOns];
+    
+    if (checked) {
+      updatedAddOns.push(addOnId);
+    } else {
+      updatedAddOns = updatedAddOns.filter(id => id !== addOnId);
+    }
+    
+    form.setValue('addOns', updatedAddOns);
+  };
 
   return (
     <div className="space-y-6">
@@ -82,6 +104,39 @@ const AccountSetupTab = ({
           )}
         />
       </div>
+
+      {availableAddOns.length > 0 && (
+        <div className="space-y-4 mt-4 border-t pt-4">
+          <h3 className="text-lg font-medium">Available Add-ons</h3>
+          <div className="space-y-3">
+            {availableAddOns.map((addon) => (
+              <div 
+                key={addon.id} 
+                className="border rounded-lg p-4 bg-background hover:bg-background/80"
+              >
+                <div className="flex items-start">
+                  <Checkbox 
+                    id={`addon-${addon.id}`}
+                    checked={addOns.includes(addon.id)}
+                    onCheckedChange={(checked) => handleAddOnToggle(addon.id, checked === true)}
+                    className="mt-1 mr-2"
+                  />
+                  <div>
+                    <label 
+                      htmlFor={`addon-${addon.id}`}
+                      className="text-lg font-medium cursor-pointer"
+                    >
+                      {addon.name}
+                    </label>
+                    <p className="text-sm text-muted-foreground">{addon.description}</p>
+                    <div className="text-sm font-semibold text-primary mt-1">{addon.price}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       {createAccount && (
         <div className="space-y-4">
