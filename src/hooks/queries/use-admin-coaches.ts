@@ -39,7 +39,7 @@ export function useAdminCoaches() {
       } 
       // Clinic admins should only know about their own clinic
       else if (user?.role === 'clinic_admin' && user?.clinicId) {
-        const singleClinic = await ClinicService.getClinicById(user.clinicId);
+        const singleClinic = await ClinicService.getClinic(user.clinicId);
         const clinicMap: Record<string, string> = {};
         if (singleClinic) {
           clinicMap[singleClinic.id] = singleClinic.name;
