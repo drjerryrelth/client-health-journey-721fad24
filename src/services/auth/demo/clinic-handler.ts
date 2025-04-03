@@ -8,10 +8,9 @@ import { autoConfirmDemoEmail } from './confirmation-handler';
  * @param email The email to check
  */
 export const isDemoClinicEmail = (email: string): boolean => {
-  // Accept any email that ends with .demo@example.com (including those with numbers)
-  return email.endsWith('.demo@example.com') || 
-         email.includes('demo-clinic') || 
-         email.includes('democlinic');
+  // Accept any email that contains 'demo' in a more flexible way
+  return email.toLowerCase().includes('demo') ||
+         email.toLowerCase().includes('test');
 };
 
 /**
@@ -54,7 +53,7 @@ export const handleDemoClinicSignup = async (
       } else if (signUpError.message?.includes('Email address') && signUpError.message?.includes('invalid')) {
         // Special case for email validation errors
         console.error('Email validation error:', signUpError.message);
-        throw new Error(`The email format "${email}" appears to be invalid. Please use a valid email format like "myclinic.demo@example.com".`);
+        throw new Error(`The email format "${email}" appears to be invalid. Please use a valid email format like "clinic-demo@example.com" or "demo-clinic@example.com".`);
       } else {
         console.error('Demo clinic user creation error:', signUpError.message);
         throw new Error(`Could not create demo clinic user: ${signUpError.message}`);
