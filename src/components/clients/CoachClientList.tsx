@@ -2,10 +2,9 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useClientsQuery } from '@/hooks/queries/use-client-queries';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { EmptyClientState, ClientListItem } from '@/components/clients/coach';
 
 const CoachClientList = ({ onAddClient }: { onAddClient: () => void }) => {
   const { user } = useAuth();
@@ -28,33 +27,17 @@ const CoachClientList = ({ onAddClient }: { onAddClient: () => void }) => {
   }
 
   if (!clients || clients.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-10 text-center">
-        <p className="text-lg font-medium text-gray-700 mb-4">You don't have any clients yet</p>
-        <Button onClick={onAddClient} className="flex items-center">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Your First Client
-        </Button>
-      </div>
-    );
+    return <EmptyClientState onAddClient={onAddClient} />;
   }
 
   return (
     <div className="space-y-4">
       {clients.map((client) => (
-        <div 
-          key={client.id} 
-          className="flex items-center justify-between p-4 border rounded-md hover:bg-gray-50 cursor-pointer"
-          onClick={() => handleClientClick(client.id)}
-        >
-          <div>
-            <h3 className="font-medium">{client.name}</h3>
-            <p className="text-sm text-gray-500">{client.email}</p>
-          </div>
-          <div className="text-sm text-gray-500">
-            Last check-in: {client.lastCheckIn ? new Date(client.lastCheckIn).toLocaleDateString() : 'Never'}
-          </div>
-        </div>
+        <ClientListItem 
+          key={client.id}
+          client={client} 
+          onClick={handleClientClick} 
+        />
       ))}
     </div>
   );
