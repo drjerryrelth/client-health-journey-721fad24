@@ -15,8 +15,9 @@ export const isDemoClinicEmail = (email: string): boolean => {
 
 /**
  * Handle demo clinic signup
- * This function handles the special case of demo clinic signups
+ * This function handles the special case of demo clinic signups with consistent error handling
  * @param email Clinic email
+ * @param password User password
  * @param clinicName Clinic name
  * @param primaryContact Primary contact name
  */
@@ -29,8 +30,8 @@ export const handleDemoClinicSignup = async (
   try {
     console.log('Processing demo clinic signup:', email);
 
-    // For demo clinics, create the auth user with a standard password
-    const signUpData = await supabase.auth.signUp({
+    // Create auth user with provided password
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -41,25 +42,28 @@ export const handleDemoClinicSignup = async (
       }
     });
     
-    if (signUpData.error) {
-      // If error is because user already exists, that's fine for demo purposes
-      if (signUpData.error.message?.includes('already registered')) {
+    // Handle sign-up errors with improved messaging
+    if (signUpError) {
+      // Handle case where user already exists
+      if (signUpError.message?.includes('already registered')) {
         console.log('Demo clinic user already exists, will proceed with setup');
-      } else if (signUpData.error.message?.includes('rate limit')) {
-        console.error('Rate limit hit during demo clinic creation:', signUpData.error.message);
-        throw new Error('Demo clinic creation rate limited. Please try again later.');
+      } else if (signUpError.message?.includes('rate limit')) {
+        console.error('Rate limit error:', signUpError.message);
+        throw new Error('Demo clinic creation rate limited. Please try again in a few minutes.');
       } else {
-        console.warn('Could not create demo clinic user:', signUpData.error.message);
-        return false;
+        console.error('Demo clinic user creation error:', signUpError.message);
+        throw new Error(`Could not create demo clinic user: ${signUpError.message}`);
       }
     } else {
       console.log('Demo clinic user created successfully');
       
-      // For demo accounts, immediately confirm the email
+      // Auto-confirm the email for demo accounts
       try {
         await autoConfirmDemoEmail(email);
+        console.log('Demo clinic email auto-confirmed');
       } catch (confirmErr) {
         console.error('Error confirming demo clinic email:', confirmErr);
+        // Continue execution - this is not a critical error
       }
     }
     
@@ -68,7 +72,7 @@ export const handleDemoClinicSignup = async (
       .from('clinics')
       .insert({
         name: clinicName,
-        email: email,
+        email,
         primary_contact: primaryContact,
         status: 'active'
       })
@@ -76,13 +80,42 @@ export const handleDemoClinicSignup = async (
       .single();
       
     if (clinicError) {
-      console.error('Error creating demo clinic:', clinicError);
-      return false;
+      // If the clinic already exists, handle gracefully
+      if (clinicError.code === '23505') { // Unique violation
+        console.log('Clinic record already exists, continuing');
+        return true;
+      } else {
+        console.error('Error creating demo clinic record:', clinicError);
+        throw new Error(`Failed to create clinic record: ${clinicError.message}`);
+      }
     }
     
+    console.log('Demo clinic setup completed successfully');
     return true;
-  } catch (error) {
-    console.error('Error in handleDemoClinicSignup:', error);
+  } catch (error: any) {
+    console.error('Error in demo clinic signup process:', error);
     throw error;
+  }
+};
+
+/**
+ * Check if a demo clinic account already exists
+ * @param email The email to check
+ */
+export const isDemoClinicAccountExists = async (email: string): Promise<boolean> => {
+  if (!isDemoClinicEmail(email)) return false;
+  
+  try {
+    // First check if the user exists in auth
+    const { data, error } = await supabase
+      .from('clinics')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+      
+    return !!data?.id;
+  } catch (error) {
+    console.error('Error checking if demo clinic exists:', error);
+    return false;
   }
 };
