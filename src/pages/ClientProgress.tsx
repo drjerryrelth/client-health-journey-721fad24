@@ -5,7 +5,7 @@ import ClientDataProvider from '@/components/client/ClientDataProvider';
 import ProgressChart from '@/components/progress/ProgressChart';
 import { Separator } from '@/components/ui/separator';
 import { CheckIn } from '@/types';
-import { ClientDataContext } from '@/components/client/ClientDataProvider';
+import { ClientDataContext } from '@/components/client/context/ClientDataContext';
 
 const ClientProgress = () => {
   return (
