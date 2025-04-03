@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +20,6 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel }) =>
   const { mutate: createClient, isPending } = useCreateClientMutation();
   const [selectedProgramType, setSelectedProgramType] = useState<string | null>(null);
   
-  // Get all programs for the clinic
   const { data: programs = [] } = useProgramsQuery(user?.clinicId);
   
   console.log("Available programs:", programs);
@@ -36,12 +34,13 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel }) =>
       programCategory: '',
       startDate: new Date().toISOString().split('T')[0],
       notes: '',
+      weightDate: new Date().toISOString().split('T')[0],
+      goals: [],
     },
   });
   
   const watchedProgramId = form.watch('programId');
   
-  // Update selected program type when program changes
   useEffect(() => {
     if (watchedProgramId) {
       const selectedProgram = programs.find(p => p.id === watchedProgramId);
@@ -67,6 +66,9 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel }) =>
       notes: values.notes || null,
       clinicId: user.clinicId,
       coachId: user.role === 'coach' ? user.id : null,
+      initialWeight: values.initialWeight,
+      weightDate: values.weightDate,
+      goals: values.goals
     }, {
       onSuccess: (result) => {
         if (result.tempPassword) {

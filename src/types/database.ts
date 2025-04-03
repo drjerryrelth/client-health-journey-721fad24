@@ -1,4 +1,3 @@
-
 // Add the sleep_hours field to CheckInRow
 export interface CheckInRow {
   id: string;
@@ -47,6 +46,9 @@ export interface ClientRow {
   clinic_id: string;
   coach_id?: string;
   created_at?: string;
+  initial_weight?: number;
+  weight_date?: string;
+  goals?: string[];
 }
 
 export interface ProgramRow {

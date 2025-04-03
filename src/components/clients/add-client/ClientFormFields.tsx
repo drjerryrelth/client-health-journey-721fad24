@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
@@ -15,9 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Program } from '@/types';
-import { AddClientFormValues } from './AddClientSchema';
+import { AddClientFormValues, clientGoals } from './AddClientSchema';
 
 interface ClientFormFieldsProps {
   programs: Program[];
@@ -67,6 +67,84 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
               <Input placeholder="Phone number" {...field} />
             </FormControl>
             <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="space-y-4">
+        <FormField
+          control={form.control}
+          name="initialWeight"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Initial Weight</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="Weight in pounds" 
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="weightDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Weight Measurement Date</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <FormField
+        control={form.control}
+        name="goals"
+        render={() => (
+          <FormItem>
+            <FormLabel>Client Goals (Select all that apply)</FormLabel>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              {clientGoals.map((goal) => (
+                <FormField
+                  key={goal.id}
+                  control={form.control}
+                  name="goals"
+                  render={({ field }) => {
+                    return (
+                      <FormItem
+                        key={goal.id}
+                        className="flex flex-row items-start space-x-3 space-y-0"
+                      >
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes(goal.id)}
+                            onCheckedChange={(checked) => {
+                              const current = field.value || [];
+                              const updated = checked
+                                ? [...current, goal.id]
+                                : current.filter((value) => value !== goal.id);
+                              field.onChange(updated);
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          {goal.label}
+                        </FormLabel>
+                      </FormItem>
+                    );
+                  }}
+                />
+              ))}
+            </div>
           </FormItem>
         )}
       />
