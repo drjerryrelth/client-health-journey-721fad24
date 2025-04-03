@@ -1,10 +1,8 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { ClientService } from '@/services/client-service';
-import { toast } from 'sonner';
 import { Coach } from '@/services/coaches/types';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export interface UseCoachActionsProps {
   addClient: () => Promise<void>;
@@ -18,7 +16,6 @@ export const useCoachActions = (): UseCoachActionsProps => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const addClient = async (): Promise<void> => {
     try {
@@ -29,11 +26,12 @@ export const useCoachActions = (): UseCoachActionsProps => {
         return;
       }
       
-      // Navigate to the add client page
-      navigate('/coach/clients?action=add');
+      // Instead of navigating, we'll return a success so the dialog can be opened
+      // The dialog is now controlled by the ClientsPage component
+      return;
     } catch (error) {
-      console.error("Error navigating to add client:", error);
-      toast.error("Failed to navigate to add client page");
+      console.error("Error in add client action:", error);
+      toast.error("Failed to prepare add client action");
     } finally {
       setIsLoading(false);
     }

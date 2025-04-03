@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { UserPlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Client {
   id: string;
@@ -37,7 +38,6 @@ const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
       try {
         console.log('Fetching clients for coach:', user.id);
         
-        // Fetch clients assigned to this coach
         const { data, error } = await supabase
           .from('clients')
           .select(`
@@ -56,15 +56,12 @@ const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
         
         console.log('Fetched clients:', data.length);
         
-        // Transform data to match the expected format
         const formattedClients = data.map(client => {
-          // Calculate a mock progress based on start date
           const startDate = new Date(client.start_date);
           const today = new Date();
           const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-          const progress = Math.min(Math.floor((daysSinceStart / 90) * 100), 100); // Assuming 90-day program
+          const progress = Math.min(Math.floor((daysSinceStart / 90) * 100), 100);
           
-          // Determine status based on last check-in
           let status = 'active';
           if (client.last_check_in) {
             const lastCheckIn = new Date(client.last_check_in);
@@ -75,7 +72,6 @@ const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
             status = 'inactive';
           }
           
-          // Format last check-in display
           let lastCheckInDisplay = 'Never';
           if (client.last_check_in) {
             const lastCheckIn = new Date(client.last_check_in);
@@ -86,10 +82,8 @@ const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
             else lastCheckInDisplay = lastCheckIn.toLocaleDateString();
           }
           
-          // Safely get program name - fixed TypeScript null check
           let programName = 'No Program';
           
-          // Using type assertion with optional chaining to avoid null errors
           const programsObject = client.programs as { name?: string } | null;
           if (programsObject && 'name' in programsObject) {
             programName = programsObject.name || 'No Program';
@@ -151,11 +145,11 @@ const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
     return (
       <div className="text-center py-8">
         <p className="text-gray-500">No clients found. Add a client to get started.</p>
-        <Link 
-          to="/coach/clients?action=add" 
-          className="inline-flex items-center mt-4 text-sm text-primary-600 hover:text-primary-800"
-        >
-          Add your first client
+        <Link to="/coach/clients?action=add">
+          <Button variant="outline" className="mt-4">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add your first client
+          </Button>
         </Link>
       </div>
     );

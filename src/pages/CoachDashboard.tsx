@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/context/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,12 +6,13 @@ import { useCoachDashboardStats, useCoachRecentActivities } from '@/hooks/use-co
 import { useCoachActions } from '@/hooks/use-coach-actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
+import { UserPlus, Calendar, BookOpen } from 'lucide-react';
 
 const CoachDashboard = () => {
   const { user } = useAuth();
   const { data: stats, isLoading: statsLoading } = useCoachDashboardStats();
   const { data: activities, isLoading: activitiesLoading } = useCoachRecentActivities(5);
-  const { addClient, isLoading: actionLoading } = useCoachActions();
+  const { isLoading: actionLoading } = useCoachActions();
   const navigate = useNavigate();
 
   console.log('Rendering CoachDashboard, user:', user);
@@ -28,6 +28,11 @@ const CoachDashboard = () => {
   // Handle card click
   const handleCardClick = (path: string) => {
     navigate(path);
+  };
+
+  // Navigate to add client with action param
+  const handleAddClientClick = () => {
+    navigate('/coach/clients?action=add');
   };
 
   return (
@@ -150,22 +155,25 @@ const CoachDashboard = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => navigate('/coach/clients?action=add')}
+                onClick={handleAddClientClick}
                 disabled={actionLoading}
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
               >
+                <UserPlus className="mr-2 h-4 w-4" />
                 Add Client
               </button>
               <button
                 onClick={() => navigate('/coach/check-ins')}
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow hover:bg-secondary/90 disabled:pointer-events-none disabled:opacity-50"
               >
+                <Calendar className="mr-2 h-4 w-4" />
                 View Check-ins
               </button>
               <button
                 onClick={() => navigate('/coach/resources')}
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow hover:bg-secondary/90 disabled:pointer-events-none disabled:opacity-50"
               >
+                <BookOpen className="mr-2 h-4 w-4" />
                 Resources
               </button>
             </div>

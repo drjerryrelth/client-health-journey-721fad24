@@ -1,27 +1,38 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ClientList from '@/components/clients/ClientList';
 import CoachClientList from '@/components/clients/CoachClientList';
 import { useAuth } from '@/context/AuthContext';
 import { useCoachActions } from '@/hooks/use-coach-actions';
 import { useSearchParams } from 'react-router-dom';
+import AddClientDialog from '@/components/clients/AddClientDialog';
 
 const ClientsPage = () => {
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const action = searchParams.get('action');
   const isCoach = hasRole('coach');
-  const { addClient, isLoading } = useCoachActions();
+  const { isLoading } = useCoachActions();
+  
+  // State to control dialog visibility
+  const [dialogOpen, setDialogOpen] = useState(action === 'add');
 
-  const handleAddClientClick = async () => {
-    if (isCoach) {
-      await addClient();
-    } else {
-      navigate('/clients/add');
+  // Handle opening the dialog directly
+  const handleAddClientClick = () => {
+    setDialogOpen(true);
+    setSearchParams({ action: 'add' });
+  };
+
+  // Handle dialog close
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setSearchParams({});
     }
   };
 
@@ -30,6 +41,7 @@ const ClientsPage = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
         <Button onClick={handleAddClientClick} disabled={isLoading}>
+          <UserPlus className="mr-2 h-4 w-4" />
           Add Client
         </Button>
       </div>
@@ -43,19 +55,8 @@ const ClientsPage = () => {
         </CardContent>
       </Card>
       
-      {action === 'add' && (
-        <div className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New Client</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Client form would go here.</p>
-              {/* Add the client form component when it's built */}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Add Client Dialog */}
+      <AddClientDialog open={dialogOpen} onOpenChange={handleDialogOpenChange} />
     </div>
   );
 };
