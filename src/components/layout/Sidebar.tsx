@@ -10,6 +10,7 @@ import SidebarProfile from "./sidebar/SidebarProfile";
 import { adminNavItems, clinicAdminNavItems } from "./sidebar/AdminNavItems";
 import { coachNavItems } from "./sidebar/CoachNavItems";
 import { clientNavItems } from "./sidebar/ClientNavItems";
+import { UserRole } from "@/types";
 
 interface SidebarProps {
   className?: string;
@@ -23,26 +24,29 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
   if (!user) return null;
 
   let navItems = clientNavItems;
-  let displayRole = user.role;
+  let userRole: UserRole = user.role;
+  
+  // Use a separate variable for display text that doesn't need to conform to UserRole type
+  let displayRoleText: string = userRole;
   
   // Use the actual role from the user object instead of trying to derive it
   if (user.role === 'admin' || user.role === 'super_admin') {
     navItems = adminNavItems;
-    displayRole = user.role === 'super_admin' ? 'Super Admin' : 'System Admin';
+    displayRoleText = user.role === 'super_admin' ? 'Super Admin' : 'System Admin';
   } else if (user.role === 'clinic_admin') {
     navItems = clinicAdminNavItems;
-    displayRole = 'Clinic Admin';
+    displayRoleText = 'Clinic Admin';
   } else if (user.role === 'coach') {
     navItems = coachNavItems;
-    displayRole = 'Coach';
+    displayRoleText = 'Coach';
   } else {
-    displayRole = 'Client';
+    displayRoleText = 'Client';
   }
   
   console.log("Sidebar user info:", {
     role: user.role,
     clinicId: user.clinicId,
-    displayRole
+    displayRoleText
   });
 
   return (
@@ -68,7 +72,7 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
       <SidebarProfile 
         user={user} 
         onLogout={logout} 
-        userRole={displayRole}
+        userRole={displayRoleText}
       />
     </div>
   );

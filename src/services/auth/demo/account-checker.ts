@@ -29,14 +29,15 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
         
         if (users) {
           // Fix: properly type the user data and check for email property
-          // Type the users explicitly to avoid TypeScript errors
           interface UserData {
             id: string;
             email?: string;
           }
           
           // Try to find user with matching email
-          const matchingUser = users.users?.find((user: UserData) => user.email === email);
+          const matchingUser = users.users?.find((user: UserData) => 
+            user.email === email
+          );
           return !!matchingUser;
         }
         
