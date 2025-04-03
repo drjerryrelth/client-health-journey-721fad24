@@ -13,9 +13,10 @@ import ClientSuccessDisplay from './ClientSuccessDisplay';
 interface AddClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  clinicId?: string;  // Added clinicId as an optional prop
 }
 
-const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange }) => {
+const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange, clinicId }) => {
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [clientEmail, setClientEmail] = useState<string>('');
   
@@ -52,6 +53,7 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange })
           <AddClientForm 
             onSuccess={handleSuccess}
             onCancel={() => onOpenChange(false)}
+            clinicId={clinicId}  // Pass clinicId to the AddClientForm
           />
         )}
       </DialogContent>

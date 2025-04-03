@@ -14,14 +14,18 @@ import { formSchema, AddClientFormValues } from './AddClientSchema';
 interface AddClientFormProps {
   onSuccess: (email: string, tempPassword: string) => void;
   onCancel: () => void;
+  clinicId?: string; // Added clinicId as an optional prop
 }
 
-const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel }) => {
+const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clinicId }) => {
   const { user } = useAuth();
   const { mutate: createClient, isPending } = useCreateClientMutation();
   const [selectedProgramType, setSelectedProgramType] = useState<string | null>(null);
   
-  const { data: programs = [] } = useProgramsQuery(user?.clinicId);
+  // Use the passed clinicId or fall back to user's clinicId
+  const effectiveClinicId = clinicId || user?.clinicId;
+  
+  const { data: programs = [] } = useProgramsQuery(effectiveClinicId);
   
   console.log("Available programs:", programs);
   
@@ -53,7 +57,7 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel }) =>
   }, [watchedProgramId, programs]);
 
   const onSubmit = (values: AddClientFormValues) => {
-    if (!user?.clinicId) return;
+    if (!effectiveClinicId) return;
     
     console.log("Submitting client form with values:", values);
     
@@ -65,8 +69,8 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel }) =>
       programCategory: values.programCategory as 'A' | 'B' | 'C' | null || null,
       startDate: values.startDate,
       notes: values.notes || null,
-      clinicId: user.clinicId,
-      coachId: user.role === 'coach' ? user.id : null,
+      clinicId: effectiveClinicId,
+      coachId: user?.role === 'coach' ? user.id : null,
       initialWeight: values.initialWeight,
       weightDate: values.weightDate,
       goals: values.goals
