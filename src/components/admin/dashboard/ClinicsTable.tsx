@@ -12,6 +12,7 @@ interface ClinicsTableProps {
   isError: boolean;
   refetch: () => void;
   onManageClinics: () => void;
+  isClinicAdmin?: boolean;
 }
 
 const ClinicsTable: React.FC<ClinicsTableProps> = ({
@@ -19,15 +20,20 @@ const ClinicsTable: React.FC<ClinicsTableProps> = ({
   isLoading,
   isError,
   refetch,
-  onManageClinics
+  onManageClinics,
+  isClinicAdmin = false
 }) => {
+  const title = isClinicAdmin ? "Your Clinic" : "Active Clinics";
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-lg">Active Clinics</CardTitle>
-        <Button onClick={onManageClinics} variant="outline" size="sm">
-          Manage Clinics
-        </Button>
+        <CardTitle className="text-lg">{title}</CardTitle>
+        {!isClinicAdmin && (
+          <Button onClick={onManageClinics} variant="outline" size="sm">
+            Manage Clinics
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -62,7 +68,7 @@ const ClinicsTable: React.FC<ClinicsTableProps> = ({
           </div>
         ) : !dashboardStats || dashboardStats.clinicsSummary.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No active clinics found
+            {isClinicAdmin ? 'No clinic information found' : 'No active clinics found'}
           </div>
         ) : (
           <div className="overflow-x-auto">

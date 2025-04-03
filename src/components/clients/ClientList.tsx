@@ -1,135 +1,203 @@
 
-import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useAuth } from '@/context/auth';
+import { supabase } from '@/lib/supabase';
+import { Client } from '@/types';
+import { mapDbClientToClient } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Edit, Trash2, MoreHorizontal, User, CalendarClock, Building } from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 interface ClientListProps {
-  limit?: number;
+  clinicId?: string;
 }
 
-const ClientList: React.FC<ClientListProps> = ({ limit }) => {
-  // Mock client data
-  const clients = [
-    {
-      id: '1',
-      name: 'Jane Cooper',
-      email: 'jane@example.com',
-      program: 'Practice Naturals',
-      progress: 75,
-      lastCheckIn: '2 hours ago',
-      status: 'active',
-    },
-    {
-      id: '2',
-      name: 'Michael Johnson',
-      email: 'michael@example.com',
-      program: 'Keto Program',
-      progress: 40,
-      lastCheckIn: '1 day ago',
-      status: 'active',
-    },
-    {
-      id: '3',
-      name: 'Emma Wilson',
-      email: 'emma@example.com',
-      program: 'Custom',
-      progress: 60,
-      lastCheckIn: '3 days ago',
-      status: 'at risk',
-    },
-    {
-      id: '4',
-      name: 'Robert Brown',
-      email: 'robert@example.com',
-      program: 'Practice Naturals',
-      progress: 90,
-      lastCheckIn: '5 hours ago',
-      status: 'active',
-    },
-    {
-      id: '5',
-      name: 'Olivia Thompson',
-      email: 'olivia@example.com',
-      program: 'Keto Program',
-      progress: 30,
-      lastCheckIn: '7 days ago',
-      status: 'at risk',
-    },
-    {
-      id: '6',
-      name: 'William Garcia',
-      email: 'william@example.com',
-      program: 'Custom',
-      progress: 15,
-      lastCheckIn: 'Never',
-      status: 'inactive',
-    },
-  ];
+const ClientList = ({ clinicId }: ClientListProps) => {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  const isClinicAdmin = user?.role === 'clinic_admin';
+  const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  
+  // Ensure clinicId is set for clinic admins
+  const effectiveClinicId = isClinicAdmin ? user?.clinicId : clinicId;
+  
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        setLoading(true);
+        
+        let query = supabase.from('clients').select(`
+          *,
+          programs:program_id (name),
+          coaches:coach_id (name, email)
+        `);
+        
+        // Filter by clinic ID if provided or if user is clinic admin
+        if (effectiveClinicId) {
+          console.log(`Filtering clients by clinic ID: ${effectiveClinicId}`);
+          query = query.eq('clinic_id', effectiveClinicId);
+        }
+        
+        const { data, error } = await query.order('created_at', { ascending: false });
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          const mappedClients = data.map(client => mapDbClientToClient(client));
+          setClients(mappedClients);
+        }
+      } catch (err: any) {
+        console.error('Error fetching clients:', err);
+        setError(err.message);
+        toast.error('Failed to load clients');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const displayClients = limit ? clients.slice(0, limit) : clients;
+    fetchClients();
+  }, [effectiveClinicId, isClinicAdmin, user?.clinicId]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'at risk':
-        return 'bg-amber-100 text-amber-800';
-      case 'inactive':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const handleView = (id: string) => {
+    navigate(`/admin/clients/${id}`);
+  };
+
+  const handleEdit = (id: string) => {
+    navigate(`/admin/clients/${id}/edit`);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this client?')) {
+      try {
+        const { error } = await supabase.from('clients').delete().eq('id', id);
+        
+        if (error) {
+          throw error;
+        }
+        
+        setClients(clients.filter(client => client.id !== id));
+        toast.success('Client deleted successfully');
+      } catch (err: any) {
+        console.error('Error deleting client:', err);
+        toast.error('Failed to delete client');
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-red-500 border border-red-300 rounded-md">
+        Error: {error}
+        <Button variant="outline" className="mt-2" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Client</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
             <TableHead>Program</TableHead>
-            <TableHead>Progress</TableHead>
+            <TableHead>Start Date</TableHead>
             <TableHead>Last Check-in</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead className="w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {displayClients.map((client) => (
-            <TableRow key={client.id}>
-              <TableCell>
-                <Link to={`/client/${client.id}`} className="flex items-center space-x-3 hover:underline">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${client.name}`} alt={client.name} />
-                    <AvatarFallback>{client.name.slice(0, 2)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium">{client.name}</div>
-                    <div className="text-xs text-gray-500">{client.email}</div>
+          {clients.length > 0 ? (
+            clients.map((client) => (
+              <TableRow key={client.id} className="hover:bg-gray-50">
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <div className="bg-primary-100 h-8 w-8 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary-700" />
+                    </div>
+                    <span className="font-medium">{client.name}</span>
                   </div>
-                </Link>
-              </TableCell>
-              <TableCell>{client.program}</TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-primary-500 h-2 rounded-full" 
-                      style={{ width: `${client.progress}%` }}
-                    ></div>
+                </TableCell>
+                <TableCell>{client.email}</TableCell>
+                <TableCell>
+                  {client.programId ? (
+                    <Badge variant="outline" className="bg-blue-50">
+                      {(client as any).programs?.name || 'Unknown Program'}
+                    </Badge>
+                  ) : (
+                    <span className="text-gray-500">Not assigned</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <CalendarClock className="h-4 w-4" />
+                    {client.startDate || 'Not set'}
                   </div>
-                  <span className="text-xs font-medium">{client.progress}%</span>
-                </div>
-              </TableCell>
-              <TableCell>{client.lastCheckIn}</TableCell>
-              <TableCell>
-                <Badge className={getStatusColor(client.status)} variant="outline">
-                  {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
-                </Badge>
+                </TableCell>
+                <TableCell>
+                  {client.lastCheckIn || 'Never'}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Open menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleView(client.id)}>
+                        View
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(client.id)}>
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleDelete(client.id)} 
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                No clients found.
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </div>

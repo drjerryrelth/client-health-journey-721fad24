@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { DashboardStats } from '@/types/dashboard';
@@ -102,7 +101,9 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
           status: clinicData.status
         }]
       };
-    } else if (userRole === 'admin' || userRole === 'super_admin') {
+    } 
+    // For system admins, keep the existing functionality
+    else if (userRole === 'admin' || userRole === 'super_admin') {
       // SYSTEM ADMIN: Fetch all clinics data
       console.log('[DashboardStats] System admin detected, fetching global statistics');
       

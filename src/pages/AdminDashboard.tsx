@@ -67,11 +67,14 @@ const AdminDashboard = () => {
     });
   };
   
+  const isClinicAdmin = user?.role === 'clinic_admin';
+  const dashboardTitle = isClinicAdmin ? 'Clinic Dashboard' : 'Admin Dashboard';
+  
   return (
     <div>
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{dashboardTitle}</h1>
           <p className="text-gray-500">Welcome back, {user?.name || 'Admin User'}!</p>
         </div>
         <Button 
@@ -99,6 +102,7 @@ const AdminDashboard = () => {
             isError={isStatsError}
             refetch={refetchStats}
             onManageClinics={handleManageClinics}
+            isClinicAdmin={isClinicAdmin}
           />
         </div>
         
