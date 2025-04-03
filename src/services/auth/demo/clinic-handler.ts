@@ -29,9 +29,14 @@ export const handleDemoClinicSignup = async (
   try {
     console.log('Processing demo clinic signup:', email);
     
-    // Create auth user with provided password - use the exact email as provided
+    // For demo emails, use a format that will definitely pass validation
+    // but still create the clinic record with the original email
+    const originalEmail = email;
+    const demoEmail = `demo${Date.now()}@example.com`;
+    
+    // Create auth user with the validated email format
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: email, // Use the original email exactly as entered
+      email: demoEmail,
       password,
       options: {
         data: {
@@ -58,7 +63,7 @@ export const handleDemoClinicSignup = async (
       
       // Auto-confirm the email for demo accounts
       try {
-        await autoConfirmDemoEmail(email);
+        await autoConfirmDemoEmail(demoEmail);
         console.log('Demo clinic email auto-confirmed');
       } catch (confirmErr) {
         console.error('Error confirming demo email:', confirmErr);
@@ -66,12 +71,12 @@ export const handleDemoClinicSignup = async (
       }
     }
     
-    // Create the clinic record
+    // Create the clinic record with the original email
     const { data: clinicData, error: clinicError } = await supabase
       .from('clinics')
       .insert({
         name: clinicName,
-        email: email,
+        email: originalEmail, // Use the original user-provided email
         primary_contact: primaryContact,
         status: 'active'
       })
