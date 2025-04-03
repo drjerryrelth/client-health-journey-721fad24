@@ -13,7 +13,7 @@ const Dashboard = () => {
     if (!isLoading && user) {
       console.log('Dashboard redirecting based on role:', user.role, 'clinicId:', user.clinicId);
       
-      // Redirect to the appropriate dashboard based on role
+      // Strict role-based redirection
       if (user.role === 'admin' || user.role === 'super_admin') {
         console.log('Redirecting to admin dashboard (system admin)');
         navigate('/admin/dashboard', { replace: true });

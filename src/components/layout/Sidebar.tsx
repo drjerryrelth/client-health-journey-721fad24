@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth";
@@ -11,6 +11,7 @@ import { adminNavItems, clinicAdminNavItems } from "./sidebar/AdminNavItems";
 import { coachNavItems } from "./sidebar/CoachNavItems";
 import { clientNavItems } from "./sidebar/ClientNavItems";
 import { UserRole } from "@/types";
+import { toast } from 'sonner';
 
 interface SidebarProps {
   className?: string;
@@ -20,6 +21,7 @@ interface SidebarProps {
 
 export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) {
   const { user, hasRole, logout } = useAuth();
+  const location = useLocation();
 
   if (!user) return null;
 
@@ -29,12 +31,20 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
   // Use a separate variable for display text that doesn't need to conform to UserRole type
   let displayRoleText: string = userRole;
   
-  // Use the actual role from the user object instead of trying to derive it
+  // FIXED: Strict separation of role-based navigation
   if (user.role === 'admin' || user.role === 'super_admin') {
     navItems = adminNavItems;
     displayRoleText = user.role === 'super_admin' ? 'Super Admin' : 'System Admin';
   } else if (user.role === 'clinic_admin') {
     navItems = clinicAdminNavItems;
+    
+    // Extra protection: If clinic admin somehow gets to a system-admin only route, block it
+    if (location.pathname.includes('/admin/clinics') || 
+        location.pathname.includes('/admin/admin-users')) {
+      toast.error("You don't have permission to access this page");
+      window.location.href = '/admin/dashboard';
+    }
+    
     displayRoleText = 'Clinic Admin';
   } else if (user.role === 'coach') {
     navItems = coachNavItems;

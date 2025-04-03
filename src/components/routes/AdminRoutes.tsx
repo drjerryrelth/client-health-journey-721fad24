@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import AdminDashboard from '@/pages/AdminDashboard';
@@ -17,6 +17,7 @@ import ClinicCustomizationPage from '@/pages/admin/ClinicCustomizationPage';
 import MealPlanGenerator from '@/pages/MealPlanGenerator';
 import NotFound from '@/pages/NotFound';
 import { useAuth } from '@/context/auth';
+import { toast } from 'sonner';
 
 const AdminRoutes = () => {
   const { user } = useAuth();
@@ -31,12 +32,28 @@ const AdminRoutes = () => {
     return <Navigate to="/unauthorized" replace />;
   }
   
+  // CRITICAL ISSUE FIX: Ensure clinic admin NEVER sees system admin routes
+  useEffect(() => {
+    // For clinic admins trying to access forbidden routes
+    if (isClinicAdmin) {
+      const currentPath = window.location.pathname;
+      const forbiddenPaths = ['/admin/clinics', '/admin/admin-users'];
+      
+      if (forbiddenPaths.some(path => currentPath.startsWith(path))) {
+        console.log('Clinic admin attempting to access forbidden route:', currentPath);
+        toast.error('You do not have permission to access this page');
+        window.location.href = '/admin/dashboard';
+      }
+    }
+  }, [isClinicAdmin]);
+  
   // Different route configurations based on exact role
   // Clinic admin - STRICTLY LIMITED access
   if (isClinicAdmin) {
     console.log('Rendering clinic admin routes only');
     return (
       <Routes>
+        {/* Use specialized layout for clinic admins with strict role enforcement */}
         <Route element={<MainLayout requiredRoles={['clinic_admin']} />}>
           {/* Base route */}
           <Route index element={<AdminDashboard />} />
@@ -54,10 +71,6 @@ const AdminRoutes = () => {
           <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
           <Route path="settings" element={<SettingsPage />} />
           
-          {/* Explicitly block access to system admin only routes */}
-          <Route path="clinics" element={<Navigate to="/unauthorized" replace />} />
-          <Route path="admin-users" element={<Navigate to="/unauthorized" replace />} />
-          
           {/* Catch all route */}
           <Route path="*" element={<NotFound />} />
         </Route>
@@ -65,7 +78,7 @@ const AdminRoutes = () => {
     );
   }
   
-  // System admin routes (for 'admin' or 'super_admin')
+  // System admin routes (for 'admin' or 'super_admin') with explicit role enforcement
   console.log('Rendering system admin routes (full access)');
   return (
     <Routes>
@@ -73,7 +86,7 @@ const AdminRoutes = () => {
         {/* Base route */}
         <Route index element={<AdminDashboard />} />
         
-        {/* Admin routes */}
+        {/* Admin routes - explicitly marked for system admin only */}
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="clients" element={<ClientsPage />} />
         <Route path="clinics" element={<ClinicsPage />} />

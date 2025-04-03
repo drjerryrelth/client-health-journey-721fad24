@@ -34,8 +34,11 @@ const DashboardLoader = () => {
 
   console.log('DashboardLoader - User role:', user.role);
   
-  // Only render routes specific to the user's role
-  if (user.role === 'admin' || user.role === 'super_admin' || user.role === 'clinic_admin') {
+  // STRICT ENFORCEMENT - Only render routes specific to the user's role
+  if (user.role === 'admin' || user.role === 'super_admin') {
+    return <AdminRoutes />;
+  } else if (user.role === 'clinic_admin') {
+    // Ensure clinic admins can only see clinic admin routes
     return <AdminRoutes />;
   } else if (user.role === 'coach') {
     return <CoachRoutes />;

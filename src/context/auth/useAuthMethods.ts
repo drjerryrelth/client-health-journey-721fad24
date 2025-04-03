@@ -97,9 +97,6 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     }
     
     // CRITICAL CHANGE: Use strict role checking for different admin types
-    // System admin roles - admin, super_admin
-    // Special role - clinic_admin (has access to admin dashboard but limited to their clinic)
-    // User roles - coach, client
     
     // Get the actual user role for clarity
     const actualRole = user.role;
@@ -114,25 +111,31 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     // Convert required role to array for easier checking
     const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     
-    // IMPORTANT: Strictly enforce role separation
-    // If admin is required, only system admins can access (never clinic admins)
-    if (requiredRoles.includes('admin')) {
+    // CRITICAL SECURITY FIX: Explicitly handle each role scenario
+    
+    // Check for system admin only routes - clinic_admin can NEVER access these
+    if (requiredRoles.includes('admin') && !requiredRoles.includes('clinic_admin')) {
       return isSystemAdmin || isSuperAdmin;
     }
     
-    // If clinic_admin is required, clinic admins, system admins and super admins can access
+    // Check for clinic admin routes - both clinic admins and system admins can access
     if (requiredRoles.includes('clinic_admin')) {
-      return isClinicAdmin || isSystemAdmin || isSuperAdmin;
+      if (isClinicAdmin || isSystemAdmin || isSuperAdmin) return true;
     }
     
     // For coach role
     if (requiredRoles.includes('coach')) {
-      return isCoach || isSystemAdmin || isSuperAdmin;
+      if (isCoach || isSystemAdmin || isSuperAdmin) return true;
     }
     
     // For client role
     if (requiredRoles.includes('client')) {
-      return isClient || isSystemAdmin || isSuperAdmin;
+      if (isClient || isSystemAdmin || isSuperAdmin) return true;
+    }
+    
+    // Final check for super_admin specific functions
+    if (requiredRoles.includes('super_admin')) {
+      return isSuperAdmin;
     }
     
     // No specific role check passed

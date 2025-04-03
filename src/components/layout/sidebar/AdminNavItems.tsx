@@ -20,6 +20,7 @@ export type NavItem = {
 };
 
 // Navigation items for system administrators (admin, super_admin)
+// CRITICAL: These items are ONLY for system admins, never clinic admins
 export const adminNavItems: NavItem[] = [
   {
     title: "Dashboard",
@@ -84,7 +85,7 @@ export const adminNavItems: NavItem[] = [
 ];
 
 // Navigation items for clinic administrators - SPECIFICALLY different from system admins
-// Note: Clinic admins should NOT see Clinics or Admin Users
+// IMPORTANT: Clinic admins should NEVER see Clinics or Admin Users
 export const clinicAdminNavItems: NavItem[] = [
   {
     title: "Dashboard",

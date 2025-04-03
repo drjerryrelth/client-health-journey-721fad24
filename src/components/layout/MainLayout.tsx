@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/context/auth';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import TopBar from './TopBar';
 import { UserRole } from '@/types';
@@ -13,6 +13,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'super_admin', 'clinic_admin', 'coach', 'client'] }) => {
   const { isAuthenticated, isLoading, hasRole, user } = useAuth();
+  const location = useLocation();
   
   // Show loading state
   if (isLoading) {
@@ -33,6 +34,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
   console.log('MainLayout - User role:', user?.role);
   console.log('MainLayout - User clinicId:', user?.clinicId);
   console.log('MainLayout - Required roles:', requiredRoles);
+  
+  // Enhanced security check - Ensure clinic_admin cannot access system admin routes
+  if (user?.role === 'clinic_admin') {
+    // System admin only paths that clinic admins should never access
+    const systemAdminOnlyPaths = ['/admin/clinics', '/admin/admin-users'];
+    
+    // Check if current path starts with any of the restricted paths
+    const isRestrictedPath = systemAdminOnlyPaths.some(path => 
+      location.pathname.startsWith(path)
+    );
+    
+    if (isRestrictedPath) {
+      console.log('MainLayout - Blocking clinic admin from accessing system admin route:', location.pathname);
+      toast.error("Access denied. You don't have permission to access this page.");
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
   
   // CRITICAL FIX: Apply specialized role checking logic
   let hasPermission = false;
