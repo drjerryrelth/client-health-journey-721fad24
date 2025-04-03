@@ -60,8 +60,12 @@ const AccountSetupTab = ({
   const handlePlanSelect = (planId: string) => {
     console.log('Selecting plan:', planId);
     
-    // Update the form value directly
-    form.setValue('selectedPlan', planId);
+    // Set the form value directly
+    form.setValue('selectedPlan', planId, {
+      shouldValidate: true,
+      shouldTouch: true,
+      shouldDirty: true,
+    });
     
     // Filter add-ons that are compatible with the selected plan
     const currentAddOns = form.getValues('addOns') || [];
@@ -116,7 +120,7 @@ const AccountSetupTab = ({
                       description={plan.description}
                       price={plan.price}
                       features={plan.features}
-                      selected={field.value === plan.id}
+                      selected={selectedPlan === plan.id}
                       onSelect={() => {
                         field.onChange(plan.id);
                         handlePlanSelect(plan.id);
