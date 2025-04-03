@@ -84,6 +84,10 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     }
   }, [setIsLoading, toast]);
 
+  /**
+   * Strictly check if a user has the required role(s)
+   * CRUCIAL FIX: This function was allowing clinic admins to have system admin permissions
+   */
   const hasRole = useCallback((requiredRole: UserRole | UserRole[]) => (user: UserData | null) => {
     console.log('Checking role:', requiredRole, 'for user:', user);
     
@@ -92,38 +96,48 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       return false;
     }
     
-    // Fix: Strict role checking - a clinic_admin should ONLY have clinic_admin role
-    // They should not have permissions of system admin roles
-    const isSuperAdmin = user.role === 'super_admin';
-    const isSystemAdmin = user.role === 'admin';
-    const isClinicAdmin = user.role === 'clinic_admin';
+    // CRITICAL CHANGE: Use strict role checking for different admin types
+    // System admin roles - admin, super_admin
+    // Special role - clinic_admin (has access to admin dashboard but limited to their clinic)
+    // User roles - coach, client
     
-    console.log('Is clinic admin?', isClinicAdmin);
-    console.log('Is system admin?', isSystemAdmin);
-    console.log('Is super admin?', isSuperAdmin);
-
-    // IMPORTANT: Different roles have different access levels. A clinic_admin is not a system admin.
-    // This is where the bug was - clinic_admins were being treated as having admin privileges
+    // Get the actual user role for clarity
+    const actualRole = user.role;
+    const isSuperAdmin = actualRole === 'super_admin';
+    const isSystemAdmin = actualRole === 'admin';
+    const isClinicAdmin = actualRole === 'clinic_admin';
+    const isCoach = actualRole === 'coach';
+    const isClient = actualRole === 'client';
     
-    if ((Array.isArray(requiredRole) && requiredRole.includes('admin')) || requiredRole === 'admin') {
-      // Only actual system admins should have admin permissions
+    console.log({isSuperAdmin, isSystemAdmin, isClinicAdmin, isCoach, isClient});
+    
+    // Convert required role to array for easier checking
+    const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    
+    // IMPORTANT: Strictly enforce role separation
+    // If admin is required, only system admins can access (never clinic admins)
+    if (requiredRoles.includes('admin')) {
       return isSystemAdmin || isSuperAdmin;
     }
     
-    if ((Array.isArray(requiredRole) && requiredRole.includes('clinic_admin')) || requiredRole === 'clinic_admin') {
-      // Clinic admins have their own role, separate from system admins
+    // If clinic_admin is required, clinic admins, system admins and super admins can access
+    if (requiredRoles.includes('clinic_admin')) {
       return isClinicAdmin || isSystemAdmin || isSuperAdmin;
     }
     
-    if (Array.isArray(requiredRole)) {
-      const hasAnyRole = requiredRole.some(role => user.role === role);
-      console.log(`User has any of [${requiredRole.join(', ')}]?`, hasAnyRole);
-      return hasAnyRole;
+    // For coach role
+    if (requiredRoles.includes('coach')) {
+      return isCoach || isSystemAdmin || isSuperAdmin;
     }
     
-    const hasSpecificRole = user.role === requiredRole;
-    console.log(`User has role ${requiredRole}?`, hasSpecificRole);
-    return hasSpecificRole;
+    // For client role
+    if (requiredRoles.includes('client')) {
+      return isClient || isSystemAdmin || isSuperAdmin;
+    }
+    
+    // No specific role check passed
+    console.log(`No match for required roles: ${requiredRoles.join(', ')}`);
+    return false;
   }, []);
 
   return {

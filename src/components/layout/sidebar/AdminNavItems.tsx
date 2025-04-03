@@ -1,35 +1,40 @@
 
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import {
   BarChart3,
+  Building2,
+  Calendar,
   ClipboardList,
   Users,
-  Building,
-  User,
-  Settings,
-  Package,
-  CalendarCheck,
   FileText,
+  Settings,
   Activity,
-  BookOpen,
-  Home,
+  Folders,
+  UserCog,
   Palette,
 } from "lucide-react";
 
-export interface NavItem {
+export type NavItem = {
   title: string;
   href: string;
   icon: React.ElementType;
-}
+};
 
-// Full admin access to everything
+// Navigation items for system administrators (admin, super_admin)
 export const adminNavItems: NavItem[] = [
   {
     title: "Dashboard",
     href: "/admin/dashboard",
-    icon: Home,
+    icon: BarChart3,
+  },
+  {
+    title: "Clinics",
+    href: "/admin/clinics",
+    icon: Building2,
+  },
+  {
+    title: "Coaches",
+    href: "/admin/coaches",
+    icon: Users,
   },
   {
     title: "Clients",
@@ -37,29 +42,19 @@ export const adminNavItems: NavItem[] = [
     icon: Users,
   },
   {
-    title: "Clinics",
-    href: "/admin/clinics",
-    icon: Building,
-  },
-  {
-    title: "Coaches",
-    href: "/admin/coaches",
-    icon: User,
-  },
-  {
     title: "Programs",
     href: "/admin/programs",
-    icon: Package,
+    icon: ClipboardList,
   },
   {
     title: "Check-ins",
     href: "/admin/check-ins",
-    icon: CalendarCheck,
+    icon: Calendar,
   },
   {
     title: "Reports",
     href: "/admin/reports",
-    icon: BarChart3,
+    icon: FileText,
   },
   {
     title: "Activities",
@@ -69,7 +64,7 @@ export const adminNavItems: NavItem[] = [
   {
     title: "Resources",
     href: "/admin/resources",
-    icon: BookOpen,
+    icon: Folders,
   },
   {
     title: "Clinic Customization",
@@ -77,9 +72,9 @@ export const adminNavItems: NavItem[] = [
     icon: Palette,
   },
   {
-    title: "Meal Plan Generator",
-    href: "/admin/meal-plan-generator",
-    icon: ClipboardList,
+    title: "Admin Users",
+    href: "/admin/admin-users",
+    icon: UserCog,
   },
   {
     title: "Settings",
@@ -88,12 +83,18 @@ export const adminNavItems: NavItem[] = [
   },
 ];
 
-// Clinic admin has limited access - no access to all clinics
+// Navigation items for clinic administrators - SPECIFICALLY different from system admins
+// Note: Clinic admins should NOT see Clinics or Admin Users
 export const clinicAdminNavItems: NavItem[] = [
   {
     title: "Dashboard",
     href: "/admin/dashboard",
-    icon: Home,
+    icon: BarChart3,
+  },
+  {
+    title: "Coaches",
+    href: "/admin/coaches",
+    icon: Users,
   },
   {
     title: "Clients",
@@ -101,24 +102,19 @@ export const clinicAdminNavItems: NavItem[] = [
     icon: Users,
   },
   {
-    title: "Coaches",
-    href: "/admin/coaches",
-    icon: User,
-  },
-  {
     title: "Programs",
     href: "/admin/programs",
-    icon: Package,
+    icon: ClipboardList,
   },
   {
     title: "Check-ins",
     href: "/admin/check-ins",
-    icon: CalendarCheck,
+    icon: Calendar,
   },
   {
     title: "Reports",
     href: "/admin/reports",
-    icon: BarChart3,
+    icon: FileText,
   },
   {
     title: "Activities",
@@ -128,17 +124,12 @@ export const clinicAdminNavItems: NavItem[] = [
   {
     title: "Resources",
     href: "/admin/resources",
-    icon: BookOpen,
+    icon: Folders,
   },
   {
     title: "Clinic Customization",
     href: "/admin/clinic-customization",
     icon: Palette,
-  },
-  {
-    title: "Meal Plan Generator",
-    href: "/admin/meal-plan-generator",
-    icon: ClipboardList,
   },
   {
     title: "Settings",

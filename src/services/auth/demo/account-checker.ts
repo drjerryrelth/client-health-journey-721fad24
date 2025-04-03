@@ -1,6 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+// Define interface for user data
+interface UserData {
+  id: string;
+  email?: string;
+}
+
 /**
  * Check if a demo account exists in auth.users
  * This is used to avoid rate limit errors with demo logins
@@ -28,12 +34,6 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
         const { data: users } = await supabase.auth.admin.listUsers();
         
         if (users) {
-          // Define interface for user data
-          interface UserData {
-            id: string;
-            email?: string;
-          }
-          
           // Explicitly type the users array
           const typedUsers = users.users as UserData[] || [];
           

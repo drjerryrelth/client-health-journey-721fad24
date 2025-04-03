@@ -34,15 +34,25 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
   console.log('MainLayout - User clinicId:', user?.clinicId);
   console.log('MainLayout - Required roles:', requiredRoles);
   
-  // Critical change: For clinic_admin, only allow them to access the clinic_admin role route
-  if (user?.role === 'clinic_admin' && !requiredRoles.includes('clinic_admin')) {
-    console.log('MainLayout - Clinic admin attempting to access non-clinic admin route');
-    toast.error("Access denied. You don't have permission to access this page.");
-    return <Navigate to="/unauthorized" replace />;
+  // CRITICAL FIX: Apply specialized role checking logic
+  let hasPermission = false;
+  
+  // If user is a clinic_admin, they can ONLY access clinic_admin routes
+  if (user?.role === 'clinic_admin') {
+    // Clinic admins can ONLY access routes that explicitly require clinic_admin role
+    hasPermission = requiredRoles.includes('clinic_admin');
+    
+    // Additional check - block clinic admins from system admin pages
+    if (requiredRoles.includes('admin') && !requiredRoles.includes('clinic_admin')) {
+      console.log('MainLayout - Blocking clinic admin from accessing system admin route');
+      hasPermission = false;
+    }
+  } 
+  // For other roles, use the hasRole method
+  else {
+    hasPermission = requiredRoles.some(role => hasRole(role));
   }
   
-  // Check if user has ANY of the required roles (OR logic)
-  const hasPermission = requiredRoles.some(role => hasRole(role));
   console.log('MainLayout - Has permission:', hasPermission);
   
   if (!hasPermission) {
