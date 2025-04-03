@@ -29,7 +29,7 @@ const AdminRoutes = () => {
   if (isClinicAdmin) {
     return (
       <Routes>
-        <Route element={<MainLayout requiredRoles={['clinic_admin', 'admin']} />}>
+        <Route element={<MainLayout requiredRoles={['clinic_admin']} />}>
           {/* Clinic admin can only see their own clinic */}
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
@@ -58,7 +58,7 @@ const AdminRoutes = () => {
   // System admin routes (original behavior)
   return (
     <Routes>
-      <Route element={<MainLayout />}>
+      <Route element={<MainLayout requiredRoles={['admin', 'super_admin']} />}>
         {/* Base route */}
         <Route index element={<AdminDashboard />} />
         

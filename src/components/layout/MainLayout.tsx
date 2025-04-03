@@ -11,7 +11,7 @@ interface MainLayoutProps {
   requiredRoles?: UserRole[];
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'clinic_admin', 'coach', 'client'] }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'super_admin', 'clinic_admin', 'coach', 'client'] }) => {
   const { isAuthenticated, isLoading, hasRole, user } = useAuth();
   
   // Show loading state

@@ -6,7 +6,7 @@ import { UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ClientList from '@/components/clients/ClientList';
 import CoachClientList from '@/components/clients/CoachClientList';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { useCoachActions } from '@/hooks/use-coach-actions';
 import { useSearchParams } from 'react-router-dom';
 import { AddClientDialog } from '@/components/clients/add-client';
