@@ -9,7 +9,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   
-  // If user is already authenticated, redirect to the appropriate dashboard
   React.useEffect(() => {
     if (isAuthenticated && user) {
       console.log('User is already authenticated, redirecting to dashboard');
@@ -136,7 +135,7 @@ const Index = () => {
           
           <div className="mt-12 text-center">
             <Button size="lg" className="gap-2" onClick={handleGetStartedClick}>
-              Get Started <ArrowRight className="h-4 w-4" />
+              Register Your Clinic <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
