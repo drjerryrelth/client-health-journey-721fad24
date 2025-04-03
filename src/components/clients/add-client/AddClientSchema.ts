@@ -28,4 +28,3 @@ export const clientGoals = [
   { id: 'build_muscle', label: 'Build Muscle' },
   { id: 'improve_health', label: 'Improve Overall Health' }
 ] as const;
-

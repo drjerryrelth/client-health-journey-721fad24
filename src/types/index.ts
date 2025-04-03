@@ -25,6 +25,9 @@ export type Client = {
   clinicId: string;
   coachId?: string | null;
   tempPassword?: string; // Added temp password field for newly created clients
+  initialWeight?: number | null;
+  weightDate?: string | null;
+  goals?: string[] | null;
 };
 
 export type Program = {
@@ -97,6 +100,9 @@ export const mapDbClientToClient = (dbClient: ClientRow): Client => ({
   profileImage: dbClient.profile_image,
   clinicId: dbClient.clinic_id,
   coachId: dbClient.coach_id,
+  initialWeight: dbClient.initial_weight,
+  weightDate: dbClient.weight_date,
+  goals: dbClient.goals,
 });
 
 export const mapClientToDbClient = (client: Omit<Client, 'id'> & { id?: string }): ClientRow => ({
@@ -113,6 +119,9 @@ export const mapClientToDbClient = (client: Omit<Client, 'id'> & { id?: string }
   profile_image: client.profileImage || null,
   clinic_id: client.clinicId,
   coach_id: client.coachId || null,
+  initial_weight: client.initialWeight || null,
+  weight_date: client.weightDate || null,
+  goals: client.goals || null,
 });
 
 export const mapDbProgramToProgram = (dbProgram: ProgramRow): Program => ({

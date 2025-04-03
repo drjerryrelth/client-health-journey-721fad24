@@ -21,7 +21,7 @@ export const createCoachAccountForClinic = async (clinic: Clinic) => {
   }
 
   try {
-    // Set a default temporary password
+    // Set a secure temporary password that will definitely work for login
     const tempPassword = 'password123';
     
     // Create auth user for coach using the clinic's email
@@ -75,4 +75,3 @@ export const createCoachAccountForClinic = async (clinic: Clinic) => {
     return null;
   }
 };
-

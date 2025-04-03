@@ -193,7 +193,9 @@ export type Database = {
           coach_id: string | null
           created_at: string | null
           email: string
+          goals: string[] | null
           id: string
+          initial_weight: number | null
           last_check_in: string | null
           name: string
           notes: string | null
@@ -202,13 +204,16 @@ export type Database = {
           program_id: string | null
           start_date: string
           user_id: string | null
+          weight_date: string | null
         }
         Insert: {
           clinic_id: string
           coach_id?: string | null
           created_at?: string | null
           email: string
+          goals?: string[] | null
           id?: string
+          initial_weight?: number | null
           last_check_in?: string | null
           name: string
           notes?: string | null
@@ -217,13 +222,16 @@ export type Database = {
           program_id?: string | null
           start_date: string
           user_id?: string | null
+          weight_date?: string | null
         }
         Update: {
           clinic_id?: string
           coach_id?: string | null
           created_at?: string | null
           email?: string
+          goals?: string[] | null
           id?: string
+          initial_weight?: number | null
           last_check_in?: string | null
           name?: string
           notes?: string | null
@@ -232,6 +240,7 @@ export type Database = {
           program_id?: string | null
           start_date?: string
           user_id?: string | null
+          weight_date?: string | null
         }
         Relationships: [
           {
