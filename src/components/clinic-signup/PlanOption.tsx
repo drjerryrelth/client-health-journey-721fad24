@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Check } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 
 interface PlanOptionProps {
@@ -39,7 +39,6 @@ const PlanOption = ({
           value={id} 
           id={`plan-${id}`}
           className="mt-1 mr-2"
-          checked={selected}
         />
         <div className="flex-grow">
           <div className="flex justify-between items-start">

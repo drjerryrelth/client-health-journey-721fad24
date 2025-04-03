@@ -56,6 +56,20 @@ const AccountSetupTab = ({
     form.setValue('addOns', updatedAddOns);
   };
 
+  // Handle plan selection
+  const handlePlanSelect = (planId: string) => {
+    form.setValue('selectedPlan', planId);
+    
+    // Clear add-ons that aren't available for the newly selected plan
+    const currentAddOns = form.getValues('addOns') || [];
+    const validAddOns = currentAddOns.filter(addOnId => {
+      const addOn = addOnOptions.find(a => a.id === addOnId);
+      return addOn?.availableFor.includes(planId);
+    });
+    
+    form.setValue('addOns', validAddOns);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center mb-4">
@@ -94,7 +108,7 @@ const AccountSetupTab = ({
                       price={plan.price}
                       features={plan.features}
                       selected={field.value === plan.id}
-                      onSelect={() => field.onChange(plan.id)}
+                      onSelect={() => handlePlanSelect(plan.id)}
                     />
                   ))}
                 </RadioGroup>
