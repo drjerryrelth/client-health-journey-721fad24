@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,7 @@ const Index = () => {
   };
   
   const handleGetStartedClick = () => {
-    navigate('/login');
+    navigate('/signup/clinic');
   };
 
   return (
@@ -59,7 +58,7 @@ const Index = () => {
                 </Button>
                 <Button 
                   asChild variant="secondary"
-                  className="w-full sm:w-auto px-8 py-3 text-base font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border-gray-300 hover:text-gray-900"
+                  className="w-full sm:w-auto px-8 py-3 text-base font-medium text-gray-100 bg-gray-100 hover:bg-gray-200 border-gray-300 hover:text-gray-900"
                 >
                   <a href="#features">Learn More</a>
                 </Button>
