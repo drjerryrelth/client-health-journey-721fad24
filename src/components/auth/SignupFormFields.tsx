@@ -15,7 +15,7 @@ import {
   FormDescription,
 } from '@/components/ui/form';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Building } from 'lucide-react';
 import { signupSchema, SignupFormValues } from './signup-schema';
 import { Link } from 'react-router-dom';
 
@@ -32,7 +32,8 @@ const SignupFormFields = ({ onSubmit, isSubmitting }: SignupFormFieldsProps) => 
       email: '',
       password: '',
       confirmPassword: '',
-      fullName: '',
+      clinicName: '',
+      primaryContact: '',
       hipaaAcknowledgment: false as unknown as true, // Type assertion to fix the TypeScript error
       legalAcknowledgment: false as unknown as true, // Type assertion to fix the TypeScript error
     },
@@ -41,15 +42,37 @@ const SignupFormFields = ({ onSubmit, isSubmitting }: SignupFormFieldsProps) => 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Building size={20} className="text-primary" />
+          <h3 className="text-lg font-medium">Clinic Registration</h3>
+        </div>
+        
         <FormField
           control={form.control}
-          name="fullName"
+          name="clinicName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name</FormLabel>
+              <FormLabel>Clinic Name</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="John Doe" 
+                  placeholder="Enter your clinic name" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="primaryContact"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Primary Contact Person</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Full name of primary contact" 
                   {...field} 
                 />
               </FormControl>
@@ -194,10 +217,10 @@ const SignupFormFields = ({ onSubmit, isSubmitting }: SignupFormFieldsProps) => 
           {isSubmitting ? (
             <span className="flex items-center justify-center">
               <span className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent border-white rounded-full"></span>
-              Creating Account...
+              Creating Clinic Account...
             </span>
           ) : (
-            'Sign Up'
+            'Register Clinic'
           )}
         </Button>
       </form>

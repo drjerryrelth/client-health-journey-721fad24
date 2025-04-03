@@ -5,7 +5,8 @@ export const signupSchema = z.object({
   email: z.string().email('Invalid email format').min(1, 'Email is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(1, 'Confirm password is required'),
-  fullName: z.string().min(1, 'Full name is required'),
+  clinicName: z.string().min(1, 'Clinic name is required'),
+  primaryContact: z.string().min(1, 'Primary contact name is required'),
   hipaaAcknowledgment: z.literal(true, {
     errorMap: () => ({ message: 'You must acknowledge the HIPAA disclaimer' }),
   }),

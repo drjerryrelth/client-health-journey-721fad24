@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -84,7 +85,7 @@ const AppContent = () => {
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
           
-          {/* Add these routes wherever your other public routes are defined */}
+          {/* Legal routes */}
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
         </Routes>
