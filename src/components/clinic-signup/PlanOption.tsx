@@ -32,7 +32,7 @@ const PlanOption = ({
           ? "border-primary bg-primary/5 shadow-sm" 
           : "border-gray-200 hover:border-gray-300"
       )}
-      onClick={() => onSelect()}
+      onClick={onSelect}
       data-state={selected ? "checked" : "unchecked"}
     >
       <div className="flex items-start">
@@ -40,7 +40,6 @@ const PlanOption = ({
           value={id} 
           id={`plan-${id}`} 
           className="mt-1 mr-2"
-          checked={selected}
         />
         <div className="flex-grow">
           <div className="flex justify-between items-start">

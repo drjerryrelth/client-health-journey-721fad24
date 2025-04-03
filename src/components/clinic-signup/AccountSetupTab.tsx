@@ -104,7 +104,14 @@ const AccountSetupTab = ({
           render={({ field }) => (
             <FormItem className="space-y-3">
               <FormControl>
-                <div className="space-y-3">
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    handlePlanSelect(value);
+                  }}
+                  className="space-y-3"
+                >
                   {planOptions.map((plan) => (
                     <PlanOption
                       key={plan.id}
@@ -120,7 +127,7 @@ const AccountSetupTab = ({
                       }}
                     />
                   ))}
-                </div>
+                </RadioGroup>
               </FormControl>
               <FormMessage />
             </FormItem>
