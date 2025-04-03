@@ -216,7 +216,7 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange })
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No program</SelectItem>
+                        <SelectItem value="none">No program</SelectItem>
                         {programs.map((program: Program) => (
                           <SelectItem key={program.id} value={program.id}>
                             {program.name}
