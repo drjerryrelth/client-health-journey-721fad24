@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
@@ -21,6 +21,11 @@ const ClientsPage = () => {
   
   // State to control dialog visibility
   const [dialogOpen, setDialogOpen] = useState(action === 'add');
+  
+  // Effect to respond to URL parameter changes
+  useEffect(() => {
+    setDialogOpen(action === 'add');
+  }, [action]);
 
   // Handle opening the dialog directly
   const handleAddClientClick = () => {
