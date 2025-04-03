@@ -50,6 +50,9 @@ const AppContent = () => {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/signup/clinic" element={<ClinicSignup />} />
           
+          {/* Redirect any other signup routes to the clinic signup page */}
+          <Route path="/signup/*" element={<Navigate to="/signup/clinic" replace />} />
+          
           {/* Dashboard routes with role-based redirects */}
           <Route path="/dashboard/*" element={<Dashboard />} />
           
