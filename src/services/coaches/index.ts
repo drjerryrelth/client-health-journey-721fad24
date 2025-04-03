@@ -4,6 +4,7 @@ import {
   getClinicCoaches, 
   getAllCoaches,
   updateCoachStatus,
+  addCoach,
   createCoach,
   updateCoach,
   deleteCoach,
@@ -18,6 +19,7 @@ export const CoachService = {
   getAllCoaches,
   getAllCoachesForAdmin: getAllCoaches, // Important alias to clarify this is for admin only
   updateCoachStatus,
+  addCoach,
   createCoach,
   updateCoach,
   deleteCoach,

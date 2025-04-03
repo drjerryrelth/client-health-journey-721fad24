@@ -76,7 +76,7 @@ export const AddCoachDialog = ({
       console.log('[AddCoachDialog] Session verified before submission:', session.user.id);
       
       // Add the clients field with a default value of 0
-      const newCoach = await CoachService.createCoach({
+      const newCoach = await CoachService.addCoach({
         name: values.name,
         email: values.email,
         phone: values.phone || null,
