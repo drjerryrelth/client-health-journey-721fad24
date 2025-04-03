@@ -19,13 +19,13 @@ import NotFound from '@/pages/NotFound';
 import { useAuth } from '@/context/auth';
 
 const AdminRoutes = () => {
-  const { user, hasRole } = useAuth();
+  const { user } = useAuth();
   
-  // Check if the user is a clinic admin (admin with clinicId) vs system admin
-  const isClinicAdmin = user?.role === 'admin' && user?.clinicId !== undefined;
+  // Check if the user is a clinic admin vs system admin
+  const isClinicAdmin = user?.role === 'clinic_admin';
   const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
-  // If clinic admin, redirect to the clinic-specific dashboard
+  // If clinic admin, render routes that only show clinic-specific data
   if (isClinicAdmin) {
     return (
       <Routes>

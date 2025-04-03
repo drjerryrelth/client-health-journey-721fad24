@@ -95,11 +95,11 @@ export const createClinicUserProfile = async (
     };
   }
   
-  // IMPORTANT: Always use 'admin' role for clinic owners/admins who created their clinic
+  // IMPORTANT: Use 'clinic_admin' role instead of 'admin' for clinic owners
   // If the clinic's email matches the user's email, they are the clinic owner/admin
   const isClinicOwner = clinicData.email === email;
-  const role = isClinicOwner ? "admin" : "coach"; 
-  const fullName = clinicData.name || (isClinicOwner ? "Clinic Admin" : "Coach");
+  const role = isClinicOwner ? "clinic_admin" : "coach"; 
+  const fullName = clinicData.name || (isClinicOwner ? "Clinic Owner" : "Coach");
   
   console.log(`Creating profile for clinic user with role: ${role} (isClinicOwner: ${isClinicOwner})`);
   

@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
@@ -84,59 +83,36 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     }
   }, [setIsLoading, toast]);
 
-  // Enhanced hasRole function with improved role checking logic
   const hasRole = useCallback((requiredRole: UserRole | UserRole[]) => (user: UserData | null) => {
     console.log('Checking role:', requiredRole, 'for user:', user);
     
-    // If no user or no role, no permissions
     if (!user) {
       console.log('No user, so no role');
       return false;
     }
     
-    // Special case: if user role is "admin" but has clinicId, they're clinic_admin
-    const isClinicAdmin = user.role === 'admin' && user.clinicId !== undefined;
-    const isSystemAdmin = user.role === 'admin' && !isClinicAdmin;
     const isSuperAdmin = user.role === 'super_admin';
+    const isSystemAdmin = user.role === 'admin';
+    const isClinicAdmin = user.role === 'clinic_admin';
     
     console.log('Is clinic admin?', isClinicAdmin);
     console.log('Is system admin?', isSystemAdmin);
     console.log('Is super admin?', isSuperAdmin);
 
-    // Check for system admin access - only real admins and super admins
     if ((Array.isArray(requiredRole) && requiredRole.includes('admin')) || requiredRole === 'admin') {
       return isSystemAdmin || isSuperAdmin;
     }
     
-    // Check for clinic_admin access - clinic admins, system admins, and super admins
     if ((Array.isArray(requiredRole) && requiredRole.includes('clinic_admin')) || requiredRole === 'clinic_admin') {
       return isClinicAdmin || isSystemAdmin || isSuperAdmin;
     }
     
-    // For other roles, standard role check
     if (Array.isArray(requiredRole)) {
-      const hasAnyRole = requiredRole.some(role => {
-        // Handle special roles
-        if (role === 'admin') return isSystemAdmin || isSuperAdmin;
-        if (role === 'clinic_admin') return isClinicAdmin;
-        
-        // Direct comparison for other roles
-        return user.role === role;
-      });
+      const hasAnyRole = requiredRole.some(role => user.role === role);
       console.log(`User has any of [${requiredRole.join(', ')}]?`, hasAnyRole);
       return hasAnyRole;
     }
     
-    // Single role check - handle each specific case
-    if (requiredRole === 'admin' as UserRole) {
-      return isSystemAdmin || isSuperAdmin;
-    }
-    
-    if (requiredRole === 'clinic_admin' as UserRole) {
-      return isClinicAdmin;
-    }
-    
-    // Standard direct role comparison for other roles
     const hasSpecificRole = user.role === requiredRole;
     console.log(`User has role ${requiredRole}?`, hasSpecificRole);
     return hasSpecificRole;

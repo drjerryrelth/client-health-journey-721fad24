@@ -1,5 +1,7 @@
+
 import { ProfileRow, ClientRow, ProgramRow, SupplementRow, CheckInRow, ClinicRow } from './database';
 
+// Update the UserRole type to include a specific 'clinic_admin' role
 export type UserRole = 'admin' | 'super_admin' | 'coach' | 'client' | 'clinic_admin';
 
 export interface User {

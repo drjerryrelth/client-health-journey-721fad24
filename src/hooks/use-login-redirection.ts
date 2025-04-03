@@ -20,14 +20,11 @@ export const useLoginRedirection = () => {
       // Determine redirect destination based on role
       let destination: string;
       
-      // Check if this is a clinic admin (admin with clinicId)
-      const isClinicAdmin = user.role === 'admin' && user.clinicId !== undefined;
-      
-      if ((user.role === 'admin' && !user.clinicId) || user.role === 'super_admin') {
+      // Handle each role type specifically
+      if (user.role === 'admin' || user.role === 'super_admin') {
         destination = '/admin/dashboard';
         console.log('Redirecting to admin dashboard (system admin)');
-      } else if (isClinicAdmin) {
-        // Clinic admins go to admin dashboard too, but will see limited options
+      } else if (user.role === 'clinic_admin') {
         destination = '/admin/dashboard';
         console.log('Redirecting to admin dashboard (clinic admin)');
       } else if (user.role === 'coach') {

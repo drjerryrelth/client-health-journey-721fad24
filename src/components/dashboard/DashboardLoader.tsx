@@ -12,8 +12,8 @@ const DashboardLoader = () => {
   const { user, isLoading, hasRole } = useAuth();
 
   React.useEffect(() => {
-    // Initialize default programs if user is admin or super_admin
-    if (user && (user.role === 'admin' || user.role === 'super_admin') && user.clinicId) {
+    // Initialize default programs if user is clinic_admin or system admin with a clinicId
+    if (user && ((user.role === 'clinic_admin' || user.role === 'admin' || user.role === 'super_admin') && user.clinicId)) {
       ProgramInitializer.initializeDefaultPrograms(user.clinicId)
         .catch(err => console.error('Failed to initialize programs:', err));
     }
@@ -35,11 +35,11 @@ const DashboardLoader = () => {
   console.log('DashboardLoader - User role:', user.role);
   
   // Only render routes specific to the user's role
-  if (hasRole(['admin', 'super_admin'])) {
+  if (user.role === 'admin' || user.role === 'super_admin' || user.role === 'clinic_admin') {
     return <AdminRoutes />;
-  } else if (hasRole('coach')) {
+  } else if (user.role === 'coach') {
     return <CoachRoutes />;
-  } else if (hasRole('client')) {
+  } else if (user.role === 'client') {
     console.log('Rendering client routes');
     return <ClientRoutes />;
   } else {

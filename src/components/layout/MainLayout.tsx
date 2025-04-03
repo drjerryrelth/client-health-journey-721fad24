@@ -11,7 +11,7 @@ interface MainLayoutProps {
   requiredRoles?: UserRole[];
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'coach', 'client'] }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'clinic_admin', 'coach', 'client'] }) => {
   const { isAuthenticated, isLoading, hasRole, user } = useAuth();
   
   // Show loading state
@@ -34,16 +34,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'coac
   console.log('MainLayout - User clinicId:', user?.clinicId);
   console.log('MainLayout - Required roles:', requiredRoles);
   
-  // Special case for clinic admins - convert to clinic_admin role check
-  const adjustedRoles = requiredRoles.map(role => {
-    if (role === 'admin' && user?.role === 'admin' && user?.clinicId) {
-      return 'clinic_admin';
-    }
-    return role;
-  });
-  
   // Check if user has ANY of the required roles (OR logic, not AND)
-  const hasPermission = adjustedRoles.some(role => hasRole(role));
+  const hasPermission = requiredRoles.some(role => hasRole(role));
   console.log('MainLayout - Has permission:', hasPermission);
   
   if (!hasPermission) {

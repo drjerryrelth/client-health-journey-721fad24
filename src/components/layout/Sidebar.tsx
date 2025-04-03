@@ -23,25 +23,27 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
   if (!user) return null;
 
   let navItems = clientNavItems;
-
-  // Determine if this is a clinic admin (admin with clinicId)
-  const isClinicAdmin = user.role === 'admin' && user.clinicId !== undefined;
-  const isSystemAdmin = (user.role === 'admin' && !user.clinicId) || user.role === 'super_admin';
+  let displayRole = user.role;
+  
+  // Use the actual role from the user object instead of trying to derive it
+  if (user.role === 'admin' || user.role === 'super_admin') {
+    navItems = adminNavItems;
+    displayRole = user.role === 'super_admin' ? 'Super Admin' : 'System Admin';
+  } else if (user.role === 'clinic_admin') {
+    navItems = clinicAdminNavItems;
+    displayRole = 'Clinic Admin';
+  } else if (user.role === 'coach') {
+    navItems = coachNavItems;
+    displayRole = 'Coach';
+  } else {
+    displayRole = 'Client';
+  }
   
   console.log("Sidebar user info:", {
     role: user.role,
     clinicId: user.clinicId,
-    isClinicAdmin,
-    isSystemAdmin
+    displayRole
   });
-  
-  if (isSystemAdmin) {
-    navItems = adminNavItems;
-  } else if (isClinicAdmin) {
-    navItems = clinicAdminNavItems;
-  } else if (hasRole("coach")) {
-    navItems = coachNavItems;
-  }
 
   return (
     <div
@@ -66,7 +68,7 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
       <SidebarProfile 
         user={user} 
         onLogout={logout} 
-        userRole={isClinicAdmin ? "Clinic Admin" : user.role}
+        userRole={displayRole}
       />
     </div>
   );

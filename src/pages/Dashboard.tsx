@@ -13,15 +13,11 @@ const Dashboard = () => {
     if (!isLoading && user) {
       console.log('Dashboard redirecting based on role:', user.role, 'clinicId:', user.clinicId);
       
-      // Check if this is a clinic admin (admin with clinicId)
-      const isClinicAdmin = user.role === 'admin' && user.clinicId !== undefined;
-      const isSystemAdmin = (user.role === 'admin' && !user.clinicId) || user.role === 'super_admin';
-      
       // Redirect to the appropriate dashboard based on role
-      if (isSystemAdmin) {
+      if (user.role === 'admin' || user.role === 'super_admin') {
         console.log('Redirecting to admin dashboard (system admin)');
         navigate('/admin/dashboard', { replace: true });
-      } else if (isClinicAdmin) {
+      } else if (user.role === 'clinic_admin') {
         console.log('Redirecting to admin dashboard (clinic admin)');
         navigate('/admin/dashboard', { replace: true }); 
       } else if (user.role === 'coach') {
