@@ -30,8 +30,9 @@ const SignupFormFields = ({ onSubmit, isSubmitting }: SignupFormFieldsProps) => 
       confirmPassword: '',
       clinicName: '',
       primaryContact: '',
-      hipaaAcknowledgment: false,
-      legalAcknowledgment: false,
+      // Initialize as undefined rather than false to avoid type errors
+      hipaaAcknowledgment: undefined,
+      legalAcknowledgment: undefined,
     },
   });
 
