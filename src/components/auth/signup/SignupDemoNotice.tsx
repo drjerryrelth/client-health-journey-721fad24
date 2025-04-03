@@ -9,9 +9,8 @@ const SignupDemoNotice = () => {
         use an email ending with <code>@example.com</code> (like <code>demo@example.com</code>)
       </p>
       <p className="text-xs text-blue-600 mt-1">
-        <span className="font-medium">Important:</span> Due to Supabase email validation, please use only 
-        <code>@example.com</code> emails without hyphens or special characters in the username part.
-        For example: <code>clinic@example.com</code>, <code>test@example.com</code>, or <code>demo@example.com</code>.
+        <span className="font-medium">Important:</span> Any email ending with <code>@example.com</code> will work. 
+        Examples: <code>clinic@example.com</code>, <code>test123@example.com</code>, <code>demo@example.com</code>
       </p>
     </div>
   );

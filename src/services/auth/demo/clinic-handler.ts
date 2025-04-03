@@ -8,17 +8,8 @@ import { autoConfirmDemoEmail } from './confirmation-handler';
  * @param email The email to check
  */
 export const isDemoClinicEmail = (email: string): boolean => {
-  // First and foremost, check if the email ends with @example.com
-  // This is our primary way to identify demo emails
-  const normalizedEmail = email.toLowerCase();
-  
   // Accept ANY @example.com email as a demo email
-  if (normalizedEmail.endsWith('@example.com')) {
-    return true;
-  }
-  
-  // As a fallback, also accept emails containing 'demo' or 'test'
-  return normalizedEmail.includes('demo') || normalizedEmail.includes('test');
+  return email.toLowerCase().endsWith('@example.com');
 };
 
 /**
@@ -61,7 +52,7 @@ export const handleDemoClinicSignup = async (
       } else if (signUpError.message?.includes('Email address') && signUpError.message?.includes('invalid')) {
         // Special case for email validation errors
         console.error('Email validation error:', signUpError.message);
-        throw new Error(`Email validation failed. Please use an email ending with @example.com, such as "clinic@example.com" or "demo@example.com".`);
+        throw new Error(`Email validation failed. Please use any email ending with @example.com (e.g., "anything@example.com").`);
       } else {
         console.error('Demo clinic user creation error:', signUpError.message);
         throw new Error(`Could not create demo clinic user: ${signUpError.message}`);
