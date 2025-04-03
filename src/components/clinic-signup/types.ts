@@ -21,16 +21,16 @@ export const planOptions = [
     name: "Enterprise",
     description: "For large clinics with multiple locations",
     price: "$399/month",
-    features: ["Unlimited clients", "Unlimited coach accounts", "Custom analytics", "Priority support", "Optional white labeling"]
+    features: ["Unlimited clients", "Unlimited coach accounts", "Custom analytics", "Priority support", "Optional clinic branding"]
   }
 ];
 
-// Define the add-on option for white labeling
+// Define the add-on option for clinic branding
 export const addOnOptions = [
   {
-    id: "white-labeling",
-    name: "White Labeling",
-    description: "Custom branding for your clinic's portal",
+    id: "clinic-branding",
+    name: "Your Clinic Branding",
+    description: "Custom logo and color scheme for your clinic's portal",
     price: "$499 one-time setup fee",
     availableFor: ["enterprise"]
   }
