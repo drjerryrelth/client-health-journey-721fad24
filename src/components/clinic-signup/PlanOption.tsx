@@ -24,12 +24,6 @@ const PlanOption = ({
   selected,
   onSelect,
 }: PlanOptionProps) => {
-  // Create a proper handler to prevent event propagation issues
-  const handleClick = (e: React.MouseEvent) => {
-    // Ensure we're calling onSelect without interference
-    onSelect();
-  };
-
   return (
     <div 
       className={cn(
@@ -38,7 +32,7 @@ const PlanOption = ({
           ? "border-primary bg-primary/5 shadow-sm" 
           : "border-gray-200 hover:border-gray-300"
       )}
-      onClick={handleClick}
+      onClick={() => onSelect()}
       data-state={selected ? "checked" : "unchecked"}
     >
       <div className="flex items-start">
@@ -46,6 +40,7 @@ const PlanOption = ({
           value={id} 
           id={`plan-${id}`} 
           className="mt-1 mr-2"
+          checked={selected}
         />
         <div className="flex-grow">
           <div className="flex justify-between items-start">

@@ -60,11 +60,11 @@ const AccountSetupTab = ({
   const handlePlanSelect = (planId: string) => {
     console.log('Selecting plan:', planId);
     
-    // Set the form value directly
-    form.setValue('selectedPlan', planId, {
+    // Set the selected plan
+    form.setValue('selectedPlan', planId, { 
       shouldValidate: true,
-      shouldTouch: true,
       shouldDirty: true,
+      shouldTouch: true 
     });
     
     // Filter add-ons that are compatible with the selected plan
@@ -104,14 +104,7 @@ const AccountSetupTab = ({
           render={({ field }) => (
             <FormItem className="space-y-3">
               <FormControl>
-                <RadioGroup
-                  value={field.value}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    handlePlanSelect(value);
-                  }}
-                  className="space-y-3"
-                >
+                <div className="space-y-3">
                   {planOptions.map((plan) => (
                     <PlanOption
                       key={plan.id}
@@ -127,7 +120,7 @@ const AccountSetupTab = ({
                       }}
                     />
                   ))}
-                </RadioGroup>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
