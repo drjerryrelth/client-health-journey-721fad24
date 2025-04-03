@@ -5,3 +5,4 @@ export * from './profile-handler';
 export * from './utils';
 export * from './confirmation-handler';
 export * from './clinic-handler';
+export * from './account-checker';
