@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { autoConfirmDemoEmail } from './confirmation-handler';
 
@@ -20,15 +21,15 @@ const sanitizeDemoEmail = (email: string): string => {
   // If not an example.com email, don't modify
   if (!isDemoClinicEmail(email)) return email;
   
-  // Extract username part (before @) and domain part
-  const [username, domain] = email.split('@');
+  // Create a simple, guaranteed-valid demo email format
+  // Extract the domain part (example.com)
+  const domain = email.split('@')[1];
   
-  // Replace problematic characters with underscores
-  // Keep only alphanumeric characters and underscores
-  const sanitizedUsername = username.replace(/[^a-zA-Z0-9_]/g, '_');
+  // Create a random string to ensure uniqueness and avoid conflicts
+  const randomString = Math.random().toString(36).substring(2, 10);
   
-  // Return sanitized version
-  return `${sanitizedUsername}@${domain}`;
+  // Return a very simple sanitized demo email that will pass validation
+  return `demo${randomString}@${domain}`;
 };
 
 /**
@@ -75,7 +76,7 @@ export const handleDemoClinicSignup = async (
       } else if (signUpError.message?.includes('Email address') && signUpError.message?.includes('invalid')) {
         // Special case for email validation errors
         console.error('Email validation error:', signUpError.message);
-        throw new Error(`Email validation failed. Please use any email ending with @example.com (e.g., "anything@example.com").`);
+        throw new Error(`Supabase rejected the email format. Try a simpler email like "demo@example.com".`);
       } else {
         console.error('Demo clinic user creation error:', signUpError.message);
         throw new Error(`Could not create demo clinic user: ${signUpError.message}`);
