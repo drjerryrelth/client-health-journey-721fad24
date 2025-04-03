@@ -49,14 +49,10 @@ export const useSignup = () => {
         // Standard signup flow for regular clinics
         try {
           // Create the user account
-          const signUpResult = await signUp(data.email, data.password, {
+          await signUp(data.email, data.password, {
             full_name: data.primaryContact,
             role: 'coach' // Default role for clinic primary contact is coach
           });
-          
-          if (!signUpResult) {
-            throw new Error('Signup failed - no result returned');
-          }
           
           // Then create a clinic record
           const { error: clinicError } = await supabase
