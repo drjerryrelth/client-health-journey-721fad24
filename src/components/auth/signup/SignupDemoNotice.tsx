@@ -8,8 +8,9 @@ const SignupDemoNotice = () => {
         <span className="font-semibold">Demo Mode:</span> To create a demo clinic without email verification, 
         use any email ending with <code>@example.com</code>
       </p>
-      <p className="text-xs text-blue-600 mt-1 font-medium">
-        <span className="font-bold text-red-500">Important:</span> Due to strict validation, please use exactly <code>demo@example.com</code> to avoid errors.
+      <p className="text-xs text-blue-600 mt-1">
+        <span className="font-medium">Note:</span> Each demo account needs a unique email address. 
+        For example: <code>demo123@example.com</code> or <code>mydemo@example.com</code>
       </p>
     </div>
   );

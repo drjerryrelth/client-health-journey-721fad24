@@ -13,16 +13,19 @@ export const isDemoClinicEmail = (email: string): boolean => {
 };
 
 /**
- * Sanitize email to make it more likely to pass Supabase validation
- * This is a workaround for Supabase's strict email validation
- * @param email The email to sanitize
+ * Generate a unique demo email that will pass Supabase validation
+ * This ensures we can create multiple demo accounts
+ * @param email The original email input by user
  */
 const sanitizeDemoEmail = (email: string): string => {
   // If not an example.com email, don't modify
   if (!isDemoClinicEmail(email)) return email;
   
-  // Use extremely simple format that should always pass validation
-  return 'demo@example.com';
+  // Generate a simple unique email that will pass validation
+  // Use a timestamp + random number to ensure uniqueness
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000);
+  return `demo${timestamp}${random}@example.com`;
 };
 
 /**
@@ -41,6 +44,9 @@ export const handleDemoClinicSignup = async (
 ): Promise<boolean> => {
   try {
     console.log('Processing demo clinic signup:', email);
+    
+    // Store original email for clinic record
+    const originalEmail = email;
     
     // Sanitize the email to work around Supabase validation
     const sanitizedEmail = sanitizeDemoEmail(email);
@@ -69,7 +75,7 @@ export const handleDemoClinicSignup = async (
       } else if (signUpError.message?.includes('Email address') && signUpError.message?.includes('invalid')) {
         // Special case for email validation errors
         console.error('Email validation error:', signUpError.message);
-        throw new Error(`Supabase rejected the email format. Try using exactly "demo@example.com".`);
+        throw new Error(`Supabase rejected the email format. Please use any email ending with @example.com (e.g., "anything@example.com").`);
       } else {
         console.error('Demo clinic user creation error:', signUpError.message);
         throw new Error(`Could not create demo clinic user: ${signUpError.message}`);
@@ -92,7 +98,7 @@ export const handleDemoClinicSignup = async (
       .from('clinics')
       .insert({
         name: clinicName,
-        email: email, // Use original email for clinic data
+        email: originalEmail, // Use original email for clinic data
         primary_contact: primaryContact,
         status: 'active'
       })
