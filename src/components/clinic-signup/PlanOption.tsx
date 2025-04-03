@@ -2,7 +2,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-import { RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 
 interface PlanOptionProps {
@@ -36,11 +35,13 @@ const PlanOption = ({
       data-state={selected ? "checked" : "unchecked"}
     >
       <div className="flex items-start">
-        <RadioGroupItem 
-          value={id} 
-          id={`plan-${id}`} 
-          className="mt-1 mr-2"
-        />
+        <div className="h-4 w-4 mt-1 mr-2 rounded-full border border-primary relative">
+          {selected && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+            </div>
+          )}
+        </div>
         <div className="flex-grow">
           <div className="flex justify-between items-start">
             <Label htmlFor={`plan-${id}`} className="text-lg font-medium cursor-pointer">

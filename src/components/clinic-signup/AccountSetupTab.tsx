@@ -6,7 +6,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormField, FormItem, FormMessage, FormControl } from '@/components/ui/form';
 import { ClinicSignupFormValues, planOptions, addOnOptions } from './types';
 import HipaaNotice from './HipaaNotice';
-import { RadioGroup } from '@/components/ui/radio-group';
 import PlanOption from './PlanOption';
 import AddOnOptions from './AddOnOptions';
 import AccountCreationFields from './AccountCreationFields';
@@ -104,14 +103,7 @@ const AccountSetupTab = ({
           render={({ field }) => (
             <FormItem className="space-y-3">
               <FormControl>
-                <RadioGroup
-                  value={field.value}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    handlePlanSelect(value);
-                  }}
-                  className="space-y-3"
-                >
+                <div className="space-y-3">
                   {planOptions.map((plan) => (
                     <PlanOption
                       key={plan.id}
@@ -120,14 +112,14 @@ const AccountSetupTab = ({
                       description={plan.description}
                       price={plan.price}
                       features={plan.features}
-                      selected={selectedPlan === plan.id}
+                      selected={field.value === plan.id}
                       onSelect={() => {
                         field.onChange(plan.id);
                         handlePlanSelect(plan.id);
                       }}
                     />
                   ))}
-                </RadioGroup>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
