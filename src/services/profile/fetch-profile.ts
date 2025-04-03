@@ -44,7 +44,7 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
     if (error) {
       console.log('Profile not found in database, checking if this is a clinic registration');
       
-      // Check if this user is associated with a clinic as an owner/admin
+      // Check if this user is associated with a clinic
       const { data: clinicData, error: clinicError } = await supabase
         .from('clinics')
         .select('id, name, email')
@@ -56,7 +56,11 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       } else if (clinicData) {
         console.log('User is associated with clinic:', clinicData);
         
-        // IMPORTANT: Create a profile for clinic users as admin, not coach
+        // Check if this is the clinic owner (clinic email matches user email)
+        const isClinicOwner = clinicData.email === email;
+        console.log(`Is clinic owner? ${isClinicOwner} (${clinicData.email} vs ${email})`);
+        
+        // Create appropriate profile
         return await createClinicUserProfile(userId, email, clinicData);
       }
       

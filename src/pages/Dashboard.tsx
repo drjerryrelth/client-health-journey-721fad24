@@ -11,15 +11,23 @@ const Dashboard = () => {
   
   useEffect(() => {
     if (!isLoading && user) {
-      console.log('Dashboard redirecting based on role:', user.role);
+      console.log('Dashboard redirecting based on role:', user.role, 'clinicId:', user.clinicId);
+      
+      // Check if this is a clinic admin (admin with clinicId)
+      const isClinicAdmin = user.role === 'admin' && user.clinicId !== undefined;
+      const isSystemAdmin = (user.role === 'admin' && !user.clinicId) || user.role === 'super_admin';
+      
       // Redirect to the appropriate dashboard based on role
-      if (hasRole('admin') || hasRole('super_admin')) {
-        console.log('Redirecting to admin dashboard');
+      if (isSystemAdmin) {
+        console.log('Redirecting to admin dashboard (system admin)');
         navigate('/admin/dashboard', { replace: true });
-      } else if (hasRole('coach')) {
+      } else if (isClinicAdmin) {
+        console.log('Redirecting to admin dashboard (clinic admin)');
+        navigate('/admin/dashboard', { replace: true }); 
+      } else if (user.role === 'coach') {
         console.log('Redirecting to coach dashboard');
         navigate('/coach/dashboard', { replace: true });
-      } else if (hasRole('client')) {
+      } else if (user.role === 'client') {
         console.log('Redirecting to client portal');
         navigate('/client', { replace: true });
       } else {

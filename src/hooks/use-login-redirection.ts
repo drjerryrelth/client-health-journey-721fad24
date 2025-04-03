@@ -12,7 +12,7 @@ export const useLoginRedirection = () => {
   // Effect for navigation when auth status changes
   useEffect(() => {
     if (isAuthenticated && !isLoading && user) {
-      console.log('User authenticated, redirecting...', user.role);
+      console.log('User authenticated, redirecting...', user.role, 'clinicId:', user.clinicId);
       
       // Add toast notification for clarity
       toast.success(`Logged in as ${user.role}`);
@@ -25,11 +25,14 @@ export const useLoginRedirection = () => {
       
       if ((user.role === 'admin' && !user.clinicId) || user.role === 'super_admin') {
         destination = '/admin/dashboard';
+        console.log('Redirecting to admin dashboard (system admin)');
       } else if (isClinicAdmin) {
         // Clinic admins go to admin dashboard too, but will see limited options
         destination = '/admin/dashboard';
+        console.log('Redirecting to admin dashboard (clinic admin)');
       } else if (user.role === 'coach') {
         destination = '/coach/dashboard';
+        console.log('Redirecting to coach dashboard');
       } else if (user.role === 'client') {
         destination = '/client'; // Changed from /client/dashboard to /client
         console.log('Client user detected, redirecting to /client');
