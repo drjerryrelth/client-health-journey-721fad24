@@ -1,0 +1,48 @@
+
+import { useAuth } from '@/context/auth';
+
+/**
+ * Custom hook to filter data based on user role and clinic ID
+ * This ensures strict role-based access to data
+ */
+export function useClinicFilter() {
+  const { user } = useAuth();
+  
+  // Determine if user is a system admin (admin or super_admin)
+  const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  
+  // Determine if user is a clinic admin
+  const isClinicAdmin = user?.role === 'clinic_admin';
+  
+  // Get the user's clinic ID (if any)
+  const userClinicId = user?.clinicId;
+  
+  /**
+   * Filter function that can be applied to any data array with clinicId property
+   * Will return:
+   * - All data for system admins
+   * - Only clinic-specific data for clinic admins
+   * - Empty array for unauthorized users
+   */
+  const filterByClinic = <T extends { clinicId: string }>(data: T[]): T[] => {
+    // System admins can see all data
+    if (isSystemAdmin) {
+      return data;
+    }
+    
+    // Clinic admins can only see their clinic's data
+    if (isClinicAdmin && userClinicId) {
+      return data.filter(item => item.clinicId === userClinicId);
+    }
+    
+    // For other roles or missing clinic ID, return empty array
+    return [];
+  };
+  
+  return {
+    isSystemAdmin,
+    isClinicAdmin,
+    userClinicId,
+    filterByClinic
+  };
+}

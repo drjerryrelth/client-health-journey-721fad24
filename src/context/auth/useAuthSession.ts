@@ -1,7 +1,8 @@
+
 import { useCallback } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { UserData } from '@/types/auth';
-import { fetchUserProfile } from '@/hooks/use-user-profile';
+import { fetchUserProfile } from '@/services/profile/fetch-profile';
 import { 
   getCurrentSession,
   setupAuthListener 

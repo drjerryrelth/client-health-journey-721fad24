@@ -1,147 +1,174 @@
 
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { Badge } from "@/components/ui/badge";
+import { UserPlus, RefreshCw } from 'lucide-react';
 import { useAdminCoaches } from '@/hooks/queries/use-admin-coaches';
+import CoachesErrorState from '@/components/admin/coaches/CoachesErrorState';
+import CoachesFilter from '@/components/admin/coaches/CoachesFilter';
 import CoachesTable from '@/components/admin/coaches/CoachesTable';
 import CoachesLoadingState from '@/components/admin/coaches/CoachesLoadingState';
-import CoachesErrorState from '@/components/admin/coaches/CoachesErrorState';
-import ErrorDialog from '@/components/coaches/ErrorDialog';
-import CoachesFilter from '@/components/admin/coaches/CoachesFilter';
+import { AddCoachDialog } from '@/components/coaches/add/AddCoachDialog';
+import { EditCoachDialog } from '@/components/coaches/edit/EditCoachDialog';
+import { DeleteCoachDialog } from '@/components/coaches/delete/DeleteCoachDialog';
+import { ResetCoachPasswordDialog } from '@/components/coaches/reset-password/ResetCoachPasswordDialog';
+import { Coach } from '@/services/coaches';
+import { useClinicFilter } from '@/components/coaches/list/useClinicFilter';
+import { useAuth } from '@/context/auth';
 
 const CoachesPage = () => {
-  const navigate = useNavigate();
-  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
-  const [filters, setFilters] = useState({
-    search: '',
-    status: 'all',
-    clinic: 'all'
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
+  const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
+  const [filterText, setFilterText] = useState('');
+  
+  // Get the user's role information
+  const { user } = useAuth();
+  
+  // Get the clinic filter functions
+  const { isClinicAdmin, filterByClinic } = useClinicFilter();
+  
+  // Fetch coaches data based on user role
+  const { coaches: allCoaches, loading, error, refresh, retryCount } = useAdminCoaches();
+  
+  // Apply clinic filtering to ensure clinic admins only see their clinic's coaches
+  const coaches = filterByClinic(allCoaches);
+  
+  const filteredCoaches = coaches.filter(coach => {
+    const searchText = filterText.toLowerCase();
+    return (
+      coach.name.toLowerCase().includes(searchText) ||
+      coach.email.toLowerCase().includes(searchText) ||
+      (coach.phone && coach.phone.includes(searchText)) ||
+      coach.clinicName.toLowerCase().includes(searchText)
+    );
   });
   
-  const {
-    coaches,
-    loading,
-    error,
-    errorDetails,
-    refresh,
-    retryCount
-  } = useAdminCoaches();
-
-  // Extract unique clinics for filtering
-  const clinics = useMemo(() => {
-    if (!coaches || coaches.length === 0) return {};
-    
-    const clinicMap: Record<string, string> = {};
-    coaches.forEach(coach => {
-      if (coach.clinicId && coach.clinicName) {
-        clinicMap[coach.clinicId] = coach.clinicName;
-      }
-    });
-    return clinicMap;
-  }, [coaches]);
-
-  // Filter coaches based on search, status, and clinic
-  const filteredCoaches = useMemo(() => {
-    if (!coaches) return [];
-    
-    return coaches.filter(coach => {
-      // Search filter
-      const searchMatch = filters.search === '' || 
-        coach.name.toLowerCase().includes(filters.search.toLowerCase()) || 
-        coach.email.toLowerCase().includes(filters.search.toLowerCase());
-      
-      // Status filter
-      const statusMatch = filters.status === 'all' || coach.status === filters.status;
-      
-      // Clinic filter
-      const clinicMatch = filters.clinic === 'all' || coach.clinicId === filters.clinic;
-      
-      return searchMatch && statusMatch && clinicMatch;
-    });
-  }, [coaches, filters]);
-
-  const handleBackToDashboard = () => {
-    navigate("/admin/dashboard");
+  const handleAddDialogClose = (open: boolean) => {
+    setIsAddDialogOpen(open);
+    if (!open) refresh();
+  };
+  
+  const handleEditDialogClose = (open: boolean) => {
+    setIsEditDialogOpen(open);
+    if (!open) refresh();
+  };
+  
+  const handleDeleteDialogClose = (open: boolean) => {
+    setIsDeleteDialogOpen(open);
+    if (!open) refresh();
+  };
+  
+  const handleResetPasswordDialogClose = (open: boolean) => {
+    setIsResetPasswordDialogOpen(open);
+  };
+  
+  const handleEditCoach = (coach: Coach) => {
+    setSelectedCoach(coach);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleDeleteCoach = (coach: Coach) => {
+    setSelectedCoach(coach);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const handleResetPassword = (coach: Coach) => {
+    setSelectedCoach(coach);
+    setIsResetPasswordDialogOpen(true);
+  };
+  
+  const handleManualRefresh = () => {
+    refresh();
   };
 
-  const handleShowError = () => {
-    setErrorDialogOpen(true);
-  };
-
-  const handleFilterChange = (newFilters: { search: string; status: string; clinic: string }) => {
-    setFilters(newFilters);
-  };
-
+  // Check if the page is being loaded for a clinic admin directly on the admin/coaches route
+  // Prevent system admin routes for clinic admins
+  React.useEffect(() => {
+    if (isClinicAdmin) {
+      console.log('Strict enforcement: Clinic admin accessing coaches page');
+    }
+  }, [isClinicAdmin]);
+  
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Coaches</h1>
+        <div className="flex space-x-2">
           <Button 
-            variant="ghost" 
-            onClick={handleBackToDashboard}
-            className="mr-2 flex items-center gap-1"
+            onClick={handleManualRefresh} 
+            variant="outline" 
+            size="icon"
+            disabled={loading}
+            className="flex items-center justify-center"
+            title="Refresh coaches"
           >
-            <ArrowLeft size={18} />
-            <span>Back to Dashboard</span>
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           </Button>
-          <h1 className="text-2xl font-bold text-gray-900">All Coaches</h1>
+          <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center gap-2">
+            <UserPlus size={16} />
+            <span>Add Coach</span>
+          </Button>
         </div>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={refresh}
-          disabled={loading}
-          className="flex items-center gap-1"
-        >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          <span>Refresh</span>
-        </Button>
       </div>
-      
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Coaches</span>
-            {filteredCoaches.length > 0 && (
-              <Badge variant="outline" className="ml-2 bg-primary-50 text-primary-700">
-                {filteredCoaches.length} of {coaches.length}
-              </Badge>
-            )}
-          </CardTitle>
+          <CardTitle>Manage Coaches</CardTitle>
+          <CardDescription>
+            {isClinicAdmin 
+              ? "Manage coaches for your clinic" 
+              : "View and manage all coaches across clinics"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Add the filter component */}
-          {!loading && !error && coaches.length > 0 && (
-            <CoachesFilter 
-              onFilterChange={handleFilterChange} 
-              clinics={clinics} 
-            />
-          )}
+          <CoachesFilter 
+            filterText={filterText} 
+            setFilterText={setFilterText} 
+            count={filteredCoaches.length}
+          />
           
-          {loading ? (
-            <CoachesLoadingState retryCount={retryCount} />
-          ) : error ? (
-            <CoachesErrorState 
-              error={error}
-              onRefresh={refresh}
-              onShowDetails={handleShowError}
-            />
+          {error ? (
+            <CoachesErrorState error={error} retryCount={retryCount} onRetry={refresh} />
+          ) : loading ? (
+            <CoachesLoadingState />
           ) : (
-            <CoachesTable coaches={filteredCoaches} />
+            <CoachesTable 
+              coaches={filteredCoaches}
+              onEdit={handleEditCoach}
+              onDelete={handleDeleteCoach}
+              onResetPassword={handleResetPassword}
+              isSystemAdmin={!isClinicAdmin}
+            />
           )}
         </CardContent>
       </Card>
-
-      <ErrorDialog
-        open={errorDialogOpen}
-        onOpenChange={setErrorDialogOpen}
-        errorDetails={errorDetails}
-        title="Coach Fetching Error"
-      />
+      
+      <AddCoachDialog open={isAddDialogOpen} onOpenChange={handleAddDialogClose} />
+      
+      {selectedCoach && (
+        <>
+          <EditCoachDialog 
+            coach={selectedCoach} 
+            open={isEditDialogOpen} 
+            onOpenChange={handleEditDialogClose} 
+          />
+          
+          <DeleteCoachDialog 
+            coach={selectedCoach} 
+            open={isDeleteDialogOpen} 
+            onOpenChange={handleDeleteDialogClose} 
+          />
+          
+          <ResetCoachPasswordDialog 
+            coach={selectedCoach} 
+            open={isResetPasswordDialogOpen} 
+            onOpenChange={handleResetPasswordDialogClose} 
+          />
+        </>
+      )}
     </div>
   );
 };

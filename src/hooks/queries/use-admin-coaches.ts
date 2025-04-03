@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { CoachService } from '@/services/coaches';
 import ClinicService from '@/services/clinic-service';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/auth';
 
 export interface CoachWithClinic {
   id: string;
@@ -22,6 +23,7 @@ export function useAdminCoaches() {
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const { user } = useAuth();
 
   const fetchClinics = async () => {
     try {
@@ -42,26 +44,38 @@ export function useAdminCoaches() {
       setLoading(true);
       setError(null);
       
-      console.log(`[useAdminCoaches] Fetching all coaches (attempt: ${retryCount + 1})`);
+      console.log(`[useAdminCoaches] Fetching coaches (attempt: ${retryCount + 1})`);
       
-      const allCoaches = await CoachService.getAllCoachesForAdmin();
+      // CRITICAL FIX: Use the correct fetching method based on role
+      // Clinic admins should ONLY see their clinic's coaches
+      const isClinicAdmin = user?.role === 'clinic_admin';
+      const clinicId = user?.clinicId;
       
-      console.log('[useAdminCoaches] Received coaches data:', allCoaches);
-      console.log('[useAdminCoaches] Coaches data type:', typeof allCoaches);
-      console.log('[useAdminCoaches] Is array?', Array.isArray(allCoaches));
+      let coachesData;
+      if (isClinicAdmin && clinicId) {
+        console.log('[useAdminCoaches] Fetching coaches for specific clinic:', clinicId);
+        coachesData = await CoachService.getClinicCoaches(clinicId);
+      } else {
+        console.log('[useAdminCoaches] Fetching all coaches (system admin)');
+        coachesData = await CoachService.getAllCoachesForAdmin();
+      }
       
-      if (!Array.isArray(allCoaches)) {
-        console.error('[useAdminCoaches] Invalid coaches data format:', allCoaches);
+      console.log('[useAdminCoaches] Received coaches data:', coachesData);
+      console.log('[useAdminCoaches] Coaches data type:', typeof coachesData);
+      console.log('[useAdminCoaches] Is array?', Array.isArray(coachesData));
+      
+      if (!Array.isArray(coachesData)) {
+        console.error('[useAdminCoaches] Invalid coaches data format:', coachesData);
         throw new Error('Invalid data format received from service');
       }
       
-      setCoaches(allCoaches);
+      setCoaches(coachesData);
       
-      if (allCoaches.length === 0) {
+      if (coachesData.length === 0) {
         console.warn('[useAdminCoaches] No coaches were returned');
         toast.info('No coaches found in the database');
       } else {
-        toast.success(`Successfully loaded ${allCoaches.length} coaches`);
+        toast.success(`Successfully loaded ${coachesData.length} coaches`);
       }
       
       setLoading(false);
@@ -92,7 +106,7 @@ export function useAdminCoaches() {
     console.log('[useAdminCoaches] Hook mounted, fetching coaches');
     fetchClinics();
     fetchCoaches();
-  }, []);
+  }, [user?.role, user?.clinicId]); // CRITICAL FIX: Added user role and clinicId as dependencies
 
   const getClinicName = (clinicId: string) => {
     return clinics[clinicId] || `Unknown Clinic (${clinicId ? clinicId.slice(-4) : 'None'})`;

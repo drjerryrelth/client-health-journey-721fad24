@@ -1,26 +1,31 @@
 
-import { Coach } from './types';
-import { getClinicCoaches, getAllCoaches } from './coach-fetchers';
-import { addCoach, updateCoach, removeCoachAndReassignClients } from './coach-mutations';
+// Re-export Coach Service functionality
+import { 
+  getClinicCoaches, 
+  getAllCoaches,
+  updateCoachStatus,
+  createCoach,
+  updateCoach,
+  deleteCoach,
+  resetCoachPassword 
+} from './coach-service';
+
 import { getMockCoaches } from './mock-data';
-import { getCoachCount, getAllCoachesForAdmin } from './admin-coach-service';
 
-// Export types
-export type { Coach };
+import { Coach } from './types';
 
-// Export functions
+// Export Coach Service API with appropriate function names
 export const CoachService = {
   getClinicCoaches,
   getAllCoaches,
-  addCoach,
+  getAllCoachesForAdmin: getAllCoaches, // Important alias to clarify this is for admin only
+  updateCoachStatus,
+  createCoach,
   updateCoach,
-  removeCoachAndReassignClients,
-  getCoachCount,         // Add the admin service functions
-  getAllCoachesForAdmin  // Add the admin service functions
+  deleteCoach,
+  resetCoachPassword,
+  getMockCoaches
 };
 
-// Export mock data function
-export { getMockCoaches };
-
-// Default export
-export default CoachService;
+// Re-export types for external consumers
+export type { Coach };
