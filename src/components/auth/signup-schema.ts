@@ -9,6 +9,9 @@ export const signupSchema = z.object({
   hipaaAcknowledgment: z.literal(true, {
     errorMap: () => ({ message: 'You must acknowledge the HIPAA disclaimer' }),
   }),
+  legalAcknowledgment: z.literal(true, {
+    errorMap: () => ({ message: 'You must agree to the Terms and Privacy Policy' }),
+  }),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],

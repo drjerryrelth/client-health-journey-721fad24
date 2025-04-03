@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,8 @@ import NotFound from "./pages/NotFound";
 import MealPlanGenerator from "./pages/MealPlanGenerator";
 import MainLayout from "./components/layout/MainLayout";
 import { AdminRoutes, CoachRoutes, ClientRoutes } from "./components/routes";
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +83,10 @@ const AppContent = () => {
           
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
+          
+          {/* Add these routes wherever your other public routes are defined */}
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
         </Routes>
       </ClinicThemeProvider>
     </TooltipProvider>
