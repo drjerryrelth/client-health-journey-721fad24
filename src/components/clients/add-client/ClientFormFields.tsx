@@ -79,7 +79,8 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
             <FormLabel>Program</FormLabel>
             <Select 
               onValueChange={field.onChange} 
-              defaultValue={field.value}
+              value={field.value || ""}
+              defaultValue={field.value || ""}
             >
               <FormControl>
                 <SelectTrigger>
@@ -87,12 +88,16 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="none">No program</SelectItem>
-                {programs.map((program: Program) => (
-                  <SelectItem key={program.id} value={program.id}>
-                    {program.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="">No program</SelectItem>
+                {programs && programs.length > 0 ? (
+                  programs.map((program: Program) => (
+                    <SelectItem key={program.id} value={program.id}>
+                      {program.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="" disabled>No programs available</SelectItem>
+                )}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -109,7 +114,8 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
               <FormLabel>Program Category</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
-                defaultValue={field.value}
+                value={field.value || ""}
+                defaultValue={field.value || ""}
               >
                 <FormControl>
                   <SelectTrigger>

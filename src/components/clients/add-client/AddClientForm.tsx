@@ -8,7 +8,6 @@ import { Form } from '@/components/ui/form';
 import { useProgramsQuery } from '@/hooks/queries/use-program-queries';
 import { useAuth } from '@/context/AuthContext';
 import { useCreateClientMutation } from '@/hooks/queries/use-client-queries';
-import { Program } from '@/types';
 import ClientFormFields from './ClientFormFields';
 import { formSchema, AddClientFormValues } from './AddClientSchema';
 
@@ -24,6 +23,8 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel }) =>
   
   // Get all programs for the clinic
   const { data: programs = [] } = useProgramsQuery(user?.clinicId);
+  
+  console.log("Available programs:", programs);
   
   const form = useForm<AddClientFormValues>({
     resolver: zodResolver(formSchema),
@@ -44,6 +45,7 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel }) =>
   useEffect(() => {
     if (watchedProgramId) {
       const selectedProgram = programs.find(p => p.id === watchedProgramId);
+      console.log("Selected program:", selectedProgram);
       setSelectedProgramType(selectedProgram?.type || null);
     } else {
       setSelectedProgramType(null);
@@ -52,6 +54,8 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel }) =>
 
   const onSubmit = (values: AddClientFormValues) => {
     if (!user?.clinicId) return;
+    
+    console.log("Submitting client form with values:", values);
     
     createClient({
       name: values.name,

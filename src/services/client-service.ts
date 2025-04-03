@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Client, mapDbClientToClient, mapClientToDbClient } from '@/types';
 import { ClientRow } from '@/types/database';
