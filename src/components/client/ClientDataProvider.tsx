@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CheckIn } from '@/types';
 import CheckInService from '@/services/check-in-service';
 import { toast } from 'sonner';
+import { isDemoEmail } from '@/services/auth/demo';
 
 // Define the context type
 interface ClientDataContextType {
@@ -53,6 +54,30 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       console.log('ClientDataProvider: Fetching client ID for user', user.id);
       
+      // Check if this is a demo client account first
+      const isDemo = user.email && isDemoEmail(user.email);
+      if (isDemo) {
+        console.log('Demo user detected, using demo client data');
+        // Set some demo data values
+        setCheckIns([{
+          id: 'demo-1',
+          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          waterIntake: 5,
+          weight: 150
+        }, {
+          id: 'demo-2',
+          date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+          waterIntake: 4,
+          weight: 152
+        }]);
+        setProgramName('Demo Program');
+        setClientStartDate(new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString());
+        setWaterProgress(62.5);
+        setWeightTrend('down');
+        setLoading(false);
+        return;
+      }
+      
       try {
         const { data, error } = await supabase
           .from('clients')
@@ -62,28 +87,10 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           
         if (error) {
           console.error("Error fetching client ID:", error);
-          // For demo accounts, we might not have a real client ID in the database
-          if (user.email && user.email.includes('@demo.com')) {
-            console.log('Demo user detected, using demo client data');
-            // Set some demo data values
-            setCheckIns([{
-              id: 'demo-1',
-              waterIntake: 5,
-              weight: 150
-            }, {
-              id: 'demo-2',
-              waterIntake: 4,
-              weight: 152
-            }]);
-            setProgramName('Demo Program');
-            setClientStartDate(new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString());
-            setWaterProgress(62.5);
-            setWeightTrend('down');
-            setLoading(false);
-          } else {
-            setHasError(true);
-            toast.error('Could not load client data. Please try again later.');
-          }
+          // For regular users who don't have a client record yet
+          setHasError(true);
+          toast.error('Could not load client data. Please try again later.');
+          setLoading(false);
           return;
         }
         
