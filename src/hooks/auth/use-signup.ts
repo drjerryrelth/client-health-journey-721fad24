@@ -17,14 +17,12 @@ export const useSignup = () => {
       console.log('Attempting clinic signup with:', data.email);
       
       // First create the auth user
-      const { data: authData, error: signUpError } = await signUp(data.email, data.password, {
-        full_name: data.primaryContact,
-        role: 'coach' // Default role for clinic primary contact is coach
-      });
-      
-      if (signUpError) throw signUpError;
-      
-      if (authData?.user?.id) {
+      try {
+        await signUp(data.email, data.password, {
+          full_name: data.primaryContact,
+          role: 'coach' // Default role for clinic primary contact is coach
+        });
+        
         // Then create a clinic record
         const { error: clinicError } = await supabase
           .from('clinics')
@@ -36,12 +34,14 @@ export const useSignup = () => {
           });
           
         if (clinicError) throw clinicError;
+        
+        toast({
+          title: 'Clinic registration successful',
+          description: 'Your clinic account has been created. Please check your email to confirm.',
+        });
+      } catch (signUpError: any) {
+        throw signUpError;
       }
-      
-      toast({
-        title: 'Clinic registration successful',
-        description: 'Your clinic account has been created. Please check your email to confirm.',
-      });
       
     } catch (error: any) {
       console.error('Signup error:', error);
