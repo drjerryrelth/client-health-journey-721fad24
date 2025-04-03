@@ -8,6 +8,7 @@ import { autoConfirmDemoEmail } from './confirmation-handler';
  * @param email The email to check
  */
 export const isDemoClinicEmail = (email: string): boolean => {
+  // Accept any email that ends with .demo@example.com (including those with numbers)
   return email.endsWith('.demo@example.com') || 
          email.includes('demo-clinic') || 
          email.includes('democlinic');
@@ -50,6 +51,10 @@ export const handleDemoClinicSignup = async (
       } else if (signUpError.message?.includes('rate limit')) {
         console.error('Rate limit error:', signUpError.message);
         throw new Error('Demo clinic creation rate limited. Please try again in a few minutes.');
+      } else if (signUpError.message?.includes('Email address') && signUpError.message?.includes('invalid')) {
+        // Special case for email validation errors
+        console.error('Email validation error:', signUpError.message);
+        throw new Error(`The email format "${email}" appears to be invalid. Please use a valid email format like "myclinic.demo@example.com".`);
       } else {
         console.error('Demo clinic user creation error:', signUpError.message);
         throw new Error(`Could not create demo clinic user: ${signUpError.message}`);
