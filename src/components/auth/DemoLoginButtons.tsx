@@ -5,7 +5,7 @@ import { UserRole } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useLoginHandler } from '@/hooks/use-login-handler';
+import { useDemoLogin } from '@/hooks/auth';
 import { demoEmails } from '@/services/auth/demo';
 
 interface DemoLoginButtonsProps {
@@ -13,18 +13,17 @@ interface DemoLoginButtonsProps {
   isSubmitting?: boolean;
 }
 
-const DemoLoginButtons = ({ handleDemoLogin, isSubmitting: propIsSubmitting }: DemoLoginButtonsProps = {}) => {
-  // Use login handler if no handler is provided (for homepage use)
+const DemoLoginButtons = ({ handleDemoLogin: propHandleDemoLogin, isSubmitting: propIsSubmitting }: DemoLoginButtonsProps = {}) => {
   const navigate = useNavigate();
-  const { handleDemoLogin: hookLoginHandler, isSubmitting: hookIsSubmitting } = useLoginHandler();
+  const { handleDemoLogin: hookLoginHandler, isSubmitting: hookIsSubmitting } = useDemoLogin();
   
   // Use prop isSubmitting if provided, otherwise use the hook's isSubmitting
   const isSubmitting = propIsSubmitting !== undefined ? propIsSubmitting : hookIsSubmitting;
   
   const handleLogin = async (type: UserRole, email: string) => {
     console.log(`Demo login clicked for ${type} with email ${email}`);
-    if (handleDemoLogin) {
-      await handleDemoLogin(type, email);
+    if (propHandleDemoLogin) {
+      await propHandleDemoLogin(type, email);
     } else {
       // If no handler provided, use the hook's handler
       await hookLoginHandler(type, email);

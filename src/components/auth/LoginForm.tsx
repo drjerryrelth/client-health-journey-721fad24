@@ -3,7 +3,7 @@ import React from 'react';
 import LoginHeader from './LoginHeader';
 import LoginFormFields from './LoginFormFields';
 import DemoLoginButtons from './DemoLoginButtons';
-import { useLoginHandler } from '@/hooks/use-login-handler';
+import { useLoginHandler } from '@/hooks/auth';
 
 const LoginForm = () => {
   const { isSubmitting, handleLogin, handleDemoLogin } = useLoginHandler();
