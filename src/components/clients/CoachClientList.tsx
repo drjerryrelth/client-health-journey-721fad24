@@ -12,11 +12,9 @@ const CoachClientList = ({ onAddClient }: { onAddClient: () => void }) => {
   const { data: clients, isLoading } = useClientsQuery(user?.clinicId);
   const navigate = useNavigate();
 
-  // Handle the "Add Your First Client" button click
-  const handleAddClientClick = () => {
-    if (onAddClient) {
-      onAddClient();
-    }
+  // Handle client row click
+  const handleClientClick = (clientId: string) => {
+    navigate(`/coach/clients/${clientId}`);
   };
 
   if (isLoading) {
@@ -33,7 +31,7 @@ const CoachClientList = ({ onAddClient }: { onAddClient: () => void }) => {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
         <p className="text-lg font-medium text-gray-700 mb-4">You don't have any clients yet</p>
-        <Button onClick={handleAddClientClick} className="flex items-center">
+        <Button onClick={onAddClient} className="flex items-center">
           <UserPlus className="mr-2 h-4 w-4" />
           Add Your First Client
         </Button>
@@ -47,7 +45,7 @@ const CoachClientList = ({ onAddClient }: { onAddClient: () => void }) => {
         <div 
           key={client.id} 
           className="flex items-center justify-between p-4 border rounded-md hover:bg-gray-50 cursor-pointer"
-          onClick={() => navigate(`/coach/clients/${client.id}`)}
+          onClick={() => handleClientClick(client.id)}
         >
           <div>
             <h3 className="font-medium">{client.name}</h3>

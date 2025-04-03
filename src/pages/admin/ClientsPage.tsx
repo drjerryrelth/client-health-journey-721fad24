@@ -25,17 +25,18 @@ const ClientsPage = () => {
   // Handle opening the dialog directly
   const handleAddClientClick = () => {
     setDialogOpen(true);
-    setSearchParams({ action: 'add' });
+    // Only update URL if the dialog wasn't already open
+    if (!dialogOpen) {
+      setSearchParams({ action: 'add' });
+    }
   };
 
   // Handle dialog close
   const handleDialogOpenChange = (open: boolean) => {
     setDialogOpen(open);
-    if (!open) {
-      // Remove the action parameter without triggering a loop
-      if (action === 'add') {
-        setSearchParams({});
-      }
+    // When closing, clear the URL parameter
+    if (!open && action === 'add') {
+      setSearchParams({});
     }
   };
 
@@ -61,7 +62,7 @@ const ClientsPage = () => {
         </CardContent>
       </Card>
       
-      {/* Add Client Dialog */}
+      {/* Add Client Dialog - controlled by local state, not directly by URL */}
       <AddClientDialog open={dialogOpen} onOpenChange={handleDialogOpenChange} />
     </div>
   );
