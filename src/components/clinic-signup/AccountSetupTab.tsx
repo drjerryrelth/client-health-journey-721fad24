@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FormField, FormItem, FormLabel, FormMessage, FormControl } from '@/components/ui/form';
+import { FormField, FormItem, FormLabel, FormMessage, FormControl, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { ClinicSignupFormValues } from './types';
 import HipaaNotice from './HipaaNotice';
@@ -24,6 +24,14 @@ const AccountSetupTab = ({
   onBack, 
   isSubmitting 
 }: AccountSetupTabProps) => {
+  // Pre-fill admin email with clinic email when component mounts or createAccount changes
+  useEffect(() => {
+    if (createAccount && form.getValues('email') === '') {
+      const clinicEmail = form.getValues('clinicEmail');
+      form.setValue('email', clinicEmail);
+    }
+  }, [createAccount, form]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center mb-4">
@@ -47,7 +55,10 @@ const AccountSetupTab = ({
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                <FormLabel>Admin Email <span className="text-red-500">*</span></FormLabel>
+                <FormDescription>
+                  Email for the administrator account (pre-filled with clinic email)
+                </FormDescription>
                 <FormControl>
                   <Input {...field} type="email" />
                 </FormControl>
