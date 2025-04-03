@@ -56,11 +56,11 @@ const AccountSetupTab = ({
     form.setValue('addOns', updatedAddOns);
   };
 
-  // Handle plan selection
+  // Handle plan selection - completely revised for reliability
   const handlePlanSelect = (planId: string) => {
-    console.log('Selected plan:', planId);
+    console.log('Selecting plan:', planId);
     
-    // Set the new plan value with explicit shouldDirty to mark the field as changed
+    // Force update the form field with all necessary flags
     form.setValue('selectedPlan', planId, { 
       shouldValidate: true,
       shouldDirty: true,
@@ -74,7 +74,16 @@ const AccountSetupTab = ({
       return addOn && addOn.availableFor.includes(planId);
     });
     
-    form.setValue('addOns', validAddOns);
+    if (currentAddOns.length !== validAddOns.length) {
+      form.setValue('addOns', validAddOns, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true
+      });
+    }
+    
+    // Force a re-render if needed
+    form.trigger('selectedPlan');
   };
 
   return (
@@ -104,7 +113,7 @@ const AccountSetupTab = ({
                 <RadioGroup
                   value={field.value}
                   onValueChange={(value) => {
-                    field.onChange(value);
+                    // Don't call field.onChange directly, always use handlePlanSelect
                     handlePlanSelect(value);
                   }}
                   className="space-y-3"
