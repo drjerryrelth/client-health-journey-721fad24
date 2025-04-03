@@ -28,14 +28,17 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
         const { data: users } = await supabase.auth.admin.listUsers();
         
         if (users) {
-          // Fix: properly type the user data and check for email property
+          // Properly type the user data and check for email property
           interface UserData {
             id: string;
             email?: string;
           }
           
+          // Explicitly type the users array
+          const typedUsers = users.users as UserData[] || [];
+          
           // Try to find user with matching email
-          const matchingUser = users.users?.find((user: UserData) => 
+          const matchingUser = typedUsers.find(user => 
             user.email === email
           );
           return !!matchingUser;
