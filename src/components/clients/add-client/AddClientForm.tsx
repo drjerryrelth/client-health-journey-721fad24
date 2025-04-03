@@ -6,16 +6,11 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { useProgramsQuery } from '@/hooks/queries/use-program-queries';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { useCreateClientMutation } from '@/hooks/queries/use-client-queries';
 import ClientFormFields from './ClientFormFields';
 import { formSchema, AddClientFormValues } from './AddClientSchema';
-
-interface AddClientFormProps {
-  onSuccess: (email: string, tempPassword: string) => void;
-  onCancel: () => void;
-  clinicId?: string; // Added clinicId as an optional prop
-}
+import { AddClientFormProps } from './index';
 
 const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clinicId }) => {
   const { user } = useAuth();

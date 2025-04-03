@@ -80,7 +80,7 @@ const ClientsPage = () => {
       <AddClientDialog 
         open={dialogOpen} 
         onOpenChange={handleDialogOpenChange}
-        clinicId={isClinicAdmin ? user?.clinicId : undefined} 
+        clinicId={isClinicAdmin ? user?.clinicId : undefined}
       />
     </div>
   );

@@ -9,12 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import AddClientForm from './AddClientForm';
 import ClientSuccessDisplay from './ClientSuccessDisplay';
-
-interface AddClientDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  clinicId?: string;  // Added clinicId as an optional prop
-}
+import { AddClientDialogProps } from './index';
 
 const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange, clinicId }) => {
   const [tempPassword, setTempPassword] = useState<string | null>(null);
@@ -53,7 +48,7 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange, c
           <AddClientForm 
             onSuccess={handleSuccess}
             onCancel={() => onOpenChange(false)}
-            clinicId={clinicId}  // Pass clinicId to the AddClientForm
+            clinicId={clinicId}
           />
         )}
       </DialogContent>
