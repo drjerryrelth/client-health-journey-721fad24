@@ -36,6 +36,7 @@ const ClinicSignup = () => {
           state: values.state,
           zip: values.zipCode,
           primary_contact: values.primaryContact,
+          subscription_plan: values.selectedPlan,
           status: 'active'
         })
         .select('id')

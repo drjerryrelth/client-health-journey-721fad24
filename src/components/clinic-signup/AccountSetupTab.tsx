@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField, FormItem, FormLabel, FormMessage, FormControl, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { ClinicSignupFormValues } from './types';
+import { ClinicSignupFormValues, planOptions } from './types';
 import HipaaNotice from './HipaaNotice';
 import { Link } from 'react-router-dom';
+import { RadioGroup } from '@/components/ui/radio-group';
+import PlanOption from './PlanOption';
 
 interface AccountSetupTabProps {
   form: UseFormReturn<ClinicSignupFormValues>;
@@ -33,7 +35,7 @@ const AccountSetupTab = ({
   }, [createAccount, form]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center mb-4">
         <Checkbox 
           id="create-account" 
@@ -47,6 +49,39 @@ const AccountSetupTab = ({
       </div>
       
       <HipaaNotice />
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Select a Plan</h3>
+        <FormField
+          control={form.control}
+          name="selectedPlan"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="space-y-3"
+                >
+                  {planOptions.map((plan) => (
+                    <PlanOption
+                      key={plan.id}
+                      id={plan.id}
+                      name={plan.name}
+                      description={plan.description}
+                      price={plan.price}
+                      features={plan.features}
+                      selected={field.value === plan.id}
+                      onSelect={() => field.onChange(plan.id)}
+                    />
+                  ))}
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
       
       {createAccount && (
         <div className="space-y-4">

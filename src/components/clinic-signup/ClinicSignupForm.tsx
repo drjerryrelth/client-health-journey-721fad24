@@ -9,7 +9,7 @@ import { CardHeader, CardTitle, CardDescription, CardContent } from '@/component
 import { ClinicInformationTab } from './index';
 import { CoachSetupTab } from './index';
 import { AccountSetupTab } from './index';
-import { clinicSignupSchema, ClinicSignupFormValues, CoachFormData } from './types';
+import { clinicSignupSchema, ClinicSignupFormValues, CoachFormData, planOptions } from './types';
 
 interface ClinicSignupFormProps {
   isSubmitting: boolean;
@@ -37,6 +37,7 @@ const ClinicSignupForm = ({ isSubmitting, onSubmit }: ClinicSignupFormProps) => 
       confirmPassword: '',
       hipaaAcknowledgment: false,
       legalAcknowledgment: false,
+      selectedPlan: planOptions[1].id, // Default to Professional plan
     },
     mode: 'onChange'
   });
@@ -80,7 +81,7 @@ const ClinicSignupForm = ({ isSubmitting, onSubmit }: ClinicSignupFormProps) => 
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="clinic">Clinic Information</TabsTrigger>
                 <TabsTrigger value="coaches">Coach Setup</TabsTrigger>
-                <TabsTrigger value="account">Account</TabsTrigger>
+                <TabsTrigger value="account">Account & Plan</TabsTrigger>
               </TabsList>
             </div>
             

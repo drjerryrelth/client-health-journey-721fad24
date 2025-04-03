@@ -1,6 +1,30 @@
 
 import { z } from 'zod';
 
+export const planOptions = [
+  {
+    id: "basic",
+    name: "Basic",
+    description: "For small clinics just getting started",
+    price: "$49/month",
+    features: ["Up to 50 clients", "1 coach account", "Basic analytics"]
+  },
+  {
+    id: "professional",
+    name: "Professional",
+    description: "For established clinics",
+    price: "$99/month",
+    features: ["Up to 200 clients", "5 coach accounts", "Advanced analytics", "Email support"]
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    description: "For large clinics with multiple locations",
+    price: "$199/month",
+    features: ["Unlimited clients", "Unlimited coach accounts", "Custom analytics", "Priority support", "White-labeling"]
+  }
+];
+
 export const clinicSignupSchema = z.object({
   clinicName: z.string().min(1, "Clinic name is required"),
   clinicEmail: z.string().email("Invalid email format").min(1, "Email is required"),
@@ -20,6 +44,7 @@ export const clinicSignupSchema = z.object({
   legalAcknowledgment: z.boolean().refine(val => val === true, {
     message: "You must agree to the Terms and Privacy Policy",
   }),
+  selectedPlan: z.string().min(1, "Please select a plan"),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
