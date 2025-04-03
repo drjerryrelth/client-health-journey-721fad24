@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 const AdminRoutes = () => {
   const { user } = useAuth();
   
-  // More strict type checking
+  // Strict type checking
   const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const isClinicAdmin = user?.role === 'clinic_admin';
   
@@ -32,33 +32,35 @@ const AdminRoutes = () => {
     return <Navigate to="/unauthorized" replace />;
   }
   
-  // CRITICAL ISSUE FIX: Ensure clinic admin NEVER sees system admin routes
+  // CRITICAL SECURITY ENFORCEMENT
+  // Emergency check to prevent clinic admins from accessing system admin routes
   useEffect(() => {
-    // For clinic admins trying to access forbidden routes
     if (isClinicAdmin) {
       const currentPath = window.location.pathname;
+      // These paths are strictly forbidden for clinic admins
       const forbiddenPaths = ['/admin/clinics', '/admin/admin-users'];
       
       if (forbiddenPaths.some(path => currentPath.startsWith(path))) {
-        console.log('Clinic admin attempting to access forbidden route:', currentPath);
-        toast.error('You do not have permission to access this page');
+        console.error('SECURITY VIOLATION: Clinic admin attempting to access forbidden route:', currentPath);
+        toast.error('Access denied. You do not have permission to access this page.');
+        // Force a redirect
         window.location.href = '/admin/dashboard';
       }
     }
   }, [isClinicAdmin]);
   
-  // Different route configurations based on exact role
-  // Clinic admin - STRICTLY LIMITED access
+  // CRITICAL SECURITY ENFORCEMENT: Different routes for different admin types
+  // This separation ensures clinic admins can NEVER access system admin routes
   if (isClinicAdmin) {
-    console.log('Rendering clinic admin routes only');
+    console.log('Rendering CLINIC ADMIN routes only - restricted access');
     return (
       <Routes>
-        {/* Use specialized layout for clinic admins with strict role enforcement */}
+        {/* Use specialized layout with strict role enforcement */}
         <Route element={<MainLayout requiredRoles={['clinic_admin']} />}>
           {/* Base route */}
           <Route index element={<AdminDashboard />} />
           
-          {/* Clinic admin accessible routes */}
+          {/* Routes allowed for clinic admins */}
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="clients" element={<ClientsPage />} />
           <Route path="coaches" element={<CoachesPage />} />
@@ -74,19 +76,23 @@ const AdminRoutes = () => {
           {/* Catch all route */}
           <Route path="*" element={<NotFound />} />
         </Route>
+        
+        {/* Emergency catch-all to prevent access to system admin routes */}
+        <Route path="clinics/*" element={<Navigate to="/unauthorized" replace />} />
+        <Route path="admin-users/*" element={<Navigate to="/unauthorized" replace />} />
       </Routes>
     );
   }
   
-  // System admin routes (for 'admin' or 'super_admin') with explicit role enforcement
-  console.log('Rendering system admin routes (full access)');
+  // System admin routes (for 'admin' or 'super_admin')
+  console.log('Rendering SYSTEM ADMIN routes (full access)');
   return (
     <Routes>
       <Route element={<MainLayout requiredRoles={['admin', 'super_admin']} />}>
         {/* Base route */}
         <Route index element={<AdminDashboard />} />
         
-        {/* Admin routes - explicitly marked for system admin only */}
+        {/* All admin routes available to system admins */}
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="clients" element={<ClientsPage />} />
         <Route path="clinics" element={<ClinicsPage />} />

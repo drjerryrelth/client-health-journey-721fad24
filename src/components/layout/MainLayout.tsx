@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/context/auth';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
@@ -30,14 +30,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
     return <Navigate to="/login" replace />;
   }
   
-  // Enhanced logging for debugging role issues
+  // Detailed role and permission logging for debugging
   console.log('MainLayout - User role:', user?.role);
   console.log('MainLayout - User clinicId:', user?.clinicId);
   console.log('MainLayout - Required roles:', requiredRoles);
+  console.log('MainLayout - Current path:', location.pathname);
   
-  // Enhanced security check - Ensure clinic_admin cannot access system admin routes
+  // CRITICAL SECURITY ENHANCEMENT: Specific path-based security checks
+  // This ensures clinic admins cannot access system admin routes regardless of other checks
   if (user?.role === 'clinic_admin') {
-    // System admin only paths that clinic admins should never access
+    // System admin only paths that clinic admins should NEVER access
     const systemAdminOnlyPaths = ['/admin/clinics', '/admin/admin-users'];
     
     // Check if current path starts with any of the restricted paths
@@ -46,27 +48,27 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
     );
     
     if (isRestrictedPath) {
-      console.log('MainLayout - Blocking clinic admin from accessing system admin route:', location.pathname);
+      console.error('SECURITY VIOLATION: Blocking clinic admin from accessing system admin route:', location.pathname);
       toast.error("Access denied. You don't have permission to access this page.");
       return <Navigate to="/unauthorized" replace />;
     }
   }
   
-  // CRITICAL FIX: Apply specialized role checking logic
+  // CRITICAL SECURITY FIX: Apply specialized role checking logic
   let hasPermission = false;
   
   // If user is a clinic_admin, they can ONLY access clinic_admin routes
   if (user?.role === 'clinic_admin') {
-    // Clinic admins can ONLY access routes that explicitly require clinic_admin role
+    // Clinic admins can ONLY access routes that explicitly include clinic_admin role
     hasPermission = requiredRoles.includes('clinic_admin');
     
     // Additional check - block clinic admins from system admin pages
     if (requiredRoles.includes('admin') && !requiredRoles.includes('clinic_admin')) {
-      console.log('MainLayout - Blocking clinic admin from accessing system admin route');
+      console.error('SECURITY VIOLATION: Blocking clinic admin from accessing system admin route');
       hasPermission = false;
     }
   } 
-  // For other roles, use the hasRole method
+  // For other roles, use the standard hasRole method
   else {
     hasPermission = requiredRoles.some(role => hasRole(role));
   }

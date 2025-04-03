@@ -10,6 +10,7 @@ type UseAuthMethodsProps = {
 };
 
 export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => {
+  // Login method implementation
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
@@ -38,6 +39,7 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     }
   }, [setIsLoading, toast]);
 
+  // Logout method implementation
   const logout = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -61,6 +63,7 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     }
   }, [setIsLoading, toast]);
 
+  // Sign up method implementation
   const signUp = useCallback(async (email: string, password: string, userData: { full_name: string; role: string }) => {
     setIsLoading(true);
     try {
@@ -86,55 +89,60 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
 
   /**
    * Strictly check if a user has the required role(s)
-   * CRUCIAL FIX: This function was allowing clinic admins to have system admin permissions
+   * This is a critical security function to properly enforce role-based access
    */
   const hasRole = useCallback((requiredRole: UserRole | UserRole[]) => (user: UserData | null) => {
     console.log('Checking role:', requiredRole, 'for user:', user);
     
     if (!user) {
-      console.log('No user, so no role');
+      console.log('No user, access denied');
       return false;
     }
     
-    // CRITICAL CHANGE: Use strict role checking for different admin types
-    
     // Get the actual user role for clarity
     const actualRole = user.role;
+    
+    // Determine role types for strict checking
     const isSuperAdmin = actualRole === 'super_admin';
     const isSystemAdmin = actualRole === 'admin';
     const isClinicAdmin = actualRole === 'clinic_admin';
     const isCoach = actualRole === 'coach';
     const isClient = actualRole === 'client';
     
-    console.log({isSuperAdmin, isSystemAdmin, isClinicAdmin, isCoach, isClient});
+    console.log('Role checks:', {isSuperAdmin, isSystemAdmin, isClinicAdmin, isCoach, isClient});
     
     // Convert required role to array for easier checking
     const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     
-    // CRITICAL SECURITY FIX: Explicitly handle each role scenario
+    // CRITICAL SECURITY ENFORCEMENT - Strict role checking
     
-    // Check for system admin only routes - clinic_admin can NEVER access these
+    // System admin only routes - clinic_admin can NEVER access these
     if (requiredRoles.includes('admin') && !requiredRoles.includes('clinic_admin')) {
+      console.log('System admin check:', isSystemAdmin || isSuperAdmin);
       return isSystemAdmin || isSuperAdmin;
     }
     
-    // Check for clinic admin routes - both clinic admins and system admins can access
+    // Routes that require clinic admin role - both clinic admins and system admins can access
     if (requiredRoles.includes('clinic_admin')) {
-      if (isClinicAdmin || isSystemAdmin || isSuperAdmin) return true;
+      console.log('Clinic admin check:', isClinicAdmin || isSystemAdmin || isSuperAdmin);
+      return isClinicAdmin || isSystemAdmin || isSuperAdmin;
     }
     
-    // For coach role
+    // Coach routes
     if (requiredRoles.includes('coach')) {
-      if (isCoach || isSystemAdmin || isSuperAdmin) return true;
+      console.log('Coach check:', isCoach || isSystemAdmin || isSuperAdmin);
+      return isCoach || isSystemAdmin || isSuperAdmin;
     }
     
-    // For client role
+    // Client routes
     if (requiredRoles.includes('client')) {
-      if (isClient || isSystemAdmin || isSuperAdmin) return true;
+      console.log('Client check:', isClient || isSystemAdmin || isSuperAdmin);
+      return isClient || isSystemAdmin || isSuperAdmin;
     }
     
-    // Final check for super_admin specific functions
+    // Super admin specific functions
     if (requiredRoles.includes('super_admin')) {
+      console.log('Super admin check:', isSuperAdmin);
       return isSuperAdmin;
     }
     

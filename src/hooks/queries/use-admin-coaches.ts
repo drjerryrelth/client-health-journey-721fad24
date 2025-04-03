@@ -27,13 +27,26 @@ export function useAdminCoaches() {
 
   const fetchClinics = async () => {
     try {
-      const allClinics = await ClinicService.getClinics();
-      const clinicMap: Record<string, string> = {};
-      allClinics.forEach(clinic => {
-        clinicMap[clinic.id] = clinic.name;
-      });
-      setClinics(clinicMap);
-      console.log('[useAdminCoaches] Clinic map created:', clinicMap);
+      // Only system admins should fetch all clinics
+      if (user?.role === 'admin' || user?.role === 'super_admin') {
+        const allClinics = await ClinicService.getClinics();
+        const clinicMap: Record<string, string> = {};
+        allClinics.forEach(clinic => {
+          clinicMap[clinic.id] = clinic.name;
+        });
+        setClinics(clinicMap);
+        console.log('[useAdminCoaches] Clinic map created for system admin:', clinicMap);
+      } 
+      // Clinic admins should only know about their own clinic
+      else if (user?.role === 'clinic_admin' && user?.clinicId) {
+        const singleClinic = await ClinicService.getClinicById(user.clinicId);
+        const clinicMap: Record<string, string> = {};
+        if (singleClinic) {
+          clinicMap[singleClinic.id] = singleClinic.name;
+          setClinics(clinicMap);
+          console.log('[useAdminCoaches] Single clinic map created for clinic admin:', clinicMap);
+        }
+      }
     } catch (err) {
       console.error('[useAdminCoaches] Error fetching clinics:', err);
     }
@@ -45,24 +58,25 @@ export function useAdminCoaches() {
       setError(null);
       
       console.log(`[useAdminCoaches] Fetching coaches (attempt: ${retryCount + 1})`);
+      console.log('[useAdminCoaches] User role:', user?.role, 'clinicId:', user?.clinicId);
       
-      // CRITICAL FIX: Use the correct fetching method based on role
+      // STRICT ROLE ENFORCEMENT:
       // Clinic admins should ONLY see their clinic's coaches
-      const isClinicAdmin = user?.role === 'clinic_admin';
-      const clinicId = user?.clinicId;
-      
+      // System admins can see all coaches
       let coachesData;
-      if (isClinicAdmin && clinicId) {
-        console.log('[useAdminCoaches] Fetching coaches for specific clinic:', clinicId);
-        coachesData = await CoachService.getClinicCoaches(clinicId);
-      } else {
-        console.log('[useAdminCoaches] Fetching all coaches (system admin)');
+      
+      if (user?.role === 'clinic_admin' && user?.clinicId) {
+        console.log('[useAdminCoaches] Clinic admin role detected, fetching only clinic coaches');
+        coachesData = await CoachService.getClinicCoaches(user.clinicId);
+      } else if (user?.role === 'admin' || user?.role === 'super_admin') {
+        console.log('[useAdminCoaches] System admin role detected, fetching all coaches');
         coachesData = await CoachService.getAllCoachesForAdmin();
+      } else {
+        console.error('[useAdminCoaches] Invalid or missing role/clinicId:', user);
+        throw new Error('Unauthorized or missing clinic information');
       }
       
       console.log('[useAdminCoaches] Received coaches data:', coachesData);
-      console.log('[useAdminCoaches] Coaches data type:', typeof coachesData);
-      console.log('[useAdminCoaches] Is array?', Array.isArray(coachesData));
       
       if (!Array.isArray(coachesData)) {
         console.error('[useAdminCoaches] Invalid coaches data format:', coachesData);
@@ -73,7 +87,7 @@ export function useAdminCoaches() {
       
       if (coachesData.length === 0) {
         console.warn('[useAdminCoaches] No coaches were returned');
-        toast.info('No coaches found in the database');
+        toast.info('No coaches found');
       } else {
         toast.success(`Successfully loaded ${coachesData.length} coaches`);
       }
@@ -104,9 +118,10 @@ export function useAdminCoaches() {
 
   useEffect(() => {
     console.log('[useAdminCoaches] Hook mounted, fetching coaches');
+    console.log('[useAdminCoaches] Current user role:', user?.role, 'clinicId:', user?.clinicId);
     fetchClinics();
     fetchCoaches();
-  }, [user?.role, user?.clinicId]); // CRITICAL FIX: Added user role and clinicId as dependencies
+  }, [user?.role, user?.clinicId]); // Critical to include both role and clinicId as dependencies
 
   const getClinicName = (clinicId: string) => {
     return clinics[clinicId] || `Unknown Clinic (${clinicId ? clinicId.slice(-4) : 'None'})`;

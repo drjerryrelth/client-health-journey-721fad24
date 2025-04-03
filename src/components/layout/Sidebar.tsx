@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,32 +20,35 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) {
-  const { user, hasRole, logout } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
 
   if (!user) return null;
 
-  let navItems = clientNavItems;
+  // CRITICAL SECURITY CHECK: Determine nav items based on strict role checking
+  let navItems = clientNavItems; // Default fallback
   let userRole: UserRole = user.role;
-  
-  // Use a separate variable for display text that doesn't need to conform to UserRole type
   let displayRoleText: string = userRole;
   
-  // FIXED: Strict separation of role-based navigation
+  // Strict role-based navigation
   if (user.role === 'admin' || user.role === 'super_admin') {
     navItems = adminNavItems;
     displayRoleText = user.role === 'super_admin' ? 'Super Admin' : 'System Admin';
   } else if (user.role === 'clinic_admin') {
-    navItems = clinicAdminNavItems;
+    navItems = clinicAdminNavItems; // Clinic admin gets a more limited set of navigation items
+    displayRoleText = 'Clinic Admin';
     
-    // Extra protection: If clinic admin somehow gets to a system-admin only route, block it
+    // Emergency redirect if a clinic admin somehow accesses a system admin route
+    // This is a critical security measure
     if (location.pathname.includes('/admin/clinics') || 
         location.pathname.includes('/admin/admin-users')) {
+      console.error('SECURITY VIOLATION: Clinic admin attempting to access system admin route:', location.pathname);
       toast.error("You don't have permission to access this page");
-      window.location.href = '/admin/dashboard';
+      // Force a redirect
+      setTimeout(() => {
+        window.location.href = '/admin/dashboard';
+      }, 10);
     }
-    
-    displayRoleText = 'Clinic Admin';
   } else if (user.role === 'coach') {
     navItems = coachNavItems;
     displayRoleText = 'Coach';
