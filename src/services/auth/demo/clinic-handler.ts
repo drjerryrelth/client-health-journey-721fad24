@@ -8,12 +8,17 @@ import { autoConfirmDemoEmail } from './confirmation-handler';
  * @param email The email to check
  */
 export const isDemoClinicEmail = (email: string): boolean => {
-  // Very permissive validation - look for "demo" or "test" anywhere in the email
-  // or accept example.com domain which is commonly used for testing
+  // First and foremost, check if the email ends with @example.com
+  // This is our primary way to identify demo emails
   const normalizedEmail = email.toLowerCase();
-  return normalizedEmail.includes('demo') || 
-         normalizedEmail.includes('test') || 
-         normalizedEmail.endsWith('@example.com');
+  
+  // Accept ANY @example.com email as a demo email
+  if (normalizedEmail.endsWith('@example.com')) {
+    return true;
+  }
+  
+  // As a fallback, also accept emails containing 'demo' or 'test'
+  return normalizedEmail.includes('demo') || normalizedEmail.includes('test');
 };
 
 /**
@@ -56,7 +61,7 @@ export const handleDemoClinicSignup = async (
       } else if (signUpError.message?.includes('Email address') && signUpError.message?.includes('invalid')) {
         // Special case for email validation errors
         console.error('Email validation error:', signUpError.message);
-        throw new Error(`Email validation failed. Please use a simple format like "demo@example.com" or "clinic@demo.com" without hyphens, numbers, or special characters.`);
+        throw new Error(`Email validation failed. Please use an email ending with @example.com, such as "clinic@example.com" or "demo@example.com".`);
       } else {
         console.error('Demo clinic user creation error:', signUpError.message);
         throw new Error(`Could not create demo clinic user: ${signUpError.message}`);
@@ -69,7 +74,7 @@ export const handleDemoClinicSignup = async (
         await autoConfirmDemoEmail(email);
         console.log('Demo clinic email auto-confirmed');
       } catch (confirmErr) {
-        console.error('Error confirming demo clinic email:', confirmErr);
+        console.error('Error confirming demo email:', confirmErr);
         // Continue execution - this is not a critical error
       }
     }
