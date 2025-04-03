@@ -15,7 +15,7 @@ interface CoachFormProps {
   submitButtonText?: string;
 }
 
-const CoachForm = ({ 
+export const CoachForm = ({ 
   onSubmit, 
   isSubmitting, 
   onCancel, 
@@ -125,6 +125,3 @@ const CoachForm = ({
     </Form>
   );
 };
-
-export { CoachForm };
-export type { CoachFormValues };

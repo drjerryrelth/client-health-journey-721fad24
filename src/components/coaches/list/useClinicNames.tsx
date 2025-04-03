@@ -1,31 +1,47 @@
 
 import { useState, useEffect } from 'react';
-import ClinicService from '@/services/clinic-service';
-import { Clinic } from '@/services/clinic-service';
+import { supabase } from '@/integrations/supabase/client';
 
-export const useClinicNames = () => {
+export function useClinicNames() {
   const [clinics, setClinics] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchClinics = async () => {
+    async function fetchClinics() {
       try {
-        const allClinics = await ClinicService.getClinics();
+        const { data, error } = await supabase
+          .from('clinics')
+          .select('id, name');
+          
+        if (error) {
+          console.error('Error fetching clinics:', error);
+          return;
+        }
+        
+        // Create a mapping of clinic IDs to names
         const clinicMap: Record<string, string> = {};
-        allClinics.forEach((clinic: Clinic) => {
-          clinicMap[clinic.id] = clinic.name;
-        });
+        if (data) {
+          data.forEach(clinic => {
+            clinicMap[clinic.id] = clinic.name;
+          });
+        }
+        
         setClinics(clinicMap);
       } catch (error) {
-        console.error('Error fetching clinics:', error);
+        console.error('Error in useClinicNames hook:', error);
+      } finally {
+        setLoading(false);
       }
-    };
-
+    }
+    
     fetchClinics();
   }, []);
-
-  const getClinicName = (clinicId: string) => {
-    return clinics[clinicId] || `Clinic ${clinicId ? clinicId.slice(-4) : ''}`;
+  
+  // Function to get a clinic name from an ID
+  const getClinicName = (clinicId: string): string => {
+    if (!clinicId) return 'Unknown Clinic';
+    return clinics[clinicId] || `Unknown Clinic (${clinicId.slice(-4)})`;
   };
-
-  return { clinics, getClinicName };
-};
+  
+  return { clinics, loading, getClinicName };
+}

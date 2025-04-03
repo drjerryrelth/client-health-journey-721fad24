@@ -12,8 +12,6 @@ import {
 
 import { getMockCoaches } from './mock-data';
 
-import { Coach } from './types';
-
 // Export Coach Service API with appropriate function names
 export const CoachService = {
   getClinicCoaches,
@@ -28,4 +26,4 @@ export const CoachService = {
 };
 
 // Re-export types for external consumers
-export type { Coach };
+export type { Coach } from './types';
