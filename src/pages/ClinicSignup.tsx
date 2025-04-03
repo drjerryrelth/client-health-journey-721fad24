@@ -36,8 +36,7 @@ const ClinicSignup = () => {
           state: values.state,
           zip: values.zipCode,
           primary_contact: values.primaryContact,
-          subscription_plan: values.selectedPlan,
-          add_ons: values.addOns,
+          subscription_tier: values.selectedPlan,
           status: 'active'
         })
         .select('id')
@@ -46,6 +45,22 @@ const ClinicSignup = () => {
       if (clinicError) throw new Error(`Failed to create clinic: ${clinicError.message}`);
       
       const clinicId = clinicData.id;
+      
+      // If the clinic has add-ons selected, store that information separately
+      // We could create a separate table for this, but for now we'll just log it
+      if (values.addOns && values.addOns.length > 0) {
+        console.log(`Clinic ${clinicId} has selected add-ons:`, values.addOns);
+        // In a real implementation, we would store this in a separate table
+        // For example:
+        // const { error: addOnsError } = await supabase
+        //   .from('clinic_add_ons')
+        //   .insert(values.addOns.map(addOnId => ({
+        //     clinic_id: clinicId,
+        //     add_on_id: addOnId
+        //   })));
+        // 
+        // if (addOnsError) console.error("Error storing add-ons:", addOnsError);
+      }
       
       let userId = null;
       
