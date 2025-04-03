@@ -37,12 +37,12 @@ const PlanOption = ({
       <div className="flex items-start">
         <RadioGroupItem 
           value={id} 
-          id={`plan-${id}`}
+          id={`plan-${id}`} 
           className="mt-1 mr-2"
         />
         <div className="flex-grow">
           <div className="flex justify-between items-start">
-            <Label htmlFor={`plan-${id}`} className="text-lg font-medium">
+            <Label htmlFor={`plan-${id}`} className="text-lg font-medium cursor-pointer">
               {name}
             </Label>
             <div className="text-lg font-bold text-primary">{price}</div>

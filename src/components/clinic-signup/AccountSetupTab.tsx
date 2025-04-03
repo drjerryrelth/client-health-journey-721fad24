@@ -58,7 +58,7 @@ const AccountSetupTab = ({
 
   // Handle plan selection
   const handlePlanSelect = (planId: string) => {
-    // Force the RadioGroup to update properly
+    // Set the new plan value
     form.setValue('selectedPlan', planId, { shouldValidate: true });
     
     // Clear add-ons that aren't available for the newly selected plan
