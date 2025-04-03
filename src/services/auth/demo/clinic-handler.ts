@@ -13,21 +13,6 @@ export const isDemoClinicEmail = (email: string): boolean => {
 };
 
 /**
- * Generate a unique demo email that will pass Supabase validation
- * This ensures we can create multiple demo accounts
- * @param email The original email input by user
- */
-const sanitizeDemoEmail = (email: string): string => {
-  // If not an example.com email, don't modify
-  if (!isDemoClinicEmail(email)) return email;
-  
-  // Use a very simple format that will pass validation but remain unique
-  // Just add a small random number between 1-999
-  const random = Math.floor(Math.random() * 999) + 1;
-  return `demo${random}@example.com`;
-};
-
-/**
  * Handle demo clinic signup
  * This function handles the special case of demo clinic signups with consistent error handling
  * @param email Clinic email
@@ -44,16 +29,9 @@ export const handleDemoClinicSignup = async (
   try {
     console.log('Processing demo clinic signup:', email);
     
-    // Store original email for clinic record
-    const originalEmail = email;
-    
-    // Sanitize the email to work around Supabase validation
-    const sanitizedEmail = sanitizeDemoEmail(email);
-    console.log('Using sanitized email for auth:', sanitizedEmail);
-
-    // Create auth user with provided password
+    // Create auth user with provided password - use the exact email as provided
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: sanitizedEmail,
+      email: email, // Use the original email exactly as entered
       password,
       options: {
         data: {
@@ -71,10 +49,6 @@ export const handleDemoClinicSignup = async (
       } else if (signUpError.message?.includes('rate limit')) {
         console.error('Rate limit error:', signUpError.message);
         throw new Error('Demo clinic creation rate limited. Please try again in a few minutes.');
-      } else if (signUpError.message?.includes('Email address') && signUpError.message?.includes('invalid')) {
-        // Special case for email validation errors
-        console.error('Email validation error:', signUpError.message);
-        throw new Error(`Supabase rejected the email format. Please use a simple email like "anything@example.com".`);
       } else {
         console.error('Demo clinic user creation error:', signUpError.message);
         throw new Error(`Could not create demo clinic user: ${signUpError.message}`);
@@ -84,7 +58,7 @@ export const handleDemoClinicSignup = async (
       
       // Auto-confirm the email for demo accounts
       try {
-        await autoConfirmDemoEmail(sanitizedEmail);
+        await autoConfirmDemoEmail(email);
         console.log('Demo clinic email auto-confirmed');
       } catch (confirmErr) {
         console.error('Error confirming demo email:', confirmErr);
@@ -92,12 +66,12 @@ export const handleDemoClinicSignup = async (
       }
     }
     
-    // Create the clinic record - use the original email for clinic record
+    // Create the clinic record
     const { data: clinicData, error: clinicError } = await supabase
       .from('clinics')
       .insert({
         name: clinicName,
-        email: originalEmail, // Use original email for clinic data
+        email: email,
         primary_contact: primaryContact,
         status: 'active'
       })
