@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/context/auth';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,9 @@ const TopBar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
+  
+  // Extract first name from user's full name
+  const firstName = user?.name ? user.name.split(' ')[0] : '';
   
   const handleLogout = async () => {
     await logout();
@@ -75,13 +79,13 @@ const TopBar = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} alt={user?.name || "User"} />
-                  <AvatarFallback>{user?.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${firstName}`} alt={firstName || "User"} />
+                  <AvatarFallback>{firstName?.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>Welcome, {firstName}</DropdownMenuLabel>
               <DropdownMenuItem className="flex items-center">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">{user?.name}</p>

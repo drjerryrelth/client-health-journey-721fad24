@@ -28,3 +28,33 @@ export async function autoConfirmDemoEmail(email: string): Promise<void> {
     console.warn('Error in autoConfirmDemoEmail:', error);
   }
 }
+
+/**
+ * Adds HIPAA compliance notice to new accounts
+ * This function can be called when creating new user accounts
+ */
+export async function addHipaaNotice(userId: string): Promise<void> {
+  try {
+    console.log('Adding HIPAA notice to user profile:', userId);
+    
+    // Add HIPAA notice metadata to user profile
+    const { error } = await supabase.auth.admin.updateUserById(
+      userId,
+      {
+        user_metadata: {
+          hipaa_acknowledged: true,
+          hipaa_acknowledgment_date: new Date().toISOString()
+        }
+      }
+    );
+    
+    if (error) {
+      console.log('Could not add HIPAA notice (expected in most environments):', error.message);
+      return;
+    }
+    
+    console.log('HIPAA notice added successfully');
+  } catch (error) {
+    console.warn('Error in addHipaaNotice:', error);
+  }
+}

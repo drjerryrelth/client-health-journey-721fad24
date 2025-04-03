@@ -11,9 +11,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Building, Plus, Trash } from 'lucide-react';
+import { ArrowLeft, Building, Plus, Trash, AlertTriangle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const clinicSignupSchema = z.object({
   clinicName: z.string().min(1, "Clinic name is required"),
@@ -28,6 +29,9 @@ const clinicSignupSchema = z.object({
   email: z.string().email("Invalid email format").min(1, "Email is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Confirm password is required"),
+  hipaaAcknowledgment: z.boolean().refine(val => val === true, {
+    message: "You must acknowledge the HIPAA disclaimer",
+  }),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -63,6 +67,7 @@ const ClinicSignup = () => {
       email: '',
       password: '',
       confirmPassword: '',
+      hipaaAcknowledgment: false,
     },
     mode: 'onChange'
   });
@@ -467,6 +472,14 @@ const ClinicSignup = () => {
                       </label>
                     </div>
                     
+                    <Alert variant="destructive" className="border-amber-500 text-amber-800 bg-amber-50">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle className="font-medium">HIPAA Compliance Notice</AlertTitle>
+                      <AlertDescription className="text-sm">
+                        This application is designed for general health tracking and is NOT HIPAA compliant. While we take security and privacy seriously, this platform should not be used to store or transmit protected health information (PHI) as defined by HIPAA regulations. If you require HIPAA compliance for your practice, please seek alternative solutions.
+                      </AlertDescription>
+                    </Alert>
+                    
                     {createAccount && (
                       <div className="space-y-4">
                         <FormField
@@ -512,6 +525,27 @@ const ClinicSignup = () => {
                             )}
                           />
                         </div>
+                        
+                        <FormField
+                          control={form.control}
+                          name="hipaaAcknowledgment"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel>
+                                  I acknowledge that this application is not HIPAA compliant and should not be used for protected health information.
+                                </FormLabel>
+                                <FormMessage />
+                              </div>
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     )}
                     
