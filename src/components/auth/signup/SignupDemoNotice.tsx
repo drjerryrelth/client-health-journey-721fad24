@@ -10,7 +10,7 @@ const SignupDemoNotice = () => {
       </p>
       <p className="text-xs text-blue-600 mt-1">
         <span className="font-medium">Important:</span> Any email ending with <code>@example.com</code> will work. 
-        Examples: <code>clinic@example.com</code>, <code>test123@example.com</code>, <code>demo@example.com</code>
+        Simple emails like <code>clinic@example.com</code> or <code>demo@example.com</code> work best.
       </p>
     </div>
   );

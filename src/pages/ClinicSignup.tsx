@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +23,37 @@ const ClinicSignup = () => {
     try {
       // Check if this is a demo clinic signup
       const isDemoClinic = isDemoClinicEmail(values.email);
+      
+      // For demo clinics, redirect to the demo-specific handler
+      if (isDemoClinic && createAccount) {
+        console.log("Processing as demo clinic signup");
+        try {
+          await handleDemoClinicSignup(
+            values.email,
+            values.password,
+            values.clinicName,
+            values.primaryContact
+          );
+          
+          toast({
+            title: "Demo clinic created successfully",
+            description: "Your demo clinic has been created. You can now log in with your credentials.",
+          });
+          
+          sonnerToast.success("Demo clinic created! You can now log in.");
+          navigate('/login');
+          return;
+        } catch (demoError: any) {
+          console.error("Demo clinic creation error:", demoError);
+          toast({
+            title: "Demo clinic creation failed",
+            description: demoError.message || "An error occurred during demo clinic creation",
+            variant: "destructive"
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
       
       console.log("Creating clinic with data:", {
         name: values.clinicName,

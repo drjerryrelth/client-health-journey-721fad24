@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { autoConfirmDemoEmail } from './confirmation-handler';
 
@@ -10,6 +9,26 @@ import { autoConfirmDemoEmail } from './confirmation-handler';
 export const isDemoClinicEmail = (email: string): boolean => {
   // Accept ANY @example.com email as a demo email
   return email.toLowerCase().endsWith('@example.com');
+};
+
+/**
+ * Sanitize email to make it more likely to pass Supabase validation
+ * This is a workaround for Supabase's strict email validation
+ * @param email The email to sanitize
+ */
+const sanitizeDemoEmail = (email: string): string => {
+  // If not an example.com email, don't modify
+  if (!isDemoClinicEmail(email)) return email;
+  
+  // Extract username part (before @) and domain part
+  const [username, domain] = email.split('@');
+  
+  // Replace problematic characters with underscores
+  // Keep only alphanumeric characters and underscores
+  const sanitizedUsername = username.replace(/[^a-zA-Z0-9_]/g, '_');
+  
+  // Return sanitized version
+  return `${sanitizedUsername}@${domain}`;
 };
 
 /**
@@ -28,10 +47,14 @@ export const handleDemoClinicSignup = async (
 ): Promise<boolean> => {
   try {
     console.log('Processing demo clinic signup:', email);
+    
+    // Sanitize the email to work around Supabase validation
+    const sanitizedEmail = sanitizeDemoEmail(email);
+    console.log('Using sanitized email for auth:', sanitizedEmail);
 
     // Create auth user with provided password
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
+      email: sanitizedEmail,
       password,
       options: {
         data: {
@@ -62,7 +85,7 @@ export const handleDemoClinicSignup = async (
       
       // Auto-confirm the email for demo accounts
       try {
-        await autoConfirmDemoEmail(email);
+        await autoConfirmDemoEmail(sanitizedEmail);
         console.log('Demo clinic email auto-confirmed');
       } catch (confirmErr) {
         console.error('Error confirming demo email:', confirmErr);
@@ -70,12 +93,12 @@ export const handleDemoClinicSignup = async (
       }
     }
     
-    // Create the clinic record
+    // Create the clinic record - use the original email for clinic record
     const { data: clinicData, error: clinicError } = await supabase
       .from('clinics')
       .insert({
         name: clinicName,
-        email,
+        email: email, // Use original email for clinic data
         primary_contact: primaryContact,
         status: 'active'
       })
