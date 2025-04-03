@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ClinicSignupForm } from '@/components/clinic-signup';
 import { ClinicSignupFormValues, CoachFormData } from '@/components/clinic-signup/types';
+import { isDemoClinicEmail } from '@/services/auth/demo';
+import SignupDemoNotice from '@/components/auth/signup/SignupDemoNotice';
 
 const ClinicSignup = () => {
   const { toast } = useToast();
@@ -20,6 +22,9 @@ const ClinicSignup = () => {
     const createAccount = values.email !== '';
     
     try {
+      // Check if this is a demo clinic signup
+      const isDemoClinic = isDemoClinicEmail(values.email);
+      
       const { data: clinicData, error: clinicError } = await supabase
         .from('clinics')
         .insert({
@@ -142,6 +147,9 @@ const ClinicSignup = () => {
         </div>
         
         <Card className="w-full">
+          <div className="px-6 pt-4">
+            <SignupDemoNotice />
+          </div>
           <ClinicSignupForm
             isSubmitting={isSubmitting}
             onSubmit={handleSubmit}

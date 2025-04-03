@@ -17,6 +17,9 @@ export const clinicSignupSchema = z.object({
   hipaaAcknowledgment: z.boolean().refine(val => val === true, {
     message: "You must acknowledge the HIPAA disclaimer",
   }),
+  legalAcknowledgment: z.boolean().refine(val => val === true, {
+    message: "You must agree to the Terms and Privacy Policy",
+  }),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],

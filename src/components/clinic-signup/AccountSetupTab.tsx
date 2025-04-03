@@ -7,6 +7,7 @@ import { FormField, FormItem, FormLabel, FormMessage, FormControl } from '@/comp
 import { Input } from '@/components/ui/input';
 import { ClinicSignupFormValues } from './types';
 import HipaaNotice from './HipaaNotice';
+import { Link } from 'react-router-dom';
 
 interface AccountSetupTabProps {
   form: UseFormReturn<ClinicSignupFormValues>;
@@ -99,6 +100,27 @@ const AccountSetupTab = ({
                 <div className="space-y-1 leading-none">
                   <FormLabel>
                     I acknowledge that this application is not HIPAA compliant and should not be used for protected health information.
+                  </FormLabel>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="legalAcknowledgment"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    I agree to the <Link to="/terms" className="text-primary hover:underline" target="_blank">Terms of Service</Link> and <Link to="/privacy" className="text-primary hover:underline" target="_blank">Privacy Policy</Link>
                   </FormLabel>
                   <FormMessage />
                 </div>

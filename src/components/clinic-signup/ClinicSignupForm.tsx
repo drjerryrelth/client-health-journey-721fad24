@@ -36,6 +36,7 @@ const ClinicSignupForm = ({ isSubmitting, onSubmit }: ClinicSignupFormProps) => 
       password: '',
       confirmPassword: '',
       hipaaAcknowledgment: false,
+      legalAcknowledgment: false,
     },
     mode: 'onChange'
   });
