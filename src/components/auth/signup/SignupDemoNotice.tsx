@@ -9,8 +9,8 @@ const SignupDemoNotice = () => {
         use any email ending with <code>@example.com</code>
       </p>
       <p className="text-xs text-blue-600 mt-1">
-        <span className="font-medium">Recommended:</span> Use a simple email like <code>demo@example.com</code> or <code>clinic@example.com</code>. 
-        Avoid special characters in the email address.
+        <span className="font-medium">Note:</span> If you experience validation issues, use a very simple email 
+        like <code>demo@example.com</code> without any special characters.
       </p>
     </div>
   );

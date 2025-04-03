@@ -21,15 +21,9 @@ const sanitizeDemoEmail = (email: string): string => {
   // If not an example.com email, don't modify
   if (!isDemoClinicEmail(email)) return email;
   
-  // Create a simple, guaranteed-valid demo email format
-  // Extract the domain part (example.com)
-  const domain = email.split('@')[1];
-  
-  // Create a random string to ensure uniqueness and avoid conflicts
-  const randomString = Math.random().toString(36).substring(2, 10);
-  
-  // Return a very simple sanitized demo email that will pass validation
-  return `demo${randomString}@${domain}`;
+  // For demo emails, just create a very simple email format
+  // that's guaranteed to pass validation
+  return `demo${Date.now()}@example.com`;
 };
 
 /**
