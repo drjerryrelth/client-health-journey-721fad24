@@ -1,209 +1,61 @@
-import React, { useEffect, useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from 'react-router-dom';
+
+import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
-import { UserPlus } from 'lucide-react';
+import { useClientsQuery } from '@/hooks/queries/use-client-queries';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  program: string;
-  program_id: string;
-  progress: number;
-  lastCheckIn: string;
-  status: string;
-}
-
-interface CoachClientListProps {
-  limit?: number;
-}
-
-const CoachClientList: React.FC<CoachClientListProps> = ({ limit }) => {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
+const CoachClientList = () => {
   const { user } = useAuth();
+  const { data: clients, isLoading } = useClientsQuery(user?.clinicId);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchCoachClients = async () => {
-      if (!user?.id) return;
-      
-      setLoading(true);
-      try {
-        console.log('Fetching clients for coach:', user.id);
-        
-        const { data, error } = await supabase
-          .from('clients')
-          .select(`
-            id, 
-            name, 
-            email, 
-            program_id,
-            start_date,
-            last_check_in,
-            programs(name)
-          `)
-          .eq('coach_id', user.id)
-          .order('name');
-          
-        if (error) throw error;
-        
-        console.log('Fetched clients:', data.length);
-        
-        const formattedClients = data.map(client => {
-          const startDate = new Date(client.start_date);
-          const today = new Date();
-          const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-          const progress = Math.min(Math.floor((daysSinceStart / 90) * 100), 100);
-          
-          let status = 'active';
-          if (client.last_check_in) {
-            const lastCheckIn = new Date(client.last_check_in);
-            const daysSinceCheckIn = Math.floor((today.getTime() - lastCheckIn.getTime()) / (1000 * 3600 * 24));
-            if (daysSinceCheckIn > 7) status = 'at risk';
-            if (daysSinceCheckIn > 30) status = 'inactive';
-          } else {
-            status = 'inactive';
-          }
-          
-          let lastCheckInDisplay = 'Never';
-          if (client.last_check_in) {
-            const lastCheckIn = new Date(client.last_check_in);
-            const daysSinceCheckIn = Math.floor((today.getTime() - lastCheckIn.getTime()) / (1000 * 3600 * 24));
-            if (daysSinceCheckIn === 0) lastCheckInDisplay = 'Today';
-            else if (daysSinceCheckIn === 1) lastCheckInDisplay = 'Yesterday';
-            else if (daysSinceCheckIn < 7) lastCheckInDisplay = `${daysSinceCheckIn} days ago`;
-            else lastCheckInDisplay = lastCheckIn.toLocaleDateString();
-          }
-          
-          let programName = 'No Program';
-          
-          const programsObject = client.programs as { name?: string } | null;
-          if (programsObject && 'name' in programsObject) {
-            programName = programsObject.name || 'No Program';
-          }
-          
-          return {
-            id: client.id,
-            name: client.name,
-            email: client.email,
-            program: programName,
-            program_id: client.program_id,
-            progress,
-            lastCheckIn: lastCheckInDisplay,
-            status
-          };
-        });
-        
-        setClients(formattedClients);
-      } catch (error) {
-        console.error('Error fetching coach clients:', error);
-        toast.error('Failed to load client data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchCoachClients();
-  }, [user?.id]);
-
-  const displayClients = limit ? clients.slice(0, limit) : clients;
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'at risk':
-        return 'bg-amber-100 text-amber-800';
-      case 'inactive':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  // Handle the "Add Your First Client" button click
+  const handleAddClientClick = () => {
+    navigate('?action=add');
   };
-  
-  if (loading) {
+
+  if (isLoading) {
     return (
-      <div>
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </div>
+      <div className="space-y-3">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
       </div>
     );
   }
-  
-  if (clients.length === 0) {
+
+  if (!clients || clients.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No clients found. Add a client to get started.</p>
-        <Link to="/coach/clients?action=add">
-          <Button variant="outline" className="mt-4">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add your first client
-          </Button>
-        </Link>
+      <div className="flex flex-col items-center justify-center py-10 text-center">
+        <p className="text-lg font-medium text-gray-700 mb-4">You don't have any clients yet</p>
+        <Button onClick={handleAddClientClick} className="flex items-center">
+          <UserPlus className="mr-2 h-4 w-4" />
+          Add Your First Client
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Client</TableHead>
-            <TableHead>Program</TableHead>
-            <TableHead>Progress</TableHead>
-            <TableHead>Last Check-in</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {displayClients.map((client) => (
-            <TableRow key={client.id}>
-              <TableCell>
-                <Link to={`/client/${client.id}`} className="flex items-center space-x-3 hover:underline">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${client.name}`} alt={client.name} />
-                    <AvatarFallback>{client.name.slice(0, 2)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium">{client.name}</div>
-                    <div className="text-xs text-gray-500">{client.email}</div>
-                  </div>
-                </Link>
-              </TableCell>
-              <TableCell>{client.program}</TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-primary-500 h-2 rounded-full" 
-                      style={{ width: `${client.progress}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-xs font-medium">{client.progress}%</span>
-                </div>
-              </TableCell>
-              <TableCell>{client.lastCheckIn}</TableCell>
-              <TableCell>
-                <Badge className={getStatusColor(client.status)} variant="outline">
-                  {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
-                </Badge>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      {clients.map((client) => (
+        <div 
+          key={client.id} 
+          className="flex items-center justify-between p-4 border rounded-md hover:bg-gray-50 cursor-pointer"
+          onClick={() => navigate(`/coach/clients/${client.id}`)}
+        >
+          <div>
+            <h3 className="font-medium">{client.name}</h3>
+            <p className="text-sm text-gray-500">{client.email}</p>
+          </div>
+          <div className="text-sm text-gray-500">
+            Last check-in: {client.lastCheckIn ? new Date(client.lastCheckIn).toLocaleDateString() : 'Never'}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
