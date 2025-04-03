@@ -58,13 +58,14 @@ const AccountSetupTab = ({
 
   // Handle plan selection
   const handlePlanSelect = (planId: string) => {
-    form.setValue('selectedPlan', planId);
+    // Force the RadioGroup to update properly
+    form.setValue('selectedPlan', planId, { shouldValidate: true });
     
     // Clear add-ons that aren't available for the newly selected plan
     const currentAddOns = form.getValues('addOns') || [];
     const validAddOns = currentAddOns.filter(addOnId => {
       const addOn = addOnOptions.find(a => a.id === addOnId);
-      return addOn?.availableFor.includes(planId);
+      return addOn && addOn.availableFor.includes(planId);
     });
     
     form.setValue('addOns', validAddOns);
@@ -95,7 +96,7 @@ const AccountSetupTab = ({
             <FormItem className="space-y-3">
               <FormControl>
                 <RadioGroup
-                  onValueChange={field.onChange}
+                  onValueChange={(value) => handlePlanSelect(value)}
                   value={field.value}
                   className="space-y-3"
                 >
