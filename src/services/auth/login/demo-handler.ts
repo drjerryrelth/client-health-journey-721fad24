@@ -3,22 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   getDemoUserNameByEmail, 
   getDemoRoleByEmail, 
-  isDemoEmail,
-  isDemoAccountExists,
-  ensureDemoProfileExists
+  isDemoEmail 
 } from '../demo';
-import { autoConfirmDemoEmail } from '../demo/confirmation-handler';
 
 // Helper function to handle demo account logic
 export const handleDemoAccountCreation = async (email: string): Promise<boolean> => {
   console.log('This is a demo login attempt');
-  
-  // Check if demo account already exists first to avoid rate limiting
-  const accountExists = await isDemoAccountExists(email);
-  if (accountExists) {
-    console.log('Demo account already exists, skipping creation');
-    return true;
-  }
   
   // For demo accounts, try to ensure the account exists first
   try {
@@ -40,26 +30,20 @@ export const handleDemoAccountCreation = async (email: string): Promise<boolean>
         return true;
       } else if (signUpData.error.message?.includes('after 59 seconds') || 
                 signUpData.error.message?.includes('rate limit')) {
-        console.error('Rate limit hit during demo account creation:', signUpData.error.message);
-        throw new Error('Demo account creation rate limited. Please try again later.');
+        console.log('Rate limit hit, assuming demo account exists and proceeding');
+        return true;
       } else {
         console.warn('Could not create demo user:', signUpData.error.message);
-        return false;
+        // Continue anyway - the login might still succeed
+        return true;
       }
     } else {
       console.log('Demo user created successfully');
-      
-      // For demo accounts, we should immediately confirm the email
-      try {
-        await autoConfirmDemoEmail(email);
-      } catch (confirmErr) {
-        console.error('Error confirming demo email:', confirmErr);
-      }
-      
       return true;
     }
   } catch (createErr) {
     console.error('Error creating demo account:', createErr);
-    throw createErr;
+    // Try to continue with login anyway
+    return true;
   }
 };

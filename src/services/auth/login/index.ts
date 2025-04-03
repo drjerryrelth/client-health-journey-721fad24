@@ -2,8 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { isDemoEmail } from '../demo';
 import { handleDemoAccountCreation } from './demo-handler';
-import { performLoginRequest, checkIfUserExists, createUserAndProfile } from './auth-requesters';
-import { handleProfileCreation } from './profile-handlers';
 
 export async function loginWithEmail(email: string, password: string) {
   console.log('Attempting login with email:', email);
@@ -16,7 +14,10 @@ export async function loginWithEmail(email: string, password: string) {
   
   try {
     // Attempt login
-    const result = await performLoginRequest(email, password);
+    const result = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     
     // Check for error in the result
     if (result.error) {
@@ -29,8 +30,6 @@ export async function loginWithEmail(email: string, password: string) {
       console.error('No user returned from login');
       throw new Error('No user returned from login');
     }
-    
-    await handleProfileCreation(result.data.user.id, email, isDemoAccount);
     
     console.log('Login successful');
     return result.data;
@@ -69,17 +68,21 @@ export async function signUpWithEmail(
     }
   }
   
-  // Check if the user already exists
-  if (!isDemoAccount) {
-    const userExists = await checkIfUserExists(email, password);
-    if (userExists) {
-      console.log('User already exists, no need to sign up');
-      return { user: null, session: null };
+  // Create the user
+  const result = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: userData
     }
+  });
+  
+  if (result.error) {
+    console.error('Sign up error:', result.error);
+    throw result.error;
   }
   
-  const result = await createUserAndProfile(email, password, userData);
   console.log('Account created successfully');
   
-  return result;
+  return result.data;
 }

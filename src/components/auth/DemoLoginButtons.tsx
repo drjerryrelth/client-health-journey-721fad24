@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useDemoLogin } from '@/hooks/auth';
 import { demoEmails } from '@/services/auth/demo';
 
@@ -14,7 +13,7 @@ interface DemoLoginButtonsProps {
 }
 
 const DemoLoginButtons = ({ handleDemoLogin: propHandleDemoLogin, isSubmitting: propIsSubmitting }: DemoLoginButtonsProps = {}) => {
-  const navigate = useNavigate();
+  // Use the hook's login handler if no prop handler is provided
   const { handleDemoLogin: hookLoginHandler, isSubmitting: hookIsSubmitting } = useDemoLogin();
   
   // Use prop isSubmitting if provided, otherwise use the hook's isSubmitting
