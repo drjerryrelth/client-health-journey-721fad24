@@ -21,9 +21,8 @@ const sanitizeDemoEmail = (email: string): string => {
   // If not an example.com email, don't modify
   if (!isDemoClinicEmail(email)) return email;
   
-  // For demo emails, just create a very simple email format
-  // that's guaranteed to pass validation
-  return `demo${Date.now()}@example.com`;
+  // Use extremely simple format that should always pass validation
+  return 'demo@example.com';
 };
 
 /**
@@ -70,7 +69,7 @@ export const handleDemoClinicSignup = async (
       } else if (signUpError.message?.includes('Email address') && signUpError.message?.includes('invalid')) {
         // Special case for email validation errors
         console.error('Email validation error:', signUpError.message);
-        throw new Error(`Supabase rejected the email format. Try a simpler email like "demo@example.com".`);
+        throw new Error(`Supabase rejected the email format. Try using exactly "demo@example.com".`);
       } else {
         console.error('Demo clinic user creation error:', signUpError.message);
         throw new Error(`Could not create demo clinic user: ${signUpError.message}`);
