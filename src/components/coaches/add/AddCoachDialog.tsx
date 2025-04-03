@@ -82,7 +82,7 @@ export const AddCoachDialog = ({
         phone: values.phone || null,
         status: 'active',
         clinicId: effectiveClinicId,
-        clients: 0
+        clients: 0  // Add the missing clients field with a default value of 0
       });
 
       if (newCoach) {
