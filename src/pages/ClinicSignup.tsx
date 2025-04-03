@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast as sonnerToast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ClinicSignupForm } from '@/components/clinic-signup';
 import { ClinicSignupFormValues, CoachFormData } from '@/components/clinic-signup/types';
@@ -25,6 +25,13 @@ const ClinicSignup = () => {
       // Check if this is a demo clinic signup
       const isDemoClinic = isDemoClinicEmail(values.email);
       
+      console.log("Creating clinic with data:", {
+        name: values.clinicName,
+        email: values.clinicEmail,
+        phone: values.clinicPhone,
+        subscription_tier: values.selectedPlan
+      });
+      
       const { data: clinicData, error: clinicError } = await supabase
         .from('clinics')
         .insert({
@@ -42,8 +49,12 @@ const ClinicSignup = () => {
         .select('id')
         .single();
 
-      if (clinicError) throw new Error(`Failed to create clinic: ${clinicError.message}`);
+      if (clinicError) {
+        console.error("Error creating clinic:", clinicError);
+        throw new Error(`Failed to create clinic: ${clinicError.message}`);
+      }
       
+      console.log("Clinic created successfully with ID:", clinicData.id);
       const clinicId = clinicData.id;
       
       // If the clinic has add-ons selected, store that information separately
@@ -65,6 +76,7 @@ const ClinicSignup = () => {
       let userId = null;
       
       if (createAccount) {
+        console.log("Creating user account for:", values.email);
         const { data: userData, error: signUpError } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
@@ -77,10 +89,16 @@ const ClinicSignup = () => {
           }
         });
 
-        if (signUpError) throw new Error(`Failed to create account: ${signUpError.message}`);
+        if (signUpError) {
+          console.error("Error signing up:", signUpError);
+          throw new Error(`Failed to create account: ${signUpError.message}`);
+        }
+        
+        console.log("User created successfully");
         userId = userData.user?.id;
         
         if (userId) {
+          console.log("Updating user profile for ID:", userId);
           const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
@@ -93,10 +111,13 @@ const ClinicSignup = () => {
             
           if (profileError) {
             console.error("Error updating profile:", profileError);
+          } else {
+            console.log("Profile updated successfully");
           }
         }
       }
       
+      console.log("Creating primary coach record");
       const { error: primaryCoachError } = await supabase
         .from('coaches')
         .insert({
@@ -107,9 +128,14 @@ const ClinicSignup = () => {
           clinic_id: clinicId
         });
         
-      if (primaryCoachError) throw new Error(`Failed to create primary coach: ${primaryCoachError.message}`);
+      if (primaryCoachError) {
+        console.error("Error creating primary coach:", primaryCoachError);
+        throw new Error(`Failed to create primary coach: ${primaryCoachError.message}`);
+      }
+      console.log("Primary coach created successfully");
       
       if (additionalCoaches.length > 0) {
+        console.log("Adding additional coaches:", additionalCoaches.length);
         const coachRecords = additionalCoaches.map(coach => ({
           name: coach.name,
           email: coach.email,
@@ -129,6 +155,8 @@ const ClinicSignup = () => {
             description: "Some additional coaches may not have been created",
             variant: "destructive"
           });
+        } else {
+          console.log("Additional coaches created successfully");
         }
       }
       
@@ -139,6 +167,13 @@ const ClinicSignup = () => {
           : "Your clinic has been created. You can now log in with your credentials.",
       });
       
+      // Also use sonner toast for more visibility
+      sonnerToast.success(
+        createAccount
+          ? "Clinic created! Please check your email to confirm your account."
+          : "Clinic created successfully!"
+      );
+      
       navigate('/login');
       
     } catch (error: any) {
@@ -148,6 +183,9 @@ const ClinicSignup = () => {
         description: error.message || "An error occurred during signup",
         variant: "destructive"
       });
+      
+      // Also use sonner toast for more visibility
+      sonnerToast.error(error.message || "Signup failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
