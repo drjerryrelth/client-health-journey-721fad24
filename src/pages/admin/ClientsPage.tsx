@@ -9,7 +9,7 @@ import CoachClientList from '@/components/clients/CoachClientList';
 import { useAuth } from '@/context/AuthContext';
 import { useCoachActions } from '@/hooks/use-coach-actions';
 import { useSearchParams } from 'react-router-dom';
-import AddClientDialog from '@/components/clients/AddClientDialog';
+import { AddClientDialog } from '@/components/clients/add-client';
 
 const ClientsPage = () => {
   const navigate = useNavigate();
