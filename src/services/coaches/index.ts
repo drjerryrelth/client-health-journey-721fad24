@@ -25,5 +25,8 @@ export const CoachService = {
   getMockCoaches
 };
 
+// Explicitly re-export getMockCoaches for direct imports
+export { getMockCoaches };
+
 // Re-export types for external consumers
 export type { Coach } from './types';

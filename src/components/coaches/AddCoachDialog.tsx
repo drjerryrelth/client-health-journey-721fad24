@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import CoachService from '@/services/coaches';
+import { CoachService } from '@/services/coaches';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { useAuth } from '@/context/auth';
 import { CoachForm } from './CoachForm';

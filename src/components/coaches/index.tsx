@@ -6,3 +6,5 @@ export { default as CoachList } from './CoachList';
 export { AddCoachDialog } from './add/AddCoachDialog';
 export { EditCoachDialog } from './edit/EditCoachDialog';
 export { DeleteCoachDialog } from './delete/DeleteCoachDialog';
+export { CoachFormValues } from './schema/coach-form-schema';
+export { CoachForm } from './CoachForm';

@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Coach, CoachService, getMockCoaches } from '@/services/coaches';
+import { Coach, CoachService } from '@/services/coaches';
 import AddClinicDialog from '@/components/clinics/AddClinicDialog';
 import ClinicService, { Clinic } from '@/services/clinic-service';
 import ClinicsOverview from '@/components/clinics/ClinicsOverview';
@@ -23,7 +22,6 @@ const ClinicsPage = () => {
   useEffect(() => {
     fetchClinics();
     
-    // Check for action=add in the URL query parameters
     const queryParams = new URLSearchParams(location.search);
     if (queryParams.get('action') === 'add') {
       setShowAddClinicDialog(true);
@@ -134,7 +132,7 @@ const ClinicsPage = () => {
       <ClinicDetail 
         clinic={selectedClinic}
         onBackClick={handleBackToAllClinics}
-        getMockCoaches={getMockCoaches}
+        getMockCoaches={CoachService.getMockCoaches}
       />
     );
   }
