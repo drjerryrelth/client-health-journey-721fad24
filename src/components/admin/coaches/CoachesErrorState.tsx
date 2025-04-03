@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 
 interface CoachesErrorStateProps {
   error: string;
-  onRefresh: () => void;
-  onShowDetails: () => void;
+  onRetry: () => void;
+  onShowDetails?: () => void;
 }
 
 const CoachesErrorState: React.FC<CoachesErrorStateProps> = ({ 
   error, 
-  onRefresh, 
-  onShowDetails 
+  onRetry,
+  onShowDetails
 }) => {
   return (
     <div className="flex justify-center py-8">
@@ -23,21 +23,23 @@ const CoachesErrorState: React.FC<CoachesErrorStateProps> = ({
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={onRefresh}
+            onClick={onRetry}
             className="flex items-center gap-1"
           >
             <RefreshCw size={14} />
             <span>Try Again</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onShowDetails}
-            className="flex items-center gap-1"
-          >
-            <AlertCircle size={14} />
-            <span>Show Details</span>
-          </Button>
+          {onShowDetails && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onShowDetails}
+              className="flex items-center gap-1"
+            >
+              <AlertCircle size={14} />
+              <span>Show Details</span>
+            </Button>
+          )}
         </div>
       </div>
     </div>

@@ -28,7 +28,7 @@ const CoachesPage = () => {
   const { user } = useAuth();
   
   // Get the clinic filter functions
-  const { isClinicAdmin, filterByClinic } = useClinicFilter();
+  const { isClinicAdmin, filterByClinic, userClinicId } = useClinicFilter();
   
   // Fetch coaches data based on user role
   const { coaches: allCoaches, loading, error, refresh, retryCount } = useAdminCoaches();
@@ -92,6 +92,8 @@ const CoachesPage = () => {
     }
   }, [isClinicAdmin]);
   
+  const clinicName = isClinicAdmin ? user?.name || 'Your Clinic' : 'All Clinics';
+  
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -131,7 +133,7 @@ const CoachesPage = () => {
           />
           
           {error ? (
-            <CoachesErrorState error={error} retryCount={retryCount} onRetry={refresh} />
+            <CoachesErrorState error={error} onRetry={refresh} />
           ) : loading ? (
             <CoachesLoadingState />
           ) : (
@@ -146,7 +148,13 @@ const CoachesPage = () => {
         </CardContent>
       </Card>
       
-      <AddCoachDialog open={isAddDialogOpen} onOpenChange={handleAddDialogClose} />
+      <AddCoachDialog 
+        open={isAddDialogOpen} 
+        onOpenChange={handleAddDialogClose} 
+        clinicId={userClinicId || undefined}
+        clinicName={clinicName}
+        onCoachAdded={refresh}
+      />
       
       {selectedCoach && (
         <>
@@ -154,18 +162,22 @@ const CoachesPage = () => {
             coach={selectedCoach} 
             open={isEditDialogOpen} 
             onOpenChange={handleEditDialogClose} 
+            clinicName={clinicName}
+            onCoachUpdated={refresh}
           />
           
           <DeleteCoachDialog 
             coach={selectedCoach} 
             open={isDeleteDialogOpen} 
             onOpenChange={handleDeleteDialogClose} 
+            onCoachDeleted={refresh}
           />
           
           <ResetCoachPasswordDialog 
             coach={selectedCoach} 
             open={isResetPasswordDialogOpen} 
             onOpenChange={handleResetPasswordDialogClose} 
+            onPasswordReset={refresh}
           />
         </>
       )}
