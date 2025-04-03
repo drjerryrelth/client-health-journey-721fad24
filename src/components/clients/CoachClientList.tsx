@@ -5,16 +5,17 @@ import { useClientsQuery } from '@/hooks/queries/use-client-queries';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UserPlus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const CoachClientList = () => {
   const { user } = useAuth();
   const { data: clients, isLoading } = useClientsQuery(user?.clinicId);
   const navigate = useNavigate();
+  const [, setSearchParams] = useSearchParams();
 
   // Handle the "Add Your First Client" button click
   const handleAddClientClick = () => {
-    navigate('?action=add');
+    setSearchParams({ action: 'add' });
   };
 
   if (isLoading) {
