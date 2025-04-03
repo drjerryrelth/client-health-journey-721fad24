@@ -106,8 +106,8 @@ const AccountSetupTab = ({
       </div>
 
       {availableAddOns.length > 0 && (
-        <div className="space-y-4 mt-4 border-t pt-4">
-          <h3 className="text-lg font-medium">Available Add-ons</h3>
+        <div className="space-y-4 mt-6 border-t pt-6">
+          <h3 className="text-lg font-medium">Optional Add-ons</h3>
           <div className="space-y-3">
             {availableAddOns.map((addon) => (
               <div 

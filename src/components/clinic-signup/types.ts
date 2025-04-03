@@ -21,7 +21,7 @@ export const planOptions = [
     name: "Enterprise",
     description: "For large clinics with multiple locations",
     price: "$399/month",
-    features: ["Unlimited clients", "Unlimited coach accounts", "Custom analytics", "Priority support", "Optional clinic branding"]
+    features: ["Unlimited clients", "Unlimited coach accounts", "Custom analytics", "Priority support", "Optional clinic branding (add-on)"]
   }
 ];
 
