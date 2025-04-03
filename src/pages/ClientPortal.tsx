@@ -9,7 +9,8 @@ import ClientJournal from '@/components/client/ClientJournal';
 import MyProgram from './MyProgram';
 import MyProfile from './MyProfile';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, LineChart, Book, MessageSquare, Calendar, FileText } from 'lucide-react';
+import { User, LineChart, Book, MessageSquare, Calendar, FileText, Utensils } from 'lucide-react';
+import MealPlanGenerator from './MealPlanGenerator';
 
 const ClientPortal = () => {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ const ClientPortal = () => {
     if (currentPath.includes('/resources')) return 'resources';
     if (currentPath.includes('/program')) return 'program';
     if (currentPath.includes('/profile')) return 'profile';
+    if (currentPath.includes('/meal-plan-generator')) return 'meal-plan-generator';
     return 'dashboard';
   };
   
@@ -46,6 +48,9 @@ const ClientPortal = () => {
         break;
       case 'profile':
         navigate('/client/profile');
+        break;
+      case 'meal-plan-generator':
+        navigate('/client/meal-plan-generator');
         break;
       default:
         navigate('/client');
@@ -81,6 +86,10 @@ const ClientPortal = () => {
             <Calendar size={16} />
             <span>Resources</span>
           </TabsTrigger>
+          <TabsTrigger value="meal-plan-generator" className="flex items-center gap-2">
+            <Utensils size={16} />
+            <span>Meal Plans</span>
+          </TabsTrigger>
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User size={16} />
             <span>Profile</span>
@@ -105,6 +114,10 @@ const ClientPortal = () => {
         
         <TabsContent value="program">
           <MyProgram />
+        </TabsContent>
+        
+        <TabsContent value="meal-plan-generator">
+          <MealPlanGenerator />
         </TabsContent>
         
         <TabsContent value="profile">

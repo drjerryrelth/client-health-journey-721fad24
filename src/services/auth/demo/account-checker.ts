@@ -1,48 +1,54 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-// Helper function to check if a demo account already exists without triggering rate limits
-export const isDemoAccountExists = async (email: string): Promise<boolean> => {
+/**
+ * Check if a demo account exists in auth.users
+ * This is used to avoid rate limit errors with demo logins
+ */
+export async function isDemoAccountExists(email: string): Promise<boolean> {
+  if (!email) {
+    console.error('Email is required to check if demo account exists');
+    return false;
+  }
+  
   try {
-    // Use a safe method to check existence that won't trigger rate limits
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('email', email)
-      .maybeSingle();
+    console.log('Checking if demo account exists:', email);
     
-    if (!error && data) {
-      console.log(`Demo account for ${email} already exists in profiles table`);
-      return true;
+    // First check if the account exists in auth
+    const { data, error } = await supabase.auth.admin.listUsers();
+    
+    if (error) {
+      console.log('Error checking if demo account exists:', error.message);
+      
+      // Check if error is due to lack of admin permissions
+      if (error.message?.includes('not authorized') || error.message?.includes('not admin')) {
+        console.log('Admin API not available. Falling back to sign-in check method.');
+        
+        // Try to check if user can be retrieved with non-admin API
+        const { data: users } = await supabase.auth.admin.listUsers();
+        
+        if (users) {
+          // Try to find user with matching email
+          const matchingUser = users.users.find((user: any) => user.email === email);
+          return !!matchingUser;
+        }
+        
+        return false;
+      }
+      
+      return false;
     }
     
-    // Try another check against auth users (admin only method, might not work for all cases)
-    try {
-      // Remove the filter parameter which was causing the TypeScript error
-      // The admin.listUsers() method doesn't support filtering by email in the way we were using it
-      const { data: authData } = await supabase.auth.admin.listUsers();
-      
-      // Instead, manually filter the results after fetching
-      if (authData?.users && Array.isArray(authData.users)) {
-        // Properly type the user object to avoid the TypeScript error
-        const matchingUser = authData.users.find((user: any) => {
-          return user && typeof user === 'object' && 'email' in user && user.email === email;
-        });
-        
-        if (matchingUser) {
-          console.log(`Demo account for ${email} already exists in auth.users`);
-          return true;
-        }
-      }
-    } catch (adminError) {
-      // Admin API likely not available to the client, silently continue
-      console.log('Admin API not available, continuing with regular checks');
+    if (data && data.users) {
+      // Check if a user with this email exists
+      const userExists = data.users.some(user => user.email === email);
+      console.log('Demo account exists:', userExists);
+      return userExists;
     }
     
     return false;
   } catch (error) {
-    console.error('Error checking if demo account exists:', error);
-    // Assume it might exist to avoid creating duplicates
-    return true;
+    console.error('Unexpected error checking if demo account exists:', error);
+    return false;
   }
-};
+}

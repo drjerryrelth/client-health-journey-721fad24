@@ -8,6 +8,7 @@ import {
   MessageSquare,
   BookOpen,
   UserCircle,
+  Utensils,
 } from "lucide-react";
 import { NavItem } from "./AdminNavItems";
 
@@ -41,6 +42,11 @@ export const clientNavItems: NavItem[] = [
     title: "Resources",
     href: "/client/resources",
     icon: BookOpen,
+  },
+  {
+    title: "Meal Plan Generator",
+    href: "/client/meal-plan-generator",
+    icon: Utensils,
   },
   {
     title: "Profile",

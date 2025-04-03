@@ -8,6 +8,7 @@ import ClientProgress from '@/pages/ClientProgress';
 import ClientProgramDetails from '@/pages/ClientProgramDetails';
 import MyProfile from '@/pages/MyProfile';
 import ClientDashboard from '@/pages/ClientDashboard';
+import MealPlanGenerator from '@/pages/MealPlanGenerator';
 
 const ClientRoutes = () => {
   return (
@@ -23,6 +24,7 @@ const ClientRoutes = () => {
         <Route path="check-in" element={<CheckIn />} />
         <Route path="progress" element={<ClientProgress />} />
         <Route path="my-program" element={<ClientProgramDetails />} />
+        <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
       </Route>
     </Routes>
   );
