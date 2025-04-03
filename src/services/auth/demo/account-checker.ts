@@ -28,7 +28,7 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
         const { data: users } = await supabase.auth.admin.listUsers();
         
         if (users) {
-          // Properly type the user data and check for email property
+          // Define interface for user data
           interface UserData {
             id: string;
             email?: string;

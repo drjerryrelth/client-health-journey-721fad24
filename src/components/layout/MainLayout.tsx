@@ -29,12 +29,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
     return <Navigate to="/login" replace />;
   }
   
-  // Check role permissions with improved logging
+  // Enhanced logging for debugging role issues
   console.log('MainLayout - User role:', user?.role);
   console.log('MainLayout - User clinicId:', user?.clinicId);
   console.log('MainLayout - Required roles:', requiredRoles);
   
-  // Check if user has ANY of the required roles (OR logic, not AND)
+  // Critical change: For clinic_admin, only allow them to access the clinic_admin role route
+  if (user?.role === 'clinic_admin' && !requiredRoles.includes('clinic_admin')) {
+    console.log('MainLayout - Clinic admin attempting to access non-clinic admin route');
+    toast.error("Access denied. You don't have permission to access this page.");
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  // Check if user has ANY of the required roles (OR logic)
   const hasPermission = requiredRoles.some(role => hasRole(role));
   console.log('MainLayout - Has permission:', hasPermission);
   

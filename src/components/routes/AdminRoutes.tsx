@@ -21,17 +21,24 @@ import { useAuth } from '@/context/auth';
 const AdminRoutes = () => {
   const { user } = useAuth();
   
-  // Check if the user is a clinic admin vs system admin
-  const isClinicAdmin = user?.role === 'clinic_admin';
+  // Determine exact user role type for strict checking
   const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-
-  // If clinic admin, render routes that only show clinic-specific data
+  const isClinicAdmin = user?.role === 'clinic_admin';
+  
+  // If not an admin or clinic admin, redirect to unauthorized
+  if (!isSystemAdmin && !isClinicAdmin) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  // Clinic admin routes - they should only see their own clinic data
   if (isClinicAdmin) {
     return (
       <Routes>
         <Route element={<MainLayout requiredRoles={['clinic_admin']} />}>
-          {/* Clinic admin can only see their own clinic */}
+          {/* Base route */}
           <Route index element={<AdminDashboard />} />
+          
+          {/* Clinic admin accessible routes */}
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="clients" element={<ClientsPage />} />
           <Route path="coaches" element={<CoachesPage />} />
@@ -44,7 +51,7 @@ const AdminRoutes = () => {
           <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
           <Route path="settings" element={<SettingsPage />} />
           
-          {/* Clinic admins shouldn't access these routes */}
+          {/* Block access to system admin only routes */}
           <Route path="clinics" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="admin-users" element={<Navigate to="/admin/dashboard" replace />} />
           
@@ -55,14 +62,14 @@ const AdminRoutes = () => {
     );
   }
   
-  // System admin routes (original behavior)
+  // System admin routes (for 'admin' or 'super_admin')
   return (
     <Routes>
       <Route element={<MainLayout requiredRoles={['admin', 'super_admin']} />}>
         {/* Base route */}
         <Route index element={<AdminDashboard />} />
         
-        {/* Admin routes - these match exactly with AdminNavItems.tsx */}
+        {/* Admin routes */}
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="clients" element={<ClientsPage />} />
         <Route path="clinics" element={<ClinicsPage />} />

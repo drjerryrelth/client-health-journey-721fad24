@@ -103,7 +103,7 @@ export const createClinicUserProfile = async (
   
   console.log(`Creating profile for clinic user with role: ${role} (isClinicOwner: ${isClinicOwner})`);
   
-  // Create profile object
+  // Create profile object with the correct role and clinic ID
   const clinicProfile: UserData = {
     id: userId,
     name: fullName,
@@ -113,7 +113,7 @@ export const createClinicUserProfile = async (
   };
   
   try {
-    // Create the profile in the database
+    // Create the profile in the database with the proper role
     const { error: insertError } = await supabase
       .from('profiles')
       .upsert({

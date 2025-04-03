@@ -92,6 +92,8 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       return false;
     }
     
+    // Fix: Strict role checking - a clinic_admin should ONLY have clinic_admin role
+    // They should not have permissions of system admin roles
     const isSuperAdmin = user.role === 'super_admin';
     const isSystemAdmin = user.role === 'admin';
     const isClinicAdmin = user.role === 'clinic_admin';
@@ -100,11 +102,16 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     console.log('Is system admin?', isSystemAdmin);
     console.log('Is super admin?', isSuperAdmin);
 
+    // IMPORTANT: Different roles have different access levels. A clinic_admin is not a system admin.
+    // This is where the bug was - clinic_admins were being treated as having admin privileges
+    
     if ((Array.isArray(requiredRole) && requiredRole.includes('admin')) || requiredRole === 'admin') {
+      // Only actual system admins should have admin permissions
       return isSystemAdmin || isSuperAdmin;
     }
     
     if ((Array.isArray(requiredRole) && requiredRole.includes('clinic_admin')) || requiredRole === 'clinic_admin') {
+      // Clinic admins have their own role, separate from system admins
       return isClinicAdmin || isSystemAdmin || isSuperAdmin;
     }
     
