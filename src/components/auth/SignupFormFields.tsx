@@ -32,7 +32,7 @@ const SignupFormFields = ({ onSubmit, isSubmitting }: SignupFormFieldsProps) => 
       password: '',
       confirmPassword: '',
       fullName: '',
-      hipaaAcknowledgment: false,
+      hipaaAcknowledgment: false as unknown as true, // Type assertion to fix the TypeScript error
     },
   });
 
