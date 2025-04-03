@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [setupAuth]);
 
   // Wrap the signUp method to match the expected return type
-  const wrappedSignUp = async (email: string, password: string, userData: { full_name: string; role: string }) => {
+  const wrappedSignUp = async (email: string, password: string, userData: { full_name: string; role: string }): Promise<void> => {
     await signUp(email, password, userData);
   };
 

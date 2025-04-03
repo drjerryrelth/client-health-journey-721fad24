@@ -11,7 +11,7 @@ export const useSignup = () => {
   const { signUp } = useAuth();
   const { toast } = useToast();
 
-  const handleSignup = async (data: SignupFormValues) => {
+  const handleSignup = async (data: SignupFormValues): Promise<void> => {
     setIsSubmitting(true);
 
     try {
@@ -36,8 +36,6 @@ export const useSignup = () => {
             title: 'Demo clinic created successfully',
             description: 'Your demo clinic has been created. You can now log in with your credentials.',
           });
-          
-          return true;
         } catch (demoError: any) {
           console.error('Demo clinic creation error:', demoError);
           toast({
@@ -79,8 +77,6 @@ export const useSignup = () => {
             title: 'Clinic registration successful',
             description: 'Your clinic account has been created. Please check your email to confirm.',
           });
-          
-          return true;
         } catch (signUpError: any) {
           console.error('Standard signup error:', signUpError);
           throw signUpError;
@@ -93,7 +89,6 @@ export const useSignup = () => {
         description: error.message || 'An error occurred during signup',
         variant: 'destructive',
       });
-      return false;
     } finally {
       setIsSubmitting(false);
     }
