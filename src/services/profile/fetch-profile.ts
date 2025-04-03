@@ -56,7 +56,7 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
       } else if (clinicData) {
         console.log('User is associated with clinic:', clinicData);
         
-        // Create a profile for clinic users
+        // IMPORTANT: Create a profile for clinic users as admin, not coach
         return await createClinicUserProfile(userId, email, clinicData);
       }
       

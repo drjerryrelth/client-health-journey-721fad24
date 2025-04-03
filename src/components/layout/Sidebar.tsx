@@ -28,6 +28,13 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
   const isClinicAdmin = user.role === 'admin' && user.clinicId !== undefined;
   const isSystemAdmin = (user.role === 'admin' && !user.clinicId) || user.role === 'super_admin';
   
+  console.log("Sidebar user info:", {
+    role: user.role,
+    clinicId: user.clinicId,
+    isClinicAdmin,
+    isSystemAdmin
+  });
+  
   if (isSystemAdmin) {
     navItems = adminNavItems;
   } else if (isClinicAdmin) {
