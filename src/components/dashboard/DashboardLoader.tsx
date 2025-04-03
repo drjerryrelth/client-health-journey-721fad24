@@ -40,6 +40,7 @@ const DashboardLoader = () => {
   } else if (hasRole('coach')) {
     return <CoachRoutes />;
   } else if (hasRole('client')) {
+    console.log('Rendering client routes');
     return <ClientRoutes />;
   } else {
     console.error('Unknown user role:', user.role);

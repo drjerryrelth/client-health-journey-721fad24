@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useAuth } from '@/context/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckIn } from '@/types';
 import CheckInService from '@/services/check-in-service';
+import { toast } from 'sonner';
 
 // Define the context type
 interface ClientDataContextType {
@@ -38,11 +40,18 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [clientStartDate, setClientStartDate] = useState("");
   const [waterProgress, setWaterProgress] = useState(0);
   const [weightTrend, setWeightTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
+  const [hasError, setHasError] = useState(false);
   
   // First, get the client ID associated with the logged-in user
   useEffect(() => {
     const fetchClientId = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log('ClientDataProvider: No user, skipping data fetch');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('ClientDataProvider: Fetching client ID for user', user.id);
       
       try {
         const { data, error } = await supabase
@@ -51,12 +60,45 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           .eq('user_id', user.id)
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching client ID:", error);
+          // For demo accounts, we might not have a real client ID in the database
+          if (user.email && user.email.includes('@demo.com')) {
+            console.log('Demo user detected, using demo client data');
+            // Set some demo data values
+            setCheckIns([{
+              id: 'demo-1',
+              waterIntake: 5,
+              weight: 150
+            }, {
+              id: 'demo-2',
+              waterIntake: 4,
+              weight: 152
+            }]);
+            setProgramName('Demo Program');
+            setClientStartDate(new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString());
+            setWaterProgress(62.5);
+            setWeightTrend('down');
+            setLoading(false);
+          } else {
+            setHasError(true);
+            toast.error('Could not load client data. Please try again later.');
+          }
+          return;
+        }
+        
         if (data) {
+          console.log('ClientDataProvider: Found client ID', data.id);
           setClientId(data.id);
+        } else {
+          console.log('ClientDataProvider: No client ID found for user', user.id);
+          // For demo purposes, still show the UI without real data
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error fetching client ID:", error);
+        setHasError(true);
+        setLoading(false);
       }
     };
     
@@ -68,6 +110,8 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const fetchClientData = async () => {
       try {
         if (!clientId) return;
+        
+        console.log('ClientDataProvider: Fetching client data for client', clientId);
         
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
@@ -81,9 +125,21 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           .eq('id', clientId)
           .single();
         
-        if (clientError) throw clientError;
+        if (clientError) {
+          console.error("Error fetching client data:", clientError);
+          setHasError(true);
+          toast.error('Could not load client details. Using sample data instead.');
+          
+          // Use sample data for demo purposes
+          setProgramName('Sample Program');
+          setClientStartDate(new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString());
+          
+          setLoading(false);
+          return;
+        }
         
         if (clientData) {
+          console.log('ClientDataProvider: Found client data', clientData);
           setClientStartDate(clientData.start_date);
           
           // Handle programs data safely to fix TypeScript errors
@@ -99,9 +155,11 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           
           // Fetch check-ins for this client using the service
           try {
+            console.log('ClientDataProvider: Fetching check-ins for client', clientData.id);
             const checkInsData = await CheckInService.getClientCheckIns(clientData.id);
             
             if (checkInsData && checkInsData.length > 0) {
+              console.log('ClientDataProvider: Found check-ins', checkInsData.length);
               setCheckIns(checkInsData);
               
               // Calculate water progress from latest check-in
@@ -125,14 +183,19 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                   setWeightTrend('neutral');
                 }
               }
+            } else {
+              console.log('ClientDataProvider: No check-ins found for client', clientData.id);
             }
           } catch (checkInsError) {
             console.error("Error fetching check-ins:", checkInsError);
+            // Continue without check-ins data
           }
         }
         
       } catch (error) {
         console.error("Error fetching client data:", error);
+        setHasError(true);
+        toast.error('An error occurred while loading client data.');
       } finally {
         setLoading(false);
       }
@@ -169,6 +232,11 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   
   return (
     <ClientDataContext.Provider value={value}>
+      {hasError && !loading ? (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-md mb-4">
+          <p className="text-red-700">There was an error loading your data. Some features may not work correctly.</p>
+        </div>
+      ) : null}
       {children}
     </ClientDataContext.Provider>
   );

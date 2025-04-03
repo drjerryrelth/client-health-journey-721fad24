@@ -61,7 +61,6 @@ const AppContent = () => {
           
           {/* Client routes */}
           <Route path="/client/*" element={<ClientRoutes />} />
-          <Route path="/client" element={<Navigate to="/client/dashboard" replace />} />
           
           {/* Legacy routes */}
           <Route path="/coach-dashboard/*" element={<Dashboard />} />

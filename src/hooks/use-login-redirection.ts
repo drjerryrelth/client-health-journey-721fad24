@@ -31,13 +31,15 @@ export const useLoginRedirection = () => {
       } else if (user.role === 'coach') {
         destination = '/coach/dashboard';
       } else if (user.role === 'client') {
-        destination = '/client/dashboard';
+        destination = '/client'; // Changed from /client/dashboard to /client
+        console.log('Client user detected, redirecting to /client');
       } else {
         toast.error(`Unknown role: ${user.role}`);
         return;
       }
       
       setRedirectDestination(destination);
+      console.log('Redirecting to:', destination);
       navigate(destination, { replace: true });
     }
   }, [isAuthenticated, isLoading, hasRole, navigate, user]);

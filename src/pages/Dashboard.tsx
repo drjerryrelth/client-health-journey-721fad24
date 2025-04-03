@@ -14,11 +14,14 @@ const Dashboard = () => {
       console.log('Dashboard redirecting based on role:', user.role);
       // Redirect to the appropriate dashboard based on role
       if (hasRole('admin') || hasRole('super_admin')) {
+        console.log('Redirecting to admin dashboard');
         navigate('/admin/dashboard', { replace: true });
       } else if (hasRole('coach')) {
+        console.log('Redirecting to coach dashboard');
         navigate('/coach/dashboard', { replace: true });
       } else if (hasRole('client')) {
-        navigate('/client/dashboard', { replace: true });
+        console.log('Redirecting to client portal');
+        navigate('/client', { replace: true });
       } else {
         console.error('Unknown user role:', user.role);
         toast.error(`Unknown role detected: ${user.role}`);

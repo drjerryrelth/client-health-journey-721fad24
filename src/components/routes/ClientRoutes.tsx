@@ -7,12 +7,14 @@ import CheckIn from '@/pages/CheckIn';
 import ClientProgress from '@/pages/ClientProgress';
 import ClientProgramDetails from '@/pages/ClientProgramDetails';
 import MyProfile from '@/pages/MyProfile';
+import ClientDashboard from '@/pages/ClientDashboard';
 
 const ClientRoutes = () => {
   return (
     <Routes>
       <Route element={<MainLayout requiredRoles={['client']} />}>
         <Route index element={<ClientPortal />} />
+        <Route path="dashboard" element={<ClientPortal />} />
         <Route path="messages" element={<ClientPortal />} />
         <Route path="journal" element={<ClientPortal />} />
         <Route path="resources" element={<ClientPortal />} />

@@ -89,14 +89,15 @@ export const useLoginHandler = () => {
             description: `You're logged in as ${type}!`,
           });
           
-          // Force navigation based on the user role
+          // Force navigation based on the user role - but wait briefly to ensure auth context is updated
           setTimeout(() => {
+            console.log(`Navigating to /${type}/dashboard`);
             if (type === 'admin') {
               navigate('/admin/dashboard', { replace: true });
             } else if (type === 'coach') {
               navigate('/coach/dashboard', { replace: true });
             } else if (type === 'client') {
-              navigate('/client/dashboard', { replace: true });
+              navigate('/client', { replace: true });  // Changed from /client/dashboard to /client
             } else {
               navigate('/dashboard', { replace: true });
             }
@@ -110,14 +111,15 @@ export const useLoginHandler = () => {
         await login(email, password);
         console.log('Demo login successful');
         
-        // Force navigation based on the user role
+        // Force navigation based on the user role - but wait briefly to ensure auth context is updated
         setTimeout(() => {
+          console.log(`Navigating to /${type}/dashboard`);
           if (type === 'admin') {
             navigate('/admin/dashboard', { replace: true });
           } else if (type === 'coach') {
             navigate('/coach/dashboard', { replace: true });
           } else if (type === 'client') {
-            navigate('/client/dashboard', { replace: true });
+            navigate('/client', { replace: true });  // Changed from /client/dashboard to /client
           } else {
             navigate('/dashboard', { replace: true });
           }
@@ -153,12 +155,13 @@ export const useLoginHandler = () => {
           
           // Force navigation based on the user role
           setTimeout(() => {
+            console.log(`Navigating to /${type}/dashboard`);
             if (type === 'admin') {
               navigate('/admin/dashboard', { replace: true });
             } else if (type === 'coach') {
               navigate('/coach/dashboard', { replace: true });
             } else if (type === 'client') {
-              navigate('/client/dashboard', { replace: true });
+              navigate('/client', { replace: true });  // Changed from /client/dashboard to /client
             } else {
               navigate('/dashboard', { replace: true });
             }
@@ -172,12 +175,13 @@ export const useLoginHandler = () => {
             
             // Force navigation based on the user role
             setTimeout(() => {
+              console.log(`Navigating to /${type}/dashboard`);
               if (type === 'admin') {
                 navigate('/admin/dashboard', { replace: true });
               } else if (type === 'coach') {
                 navigate('/coach/dashboard', { replace: true });
               } else if (type === 'client') {
-                navigate('/client/dashboard', { replace: true });
+                navigate('/client', { replace: true });  // Changed from /client/dashboard to /client
               } else {
                 navigate('/dashboard', { replace: true });
               }
