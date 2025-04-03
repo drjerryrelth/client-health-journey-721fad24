@@ -9,8 +9,8 @@ const SignupDemoNotice = () => {
         use any email ending with <code>@example.com</code>
       </p>
       <p className="text-xs text-blue-600 mt-1">
-        <span className="font-medium">Note:</span> Each demo account needs a unique email address. 
-        For example: <code>demo123@example.com</code> or <code>mydemo@example.com</code>
+        <span className="font-medium">Note:</span> Please use a simple email format like <code>demo123@example.com</code> 
+        to avoid validation issues.
       </p>
     </div>
   );

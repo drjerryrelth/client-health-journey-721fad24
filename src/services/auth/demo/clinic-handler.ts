@@ -21,11 +21,10 @@ const sanitizeDemoEmail = (email: string): string => {
   // If not an example.com email, don't modify
   if (!isDemoClinicEmail(email)) return email;
   
-  // Generate a simple unique email that will pass validation
-  // Use a timestamp + random number to ensure uniqueness
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 1000);
-  return `demo${timestamp}${random}@example.com`;
+  // Use a very simple format that will pass validation but remain unique
+  // Just add a small random number between 1-999
+  const random = Math.floor(Math.random() * 999) + 1;
+  return `demo${random}@example.com`;
 };
 
 /**
@@ -75,7 +74,7 @@ export const handleDemoClinicSignup = async (
       } else if (signUpError.message?.includes('Email address') && signUpError.message?.includes('invalid')) {
         // Special case for email validation errors
         console.error('Email validation error:', signUpError.message);
-        throw new Error(`Supabase rejected the email format. Please use any email ending with @example.com (e.g., "anything@example.com").`);
+        throw new Error(`Supabase rejected the email format. Please use a simple email like "anything@example.com".`);
       } else {
         console.error('Demo clinic user creation error:', signUpError.message);
         throw new Error(`Could not create demo clinic user: ${signUpError.message}`);
