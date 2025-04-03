@@ -37,7 +37,7 @@ export const handleDemoClinicSignup = async (
       options: {
         data: {
           full_name: primaryContact,
-          role: 'coach', // Default role for clinic primary contact is coach
+          role: 'clinic_admin', // Set role to clinic_admin for clinic primary contact
         }
       }
     });
@@ -83,11 +83,45 @@ export const handleDemoClinicSignup = async (
       // If the clinic already exists, handle gracefully
       if (clinicError.code === '23505') { // Unique violation
         console.log('Clinic record already exists, continuing');
+        
+        // Get the clinic ID
+        const { data: existingClinic } = await supabase
+          .from('clinics')
+          .select('id')
+          .eq('email', email)
+          .single();
+          
+        if (existingClinic?.id) {
+          // Update the user's profile with the clinic_id and role
+          if (signUpData?.user?.id) {
+            await supabase
+              .from('profiles')
+              .upsert({
+                id: signUpData.user.id,
+                email: email,
+                full_name: primaryContact,
+                role: 'clinic_admin',
+                clinic_id: existingClinic.id
+              });
+          }
+        }
+        
         return true;
       } else {
         console.error('Error creating demo clinic record:', clinicError);
         throw new Error(`Failed to create clinic record: ${clinicError.message}`);
       }
+    } else if (clinicData?.id && signUpData?.user?.id) {
+      // Update the user's profile with the clinic_id and role
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: signUpData.user.id,
+          email: email,
+          full_name: primaryContact,
+          role: 'clinic_admin',
+          clinic_id: clinicData.id
+        });
     }
     
     console.log('Demo clinic setup completed successfully');

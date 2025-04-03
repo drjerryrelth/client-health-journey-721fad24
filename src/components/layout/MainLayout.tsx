@@ -15,6 +15,27 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
   const { isAuthenticated, isLoading, hasRole, user } = useAuth();
   const location = useLocation();
   
+  // Additional checking for clinic admin access attempts to system admin routes
+  React.useEffect(() => {
+    if (user?.role === 'clinic_admin') {
+      // System admin only paths that clinic admins should NEVER access
+      const systemAdminOnlyPaths = ['/admin/clinics', '/admin/admin-users'];
+      
+      // Check if current path starts with any of the restricted paths
+      const isRestrictedPath = systemAdminOnlyPaths.some(path => 
+        location.pathname.startsWith(path)
+      );
+      
+      if (isRestrictedPath) {
+        console.error('SECURITY VIOLATION: Clinic admin attempting to access system admin route:', location.pathname);
+        toast.error("Access denied. You don't have permission to access this page.");
+        setTimeout(() => {
+          window.location.href = '/admin/dashboard';
+        }, 100);
+      }
+    }
+  }, [location.pathname, user?.role]);
+  
   // Show loading state
   if (isLoading) {
     return (
@@ -36,8 +57,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
   console.log('MainLayout - Required roles:', requiredRoles);
   console.log('MainLayout - Current path:', location.pathname);
   
-  // CRITICAL SECURITY ENHANCEMENT: Specific path-based security checks
-  // This ensures clinic admins cannot access system admin routes regardless of other checks
+  // CRITICAL SECURITY ENFORCEMENT
+  // Emergency check to prevent clinic admins from accessing system admin routes
   if (user?.role === 'clinic_admin') {
     // System admin only paths that clinic admins should NEVER access
     const systemAdminOnlyPaths = ['/admin/clinics', '/admin/admin-users'];

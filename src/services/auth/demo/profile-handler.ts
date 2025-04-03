@@ -9,18 +9,22 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
   // Determine role based on email - critical for correct role assignment
   let role = 'client'; // default
   let fullName = 'Demo User';
-  let clinicId = undefined; // Ensure admin demo doesn't have clinicId
+  let clinicId = undefined; // Default no clinic
   
   if (email === demoEmails.admin) {
     role = 'admin';
     fullName = 'Admin User';
     console.log('This is the demo admin email - ensuring admin role is applied WITHOUT clinic ID');
+    // Explicitly set clinicId to null for admin demo
+    clinicId = null;
   } else if (email === demoEmails.coach) {
     role = 'coach';
     fullName = 'Coach User';
+    clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
   } else if (email === demoEmails.client) {
     role = 'client';
     fullName = 'Client User';
+    clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
   }
   
   try {

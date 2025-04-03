@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { DashboardStats } from '@/types/dashboard';
@@ -135,6 +136,15 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
         console.log('[DashboardStats] Coach count from admin service:', coachCount);
       } catch (countErr) {
         console.error('[DashboardStats] Error counting coaches with admin service:', countErr);
+        // Alternative approach to count coaches if the service fails
+        try {
+          const { count } = await supabase
+            .from('coaches')
+            .select('*', { count: 'exact', head: true });
+          coachCount = count || 0;
+        } catch (fallbackErr) {
+          console.error('[DashboardStats] Fallback coach count failed:', fallbackErr);
+        }
       }
       
       // Count weekly activities across all clinics
