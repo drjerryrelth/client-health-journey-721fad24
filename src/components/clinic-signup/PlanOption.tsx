@@ -39,11 +39,6 @@ const PlanOption = ({
           value={id} 
           id={`plan-${id}`} 
           className="mt-1 mr-2"
-          checked={selected}
-          onClick={(e) => {
-            e.stopPropagation(); // Stop event from bubbling to parent div
-            onSelect(); // Manually call onSelect to ensure proper handling
-          }}
         />
         <div className="flex-grow">
           <div className="flex justify-between items-start">

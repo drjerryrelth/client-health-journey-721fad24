@@ -56,31 +56,23 @@ const AccountSetupTab = ({
     form.setValue('addOns', updatedAddOns);
   };
 
-  // Simple and direct plan selection handler
+  // Handle plan selection
   const handlePlanSelect = (planId: string) => {
     console.log('Selecting plan:', planId);
     
-    // Update form value
-    form.setValue('selectedPlan', planId, { 
-      shouldValidate: true,
-      shouldDirty: true, 
-      shouldTouch: true 
-    });
+    // Update the form value directly
+    form.setValue('selectedPlan', planId);
     
-    // Handle add-ons compatibility
+    // Filter add-ons that are compatible with the selected plan
     const currentAddOns = form.getValues('addOns') || [];
     const validAddOns = currentAddOns.filter(addOnId => {
       const addOn = addOnOptions.find(a => a.id === addOnId);
       return addOn && addOn.availableFor.includes(planId);
     });
     
-    // Update add-ons if they changed
+    // Update add-ons if needed
     if (currentAddOns.length !== validAddOns.length) {
-      form.setValue('addOns', validAddOns, {
-        shouldValidate: true,
-        shouldDirty: true,
-        shouldTouch: true
-      });
+      form.setValue('addOns', validAddOns);
     }
   };
 
@@ -110,7 +102,10 @@ const AccountSetupTab = ({
               <FormControl>
                 <RadioGroup
                   value={field.value}
-                  onValueChange={handlePlanSelect}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    handlePlanSelect(value);
+                  }}
                   className="space-y-3"
                 >
                   {planOptions.map((plan) => (
@@ -122,7 +117,10 @@ const AccountSetupTab = ({
                       price={plan.price}
                       features={plan.features}
                       selected={field.value === plan.id}
-                      onSelect={() => handlePlanSelect(plan.id)}
+                      onSelect={() => {
+                        field.onChange(plan.id);
+                        handlePlanSelect(plan.id);
+                      }}
                     />
                   ))}
                 </RadioGroup>
