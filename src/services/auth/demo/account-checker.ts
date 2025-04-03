@@ -12,11 +12,7 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
   
   try {
     // Check if the user exists in auth.users
-    const { data, error } = await supabase.auth.admin.listUsers({
-      filter: {
-        email: email
-      }
-    });
+    const { data, error } = await supabase.auth.admin.listUsers();
     
     if (error) {
       console.error('Error checking if demo account exists:', error);
@@ -25,7 +21,9 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
     }
     
     // If there are users with this email, the account exists
-    return data && data.users && data.users.length > 0;
+    return data && data.users && data.users.some(user => 
+      user.email && user.email.toLowerCase() === email.toLowerCase()
+    );
   } catch (err) {
     console.error('Unexpected error checking if demo account exists:', err);
     // Default to false in case of unexpected errors
