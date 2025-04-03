@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -8,7 +9,7 @@ import { toast as sonnerToast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ClinicSignupForm } from '@/components/clinic-signup';
 import { ClinicSignupFormValues, CoachFormData } from '@/components/clinic-signup/types';
-import { isDemoClinicEmail } from '@/services/auth/demo';
+import { isDemoClinicEmail, handleDemoClinicSignup } from '@/services/auth/demo';
 import SignupDemoNotice from '@/components/auth/signup/SignupDemoNotice';
 
 const ClinicSignup = () => {
