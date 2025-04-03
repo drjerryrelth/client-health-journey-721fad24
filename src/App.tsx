@@ -23,15 +23,32 @@ import { AdminRoutes, CoachRoutes, ClientRoutes } from "./components/routes";
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
+// Create a function component for the app content to use React hooks properly
+const App = () => {
+  // Move queryClient inside the component
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: 1,
+      },
     },
-  },
-});
+  });
 
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemeProvider>
+            <AppContent />
+          </ThemeProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
+
+// Separate component for app content
 const AppContent = () => {
   useEffect(() => {
     initializeDemoRelationships()
@@ -96,17 +113,5 @@ const AppContent = () => {
     </TooltipProvider>
   );
 };
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthProvider>
-        <ThemeProvider>
-          <AppContent />
-        </ThemeProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
 
 export default App;
