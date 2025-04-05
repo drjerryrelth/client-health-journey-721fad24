@@ -20,10 +20,17 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
       return false;
     }
     
-    // If there are users with this email, the account exists
-    return data && data.users && data.users.some(user => 
-      user.email && user.email.toLowerCase() === email.toLowerCase()
-    );
+    // Type the users data properly to fix the TypeScript error
+    if (data && data.users && Array.isArray(data.users)) {
+      // Check if any user has the matching email
+      return data.users.some(user => 
+        user && typeof user === 'object' && 'email' in user && 
+        user.email && user.email.toLowerCase() === email.toLowerCase()
+      );
+    }
+    
+    // Default to false if data structure is unexpected
+    return false;
   } catch (err) {
     console.error('Unexpected error checking if demo account exists:', err);
     // Default to false in case of unexpected errors
