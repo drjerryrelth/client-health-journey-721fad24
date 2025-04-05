@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { demoEmails } from './constants';
+import { isDemoAdminEmail } from './utils';
 
 // Helper function to ensure demo profile exists with correct role based on email
 export async function ensureDemoProfileExists(userId: string, email: string) {
@@ -11,7 +12,7 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
   let fullName = 'Demo User';
   let clinicId = undefined; // Default no clinic
   
-  if (email === demoEmails.admin) {
+  if (isDemoAdminEmail(email)) {
     role = 'admin';
     fullName = 'Admin User';
     console.log('This is the demo admin email - ensuring admin role is applied WITHOUT clinic ID');
