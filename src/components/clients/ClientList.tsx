@@ -60,7 +60,7 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
   if (!clients || clients.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        No clients found
+        No clients found for {user?.role === 'clinic_admin' ? 'your clinic' : 'this clinic'}
       </div>
     );
   }
@@ -82,10 +82,10 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
             <TableCell className="font-medium">{client.name}</TableCell>
             <TableCell>{client.email}</TableCell>
             <TableCell>
-              {client.coachId ? (client as any).coaches?.name || 'Unassigned' : 'Unassigned'}
+              {client.coachId ? (client.coaches?.name || 'Unassigned') : 'Unassigned'}
             </TableCell>
             <TableCell>
-              {client.programId ? (client as any).program?.name || 'None' : 'None'}
+              {client.programId ? (client.program?.name || 'None') : 'None'}
             </TableCell>
             <TableCell>
               {client.lastCheckIn ? (

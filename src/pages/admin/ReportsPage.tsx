@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Banknote, Activity, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from '@/context/auth';
-import { isSystemAdmin, isClinicAdmin } from '@/utils/role-based-access';
 
 const ReportsPage = () => {
   const { user } = useAuth();
@@ -12,7 +10,7 @@ const ReportsPage = () => {
   const [subscriptionData, setSubscriptionData] = useState([]);
   
   useEffect(() => {
-    // Force proper role detection - this ensures we correctly identify clinic admins
+    // Ensure proper role detection - this ensures we correctly identify clinic admins
     const isClinicAdminUser = user?.role === 'clinic_admin';
     const isSystemAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
     

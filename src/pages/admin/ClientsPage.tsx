@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus, AlertCircle } from 'lucide-react';
+import { UserPlus, AlertCircle, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ClientList from '@/components/clients/ClientList';
 import CoachClientList from '@/components/clients/CoachClientList';
@@ -22,6 +22,7 @@ const ClientsPage = () => {
   const isClinicAdmin = user?.role === 'clinic_admin';
   const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const { isLoading } = useCoachActions();
+  const [refreshKey, setRefreshKey] = useState(0);
   
   // State to control dialog visibility
   const [dialogOpen, setDialogOpen] = useState(action === 'add');
@@ -54,14 +55,33 @@ const ClientsPage = () => {
     }
   };
 
+  // Add refresh functionality
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    toast.success("Refreshing client data...");
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-        <Button onClick={handleAddClientClick} disabled={isLoading}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Client
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh} 
+            disabled={isLoading}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+          <Button 
+            onClick={handleAddClientClick} 
+            disabled={isLoading}
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Client
+          </Button>
+        </div>
       </div>
       
       {isClinicAdmin && (
@@ -71,6 +91,7 @@ const ClientsPage = () => {
           <AlertDescription>
             You are viewing all clients for {user?.name || 'your clinic'}. 
             This includes clients assigned to all coaches in your clinic.
+            Your clinic ID is: {user?.clinicId || 'unknown'}
           </AlertDescription>
         </Alert>
       )}

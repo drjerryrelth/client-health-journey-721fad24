@@ -1,7 +1,7 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { DashboardStats, ActivityItem } from '@/types/dashboard';
 import { useAuth } from '@/context/auth';
-import { isSystemAdmin, isClinicAdmin, getUserClinicId } from '@/utils/role-based-access';
 
 // Mock data function for dashboard stats based on user role
 const fetchDashboardStatsForUser = async (user: any): Promise<DashboardStats> => {
@@ -36,7 +36,7 @@ const fetchDashboardStatsForUser = async (user: any): Promise<DashboardStats> =>
     };
   } else if (isClinicAdminUser) {
     // Clinic admin only sees their clinic
-    const clinicName = user?.name?.replace(' User', '') || 'Your Clinic';
+    const clinicName = user?.name?.includes('Clinic Admin') ? 'Demo Clinic' : (user?.name || 'Your Clinic');
     return {
       activeClinicCount: 1,
       totalCoachCount: 4,
@@ -141,7 +141,7 @@ export const useDashboardStats = () => {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['dashboardStats', user?.id, user?.role],
+    queryKey: ['dashboardStats', user?.id, user?.role, user?.clinicId],
     queryFn: () => fetchDashboardStatsForUser(user),
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -153,7 +153,7 @@ export const useRecentActivities = (limit: number = 5) => {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['recentActivities', user?.id, user?.role, limit],
+    queryKey: ['recentActivities', user?.id, user?.role, user?.clinicId, limit],
     queryFn: () => fetchActivitiesForUser(user, limit),
     enabled: !!user,
     staleTime: 2 * 60 * 1000, // 2 minutes

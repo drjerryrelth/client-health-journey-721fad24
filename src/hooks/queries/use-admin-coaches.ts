@@ -71,7 +71,6 @@ export function useAdminCoaches() {
       
       if (user?.role === 'clinic_admin' && user?.clinicId) {
         console.log('[useAdminCoaches] Clinic admin role detected, fetching only clinic coaches for clinic:', user.clinicId);
-        console.log('[useAdminCoaches] Clinic name:', user.name);
         coachesData = await CoachService.getClinicCoaches(user.clinicId);
       } else if (user?.role === 'admin' || user?.role === 'super_admin') {
         console.log('[useAdminCoaches] System admin role detected, fetching all coaches');
@@ -92,7 +91,7 @@ export function useAdminCoaches() {
       
       if (coachesData.length === 0) {
         console.warn('[useAdminCoaches] No coaches were returned');
-        toast.info('No coaches found');
+        toast.info('No coaches found for your clinic');
       } else {
         toast.success(`Successfully loaded ${coachesData.length} coaches`);
       }
@@ -135,8 +134,7 @@ export function useAdminCoaches() {
   }, [user?.role, user?.clinicId, fetchClinics, fetchCoaches]); // Critical to include both role and clinicId as dependencies
 
   const getClinicName = useCallback((clinicId: string) => {
-    const name = clinics[clinicId] || `Unknown Clinic (${clinicId ? clinicId.slice(-4) : 'None'})`;
-    return name;
+    return clinics[clinicId] || `Your Clinic (${clinicId ? clinicId.slice(-4) : 'None'})`;
   }, [clinics]);
 
   // Enrich coaches with clinic names
