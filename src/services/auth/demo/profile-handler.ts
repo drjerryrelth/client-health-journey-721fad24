@@ -12,36 +12,25 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
   let fullName = 'Demo User';
   let clinicId = undefined; // Default no clinic
   
+  // CRITICAL: Special case for demo admin - highest priority check
   if (isDemoAdminEmail(email)) {
     role = 'admin';
     fullName = 'Admin User';
     console.log('CRITICAL: This is the demo admin email - ensuring admin role is applied WITHOUT clinic ID');
     // Explicitly set clinicId to null for admin demo
     clinicId = null;
-  } else if (email === demoEmails.coach) {
-    role = 'coach';
-    fullName = 'Coach User';
-    clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
-  } else if (email === demoEmails.client) {
-    role = 'client';
-    fullName = 'Client User';
-    clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
-  }
-  
-  try {
-    // First, specifically check if this is a demo admin - higher priority check
-    if (isDemoAdminEmail(email)) {
-      console.log('CRITICAL PATH: Verifying admin demo profile setup');
-      
-      // Check if profile exists
-      const { data: adminProfile, error: adminCheckError } = await supabase
+    
+    // Special case admin profile handling
+    try {
+      // Check if admin profile exists
+      const { data: existingProfile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
-      if (adminCheckError || !adminProfile) {
-        console.log('Admin demo profile not found, creating one with role:', role);
+      if (!existingProfile) {
+        console.log('Admin demo profile not found, creating one with admin role');
         
         // Create admin profile
         const { error: insertError } = await supabase
@@ -60,10 +49,8 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
           console.log('Admin demo profile created successfully');
         }
       } else {
-        console.log('Admin profile found:', adminProfile);
-        
         // CRITICAL: Ensure admin profile has the correct role and NO clinic_id
-        if (adminProfile.role !== 'admin' || adminProfile.clinic_id !== null) {
+        if (existingProfile.role !== 'admin' || existingProfile.clinic_id !== null) {
           console.log('Updating admin demo profile to ensure correct role and no clinic ID');
           
           const { error: updateError } = await supabase
@@ -85,9 +72,22 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
       
       // For admin demo, always return 'admin' role
       return 'admin';
+    } catch (error) {
+      console.error('Error handling admin demo profile:', error);
+      return 'admin'; // Return admin role even if there's an error
     }
-    
-    // Standard check for non-admin demo profiles
+  } else if (email === demoEmails.coach) {
+    role = 'coach';
+    fullName = 'Coach User';
+    clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+  } else if (email === demoEmails.client) {
+    role = 'client';
+    fullName = 'Client User';
+    clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+  }
+  
+  // Handle non-admin demo profiles
+  try {
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
       .select('*')
@@ -124,7 +124,7 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
         .update({ 
           role: role, 
           full_name: fullName,
-          clinic_id: clinicId // Important: ensure admin demo has no clinic_id
+          clinic_id: clinicId
         })
         .eq('id', userId);
       

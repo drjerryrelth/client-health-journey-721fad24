@@ -6,10 +6,6 @@ import { isDemoEmail, isDemoAdminEmail } from './utils';
  * Check if a demo account already exists in the system
  */
 export async function isDemoAccountExists(email: string): Promise<boolean> {
-  if (!isDemoEmail(email)) {
-    return false;
-  }
-  
   // Special case for demo admin email - we want to ensure this account exists
   // so return false to trigger account creation
   if (isDemoAdminEmail(email)) {
@@ -40,6 +36,10 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
   }
   
   // For non-admin demo accounts, proceed with regular check
+  if (!isDemoEmail(email)) {
+    return false;
+  }
+  
   try {
     // Check if the user exists in auth.users
     const { data, error } = await supabase.auth.admin.listUsers();

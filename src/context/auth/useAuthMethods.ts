@@ -100,7 +100,7 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       return false;
     }
     
-    // Special check for demo admin email - highest priority check
+    // PRIORITY 1: Special check for demo admin email - highest priority check
     if (user.email && isDemoAdminEmail(user.email)) {
       console.log('SECURITY: Demo admin email detected, granting admin access');
       // Demo admin email always has system admin privileges regardless of stored role
@@ -111,45 +111,18 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     const actualRole = user.role;
     console.log('Actual user role:', actualRole);
     
-    // Determine role types for strict checking
-    const isSuperAdmin = actualRole === 'super_admin';
-    const isSystemAdmin = actualRole === 'admin';
-    const isClinicAdmin = actualRole === 'clinic_admin';
-    const isCoach = actualRole === 'coach';
-    const isClient = actualRole === 'client';
+    // PRIORITY 2: Super admins and system admins should have access to everything
+    if (actualRole === 'super_admin' || actualRole === 'admin') {
+      console.log('User is super_admin or admin, granting access');
+      return true;
+    }
     
-    console.log('Role checks:', {isSuperAdmin, isSystemAdmin, isClinicAdmin, isCoach, isClient});
-    
-    // Convert required role to array for easier checking
+    // PRIORITY 3: Convert required role to array for easier checking
     const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     
-    // CRITICAL SECURITY FIX: Super admins and system admins should have access to everything
-    if (isSuperAdmin || isSystemAdmin) {
-      console.log('User is super_admin or admin, granting access to:', requiredRoles);
-      return true;
-    }
-    
-    // For other roles, check if the user's role is in the required roles
+    // Matching roles check
     if (requiredRoles.includes(actualRole)) {
       console.log(`User has required role: ${actualRole}`);
-      return true;
-    }
-    
-    // Special case: if clinic_admin is required and user is clinic_admin, grant access
-    if (requiredRoles.includes('clinic_admin') && isClinicAdmin) {
-      console.log('User is clinic_admin, granting access to clinic_admin resources');
-      return true;
-    }
-    
-    // Special case: if coach is required and user is coach, grant access
-    if (requiredRoles.includes('coach') && isCoach) {
-      console.log('User is coach, granting access to coach resources');
-      return true;
-    }
-    
-    // Special case: if client is required and user is client, grant access
-    if (requiredRoles.includes('client') && isClient) {
-      console.log('User is client, granting access to client resources');
       return true;
     }
     

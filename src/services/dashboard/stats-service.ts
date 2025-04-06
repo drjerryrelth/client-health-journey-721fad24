@@ -21,14 +21,14 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     
     console.log('[DashboardStats] Authentication verified, fetching data');
     
-    // Check if this is a demo admin first (highest priority check)
+    // PRIORITY 1: Check if this is a demo admin first (highest priority check)
     const userEmail = session.user.email;
     if (userEmail && isDemoAdminEmail(userEmail)) {
       console.log('[DashboardStats] Demo admin email detected, fetching system-wide statistics');
       return await fetchSystemAdminStats();
     }
     
-    // Get the user's role and clinicId for permission checks
+    // PRIORITY 2: Get the user's role and clinicId for permission checks
     const { data: userData } = await supabase
       .from('profiles')
       .select('role, clinic_id, email')
@@ -40,19 +40,19 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     
     console.log('[DashboardStats] User role:', userRole, 'clinicId:', userClinicId, 'email:', userEmail);
     
-    // Different logic based on user role
-    if (userRole === 'clinic_admin' && userClinicId) {
+    // PRIORITY 3: Different logic based on user role
+    if (userRole === 'admin' || userRole === 'super_admin') {
+      // SYSTEM ADMIN: Fetch all clinics data
+      console.log('[DashboardStats] System admin detected, fetching global statistics');
+      return await fetchSystemAdminStats();
+    } 
+    else if (userRole === 'clinic_admin' && userClinicId) {
       // CLINIC ADMIN: Only fetch data for their specific clinic
       console.log('[DashboardStats] Clinic admin detected, fetching limited statistics');
       return await fetchClinicAdminStats(userClinicId);
     } 
-    // For system admins, keep the existing functionality
-    else if (userRole === 'admin' || userRole === 'super_admin') {
-      // SYSTEM ADMIN: Fetch all clinics data
-      console.log('[DashboardStats] System admin detected, fetching global statistics');
-      return await fetchSystemAdminStats();
-    } else {
-      // If role is missing but email is demo admin, use system admin stats
+    else {
+      // PRIORITY 4: Final fallback for demo admin users - check email again
       if (userEmail && isDemoAdminEmail(userEmail)) {
         console.log('[DashboardStats] Fallback to demo admin detection, fetching system-wide statistics');
         return await fetchSystemAdminStats();

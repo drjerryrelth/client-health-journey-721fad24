@@ -27,7 +27,7 @@ export const useAuthSession = ({
   
   const fetchAndSetUserProfile = useCallback(async (userId: string, userEmail?: string) => {
     try {
-      // Special case for demo admin - prioritize this check
+      // Special case for demo admin - highest priority check
       if (userEmail && isDemoAdminEmail(userEmail)) {
         console.log('CRITICAL: Demo admin detected in fetchAndSetUserProfile, ensuring admin role');
         // For demo admin, force role to admin regardless of what's in the database
@@ -97,6 +97,7 @@ export const useAuthSession = ({
     
     try {
       console.log('Checking initial session');
+      console.log('Setting up auth listener');
       
       // Add a timeout to prevent infinite loading
       const timeoutPromise = new Promise<{data: null, error: Error}>((_, reject) => 
@@ -127,6 +128,17 @@ export const useAuthSession = ({
           navigate('/login');
         } else if (event === 'USER_UPDATED' && session?.user) {
           console.log('User updated');
+          setSupabaseUser(session.user);
+          
+          // Use setTimeout to avoid Supabase deadlocks
+          setTimeout(async () => {
+            if (!isMounted) return;
+            
+            // Pass email to handle demo admin case
+            await fetchAndSetUserProfile(session.user.id, session.user.email);
+          }, 0);
+        } else if (event === 'INITIAL_SESSION' && session?.user) {
+          console.log('Initial session found');
           setSupabaseUser(session.user);
           
           // Use setTimeout to avoid Supabase deadlocks
