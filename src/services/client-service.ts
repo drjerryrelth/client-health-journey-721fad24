@@ -9,6 +9,7 @@ export const ClientService = {
   // Fetch all clients for a specific clinic
   async getClinicClients(clinicId: string): Promise<Client[]> {
     try {
+      // Simplified query that doesn't join with other tables to avoid relationship errors
       const { data, error } = await supabase
         .from('clients')
         .select('*')
@@ -17,7 +18,13 @@ export const ClientService = {
 
       if (error) throw error;
       
-      return (data as ClientRow[]).map(mapDbClientToClient);
+      // Map database rows to Client objects
+      const clients = (data as ClientRow[]).map(mapDbClientToClient);
+      
+      // Enhanced logging to help debug
+      console.log(`Successfully fetched ${clients.length} clients for clinic ${clinicId}`);
+      
+      return clients;
     } catch (error) {
       console.error('Error fetching clinic clients:', error);
       toast.error('Failed to fetch client list. Please check your connection.');
