@@ -19,19 +19,24 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Program } from '@/types';
+import { Coach } from '@/services/coaches';
 import { AddClientFormValues, clientGoals } from './AddClientSchema';
 import { Loader2 } from 'lucide-react';
 
 interface ClientFormFieldsProps {
   programs: Program[];
+  coaches: Coach[];
   selectedProgramType: string | null;
   isProgramsLoading?: boolean;
+  isCoachesLoading?: boolean;
 }
 
 const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ 
   programs, 
+  coaches,
   selectedProgramType,
-  isProgramsLoading = false
+  isProgramsLoading = false,
+  isCoachesLoading = false
 }) => {
   const form = useFormContext<AddClientFormValues>();
 
@@ -153,6 +158,54 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({
                 />
               ))}
             </div>
+          </FormItem>
+        )}
+      />
+
+      {/* New Coach Selection Dropdown */}
+      <FormField
+        control={form.control}
+        name="coachId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Assign Coach</FormLabel>
+            <FormDescription>
+              Select a coach to assign to this client
+            </FormDescription>
+            <Select 
+              onValueChange={field.onChange} 
+              value={field.value || ""}
+              defaultValue={field.value || ""}
+              disabled={isCoachesLoading}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  {isCoachesLoading ? (
+                    <div className="flex items-center">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                      Loading coaches...
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Select a coach" />
+                  )}
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="">No coach assigned</SelectItem>
+                {coaches && coaches.length > 0 ? (
+                  coaches.map((coach: Coach) => (
+                    <SelectItem key={coach.id} value={coach.id}>
+                      {coach.name} ({coach.email})
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-coaches-available" disabled>
+                    {isCoachesLoading ? 'Loading coaches...' : 'No coaches available'}
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            <FormMessage />
           </FormItem>
         )}
       />

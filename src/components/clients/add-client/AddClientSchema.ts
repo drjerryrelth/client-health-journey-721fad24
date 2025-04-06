@@ -12,6 +12,8 @@ export const formSchema = z.object({
     message: 'Please enter a valid date in YYYY-MM-DD format.'
   }),
   notes: z.string().optional(),
+  // Add coachId field
+  coachId: z.string().optional(),
   // Add new fields for measurements and goals
   initialWeight: z.number().optional(),
   weightDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {

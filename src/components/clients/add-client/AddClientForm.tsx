@@ -6,6 +6,7 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { useProgramsQuery } from '@/hooks/queries/use-program-queries';
+import { useClinicCoachesQuery } from '@/hooks/queries/use-coach-queries';
 import { useAuth } from '@/context/auth';
 import { useCreateClientMutation } from '@/hooks/queries/use-client-queries';
 import ClientFormFields from './ClientFormFields';
@@ -23,10 +24,12 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
   const effectiveClinicId = clinicId || user?.clinicId;
   
   const { data: programs = [], isLoading: isProgramsLoading, error: programsError } = useProgramsQuery(effectiveClinicId);
+  const { data: coaches = [], isLoading: isCoachesLoading, error: coachesError } = useClinicCoachesQuery(effectiveClinicId);
   
   console.log("Effective clinic ID:", effectiveClinicId);
   console.log("Current user:", user);
   console.log("Available programs:", programs);
+  console.log("Available coaches:", coaches);
   
   const form = useForm<AddClientFormValues>({
     resolver: zodResolver(formSchema),
@@ -38,6 +41,7 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
       programCategory: '',
       startDate: new Date().toISOString().split('T')[0],
       notes: '',
+      coachId: '',
       weightDate: new Date().toISOString().split('T')[0],
       goals: [],
     },
@@ -66,6 +70,8 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
     
     // Process programId to handle the 'no-program' special value
     const programId = values.programId === 'no-program' ? null : values.programId || null;
+    // Process coachId to handle empty string
+    const coachId = values.coachId === '' ? null : values.coachId;
     
     createClient({
       name: values.name,
@@ -76,7 +82,7 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
       startDate: values.startDate,
       notes: values.notes || null,
       clinicId: effectiveClinicId,
-      coachId: user?.role === 'coach' ? user.id : null,
+      coachId: coachId,
       initialWeight: values.initialWeight,
       weightDate: values.weightDate,
       goals: values.goals
@@ -127,11 +133,29 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
             </Alert>
           )}
           
+          {coachesError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to load coaches. {coachesError.message}
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {!isProgramsLoading && programs.length === 0 && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 No program templates found for your clinic. You should create programs first from the Programs page.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {!isCoachesLoading && coaches.length === 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                No coaches found for your clinic. You should add coaches first from the Coaches page.
               </AlertDescription>
             </Alert>
           )}
@@ -148,8 +172,10 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
           
           <ClientFormFields 
             programs={programs} 
+            coaches={coaches}
             selectedProgramType={selectedProgramType}
             isProgramsLoading={isProgramsLoading}
+            isCoachesLoading={isCoachesLoading}
           />
 
           <DialogFooter className="pt-2">
