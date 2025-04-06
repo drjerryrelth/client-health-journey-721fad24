@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     
     console.log('Using service role client to bypass RLS policies and ensure complete data access');
     
-    // Fix: Remove the `.options()` method which is causing the error
+    // Use a simple query instead of the options() method which was causing issues
     const timestamp = new Date().getTime();
     const { data: coaches, error: coachesError } = await adminClient
       .from('coaches')

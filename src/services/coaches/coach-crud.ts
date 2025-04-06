@@ -22,8 +22,23 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
     
     console.log('[Coach Service] Authentication successful, user ID:', session.user.id);
     
+    // Ensure all required fields are present
+    if (!coach.name || !coach.email || !coach.clinicId) {
+      console.error('[Coach Service] Missing required fields for coach creation');
+      toast.error('Please provide all required coach information');
+      return null;
+    }
+    
     // Add timeout to prevent hanging
-    const coachPromise = supabase.rpc(
+    console.log('[Coach Service] Calling add_coach RPC with data:', {
+      coach_name: coach.name,
+      coach_email: coach.email,
+      coach_phone: coach.phone,
+      coach_status: coach.status,
+      coach_clinic_id: coach.clinicId
+    });
+    
+    const { data, error } = await supabase.rpc(
       'add_coach', 
       {
         coach_name: coach.name,
@@ -33,19 +48,6 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
         coach_clinic_id: coach.clinicId
       }
     );
-    
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Coach addition timed out')), 10000);
-    });
-    
-    // Race between actual operation and timeout
-    const { data, error } = await Promise.race([
-      coachPromise,
-      timeoutPromise.then(() => {
-        console.warn('[Coach Service] RPC request timed out');
-        return { data: null, error: new Error('Request timed out') };
-      }),
-    ]);
 
     console.log('[Coach Service] RPC response:', { data, error });
 

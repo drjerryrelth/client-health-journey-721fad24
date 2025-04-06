@@ -24,7 +24,7 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
     // Use RPC call to bypass RLS issues, with aggressive cache-busting
     const timestamp = new Date().getTime();
     const { data, error } = await supabase.rpc(
-      'get_clinic_coaches' as any, 
+      'get_clinic_coaches', 
       { clinic_id_param: clinicId, _cache_buster: timestamp }
     );
 
