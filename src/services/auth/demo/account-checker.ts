@@ -23,10 +23,16 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
     // Type the users data properly to fix the TypeScript error
     if (data && data.users && Array.isArray(data.users)) {
       // Check if any user has the matching email
-      return data.users.some(user => 
-        user && typeof user === 'object' && 'email' in user && 
-        user.email && user.email.toLowerCase() === email.toLowerCase()
-      );
+      return data.users.some(user => {
+        // Safely check if user is an object with an email property
+        if (user && typeof user === 'object') {
+          // Use type assertion to tell TypeScript this is an object with an email property
+          const userObj = user as { email?: string };
+          // Now check if the email exists and matches
+          return userObj.email && userObj.email.toLowerCase() === email.toLowerCase();
+        }
+        return false;
+      });
     }
     
     // Default to false if data structure is unexpected
