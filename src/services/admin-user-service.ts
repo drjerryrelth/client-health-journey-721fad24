@@ -234,5 +234,36 @@ export const AdminUserService = {
       console.error(`Error deleting admin user with ID ${id}:`, error);
       throw error;
     }
+  },
+
+  /**
+   * Promote a user to Super Admin by email
+   */
+  async promoteUserToSuperAdmin(email: string): Promise<AdminUser | null> {
+    try {
+      console.log(`Attempting to promote user with email ${email} to Super Admin`);
+      
+      // First find the admin user by email
+      const adminUser = await this.findAdminUserByEmail(email);
+      
+      if (!adminUser) {
+        console.error(`Admin user with email ${email} not found`);
+        throw new Error(`Admin user with email ${email} not found`);
+      }
+      
+      console.log(`Found admin user:`, adminUser);
+      
+      // Update the user's role to super_admin
+      const updatedUser = await this.updateAdminUser(adminUser.id, {
+        role: 'super_admin'
+      });
+      
+      console.log(`User successfully promoted to Super Admin:`, updatedUser);
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('Error promoting user to Super Admin:', error);
+      throw error;
+    }
   }
 };

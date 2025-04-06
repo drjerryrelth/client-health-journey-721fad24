@@ -7,6 +7,8 @@ import AdminRoutes from '@/components/routes/AdminRoutes';
 import CoachRoutes from '@/components/routes/CoachRoutes';
 import ClientRoutes from '@/components/routes/ClientRoutes';
 import Unauthorized from '@/pages/Unauthorized';
+import { promoteDrRelthToSuperAdmin } from '@/scripts/promote-admin';
+import { toast } from 'sonner';
 
 const DashboardLoader = () => {
   const { user, isLoading, hasRole } = useAuth();
@@ -16,6 +18,24 @@ const DashboardLoader = () => {
     if (user && ((user.role === 'clinic_admin' || user.role === 'admin' || user.role === 'super_admin') && user.clinicId)) {
       ProgramInitializer.initializeDefaultPrograms(user.clinicId)
         .catch(err => console.error('Failed to initialize programs:', err));
+    }
+    
+    // One-time promotion of drrelth@contourlight.com to Super Admin
+    // We'll run this once when any admin logs in
+    if (user && (user.role === 'admin' || user.role === 'super_admin')) {
+      promoteDrRelthToSuperAdmin()
+        .then(result => {
+          if (result.success) {
+            console.log('User promoted to Super Admin successfully');
+            // Show toast only if the promotion was just applied
+            if (result.data && result.data.role === 'super_admin') {
+              toast.success('Admin user role updated to Super Admin', {
+                description: 'The changes will take effect on the next login.'
+              });
+            }
+          }
+        })
+        .catch(err => console.error('Error during promotion attempt:', err));
     }
   }, [user]);
 
