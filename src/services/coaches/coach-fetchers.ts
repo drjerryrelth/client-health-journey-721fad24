@@ -92,43 +92,82 @@ export async function getAllCoaches(): Promise<Coach[]> {
       noResolveJson: false
     };
     
-    const { data, error } = await supabase.functions.invoke('get-all-coaches', requestOptions);
-    
-    if (error) {
-      console.error('[CoachService] Error from edge function:', error);
-      throw error;
+    try {
+      // First try the edge function
+      const { data, error } = await supabase.functions.invoke('get-all-coaches', requestOptions);
+      
+      if (error) {
+        console.error('[CoachService] Error from edge function:', error);
+        throw error;
+      }
+      
+      if (!Array.isArray(data)) {
+        console.error('[CoachService] Invalid data format from edge function, expected array:', data);
+        throw new Error('Invalid data format returned from server');
+      }
+      
+      console.log('[CoachService] Successfully retrieved', data.length, 'coaches via edge function');
+      
+      if (data.length > 0) {
+        console.log('[CoachService] Coach sample:', data[0]);
+        console.log('[CoachService] Coach emails:', data.map(c => (c as any).email).join(', '));
+      }
+      
+      // Transform and return the coaches data using type assertions
+      const coaches = data.map(coach => {
+        const coachObj = coach as any;
+        return {
+          id: String(coachObj.id || ''),
+          name: String(coachObj.name || ''),
+          email: String(coachObj.email || ''),
+          phone: coachObj.phone || null,
+          status: ((coachObj.status === 'active' || coachObj.status === 'inactive') 
+            ? coachObj.status as 'active' | 'inactive' 
+            : 'inactive') as 'active' | 'inactive',
+          clinicId: String(coachObj.clinic_id || ''),
+          clients: Number(coachObj.client_count || 0)
+        };
+      });
+      
+      console.log('[CoachService] Transformed coaches data:', coaches);
+      return coaches;
+    } catch (edgeFunctionError) {
+      console.error('[CoachService] Edge function failed, falling back to RPC:', edgeFunctionError);
+      
+      // Fallback to RPC function when edge function fails
+      const { data: rpcData, error: rpcError } = await supabase.rpc('admin_get_all_coaches');
+      
+      if (rpcError) {
+        console.error('[CoachService] RPC fallback also failed:', rpcError);
+        throw rpcError;
+      }
+      
+      if (!Array.isArray(rpcData)) {
+        console.error('[CoachService] Invalid data format from RPC, expected array:', rpcData);
+        throw new Error('Invalid data format returned from RPC server');
+      }
+      
+      console.log('[CoachService] Successfully retrieved', rpcData.length, 'coaches via RPC fallback');
+      
+      // Transform and return the coaches data using type assertions
+      const coaches = rpcData.map(coach => {
+        const coachObj = coach as any;
+        return {
+          id: String(coachObj.id || ''),
+          name: String(coachObj.name || ''),
+          email: String(coachObj.email || ''),
+          phone: coachObj.phone || null,
+          status: ((coachObj.status === 'active' || coachObj.status === 'inactive') 
+            ? coachObj.status as 'active' | 'inactive' 
+            : 'inactive') as 'active' | 'inactive',
+          clinicId: String(coachObj.clinic_id || ''),
+          clients: Number(coachObj.client_count || 0)
+        };
+      });
+      
+      console.log('[CoachService] Transformed RPC fallback coaches data:', coaches);
+      return coaches;
     }
-    
-    if (!Array.isArray(data)) {
-      console.error('[CoachService] Invalid data format from edge function, expected array:', data);
-      throw new Error('Invalid data format returned from server');
-    }
-    
-    console.log('[CoachService] Successfully retrieved', data.length, 'coaches via edge function');
-    
-    if (data.length > 0) {
-      console.log('[CoachService] Coach sample:', data[0]);
-      console.log('[CoachService] Coach emails:', data.map(c => (c as any).email).join(', '));
-    }
-    
-    // Transform and return the coaches data using type assertions
-    const coaches = data.map(coach => {
-      const coachObj = coach as any;
-      return {
-        id: String(coachObj.id || ''),
-        name: String(coachObj.name || ''),
-        email: String(coachObj.email || ''),
-        phone: coachObj.phone || null,
-        status: ((coachObj.status === 'active' || coachObj.status === 'inactive') 
-          ? coachObj.status as 'active' | 'inactive' 
-          : 'inactive') as 'active' | 'inactive',
-        clinicId: String(coachObj.clinic_id || ''),
-        clients: Number(coachObj.client_count || 0)
-      };
-    });
-    
-    console.log('[CoachService] Transformed coaches data:', coaches);
-    return coaches;
   } catch (error) {
     console.error('[CoachService] Error fetching all coaches:', error);
     

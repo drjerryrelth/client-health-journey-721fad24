@@ -3,7 +3,7 @@
 // It re-exports functions from the more specialized service files
 
 import { Coach } from './types';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { getClinicCoaches, getAllCoaches } from './coach-fetchers';
 import { addCoach, updateCoach, deleteCoach, resetCoachPassword } from './coach-crud';
 import { updateCoachStatus } from './coach-mutations';
