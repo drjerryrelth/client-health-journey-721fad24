@@ -13,9 +13,9 @@ const ClinicsPage = () => {
   const [activeTab, setActiveTab] = useState('clinics');
   const { user } = useAuth();
   const isClinicAdmin = user?.role === 'clinic_admin';
-  const { isLoading } = useCoachActions();
+  const { isLoading: isCoachActionsLoading } = useCoachActions(); // Renamed to avoid conflict
   const [clinics, setClinics] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingClinics, setIsLoadingClinics] = useState(true); // Renamed to avoid conflict
 
   // Fetch clinics data on component mount
   React.useEffect(() => {
@@ -43,7 +43,7 @@ const ClinicsPage = () => {
         console.error('Error fetching clinics:', error);
         toast.error('Failed to load clinics');
       } finally {
-        setIsLoading(false);
+        setIsLoadingClinics(false);
       }
     };
 
