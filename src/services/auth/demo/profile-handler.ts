@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { demoEmails } from './constants';
-import { isDemoAdminEmail, isDemoClinicAdminEmail } from './utils';
+import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoCoachEmail } from './utils';
 
 // Helper function to ensure demo profile exists with correct role based on email
 export async function ensureDemoProfileExists(userId: string, email: string) {
@@ -140,17 +140,77 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
       console.error('Error handling clinic admin demo profile:', error);
       return 'clinic_admin'; // Return clinic_admin role even if there's an error
     }
-  } else if (email === demoEmails.coach) {
+  } 
+  // CRITICAL: Special case for coach demo emails
+  else if (isDemoCoachEmail(email)) {
     role = 'coach';
     fullName = 'Coach User';
     clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
-  } else if (email === demoEmails.client) {
+    console.log('CRITICAL: This is a demo coach email - ensuring coach role with clinic ID:', clinicId);
+    
+    try {
+      // Check if coach profile exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (!existingProfile) {
+        console.log('Coach demo profile not found, creating one with coach role');
+        
+        // Create coach profile
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            full_name: 'Coach User',
+            email: email,
+            role: 'coach',
+            clinic_id: clinicId
+          });
+          
+        if (insertError) {
+          console.error('Error creating coach demo profile:', insertError);
+        } else {
+          console.log('Coach demo profile created successfully');
+        }
+      } else {
+        // CRITICAL: Ensure coach profile has the correct role and clinic_id
+        if (existingProfile.role !== 'coach' || existingProfile.clinic_id !== clinicId) {
+          console.log('Updating coach demo profile to ensure correct role and clinic ID');
+          
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ 
+              role: 'coach', 
+              clinic_id: clinicId,
+              full_name: 'Coach User'
+            })
+            .eq('id', userId);
+            
+          if (updateError) {
+            console.error('Error updating coach demo profile:', updateError);
+          } else {
+            console.log('Coach demo profile updated successfully');
+          }
+        }
+      }
+      
+      // For coach demo, always return 'coach' role
+      return 'coach';
+    } catch (error) {
+      console.error('Error handling coach demo profile:', error);
+      return 'coach'; // Return coach role even if there's an error
+    }
+  }
+  else if (email === demoEmails.client) {
     role = 'client';
     fullName = 'Client User';
     clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
   }
   
-  // Handle non-admin demo profiles
+  // Handle non-special demo profiles
   try {
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
@@ -207,4 +267,3 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
     return role; // Return the determined role even if there was an error
   }
 }
-

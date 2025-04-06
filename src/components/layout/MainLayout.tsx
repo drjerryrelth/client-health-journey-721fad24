@@ -34,6 +34,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
         }, 100);
       }
     }
+    
+    // Additional check for coach users trying to access admin routes
+    if (user?.role === 'coach' && location.pathname.startsWith('/admin')) {
+      console.error('SECURITY VIOLATION: Coach attempting to access admin route:', location.pathname);
+      toast.error("Access denied. You don't have permission to access this page.");
+      setTimeout(() => {
+        window.location.href = '/coach/dashboard';
+      }, 100);
+    }
   }, [location.pathname, user?.role]);
   
   // Show loading state
@@ -58,7 +67,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
   console.log('MainLayout - Current path:', location.pathname);
   
   // CRITICAL SECURITY ENFORCEMENT
-  // Emergency check to prevent clinic admins from accessing system admin routes
+  // Emergency check to prevent unauthorized access to admin routes
   if (user?.role === 'clinic_admin') {
     // System admin only paths that clinic admins should NEVER access
     const systemAdminOnlyPaths = ['/admin/clinics', '/admin/admin-users'];
@@ -75,6 +84,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
     }
   }
   
+  // Check for coach users trying to access admin routes
+  if (user?.role === 'coach' && location.pathname.startsWith('/admin')) {
+    console.error('SECURITY VIOLATION: Blocking coach from accessing admin route:', location.pathname);
+    toast.error("Access denied. You don't have permission to access this page.");
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
   // CRITICAL SECURITY FIX: Apply specialized role checking logic
   let hasPermission = false;
   
@@ -89,6 +105,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
       hasPermission = false;
     }
   } 
+  // For coach users, only allow access to coach routes
+  else if (user?.role === 'coach') {
+    // Coaches can ONLY access routes that explicitly include coach role
+    hasPermission = requiredRoles.includes('coach');
+    
+    // Block coaches from admin routes
+    if (requiredRoles.includes('admin') || requiredRoles.includes('clinic_admin')) {
+      console.error('SECURITY VIOLATION: Blocking coach from accessing admin route');
+      hasPermission = false;
+    }
+  }
   // For other roles, use the standard hasRole method
   else {
     hasPermission = requiredRoles.some(role => hasRole(role));

@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
 import { loginWithEmail, signUpWithEmail, logoutUser } from '@/services/auth';
-import { isDemoAdminEmail, isDemoClinicAdminEmail } from '@/services/auth/demo/utils';
+import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoEmail } from '@/services/auth/demo/utils';
 
 type UseAuthMethodsProps = {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -132,6 +132,26 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       console.log('SECURITY: Using standard role checking for clinic admin');
     }
     
+    // PRIORITY 1.75: Special check for coach users
+    if (user.role === 'coach') {
+      console.log('SECURITY: Coach role detected, checking appropriate access');
+      
+      // Convert required role to array for easier checking
+      const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+      
+      // Check if the required roles include admin routes - coaches should not access these
+      if (requiredRoles.includes('admin') || requiredRoles.includes('clinic_admin')) {
+        console.log('SECURITY: Coach attempting to access admin route, denying access');
+        return false;
+      }
+      
+      // If required roles include 'coach', grant access
+      if (requiredRoles.includes('coach')) {
+        console.log('SECURITY: Coach accessing permitted route');
+        return true;
+      }
+    }
+    
     // Get the actual user role for clarity
     const actualRole = user.role;
     console.log('Actual user role:', actualRole);
@@ -183,4 +203,3 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     hasRole,
   };
 };
-

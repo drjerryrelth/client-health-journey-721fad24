@@ -1,58 +1,93 @@
 
 import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { Coach } from '@/services/coaches/types';
+import { useAuth } from '@/context/auth';
+import { Client } from '@/types';
 import { toast } from 'sonner';
 
-export interface UseCoachActionsProps {
-  addClient: () => Promise<void>;
-  isLoading: boolean;
-  selectedCoach: Coach | null;
-  handleDeleteCoach: (coach: Coach) => void;
-  handleReassignAndDelete: (coachId: string, replacementCoachId: string) => Promise<void>;
-}
-
-export const useCoachActions = (): UseCoachActionsProps => {
+export function useCoachActions() {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const { user } = useAuth();
 
-  const addClient = async (): Promise<void> => {
+  // Add a client
+  const addClient = async (clientData: Partial<Client>) => {
+    if (!user?.id) {
+      toast.error("You must be logged in to add clients");
+      return null;
+    }
+    
+    setIsLoading(true);
     try {
-      setIsLoading(true);
+      // Ensure the client is assigned to the current coach
+      const newClientData = {
+        ...clientData,
+        coachId: user.id,
+        clinicId: user.clinicId || ''
+      };
       
-      if (!user?.clinicId) {
-        toast.error("You must be associated with a clinic to add clients");
-        return;
-      }
+      // Here you would normally call an API to create the client
+      console.log('Creating new client with data:', newClientData);
       
-      // Instead of navigating, we'll return a success so the dialog can be opened
-      // The dialog is now controlled by the ClientsPage component
-      return;
+      toast.success("Client added successfully");
+      return { id: 'temp-id', ...newClientData };
     } catch (error) {
-      console.error("Error in add client action:", error);
-      toast.error("Failed to prepare add client action");
+      console.error('Error adding client:', error);
+      toast.error("Failed to add client");
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteCoach = (coach: Coach) => {
-    setSelectedCoach(coach);
-    // The implementation will depend on whether we're in the admin context or not
-    // For the Coach Dashboard, this might be empty or different
+  // Assign a program to a client
+  const assignProgram = async (clientId: string, programId: string) => {
+    if (!user?.id) {
+      toast.error("You must be logged in to assign programs");
+      return false;
+    }
+    
+    setIsLoading(true);
+    try {
+      // Here you would normally call an API to assign the program
+      console.log(`Assigning program ${programId} to client ${clientId}`);
+      
+      toast.success("Program assigned successfully");
+      return true;
+    } catch (error) {
+      console.error('Error assigning program:', error);
+      toast.error("Failed to assign program");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleReassignAndDelete = async (coachId: string, replacementCoachId: string) => {
-    // Implementation will depend on context
-    // For the Coach Dashboard, this might be empty or different
+  // Review a check-in
+  const reviewCheckIn = async (checkInId: string, feedback: string) => {
+    if (!user?.id) {
+      toast.error("You must be logged in to review check-ins");
+      return false;
+    }
+    
+    setIsLoading(true);
+    try {
+      // Here you would normally call an API to submit the review
+      console.log(`Submitting review for check-in ${checkInId}: ${feedback}`);
+      
+      toast.success("Check-in reviewed successfully");
+      return true;
+    } catch (error) {
+      console.error('Error reviewing check-in:', error);
+      toast.error("Failed to submit review");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return {
-    addClient,
     isLoading,
-    selectedCoach,
-    handleDeleteCoach,
-    handleReassignAndDelete
+    addClient,
+    assignProgram,
+    reviewCheckIn
   };
-};
+}

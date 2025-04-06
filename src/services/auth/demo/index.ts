@@ -1,8 +1,6 @@
-
-// Export all the demo-related files from one place
-export { demoEmails } from './constants';
-export * from './profile-handler';
+// Export all demo-related utilities for easier imports
+export * from './constants';
 export * from './utils';
-export * from './confirmation-handler';
-export * from './clinic-handler';
-export * from './account-checker';
+export * from './profile-handler';
+
+// Add any other demo exports here as needed

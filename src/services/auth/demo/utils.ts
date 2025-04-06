@@ -24,6 +24,14 @@ export function isDemoClinicAdminEmail(email: string): boolean {
   return email.toLowerCase() === demoEmails.clinicAdmin.toLowerCase();
 }
 
+// Check if this is specifically a demo coach email
+export function isDemoCoachEmail(email: string): boolean {
+  if (!email) return false;
+  const lowerEmail = email.toLowerCase();
+  return lowerEmail === demoEmails.coach.toLowerCase() || 
+         lowerEmail === demoEmails.coachAlt.toLowerCase();
+}
+
 // Get the demo user name based on the email
 export function getDemoUserNameByEmail(email: string): string {
   if (!email) return 'Demo User';
@@ -33,7 +41,8 @@ export function getDemoUserNameByEmail(email: string): string {
   // Map demo emails to user names
   if (lowerEmail === demoEmails.admin.toLowerCase()) {
     return 'Admin User';
-  } else if (lowerEmail === demoEmails.coach.toLowerCase()) {
+  } else if (lowerEmail === demoEmails.coach.toLowerCase() || 
+            lowerEmail === demoEmails.coachAlt.toLowerCase()) {
     return 'Coach User';
   } else if (lowerEmail === demoEmails.client.toLowerCase()) {
     return 'Client User';
@@ -54,7 +63,8 @@ export function getDemoRoleByEmail(email: string): UserRole {
   // Map demo emails to roles
   if (lowerEmail === demoEmails.admin.toLowerCase()) {
     return 'admin';
-  } else if (lowerEmail === demoEmails.coach.toLowerCase()) {
+  } else if (lowerEmail === demoEmails.coach.toLowerCase() || 
+            lowerEmail === demoEmails.coachAlt.toLowerCase()) {
     return 'coach';
   } else if (lowerEmail === demoEmails.client.toLowerCase()) {
     return 'client';

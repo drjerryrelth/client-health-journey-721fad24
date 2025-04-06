@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { UserData } from '@/types/auth';
@@ -7,7 +6,7 @@ import {
   getCurrentSession,
   setupAuthListener 
 } from '@/services/auth';
-import { isDemoAdminEmail, isDemoClinicAdminEmail } from '@/services/auth/demo/utils';
+import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoCoachEmail } from '@/services/auth/demo/utils';
 
 type UseAuthSessionProps = {
   setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
@@ -57,6 +56,22 @@ export const useAuthSession = ({
         return;
       }
       
+      // Special case for demo coach - third highest priority check
+      if (userEmail && isDemoCoachEmail(userEmail)) {
+        console.log('CRITICAL: Demo coach detected in fetchAndSetUserProfile, ensuring coach role');
+        // Default clinic ID for demo coach
+        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        // For demo coach, force role to coach with specific clinic ID
+        setUser({
+          id: userId,
+          name: 'Coach User',
+          email: userEmail,
+          role: 'coach',
+          clinicId: clinicId // Coach must have a clinic
+        });
+        return;
+      }
+      
       const userData = await fetchUserProfile(userId);
       
       if (userData) {
@@ -87,6 +102,20 @@ export const useAuthSession = ({
             name: 'Clinic Admin User',
             email: userEmail,
             role: 'clinic_admin',
+            clinicId: clinicId
+          });
+          return;
+        }
+        
+        // If still no data, but we have a demo coach email, enforce coach role
+        if (userEmail && isDemoCoachEmail(userEmail)) {
+          console.log('Fallback: Using demo coach detection when profile fetch failed');
+          const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+          setUser({
+            id: userId,
+            name: 'Coach User',
+            email: userEmail,
+            role: 'coach',
             clinicId: clinicId
           });
           return;
@@ -123,6 +152,20 @@ export const useAuthSession = ({
           name: 'Clinic Admin User',
           email: userEmail,
           role: 'clinic_admin',
+          clinicId: clinicId
+        });
+        return;
+      }
+      
+      // Last resort for demo coach - even in case of errors, enforce coach role
+      if (userEmail && isDemoCoachEmail(userEmail)) {
+        console.log('ERROR FALLBACK: Using demo coach detection when profile fetch failed with error');
+        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        setUser({
+          id: userId,
+          name: 'Coach User',
+          email: userEmail,
+          role: 'coach',
           clinicId: clinicId
         });
         return;
@@ -247,4 +290,3 @@ export const useAuthSession = ({
     fetchAndSetUserProfile
   };
 };
-
