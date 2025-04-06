@@ -82,10 +82,10 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
             <TableCell className="font-medium">{client.name}</TableCell>
             <TableCell>{client.email}</TableCell>
             <TableCell>
-              {client.coachId ? (client.coaches?.name || 'Unassigned') : 'Unassigned'}
+              {client.coachId ? 'Assigned' : 'Unassigned'}
             </TableCell>
             <TableCell>
-              {client.programId ? (client.program?.name || 'None') : 'None'}
+              {client.programId ? 'Assigned' : 'None'}
             </TableCell>
             <TableCell>
               {client.lastCheckIn ? (

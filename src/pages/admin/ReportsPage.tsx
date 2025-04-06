@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Banknote, Activity, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from '@/context/auth';
+import { isClinicAdmin } from '@/utils/role-based-access';
 
 const ReportsPage = () => {
   const { user } = useAuth();
