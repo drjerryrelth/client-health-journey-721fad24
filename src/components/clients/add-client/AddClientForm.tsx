@@ -11,6 +11,8 @@ import { useCreateClientMutation } from '@/hooks/queries/use-client-queries';
 import ClientFormFields from './ClientFormFields';
 import { formSchema, AddClientFormValues } from './AddClientSchema';
 import { AddClientFormProps } from './index';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clinicId }) => {
   const { user } = useAuth();
@@ -20,8 +22,9 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
   // Use the passed clinicId or fall back to user's clinicId
   const effectiveClinicId = clinicId || user?.clinicId;
   
-  const { data: programs = [] } = useProgramsQuery(effectiveClinicId);
+  const { data: programs = [], isLoading: isProgramsLoading, error: programsError } = useProgramsQuery(effectiveClinicId);
   
+  console.log("Effective clinic ID:", effectiveClinicId);
   console.log("Available programs:", programs);
   
   const form = useForm<AddClientFormValues>({
@@ -85,9 +88,28 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
     <FormProvider {...form}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          {programsError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to load programs. {programsError.message}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {!isProgramsLoading && programs.length === 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                No programs found for your clinic. You should create programs first from the Programs page.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <ClientFormFields 
             programs={programs} 
-            selectedProgramType={selectedProgramType} 
+            selectedProgramType={selectedProgramType}
+            isProgramsLoading={isProgramsLoading}
           />
 
           <DialogFooter className="pt-2">

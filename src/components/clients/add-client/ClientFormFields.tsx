@@ -19,13 +19,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Program } from '@/types';
 import { AddClientFormValues, clientGoals } from './AddClientSchema';
+import { Loader2 } from 'lucide-react';
 
 interface ClientFormFieldsProps {
   programs: Program[];
   selectedProgramType: string | null;
+  isProgramsLoading?: boolean;
 }
 
-const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedProgramType }) => {
+const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ 
+  programs, 
+  selectedProgramType,
+  isProgramsLoading = false
+}) => {
   const form = useFormContext<AddClientFormValues>();
 
   return (
@@ -160,10 +166,18 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
               onValueChange={field.onChange} 
               value={field.value || ""}
               defaultValue={field.value || ""}
+              disabled={isProgramsLoading}
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a program" />
+                  {isProgramsLoading ? (
+                    <div className="flex items-center">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                      Loading programs...
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Select a program" />
+                  )}
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -175,7 +189,9 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="no-programs-available" disabled>No programs available</SelectItem>
+                  <SelectItem value="no-programs-available" disabled>
+                    {isProgramsLoading ? 'Loading programs...' : 'No programs available'}
+                  </SelectItem>
                 )}
               </SelectContent>
             </Select>
