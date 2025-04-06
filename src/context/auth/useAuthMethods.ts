@@ -75,21 +75,21 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
     }
   }, [setIsLoading]);
 
-  // Fixed hasRole function with properly typed return
-  const hasRole = React.useCallback((role: UserRole | UserRole[]) => {
+  // Fix the hasRole function to correctly type the return value
+  const hasRole = React.useCallback((roleToCheck: UserRole | UserRole[]) => {
     return (user: UserData | null): boolean => {
       if (!user) return false;
       
       // If no role requirement is specified, allow access
-      if (!role) return true;
+      if (!roleToCheck) return true;
       
       // Handle array of roles
-      if (Array.isArray(role)) {
-        return role.includes(user.role as UserRole);
+      if (Array.isArray(roleToCheck)) {
+        return roleToCheck.includes(user.role as UserRole);
       }
       
       // Handle single role
-      return user.role === role;
+      return user.role === roleToCheck;
     };
   }, []);
 
