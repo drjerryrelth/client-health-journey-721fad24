@@ -42,7 +42,7 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
   const watchedProgramId = form.watch('programId');
   
   useEffect(() => {
-    if (watchedProgramId) {
+    if (watchedProgramId && watchedProgramId !== 'no-program') {
       const selectedProgram = programs.find(p => p.id === watchedProgramId);
       console.log("Selected program:", selectedProgram);
       setSelectedProgramType(selectedProgram?.type || null);
@@ -56,11 +56,14 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
     
     console.log("Submitting client form with values:", values);
     
+    // Process programId to handle the 'no-program' special value
+    const programId = values.programId === 'no-program' ? null : values.programId || null;
+    
     createClient({
       name: values.name,
       email: values.email,
       phone: values.phone || null,
-      programId: values.programId || null,
+      programId: programId,
       programCategory: values.programCategory as 'A' | 'B' | 'C' | null || null,
       startDate: values.startDate,
       notes: values.notes || null,

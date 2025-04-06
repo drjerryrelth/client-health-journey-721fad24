@@ -40,7 +40,7 @@ const ReassignClientsDialog = ({
           <Label htmlFor="replacement-coach" className="block mb-2">
             Select Replacement Coach
           </Label>
-          <Select onValueChange={setReplacementCoachId} value={replacementCoachId}>
+          <Select onValueChange={setReplacementCoachId} value={replacementCoachId || "select-coach"}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a coach" />
             </SelectTrigger>
@@ -52,7 +52,7 @@ const ReassignClientsDialog = ({
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="none" disabled>No other coaches available</SelectItem>
+                <SelectItem value="no-coaches" disabled>No other coaches available</SelectItem>
               )}
             </SelectContent>
           </Select>

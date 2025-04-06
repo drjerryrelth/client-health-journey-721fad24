@@ -225,7 +225,7 @@ export const AddCoachDialog = ({
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="none" disabled>No clinics available</SelectItem>
+                      <SelectItem value="no-clinics" disabled>No clinics available</SelectItem>
                     )}
                   </SelectContent>
                 </Select>

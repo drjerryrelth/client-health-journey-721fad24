@@ -167,7 +167,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="">No program</SelectItem>
+                <SelectItem value="no-program">No program</SelectItem>
                 {programs && programs.length > 0 ? (
                   programs.map((program: Program) => (
                     <SelectItem key={program.id} value={program.id}>
@@ -175,7 +175,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="" disabled>No programs available</SelectItem>
+                  <SelectItem value="no-programs-available" disabled>No programs available</SelectItem>
                 )}
               </SelectContent>
             </Select>
