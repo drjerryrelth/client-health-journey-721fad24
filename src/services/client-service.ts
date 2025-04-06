@@ -8,39 +8,73 @@ export class ClientService {
     try {
       console.log('Fetching clients for clinic ID:', clinicId);
       
-      // Simplified query that avoids the problematic joins causing recursion
-      const { data, error } = await supabase
+      // First try with clinic_id (database column name)
+      let { data, error } = await supabase
         .from('clients')
         .select('*')
         .eq('clinic_id', clinicId)
         .order('name', { ascending: true });
       
       if (error) {
-        console.error('Error fetching clients:', error);
-        toast.error('Failed to load clients');
-        return [];
+        console.error('Error fetching clients with clinic_id:', error);
+        
+        // If failed, try with clinicId (camelCase, might be used in some places)
+        const alternativeResult = await supabase
+          .from('clients')
+          .select('*')
+          .eq('clinicId', clinicId)
+          .order('name', { ascending: true });
+          
+        if (!alternativeResult.error) {
+          data = alternativeResult.data;
+          console.log('Successfully fetched clients using clinicId instead of clinic_id');
+        } else {
+          console.error('Error fetching clients with clinicId as well:', alternativeResult.error);
+          toast.error('Failed to load clients');
+          return [];
+        }
       }
+      
+      // Log the raw client data for debugging
+      console.log('Raw client data from database:', data);
       
       // For each client, fetch coach info separately if needed
       const clientsWithCoachInfo = await Promise.all(
         (data || []).map(async (client) => {
-          if (client.coach_id) {
+          // Handle different naming conventions (coach_id vs coachId)
+          const coachId = client.coach_id || client.coachId;
+          
+          if (coachId) {
             try {
               const { data: coachData, error: coachError } = await supabase
                 .from('coaches')
                 .select('id, name, email')
-                .eq('id', client.coach_id)
+                .eq('id', coachId)
                 .single();
                 
               if (!coachError && coachData) {
-                return { ...client, coach: coachData };
+                return { 
+                  ...client, 
+                  coach: coachData,
+                  // Ensure consistent property naming
+                  coachId: coachId
+                };
               }
             } catch (coachFetchError) {
               console.error('Error fetching coach for client:', coachFetchError);
               // Continue without coach data
             }
           }
-          return client;
+          
+          // Ensure consistent property naming
+          return { 
+            ...client,
+            coachId: coachId,
+            // Convert database snake_case to camelCase if needed
+            clinicId: client.clinic_id || client.clinicId,
+            programId: client.program_id || client.programId,
+            lastCheckIn: client.last_check_in || client.lastCheckIn
+          };
         })
       );
       

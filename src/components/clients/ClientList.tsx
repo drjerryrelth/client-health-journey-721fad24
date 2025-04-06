@@ -4,10 +4,11 @@ import { useClientsQuery } from '@/hooks/queries/use-client-queries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth';
 import { useClinicFilter } from '@/components/coaches/list/useClinicFilter';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ClientListProps {
   clinicId?: string;
@@ -58,7 +59,12 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
   if (isError) {
     return (
       <div className="text-center py-8">
-        <p className="text-red-500 mb-4">Failed to load clients</p>
+        <Alert className="mb-4 bg-red-50 border-red-200">
+          <AlertCircle className="h-4 w-4 text-red-500" />
+          <AlertDescription className="text-red-700">
+            Failed to load clients. Please check your network connection and try again.
+          </AlertDescription>
+        </Alert>
         <Button onClick={() => refetch()} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
           Try Again
@@ -69,9 +75,18 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
   
   if (!clients || clients.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        No clients found for {isClinicAdmin ? 'your clinic' : 'this clinic'}
-        {activeClinicId ? ` (ID: ${activeClinicId})` : ''}
+      <div className="text-center py-8">
+        <Alert className="mb-4 bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-amber-700">
+            No clients found for {isClinicAdmin ? 'your clinic' : 'this clinic'}
+            {activeClinicId ? ` (ID: ${activeClinicId})` : ''}
+            <br />
+            <span className="text-sm text-muted-foreground mt-2 block">
+              Try adding a new client using the "Add Client" button above.
+            </span>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
