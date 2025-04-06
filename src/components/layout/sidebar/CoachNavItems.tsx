@@ -8,6 +8,7 @@ import {
   BookOpen,
   ClipboardList,
   Settings,
+  Utensils,
 } from "lucide-react";
 import { NavItem } from "./AdminNavItems";
 
@@ -40,7 +41,7 @@ export const coachNavItems: NavItem[] = [
   {
     title: "Meal Plan Generator",
     href: "/coach/meal-plan-generator",
-    icon: ClipboardList,
+    icon: Utensils,
   },
   {
     title: "Settings",

@@ -52,8 +52,12 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
   } else if (user.role === 'coach') {
     navItems = coachNavItems;
     displayRoleText = 'Coach';
-  } else {
+  } else if (user.role === 'client') {
+    navItems = clientNavItems;
     displayRoleText = 'Client';
+  } else {
+    displayRoleText = 'Unknown Role';
+    console.error('Unknown user role detected:', user.role);
   }
   
   console.log("Sidebar user info:", {

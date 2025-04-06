@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import ClientPortal from '@/pages/ClientPortal';
 import CheckIn from '@/pages/CheckIn';
@@ -15,6 +15,18 @@ import { toast } from 'sonner';
 
 const ClientRoutes = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  
+  // Log the client route access for debugging
+  useEffect(() => {
+    if (user?.role === 'client') {
+      console.log('Client accessing route:', {
+        path: location.pathname,
+        clientId: user.id,
+        name: user.name
+      });
+    }
+  }, [location.pathname, user]);
   
   // If not a client, redirect to unauthorized
   if (user?.role !== 'client') {

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useAuth } from '@/context/auth';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
@@ -27,14 +26,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
     
     const currentPath = location.pathname;
     
-    // Enhanced logging for clinic admins to debug access issues
-    if (user.role === 'clinic_admin') {
-      console.log('Clinic admin path check:', {
-        path: currentPath,
-        name: user.name,
-        clinicId: user.clinicId
-      });
-    }
+    // Enhanced logging for all users to debug access issues
+    console.log('Path access check:', {
+      path: currentPath,
+      role: user.role,
+      name: user.name,
+      clinicId: user.clinicId
+    });
     
     // Clinic admin trying to access system admin routes
     if (user.role === 'clinic_admin' && adminOnlyPaths.some(path => currentPath.startsWith(path))) {
