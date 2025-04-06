@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth';
+import { useClinicFilter } from '@/components/coaches/list/useClinicFilter';
 
 interface ClientListProps {
   clinicId?: string;
@@ -14,7 +15,10 @@ interface ClientListProps {
 
 const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
   const { user } = useAuth();
-  const activeClinicId = clinicId || user?.clinicId;
+  const { isClinicAdmin, userClinicId } = useClinicFilter();
+  
+  // Ensure we use the clinic ID from props, user context, or the clinic filter hook
+  const activeClinicId = clinicId || user?.clinicId || userClinicId;
   
   const {
     data: clients,
@@ -27,7 +31,8 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
     console.log('ClientList - activeClinicId:', activeClinicId);
     console.log('ClientList - user role:', user?.role);
     console.log('ClientList - user clinicId:', user?.clinicId);
-  }, [activeClinicId, user]);
+    console.log('ClientList - isClinicAdmin:', isClinicAdmin);
+  }, [activeClinicId, user, isClinicAdmin]);
   
   if (isLoading) {
     return (
@@ -60,7 +65,8 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
   if (!clients || clients.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        No clients found for {user?.role === 'clinic_admin' ? 'your clinic' : 'this clinic'}
+        No clients found for {isClinicAdmin ? 'your clinic' : 'this clinic'}
+        {activeClinicId ? ` (ID: ${activeClinicId})` : ''}
       </div>
     );
   }

@@ -1,17 +1,29 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/auth';
 import { ClientService } from '@/services/client-service';
 import { Client } from '@/types';
 import { toast } from 'sonner';
+import { useClinicFilter } from '@/components/coaches/list/useClinicFilter';
 
 // Client Queries
 export const useClientsQuery = (clinicId?: string) => {
   const { user } = useAuth();
-  const activeClinicId = clinicId || user?.clinicId;
+  const { userClinicId } = useClinicFilter();
+  
+  // Use a hierarchical approach to determine the active clinic ID
+  const activeClinicId = clinicId || user?.clinicId || userClinicId;
 
   return useQuery({
     queryKey: ['clients', activeClinicId],
-    queryFn: () => ClientService.getClinicClients(activeClinicId as string),
+    queryFn: () => {
+      if (!activeClinicId) {
+        console.error('Missing clinic ID in useClientsQuery');
+        return Promise.resolve([]);
+      }
+      console.log('Fetching clients for clinic:', activeClinicId);
+      return ClientService.getClinicClients(activeClinicId);
+    },
     enabled: !!activeClinicId,
   });
 };

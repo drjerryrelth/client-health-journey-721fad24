@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { DashboardStats, ActivityItem } from '@/types/dashboard';
 import { useAuth } from '@/context/auth';
+import { useClinicFilter } from '@/components/coaches/list/useClinicFilter';
 
 // Mock data function for dashboard stats based on user role
 const fetchDashboardStatsForUser = async (user: any): Promise<DashboardStats> => {
@@ -12,14 +13,15 @@ const fetchDashboardStatsForUser = async (user: any): Promise<DashboardStats> =>
   
   console.log('Dashboard stats for user:', user?.role, user?.clinicId);
   
-  // IMPORTANT FIX: Force strict role detection - use the raw user.role value
+  // IMPORTANT: Force strict role detection - use the raw user.role value
   const isClinicAdminUser = user?.role === 'clinic_admin';
   const isSystemAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
   
   console.log('Role detection results:', {
     isClinicAdmin: isClinicAdminUser,
     isSystemAdmin: isSystemAdminUser,
-    role: user?.role
+    role: user?.role,
+    clinicId: user?.clinicId
   });
   
   if (isSystemAdminUser) {
@@ -61,9 +63,11 @@ const fetchActivitiesForUser = async (user: any, limit: number = 5): Promise<Act
   // Mock API delay
   await new Promise(resolve => setTimeout(resolve, 700));
   
-  // IMPORTANT FIX: Force strict role detection - use the raw user.role value
+  // IMPORTANT: Force strict role detection - use the raw user.role value
   const isClinicAdminUser = user?.role === 'clinic_admin';
   const isSystemAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
+  
+  console.log('Activity data for user role:', user?.role, 'clinic ID:', user?.clinicId);
   
   const systemAdminActivities: ActivityItem[] = [
     {
@@ -139,6 +143,12 @@ const fetchActivitiesForUser = async (user: any, limit: number = 5): Promise<Act
 // Hook for dashboard stats
 export const useDashboardStats = () => {
   const { user } = useAuth();
+  const { isClinicAdmin } = useClinicFilter();
+  
+  // Enhanced logging for debugging
+  console.log('useDashboardStats hook - user role:', user?.role);
+  console.log('useDashboardStats hook - isClinicAdmin:', isClinicAdmin);
+  console.log('useDashboardStats hook - clinicId:', user?.clinicId);
   
   return useQuery({
     queryKey: ['dashboardStats', user?.id, user?.role, user?.clinicId],
@@ -151,6 +161,11 @@ export const useDashboardStats = () => {
 // Hook for recent activities
 export const useRecentActivities = (limit: number = 5) => {
   const { user } = useAuth();
+  const { isClinicAdmin } = useClinicFilter();
+  
+  // Enhanced logging for debugging
+  console.log('useRecentActivities hook - user role:', user?.role);
+  console.log('useRecentActivities hook - isClinicAdmin:', isClinicAdmin);
   
   return useQuery({
     queryKey: ['recentActivities', user?.id, user?.role, user?.clinicId, limit],
