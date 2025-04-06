@@ -72,10 +72,13 @@ const ClinicsPage = () => {
       // Refresh clinics list after adding a new clinic
       if (!isClinicAdmin) {
         setIsLoadingClinics(true);
-        supabase
-          .from('clinics')
-          .select('*')
-          .then(({ data, error }) => {
+        // Using async/await within a try/catch block instead of Promise.catch()
+        const refreshClinics = async () => {
+          try {
+            const { data, error } = await supabase
+              .from('clinics')
+              .select('*');
+              
             if (error) throw error;
             
             const formattedClinics = data.map(clinic => ({
@@ -89,14 +92,15 @@ const ClinicsPage = () => {
             }));
             
             setClinics(formattedClinics);
-          })
-          .catch(error => {
+          } catch (error) {
             console.error('Error fetching clinics:', error);
             toast.error('Failed to load clinics');
-          })
-          .finally(() => {
+          } finally {
             setIsLoadingClinics(false);
-          });
+          }
+        };
+        
+        refreshClinics();
       }
     }
   };

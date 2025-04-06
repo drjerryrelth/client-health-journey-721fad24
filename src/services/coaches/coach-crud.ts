@@ -7,7 +7,7 @@ import { Coach } from './types';
 /**
  * Adds a new coach to the database
  */
-export async function addCoach(coach: Omit<Coach, 'id' | 'clients'>): Promise<Coach | null> {
+export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> {
   try {
     console.log('[Coach Service] Starting coach addition process');
     console.log('[Coach Service] Coach data:', coach);

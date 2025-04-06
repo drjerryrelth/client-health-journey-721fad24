@@ -116,7 +116,8 @@ export const AddCoachDialog = ({
         email: values.email,
         phone: values.phone || null,
         status: 'active',
-        clinicId: effectiveClinicId
+        clinicId: effectiveClinicId,
+        clients: 0 // Add the clients field with default value 0
       });
       
       // Race between the actual operation and the timeout
