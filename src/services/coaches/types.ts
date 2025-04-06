@@ -1,5 +1,5 @@
 
-export type Coach = {
+export interface Coach {
   id: string;
   name: string;
   email: string;
@@ -7,4 +7,4 @@ export type Coach = {
   status: 'active' | 'inactive';
   clinicId: string;
   clients: number;
-};
+}
