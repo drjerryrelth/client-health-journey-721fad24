@@ -16,6 +16,10 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       console.log('Login successful');
+      toast({
+        title: "Login successful",
+        description: 'Welcome back!',
+      });
       return true;
     } catch (error) {
       const authError = error as AuthError;

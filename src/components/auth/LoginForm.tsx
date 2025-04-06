@@ -1,16 +1,40 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import LoginHeader from './LoginHeader';
 import LoginFormFields from './LoginFormFields';
 import DemoLoginButtons from './DemoLoginButtons';
 import { useLoginHandler } from '@/hooks/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/context/auth';
 
 const LoginForm = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const { isSubmitting, handleLogin, handleDemoLogin } = useLoginHandler();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, user } = useAuth();
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Determine where to redirect based on user role
+      let redirectPath = '/dashboard';
+      
+      if (user.role === 'admin' || user.role === 'super_admin') {
+        redirectPath = '/admin/dashboard';
+      } else if (user.role === 'clinic_admin') {
+        redirectPath = '/admin/dashboard';
+      } else if (user.role === 'coach') {
+        redirectPath = '/coach/dashboard';
+      } else if (user.role === 'client') {
+        redirectPath = '/client';
+      }
+      
+      console.log('Already authenticated, redirecting to:', redirectPath);
+      navigate(redirectPath, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
   
   const handleTabChange = (value: string) => {
     if (value === 'signup') {

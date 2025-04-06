@@ -7,9 +7,17 @@ import { toast } from 'sonner';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { hasRole, isLoading, user } = useAuth();
+  const { hasRole, isLoading, user, isAuthenticated } = useAuth();
   
   useEffect(() => {
+    // First check if user is authenticated
+    if (!isLoading && !isAuthenticated) {
+      console.log('Not authenticated, redirecting to login');
+      navigate('/login', { replace: true });
+      return;
+    }
+    
+    // Then handle role-based redirection if user exists
     if (!isLoading && user) {
       console.log('Dashboard redirecting based on role:', user.role, 'clinicId:', user.clinicId);
       
@@ -33,7 +41,7 @@ const Dashboard = () => {
         navigate('/unauthorized', { replace: true });
       }
     }
-  }, [hasRole, isLoading, navigate, user]);
+  }, [hasRole, isLoading, navigate, user, isAuthenticated]);
 
   // Display loading state while checking auth status
   return <DashboardLoader />;
