@@ -8,6 +8,7 @@ export interface UserData {
   email: string;
   role: UserRole;
   clinicId?: string;
+  phone?: string; // Added phone as an optional property
 }
 
 export interface AuthContextType {
