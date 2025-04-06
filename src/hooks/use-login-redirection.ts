@@ -106,7 +106,6 @@ export const useLoginRedirection = () => {
       if ((isLoading || isRecovering) && !loginTimeoutReached) {
         console.log('Authentication check timeout - forcing login flow');
         setLoginTimeoutReached(true);
-        setIsLoading(false);
         setIsRecovering(false);
         setRecoveryAttempted(true);
       }
