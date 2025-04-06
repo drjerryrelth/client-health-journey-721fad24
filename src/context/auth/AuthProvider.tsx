@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '@/types';
@@ -10,9 +10,11 @@ import { useAuthMethods } from './useAuthMethods';
 import { useAuthSession } from './useAuthSession';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserData | null>(null);
-  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use React.useState instead of importing useState directly
+  // This ensures we're using the correct React instance
+  const [user, setUser] = React.useState<UserData | null>(null);
+  const [supabaseUser, setSupabaseUser] = React.useState<SupabaseUser | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   

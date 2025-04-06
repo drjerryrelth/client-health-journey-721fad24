@@ -6,6 +6,7 @@ export * from './coach-fetchers';
 export * from './coach-admin';
 export * from './coach-mutations';
 export * from './coach-service';  // Legacy service file with some methods
+export * from './coach-service-exports'; // Additional exports for backward compatibility
 
 // For backwards compatibility and migration ease
 export * as CoachService from './coach-service';
