@@ -61,9 +61,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Create a hasRoleWrapper function that takes the user from context
   const hasRoleWrapper = (roleToCheck: UserRole | UserRole[]): boolean => {
-    // The hasRole function returns a function that checks if a user has a specific role
+    // Call the higher-order function to get the role checking function
     const checkRoleFn = hasRole(roleToCheck);
-    // Call that function with the current user
+    // Then call that function with the current user
     return checkRoleFn(user);
   };
 
