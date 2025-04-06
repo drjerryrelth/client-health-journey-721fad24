@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { isDemoEmail, isDemoAdminEmail } from './utils';
+import { User } from '@supabase/supabase-js';
 
 /**
  * Check if a demo account already exists in the system
@@ -22,7 +23,7 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
       }
       
       // Check if any user has the matching email
-      const adminExists = data?.users?.some(user => 
+      const adminExists = data?.users?.some((user: User) => 
         user?.email?.toLowerCase() === email.toLowerCase()
       ) || false;
       
@@ -51,7 +52,7 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
     }
     
     // Check if any user has the matching email
-    return data?.users?.some(user => 
+    return data?.users?.some((user: User) => 
       user?.email?.toLowerCase() === email.toLowerCase()
     ) || false;
   } catch (err) {
