@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import { Navigate } from 'react-router-dom';
 import { useLoginRedirection } from '@/hooks/use-login-redirection';
-import { attemptSessionRecovery } from '@/services/auth';
+import { attemptSessionRecovery } from '@/services/auth/session-service';
 
 const Login = () => {
   const { isLoading, isAuthenticated, redirectDestination } = useLoginRedirection();
