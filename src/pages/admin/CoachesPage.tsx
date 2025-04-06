@@ -106,15 +106,15 @@ const CoachesPage = () => {
   
   const handleManualRefresh = () => {
     refresh();
+    toast.info("Refreshing coaches data...");
   };
 
   // Check if the page is being loaded for a clinic admin directly on the admin/coaches route
-  // Prevent system admin routes for clinic admins
   React.useEffect(() => {
     if (isClinicAdmin) {
-      console.log('Strict enforcement: Clinic admin accessing coaches page');
+      console.log('Strict enforcement: Clinic admin accessing coaches page with clinicId:', user?.clinicId);
     }
-  }, [isClinicAdmin]);
+  }, [isClinicAdmin, user?.clinicId]);
   
   const clinicName = user?.clinicId ? 
     (isClinicAdmin ? user.name || 'Your Clinic' : 'All Clinics') : 

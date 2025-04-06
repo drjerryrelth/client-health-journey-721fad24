@@ -68,6 +68,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         return;
       }
     }
+    
+    // Special case for verifying clinic admin access is restricted to their clinic only
+    if (user.role === 'clinic_admin' && currentPath.includes('/admin')) {
+      // Additional verification could be added here to check if accessing clinic-specific data
+      console.log('Clinic admin accessing admin route - verifying access for clinic:', user.clinicId);
+    }
   }, [location.pathname, user, isLoading, navigate]);
   
   // Show loading state

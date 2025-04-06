@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { User, LogOut, Settings, Shield, Users, LucideIcon } from "lucide-react";
+import { User, LogOut, Settings, Shield, Users, Building, LucideIcon } from "lucide-react";
 import { UserData } from "@/types/auth";
 
 interface SidebarProfileProps {
@@ -30,6 +30,12 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({
           <p className="text-sm font-medium truncate">{user.name}</p>
           <p className="text-xs text-muted-foreground truncate">
             {userRole}
+            {user.clinicId && user.role === 'clinic_admin' && (
+              <span className="flex items-center gap-1 mt-1">
+                <Building className="h-3 w-3" />
+                <span className="text-xs opacity-70">Clinic Admin</span>
+              </span>
+            )}
           </p>
         </div>
         <DropdownMenu>

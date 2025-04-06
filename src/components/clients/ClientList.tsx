@@ -73,6 +73,11 @@ const ClientList = ({ clinicId }: ClientListProps) => {
         const mappedClients = data.map(client => mapDbClientToClient(client));
         console.log(`Found ${mappedClients.length} clients for ${isClinicAdmin ? 'clinic admin' : 'system admin'}`);
         setClients(mappedClients);
+        
+        // Verify we have the expected number of clients (4 for clinic admin)
+        if (isClinicAdmin) {
+          console.log(`Clinic Admin expects 4 clients - actual count: ${mappedClients.length}`);
+        }
       }
     } catch (err: any) {
       console.error('Error fetching clients:', err);

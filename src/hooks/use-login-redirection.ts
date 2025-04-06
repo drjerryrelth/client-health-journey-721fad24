@@ -29,6 +29,13 @@ export const useLoginRedirection = () => {
         destination = '/admin/dashboard';
         roleDisplay = 'Clinic Admin';
         console.log('Redirecting to admin dashboard (clinic admin)');
+        
+        // Enhanced logging for clinic admins
+        if (user.clinicId) {
+          console.log('Clinic admin for clinic:', user.clinicId, 'Name:', user.name);
+        } else {
+          console.warn('Clinic admin without clinicId detected!');
+        }
       } else if (user.role === 'coach') {
         destination = '/coach/dashboard';
         roleDisplay = 'Coach';

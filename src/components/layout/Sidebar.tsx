@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth";
-import { BookMarked, Menu, Shield, User, Users, X } from "lucide-react";
+import { BookMarked, Menu, Shield, User, Users, Building, X } from "lucide-react";
 import SidebarNav from "./sidebar/SidebarNav";
 import SidebarProfile from "./sidebar/SidebarProfile";
 import { adminNavItems, clinicAdminNavItems } from "./sidebar/AdminNavItems";
@@ -40,7 +40,7 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
   } else if (user.role === 'clinic_admin') {
     navItems = clinicAdminNavItems; // Clinic admin gets a more limited set of navigation items
     displayRoleText = 'Clinic Admin';
-    roleIcon = Shield;
+    roleIcon = Building;
     
     // Emergency redirect if a clinic admin somehow accesses a system admin route
     // This is a critical security measure
@@ -73,6 +73,21 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
     name: user.name
   });
 
+  const handleLogout = () => {
+    // Additional logging before logout
+    console.log("User logging out:", {
+      name: user.name,
+      role: user.role,
+      clinicId: user.clinicId
+    });
+    
+    // Perform logout
+    logout();
+    
+    // Show feedback toast
+    toast.success("Logged out successfully");
+  };
+
   return (
     <div
       className={cn(
@@ -95,7 +110,7 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
       <SidebarNav items={navItems} onClose={isMobile ? onClose : undefined} />
       <SidebarProfile 
         user={user} 
-        onLogout={logout} 
+        onLogout={handleLogout} 
         userRole={displayRoleText}
         roleIcon={roleIcon}
       />

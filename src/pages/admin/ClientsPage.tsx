@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ClientList from '@/components/clients/ClientList';
 import CoachClientList from '@/components/clients/CoachClientList';
@@ -11,6 +11,7 @@ import { useCoachActions } from '@/hooks/use-coach-actions';
 import { useSearchParams } from 'react-router-dom';
 import { AddClientDialog } from '@/components/clients/add-client';
 import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const ClientsPage = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const ClientsPage = () => {
   const action = searchParams.get('action');
   const isCoach = hasRole('coach');
   const isClinicAdmin = user?.role === 'clinic_admin';
+  const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const { isLoading } = useCoachActions();
   
   // State to control dialog visibility
@@ -30,7 +32,9 @@ const ClientsPage = () => {
       toast.error("Missing clinic information. Please contact support.");
       navigate('/unauthorized', { replace: true });
     }
-  }, [isClinicAdmin, user?.clinicId, navigate]);
+    
+    console.log('ClientsPage - User role:', user?.role, 'Clinic ID:', user?.clinicId);
+  }, [isClinicAdmin, user?.clinicId, navigate, user?.role]);
   
   // Handle opening the dialog directly
   const handleAddClientClick = () => {
@@ -59,6 +63,17 @@ const ClientsPage = () => {
           Add Client
         </Button>
       </div>
+      
+      {isClinicAdmin && (
+        <Alert className="mb-6 bg-primary-50 border-primary-200">
+          <AlertCircle className="h-4 w-4 text-primary" />
+          <AlertTitle>Clinic Admin View</AlertTitle>
+          <AlertDescription>
+            You are viewing all clients for {user?.name || 'your clinic'}. 
+            This includes clients assigned to all coaches in your clinic.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <Card>
         <CardHeader>
