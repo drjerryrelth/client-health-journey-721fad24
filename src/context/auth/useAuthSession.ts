@@ -236,17 +236,17 @@ export const useAuthSession = ({
     let isMounted = true;
     
     try {
-      console.log('Checking initial session');
-      console.log('Setting up auth listener');
+      console.log('Setting up auth system');
+      setIsLoading(true);
       
       // Add a timeout to prevent infinite loading
       const timeoutPromise = new Promise<{data: null, error: Error}>((_, reject) => 
         setTimeout(() => reject(new Error('Session check timeout')), 10000)
       );
       
-      // Set up auth state listener first
+      // Set up auth state listener first - this is crucial for capturing all auth events
       const { data: authListener } = setupAuthListener((event, session) => {
-        console.log('Auth state changed:', event);
+        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
         
         if (!isMounted) return;
         
@@ -260,11 +260,13 @@ export const useAuthSession = ({
             
             // Pass email to handle demo admin case
             await fetchAndSetUserProfile(session.user.id, session.user.email);
+            setIsLoading(false);
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           setUser(null);
           setSupabaseUser(null);
+          setIsLoading(false);
           navigate('/login');
         } else if (event === 'USER_UPDATED' && session?.user) {
           console.log('User updated');
@@ -276,6 +278,7 @@ export const useAuthSession = ({
             
             // Pass email to handle demo admin case
             await fetchAndSetUserProfile(session.user.id, session.user.email);
+            setIsLoading(false);
           }, 0);
         } else if (event === 'INITIAL_SESSION' && session?.user) {
           console.log('Initial session found');
@@ -287,6 +290,7 @@ export const useAuthSession = ({
             
             // Pass email to handle demo admin case
             await fetchAndSetUserProfile(session.user.id, session.user.email);
+            setIsLoading(false);
           }, 0);
         }
       });
@@ -302,14 +306,16 @@ export const useAuthSession = ({
         
         // If we have a session with a user
         if (sessionResult.data?.session?.user) {
-          console.log('Session found, user authenticated');
+          console.log('Session found during app initialization, user authenticated');
           const sessionUser = sessionResult.data.session.user;
           setSupabaseUser(sessionUser);
           
           // Get the user profile - pass email to handle demo admin case
           await fetchAndSetUserProfile(sessionUser.id, sessionUser.email);
         } else {
-          console.log('No active session found');
+          console.log('No active session found during initialization');
+          // Ensure loading is set to false when no session is found
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('Error checking auth session:', error);
@@ -320,10 +326,9 @@ export const useAuthSession = ({
           description: 'There was an error checking your authentication status.',
           variant: 'destructive',
         });
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        
+        // Ensure loading is set to false even when there's an error
+        setIsLoading(false);
       }
       
       return () => {
@@ -333,8 +338,10 @@ export const useAuthSession = ({
         }
       };
     } catch (error) {
-      setIsLoading(false);
-      console.error('Setup auth error:', error);
+      if (isMounted) {
+        setIsLoading(false);
+        console.error('Setup auth error:', error);
+      }
     }
   }, [setUser, setSupabaseUser, setIsLoading, toast, navigate, fetchAndSetUserProfile]);
 

@@ -18,6 +18,7 @@ export async function logoutUser() {
       timeoutPromise.then(() => {
         console.warn('Logout request timed out, forcing client-side logout');
         // Force client-side logout regardless
+        localStorage.removeItem('sb-bgnoaxdomwkwvgcwccry-auth-token');
         return { error: null };
       }),
     ]);
@@ -26,6 +27,7 @@ export async function logoutUser() {
   } catch (error) {
     console.error('Error during logout:', error);
     // Even if there's an error, we want to clear the local session
+    localStorage.removeItem('sb-bgnoaxdomwkwvgcwccry-auth-token');
     return { error };
   }
 }
@@ -56,4 +58,26 @@ export async function getCurrentSession() {
 export function setupAuthListener(callback: (event: string, session: any) => void) {
   console.log('Setting up auth listener');
   return supabase.auth.onAuthStateChange(callback);
+}
+
+// New function to attempt session recovery
+export async function attemptSessionRecovery() {
+  try {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.error('Session recovery failed:', error.message);
+      return { recovered: false, error };
+    }
+    
+    if (data.session) {
+      console.log('Session successfully recovered');
+      return { recovered: true, session: data.session };
+    } else {
+      console.log('No session to recover');
+      return { recovered: false, error: null };
+    }
+  } catch (e) {
+    console.error('Exception during session recovery:', e);
+    return { recovered: false, error: e };
+  }
 }
