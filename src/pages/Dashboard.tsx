@@ -19,6 +19,7 @@ const Dashboard = () => {
         navigate('/admin/dashboard', { replace: true });
       } else if (user.role === 'clinic_admin') {
         console.log('Redirecting to admin dashboard (clinic admin)');
+        // Make sure we're directing clinic admins to their proper dashboard
         navigate('/admin/dashboard', { replace: true }); 
       } else if (user.role === 'coach') {
         console.log('Redirecting to coach dashboard');

@@ -13,11 +13,13 @@ const Unauthorized = () => {
     // Redirect based on user role
     if (user) {
       if (user.role === 'admin' || user.role === 'super_admin') {
-        navigate('/dashboard');
+        navigate('/admin/dashboard');
+      } else if (user.role === 'clinic_admin') {
+        navigate('/admin/dashboard'); // Clinic admins should go to admin dashboard
       } else if (user.role === 'coach') {
-        navigate('/coach-dashboard');
+        navigate('/coach/dashboard');
       } else if (user.role === 'client') {
-        navigate('/client-dashboard');
+        navigate('/client');
       } else {
         navigate(-1); // Fall back to previous page if role unknown
       }
