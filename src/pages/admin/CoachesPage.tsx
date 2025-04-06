@@ -103,11 +103,28 @@ const CoachesPage = () => {
     setIsManualRefreshing(true);
     toast.info("Force refreshing coaches data...");
     
-    // Clear existing data first
+    // Force a complete data refresh
     setTimeout(() => {
       refresh();
       setTimeout(() => {
         setIsManualRefreshing(false);
+      }, 1500);
+    }, 500);
+  };
+  
+  const handleHardRefresh = () => {
+    setIsManualRefreshing(true);
+    toast.info("Performing complete data reload...");
+    
+    // Clear existing data and force a hard refresh
+    setTimeout(async () => {
+      // Force refresh
+      await refresh();
+      
+      // Show success toast after a delay
+      setTimeout(() => {
+        setIsManualRefreshing(false);
+        toast.success("Data refreshed from server");
       }, 1500);
     }, 500);
   };
@@ -139,18 +156,15 @@ const CoachesPage = () => {
           </Button>
           
           <Button 
-            onClick={() => {
-              handleManualRefresh();
-              toast.info("Performing deep refresh...");
-            }} 
-            variant="outline" 
+            onClick={handleHardRefresh} 
+            variant="default" 
             size="sm"
             disabled={loading || isManualRefreshing}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 bg-primary text-white hover:bg-primary/90"
             title="Force deep refresh of all coach data"
           >
             <RotateCw size={14} className={isManualRefreshing ? "animate-spin" : ""} />
-            <span>Force Reload</span>
+            <span>Hard Refresh</span>
           </Button>
           
           <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center gap-2">

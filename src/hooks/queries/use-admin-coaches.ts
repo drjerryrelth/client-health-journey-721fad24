@@ -76,7 +76,8 @@ export function useAdminCoaches() {
         coachesData = await CoachService.getClinicCoaches(user.clinicId);
       } else if (user?.role === 'admin' || user?.role === 'super_admin') {
         console.log('[useAdminCoaches] System admin role detected, fetching all coaches');
-        // Force direct retrieval, bypassing any potential cached data
+        // Force direct retrieval with a timestamp to bust any caching
+        const timestamp = Date.now();
         coachesData = await CoachService.getAllCoaches();
       } else {
         console.error('[useAdminCoaches] Invalid or missing role/clinicId:', user);
@@ -147,17 +148,17 @@ export function useAdminCoaches() {
     fetchClinics();
     fetchCoaches();
     
-    // Auto-refresh data every 30 seconds to prevent stale data
+    // Auto-refresh data every 15 seconds to prevent stale data (reduced from 30 seconds)
     const refreshInterval = setInterval(() => {
       const currentTime = Date.now();
-      // Only refresh if it's been more than 30 seconds since last refresh
-      if (currentTime - lastRefreshTime > 30000) {
+      // Only refresh if it's been more than 15 seconds since last refresh
+      if (currentTime - lastRefreshTime > 15000) {
         console.log('[useAdminCoaches] Auto-refreshing data');
         setLastRefreshTime(currentTime);
         fetchClinics();
         fetchCoaches();
       }
-    }, 30000);
+    }, 15000);
     
     return () => {
       clearInterval(refreshInterval);

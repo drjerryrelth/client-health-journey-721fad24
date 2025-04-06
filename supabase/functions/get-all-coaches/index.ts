@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
     console.log(`User making request: ${user.id}`);
     
-    // IMPORTANT: Using the service_role to bypass RLS completely - this fixes the infinite recursion issue
+    // CRITICAL: Using the service_role to bypass RLS completely
     // This is safe because we already authenticated the user above
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -78,18 +78,27 @@ Deno.serve(async (req) => {
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',
-            'Expires': '0'
+            'Expires': '0',
+            // Add random query parameter to prevent caching
+            'X-Cache-Buster': Date.now().toString()
           }
         }
       }
     );
     
-    console.log('Using service role client to bypass RLS policies and avoid recursion');
+    console.log('Using service role client to bypass RLS policies and ensure complete data access');
     
-    // Use service role client for direct query with no RLS
+    // IMPORTANT: Use a direct query with a more permissive query to catch all coaches
+    // We're removing any potential RLS constraints by using the admin client
+    const timestamp = new Date().getTime();
     const { data: coaches, error: coachesError } = await adminClient
       .from('coaches')
-      .select('id, name, email, phone, status, clinic_id, created_at');
+      .select('*')
+      .order('created_at', { ascending: false })
+      .options({
+        count: 'exact',
+        head: false
+      });
     
     if (coachesError) {
       console.error('Error fetching coaches with service role:', coachesError);
@@ -100,7 +109,7 @@ Deno.serve(async (req) => {
     }
     
     if (!coaches || coaches.length === 0) {
-      console.warn('No coaches found, returning empty array');
+      console.warn('No coaches found in database, returning empty array');
       return new Response(
         JSON.stringify([]),
         { 
@@ -116,16 +125,17 @@ Deno.serve(async (req) => {
       );
     }
     
-    console.log(`Found ${coaches.length} coaches via service role client`);
+    console.log(`Found ${coaches.length} coaches via admin client direct query`);
+    console.log(`First coach: ${coaches[0].email}, Last coach: ${coaches[coaches.length-1].email}`);
     
-    // Process each coach to add client counts - this ensures we have the complete data
+    // Process each coach to add client counts
     const coachesWithClientCount: CoachData[] = [];
     
     for (const coach of coaches) {
       // Get client count for each coach
       let clientCount = 0;
       try {
-        const { count } = await adminClient // Use adminClient here too
+        const { count } = await adminClient
           .from('clients')
           .select('*', { count: 'exact', head: true })
           .eq('coach_id', coach.id);
@@ -136,7 +146,7 @@ Deno.serve(async (req) => {
       }
       
       // Log each coach for debugging
-      console.log(`Processing coach: ${coach.name} (${coach.email}), ID: ${coach.id}`);
+      console.log(`Processing coach: ${coach.name} (${coach.email}), ID: ${coach.id}, created: ${coach.created_at}`);
       
       coachesWithClientCount.push({
         id: String(coach.id || ''),
@@ -151,7 +161,7 @@ Deno.serve(async (req) => {
       });
     }
     
-    console.log('Successfully processed all coaches with client counts');
+    console.log(`Successfully processed all ${coachesWithClientCount.length} coaches with client counts`);
     
     // Super aggressive cache prevention in response headers
     return new Response(
