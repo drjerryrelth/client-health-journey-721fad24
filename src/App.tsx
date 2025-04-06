@@ -23,18 +23,18 @@ import { AdminRoutes, CoachRoutes, ClientRoutes } from "./components/routes";
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 
-// Create a function component for the app content to use React hooks properly
-const App = () => {
-  // Move queryClient inside the component
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        retry: 1,
-      },
+// Create a client outside of the component
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
     },
-  });
+  },
+});
 
+// App component - simplified to avoid hooks outside of React lifecycle
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
