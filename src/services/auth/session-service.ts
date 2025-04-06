@@ -8,7 +8,7 @@ export async function logoutUser() {
   const logoutPromise = supabase.auth.signOut();
   
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Logout timeout')), 5000);
+    setTimeout(() => reject(new Error('Logout timeout')), 20000); // Increased from 5000 to 20000ms
   });
   
   try {
@@ -37,7 +37,7 @@ export async function getCurrentSession() {
   const sessionPromise = supabase.auth.getSession();
   
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Session check timeout')), 5000);
+    setTimeout(() => reject(new Error('Session check timeout')), 20000); // Increased from 5000 to 20000ms
   });
   
   try {
@@ -60,12 +60,28 @@ export function setupAuthListener(callback: (event: string, session: any) => voi
   return supabase.auth.onAuthStateChange(callback);
 }
 
-// New function to attempt session recovery
+// Enhanced session recovery with better error handling and logging
 export async function attemptSessionRecovery() {
+  console.log('Attempting to recover session...');
   try {
+    // First check if we already have a valid session
+    const currentSession = await supabase.auth.getSession();
+    if (currentSession.data?.session) {
+      console.log('Valid session already exists, no recovery needed');
+      return { recovered: true, session: currentSession.data.session };
+    }
+    
+    // If no valid session, try to refresh
+    console.log('No valid session found, attempting refresh');
     const { data, error } = await supabase.auth.refreshSession();
+    
     if (error) {
       console.error('Session recovery failed:', error.message);
+      // Clean up any potential stale tokens
+      if (error.message.includes('token is expired')) {
+        console.log('Token expired, clearing local storage');
+        localStorage.removeItem('sb-bgnoaxdomwkwvgcwccry-auth-token');
+      }
       return { recovered: false, error };
     }
     
