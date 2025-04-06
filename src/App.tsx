@@ -23,32 +23,7 @@ import { AdminRoutes, CoachRoutes, ClientRoutes } from "./components/routes";
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 
-// Main App component
-const App = () => {
-  // Create queryClient with useState to ensure it's stable across renders
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        retry: 1,
-      },
-    },
-  }));
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <ThemeProvider>
-            <AppContent />
-          </ThemeProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
-  );
-};
-
-// Separate component for app content
+// Create a component for the app content that uses hooks
 const AppContent = () => {
   useEffect(() => {
     initializeDemoRelationships()
@@ -111,6 +86,31 @@ const AppContent = () => {
         </Routes>
       </ClinicThemeProvider>
     </TooltipProvider>
+  );
+};
+
+// Main App component
+const App = () => {
+  // Create queryClient with useState to ensure it's stable across renders
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: 1,
+      },
+    },
+  }));
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemeProvider>
+            <AppContent />
+          </ThemeProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
