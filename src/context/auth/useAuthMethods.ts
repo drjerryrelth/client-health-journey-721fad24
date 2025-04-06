@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
@@ -101,6 +100,7 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     
     // Get the actual user role for clarity
     const actualRole = user.role;
+    console.log('Actual user role:', actualRole);
     
     // Determine role types for strict checking
     const isSuperAdmin = actualRole === 'super_admin';
@@ -114,36 +114,34 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     // Convert required role to array for easier checking
     const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     
-    // CRITICAL SECURITY ENFORCEMENT - Strict role checking
-    
-    // System admin only routes - clinic_admin can NEVER access these
-    if (requiredRoles.includes('admin') && !requiredRoles.includes('clinic_admin')) {
-      console.log('System admin check:', isSystemAdmin || isSuperAdmin);
-      return isSystemAdmin || isSuperAdmin;
+    // CRITICAL SECURITY FIX: Super admins and system admins should have access to everything
+    if (isSuperAdmin || isSystemAdmin) {
+      console.log('User is super_admin or admin, granting access to:', requiredRoles);
+      return true;
     }
     
-    // Routes that require clinic admin role - both clinic admins and system admins can access
-    if (requiredRoles.includes('clinic_admin')) {
-      console.log('Clinic admin check:', isClinicAdmin || isSystemAdmin || isSuperAdmin);
-      return isClinicAdmin || isSystemAdmin || isSuperAdmin;
+    // For other roles, check if the user's role is in the required roles
+    if (requiredRoles.includes(actualRole)) {
+      console.log(`User has required role: ${actualRole}`);
+      return true;
     }
     
-    // Coach routes
-    if (requiredRoles.includes('coach')) {
-      console.log('Coach check:', isCoach || isSystemAdmin || isSuperAdmin);
-      return isCoach || isSystemAdmin || isSuperAdmin;
+    // Special case: if clinic_admin is required and user is clinic_admin, grant access
+    if (requiredRoles.includes('clinic_admin') && isClinicAdmin) {
+      console.log('User is clinic_admin, granting access to clinic_admin resources');
+      return true;
     }
     
-    // Client routes
-    if (requiredRoles.includes('client')) {
-      console.log('Client check:', isClient || isSystemAdmin || isSuperAdmin);
-      return isClient || isSystemAdmin || isSuperAdmin;
+    // Special case: if coach is required and user is coach, grant access
+    if (requiredRoles.includes('coach') && isCoach) {
+      console.log('User is coach, granting access to coach resources');
+      return true;
     }
     
-    // Super admin specific functions
-    if (requiredRoles.includes('super_admin')) {
-      console.log('Super admin check:', isSuperAdmin);
-      return isSuperAdmin;
+    // Special case: if client is required and user is client, grant access
+    if (requiredRoles.includes('client') && isClient) {
+      console.log('User is client, granting access to client resources');
+      return true;
     }
     
     // No specific role check passed

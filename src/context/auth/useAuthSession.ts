@@ -7,6 +7,7 @@ import {
   getCurrentSession,
   setupAuthListener 
 } from '@/services/auth';
+import { isDemoAdminEmail } from '@/services/auth/demo/utils';
 
 type UseAuthSessionProps = {
   setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
@@ -24,8 +25,22 @@ export const useAuthSession = ({
   navigate
 }: UseAuthSessionProps) => {
   
-  const fetchAndSetUserProfile = useCallback(async (userId: string) => {
+  const fetchAndSetUserProfile = useCallback(async (userId: string, userEmail?: string) => {
     try {
+      // Special case for demo admin
+      if (userEmail && isDemoAdminEmail(userEmail)) {
+        console.log('CRITICAL: Demo admin detected in fetchAndSetUserProfile, ensuring admin role');
+        // For demo admin, force role to admin regardless of what's in the database
+        setUser({
+          id: userId,
+          name: 'Admin User',
+          email: userEmail,
+          role: 'admin',
+          clinicId: null // Admin has no clinic
+        });
+        return;
+      }
+      
       const userData = await fetchUserProfile(userId);
       
       if (userData) {
@@ -74,7 +89,8 @@ export const useAuthSession = ({
           setTimeout(async () => {
             if (!isMounted) return;
             
-            await fetchAndSetUserProfile(session.user.id);
+            // Pass email to handle demo admin case
+            await fetchAndSetUserProfile(session.user.id, session.user.email);
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
@@ -89,7 +105,8 @@ export const useAuthSession = ({
           setTimeout(async () => {
             if (!isMounted) return;
             
-            await fetchAndSetUserProfile(session.user.id);
+            // Pass email to handle demo admin case
+            await fetchAndSetUserProfile(session.user.id, session.user.email);
           }, 0);
         }
       });
@@ -109,8 +126,8 @@ export const useAuthSession = ({
           const sessionUser = sessionResult.data.session.user;
           setSupabaseUser(sessionUser);
           
-          // Get the user profile
-          await fetchAndSetUserProfile(sessionUser.id);
+          // Get the user profile - pass email to handle demo admin case
+          await fetchAndSetUserProfile(sessionUser.id, sessionUser.email);
         } else {
           console.log('No active session found');
         }

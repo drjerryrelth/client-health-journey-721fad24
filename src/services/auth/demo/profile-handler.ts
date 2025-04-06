@@ -5,7 +5,7 @@ import { isDemoAdminEmail } from './utils';
 
 // Helper function to ensure demo profile exists with correct role based on email
 export async function ensureDemoProfileExists(userId: string, email: string) {
-  console.log('Ensuring demo profile exists for user:', userId);
+  console.log('Ensuring demo profile exists for user:', userId, 'email:', email);
   
   // Determine role based on email - critical for correct role assignment
   let role = 'client'; // default
@@ -15,7 +15,7 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
   if (isDemoAdminEmail(email)) {
     role = 'admin';
     fullName = 'Admin User';
-    console.log('This is the demo admin email - ensuring admin role is applied WITHOUT clinic ID');
+    console.log('CRITICAL: This is the demo admin email - ensuring admin role is applied WITHOUT clinic ID');
     // Explicitly set clinicId to null for admin demo
     clinicId = null;
   } else if (email === demoEmails.coach) {
@@ -31,59 +31,54 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
   try {
     // First, specifically check if this is a demo admin - higher priority check
     if (isDemoAdminEmail(email)) {
-      console.log('Critical path: Verifying admin demo profile setup');
+      console.log('CRITICAL PATH: Verifying admin demo profile setup');
       
-      // For admin demos, always ensure the profile exists with admin role and no clinic_id
+      // Check if profile exists
       const { data: adminProfile, error: adminCheckError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
-        
+      
       if (adminCheckError || !adminProfile) {
-        console.log('Admin demo profile not found, creating one');
+        console.log('Admin demo profile not found, creating one with role:', role);
         
-        try {
-          // Create admin profile
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: userId,
-              full_name: 'Admin User',
-              email: email,
-              role: 'admin',
-              clinic_id: null
-            });
-            
-          if (insertError) {
-            console.error('Error creating admin demo profile:', insertError);
-          } else {
-            console.log('Admin demo profile created successfully');
-          }
-        } catch (err) {
-          console.error('Unexpected error creating admin profile:', err);
+        // Create admin profile
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            full_name: 'Admin User',
+            email: email,
+            role: 'admin',
+            clinic_id: null
+          });
+          
+        if (insertError) {
+          console.error('Error creating admin demo profile:', insertError);
+        } else {
+          console.log('Admin demo profile created successfully');
         }
       } else {
-        // Ensure admin profile has the correct role and NO clinic_id
+        console.log('Admin profile found:', adminProfile);
+        
+        // CRITICAL: Ensure admin profile has the correct role and NO clinic_id
         if (adminProfile.role !== 'admin' || adminProfile.clinic_id !== null) {
           console.log('Updating admin demo profile to ensure correct role and no clinic ID');
           
-          try {
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ 
-                role: 'admin', 
-                clinic_id: null 
-              })
-              .eq('id', userId);
-              
-            if (updateError) {
-              console.error('Error updating admin demo profile:', updateError);
-            } else {
-              console.log('Admin demo profile updated successfully');
-            }
-          } catch (err) {
-            console.error('Unexpected error updating admin profile:', err);
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ 
+              role: 'admin', 
+              clinic_id: null,
+              full_name: 'Admin User'
+            })
+            .eq('id', userId);
+            
+          if (updateError) {
+            console.error('Error updating admin demo profile:', updateError);
+          } else {
+            console.log('Admin demo profile updated successfully');
           }
         }
       }
@@ -102,50 +97,42 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
     if (fetchError || !profile) {
       console.log('Demo profile not found, creating one with role:', role);
       
-      try {
-        // Create profile if it doesn't exist
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: userId,
-            full_name: fullName,
-            email: email,
-            role: role,
-            clinic_id: clinicId,
-          });
-        
-        if (insertError) {
-          console.error('Error creating demo profile:', insertError);
-          console.log('This may be due to RLS policies. The app will continue with in-memory profile data.');
-        } else {
-          console.log('Demo profile created successfully with role:', role);
-        }
-      } catch (err) {
-        console.error('Unexpected error creating profile:', err);
+      // Create profile if it doesn't exist
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          full_name: fullName,
+          email: email,
+          role: role,
+          clinic_id: clinicId,
+        });
+      
+      if (insertError) {
+        console.error('Error creating demo profile:', insertError);
+        console.log('This may be due to RLS policies. The app will continue with in-memory profile data.');
+      } else {
+        console.log('Demo profile created successfully with role:', role);
       }
     } else {
       // ALWAYS update existing profile to ensure role matches the email 
       // This is critical - we want to force the role to match the predefined demo emails
       console.log(`Updating profile role from ${profile.role} to ${role} to match demo email`);
       
-      try {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            role: role, 
-            full_name: fullName,
-            clinic_id: clinicId // Important: ensure admin demo has no clinic_id
-          })
-          .eq('id', userId);
-        
-        if (updateError) {
-          console.error('Error updating demo profile:', updateError);
-          console.log('This may be due to RLS policies. The app will continue with in-memory profile data.');
-        } else {
-          console.log('Demo profile updated successfully with role:', role);
-        }
-      } catch (err) {
-        console.error('Unexpected error updating profile:', err);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          role: role, 
+          full_name: fullName,
+          clinic_id: clinicId // Important: ensure admin demo has no clinic_id
+        })
+        .eq('id', userId);
+      
+      if (updateError) {
+        console.error('Error updating demo profile:', updateError);
+        console.log('This may be due to RLS policies. The app will continue with in-memory profile data.');
+      } else {
+        console.log('Demo profile updated successfully with role:', role);
       }
     }
     
