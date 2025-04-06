@@ -1,9 +1,10 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider } from "@/context/auth";
 import { useEffect } from "react";
 import { initializeDemoRelationships } from "./services/demo-data-initializer";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -22,9 +23,9 @@ import { AdminRoutes, CoachRoutes, ClientRoutes } from "./components/routes";
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 
-// Create a function component for the app content to use React hooks properly
+// Main App component
 const App = () => {
-  // Move queryClient inside the component
+  // Create queryClient inside the component
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
