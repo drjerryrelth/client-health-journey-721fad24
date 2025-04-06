@@ -22,16 +22,21 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
     
     console.log('[Coach Service] Authentication successful, user ID:', session.user.id);
     
+    // Convert clinicId to clinic_id for the database
+    const dbCoachData = {
+      coach_name: coach.name,
+      coach_email: coach.email,
+      coach_phone: coach.phone,
+      coach_status: coach.status,
+      coach_clinic_id: coach.clinicId // Will be mapped to clinic_id in the RPC function
+    };
+    
+    console.log('[Coach Service] Prepared data for RPC call:', dbCoachData);
+    
     // Add timeout to prevent hanging
     const coachPromise = supabase.rpc(
       'add_coach', 
-      {
-        coach_name: coach.name,
-        coach_email: coach.email,
-        coach_phone: coach.phone,
-        coach_status: coach.status,
-        coach_clinic_id: coach.clinicId
-      }
+      dbCoachData
     );
     
     const timeoutPromise = new Promise((_, reject) => {
@@ -79,7 +84,7 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
       email: responseData.email,
       phone: responseData.phone,
       status: responseData.status as 'active' | 'inactive',
-      clinicId: responseData.clinic_id,
+      clinicId: responseData.clinic_id, // Map clinic_id back to clinicId for our frontend
       clients: 0
     };
     
@@ -124,7 +129,7 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
         coach_email: coach.email,
         coach_phone: coach.phone,
         coach_status: coach.status,
-        coach_clinic_id: coach.clinicId
+        coach_clinic_id: coach.clinicId // Will be mapped to clinic_id in the RPC function
       }
     );
     
@@ -158,7 +163,7 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       email: responseData.email,
       phone: responseData.phone,
       status: responseData.status as 'active' | 'inactive',
-      clinicId: responseData.clinic_id,
+      clinicId: responseData.clinic_id, // Map clinic_id back to clinicId for our frontend
       clients: responseData.client_count || 0
     };
     

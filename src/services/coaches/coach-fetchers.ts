@@ -1,130 +1,124 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Coach } from './types';
 import { toast } from 'sonner';
 import { checkAuthentication } from '../clinics/auth-helper';
-import { Coach } from './types';
-import { getMockCoaches } from './mock-data';
 
 /**
- * Fetches coaches for a specific clinic
+ * Gets all coaches for system administrators
  */
-export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
+export async function getAllCoachesForAdmin(): Promise<Coach[]> {
   try {
-    console.log('[CoachService] Fetching coaches for clinic:', clinicId);
+    console.log("[Coach Service] Fetching all coaches for admin");
     
-    if (!clinicId) {
-      console.error('[CoachService] Missing clinic ID');
-      throw new Error('Clinic ID is required to fetch coaches');
-    }
-    
-    // Check authentication before proceeding
+    // Verify user is authenticated
     const session = await checkAuthentication();
     if (!session) {
-      console.error('[CoachService] User not authenticated');
-      throw new Error('Authentication required to fetch coaches');
-    }
-    
-    console.log('[CoachService] Authentication verified, user:', session.user.id);
-    
-    // Use RPC call to bypass RLS issues
-    const { data, error } = await supabase.rpc(
-      'get_clinic_coaches', 
-      { clinic_id_param: clinicId }
-    );
-
-    if (error) {
-      console.error('[CoachService] Error fetching coaches:', error);
-      throw error;
-    }
-    
-    console.log('[CoachService] Fetched coaches data from RPC:', data);
-    
-    if (!data) {
-      console.error('[CoachService] No data returned');
+      console.error("[Coach Service] User is not authenticated");
+      toast.error('You must be logged in to view coaches');
       return [];
     }
     
-    // Transform and return the coaches data using type assertions
-    return data.map(coach => {
-      // Skip null coaches
-      if (!coach) return null;
-      
-      // Access properties safely
-      const coachObj = coach as any;
-      return {
-        id: String(coachObj.id || ''),
-        name: String(coachObj.name || ''),
-        email: String(coachObj.email || ''),
-        phone: coachObj.phone || null,
-        status: ((coachObj.status === 'active' || coachObj.status === 'inactive') 
-          ? coachObj.status as 'active' | 'inactive' 
-          : 'inactive') as 'active' | 'inactive',
-        clinicId: String(coachObj.clinic_id || ''),
-        clients: Number(coachObj.client_count || 0)
-      };
-    }).filter(Boolean);
-  } catch (error) {
-    console.error('[CoachService] Error fetching clinic coaches:', error);
-    toast.error('Failed to fetch coaches data. Please try again.');
-    // Return empty array as fallback
+    console.log("[Coach Service] Making request to edge function");
+    
+    // Use the edge function to fetch all coaches
+    const { data, error } = await supabase.functions.invoke('get-all-coaches');
+    
+    if (error) {
+      console.error("[Coach Service] Edge function error:", error);
+      toast.error(`Failed to fetch coaches: ${error.message}`);
+      return [];
+    }
+    
+    if (!data || !Array.isArray(data)) {
+      console.error("[Coach Service] Invalid response format:", data);
+      toast.error('Failed to fetch coaches: Invalid response format');
+      return [];
+    }
+    
+    console.log(`[Coach Service] Successfully fetched ${data.length} coaches`);
+    
+    // Map database fields to frontend model
+    return data.map((coach: any) => ({
+      id: coach.id,
+      name: coach.name,
+      email: coach.email,
+      phone: coach.phone,
+      status: coach.status as 'active' | 'inactive',
+      clinicId: coach.clinic_id, // Map clinic_id to clinicId
+      clients: coach.client_count || 0
+    }));
+  } catch (error: any) {
+    console.error("[Coach Service] Error in getAllCoachesForAdmin:", error);
+    toast.error(`Failed to fetch coaches: ${error.message || 'Unknown error'}`);
     return [];
   }
 }
 
 /**
- * Fetches all coaches across all clinics (admin only)
+ * Gets coaches for a specific clinic
  */
-export async function getAllCoaches(): Promise<Coach[]> {
+export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
   try {
-    console.log('[CoachService] Starting getAllCoaches call');
+    console.log(`[Coach Service] Fetching coaches for clinic: ${clinicId}`);
     
-    // Check authentication before proceeding
+    // Verify user is authenticated
     const session = await checkAuthentication();
     if (!session) {
-      console.error('[CoachService] User not authenticated');
-      throw new Error('Authentication required to fetch coaches');
+      console.error("[Coach Service] User is not authenticated");
+      toast.error('You must be logged in to view coaches');
+      return [];
     }
     
-    // Direct database query for admin users
-    console.log('[CoachService] Attempting to use admin_get_all_coaches RPC');
-    
-    // Use the RPC function that avoids RLS issues
-    const { data, error } = await supabase.rpc('admin_get_all_coaches');
-    
-    if (error) {
-      console.error('[CoachService] Error from RPC function:', error);
-      throw error;
-    }
-    
-    if (!Array.isArray(data)) {
-      console.error('[CoachService] Invalid data format from RPC, expected array:', data);
-      throw new Error('Invalid data format returned from server');
-    }
-    
-    console.log('[CoachService] Successfully retrieved', data.length, 'coaches via RPC');
-    
-    // Transform and return the coaches data using type assertions
-    const coaches = data.map(coach => {
-      const coachObj = coach as any;
-      return {
-        id: String(coachObj.id || ''),
-        name: String(coachObj.name || ''),
-        email: String(coachObj.email || ''),
-        phone: coachObj.phone || null,
-        status: ((coachObj.status === 'active' || coachObj.status === 'inactive') 
-          ? coachObj.status as 'active' | 'inactive' 
-          : 'inactive') as 'active' | 'inactive',
-        clinicId: String(coachObj.clinic_id || ''),
-        clients: Number(coachObj.client_count || 0)
-      };
+    // Use RPC function to get clinic coaches
+    const { data, error } = await supabase.rpc('get_clinic_coaches', {
+      clinic_id_param: clinicId
     });
     
-    console.log('[CoachService] Transformed coaches data:', coaches);
-    return coaches;
-  } catch (error) {
-    console.error('[CoachService] Error fetching all coaches:', error);
-    toast.error('Failed to fetch coaches data. Please try again.');
-    // Return empty array as fallback
-    return [];
+    if (error) {
+      console.error("[Coach Service] Error fetching clinic coaches:", error);
+      
+      // Fallback to direct query
+      console.log("[Coach Service] Falling back to direct query");
+      const fallbackResult = await supabase
+        .from('coaches')
+        .select('*')
+        .eq('clinic_id', clinicId); // Use clinic_id here, not clinicId
+        
+      if (fallbackResult.error) {
+        console.error("[Coach Service] Fallback query failed:", fallbackResult.error);
+        throw fallbackResult.error;
+      }
+      
+      // Map direct query results
+      return (fallbackResult.data || []).map(coach => ({
+        id: coach.id,
+        name: coach.name,
+        email: coach.email,
+        phone: coach.phone,
+        status: coach.status as 'active' | 'inactive',
+        clinicId: coach.clinic_id, // Map clinic_id to clinicId
+        clients: 0 // No client count available in fallback query
+      }));
+    }
+    
+    if (!data || !Array.isArray(data)) {
+      console.error("[Coach Service] Invalid RPC response format:", data);
+      return [];
+    }
+    
+    // Map JSON response to Coach objects
+    return data.map((coach: any) => ({
+      id: coach.id,
+      name: coach.name,
+      email: coach.email,
+      phone: coach.phone,
+      status: coach.status as 'active' | 'inactive',
+      clinicId: coach.clinic_id, // Map clinic_id to clinicId
+      clients: coach.client_count || 0
+    }));
+  } catch (error: any) {
+    console.error(`[Coach Service] Error in getClinicCoaches:`, error);
+    throw error;
   }
 }

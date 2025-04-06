@@ -74,7 +74,7 @@ export function useAdminCoaches() {
         try {
           coachesData = await CoachService.getClinicCoaches(user.clinicId);
           console.log('[useAdminCoaches] Successfully fetched coaches for clinic admin:', coachesData?.length || 0);
-        } catch (err) {
+        } catch (err: any) {
           console.error('[useAdminCoaches] Error fetching clinic coaches:', err);
           // Provide specific error message for clinic admins
           throw new Error(`Failed to fetch coaches for your clinic: ${err.message || 'Unknown error'}`);
@@ -104,7 +104,7 @@ export function useAdminCoaches() {
       }
       
       setLoading(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("[useAdminCoaches] Error fetching coaches:", err);
       setError("Failed to load coaches. Please try again.");
       setErrorDetails(err instanceof Error ? err.message : String(err));
