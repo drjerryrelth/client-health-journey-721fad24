@@ -6,6 +6,7 @@ import { Coach } from './types';
 import { supabase } from '@/lib/supabase';
 import { getClinicCoaches, getAllCoaches } from './coach-fetchers';
 import { addCoach, updateCoach, deleteCoach, resetCoachPassword } from './coach-crud';
+import { updateCoachStatus } from './coach-mutations';
 
 // Re-export functions to maintain API compatibility
 export { 
@@ -14,26 +15,8 @@ export {
   addCoach,
   updateCoach,
   deleteCoach,
-  resetCoachPassword
-};
-
-// Legacy implementation preserved for backward compatibility
-export const updateCoachStatus = async (coachId: string, status: 'active' | 'inactive'): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('coaches')
-      .update({ status })
-      .eq('id', coachId);
-      
-    if (error) {
-      throw error;
-    }
-    
-    return true;
-  } catch (err) {
-    console.error('Error updating coach status:', err);
-    return false;
-  }
+  resetCoachPassword,
+  updateCoachStatus
 };
 
 // Legacy implementation preserved for backward compatibility
