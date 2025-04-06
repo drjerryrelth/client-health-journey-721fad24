@@ -16,6 +16,7 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
     console.log('Demo admin email detected, checking if account exists');
     
     try {
+      // For demo admin, use a different approach - check auth users directly
       const { data, error } = await supabase.auth.admin.listUsers();
       
       if (error) {
@@ -24,22 +25,13 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
         return false;
       }
       
-      // If we can find the admin user, return true
-      if (data && data.users && Array.isArray(data.users)) {
-        const adminExists = data.users.some(user => {
-          if (user && typeof user === 'object') {
-            const userObj = user as { email?: string };
-            return userObj.email && userObj.email.toLowerCase() === email.toLowerCase();
-          }
-          return false;
-        });
-        
-        console.log('Demo admin account exists:', adminExists);
-        return adminExists;
-      }
+      // Check if any user has the matching email
+      const adminExists = data?.users?.some(user => 
+        user?.email?.toLowerCase() === email.toLowerCase()
+      ) || false;
       
-      // Default to false to ensure account creation
-      return false;
+      console.log('Demo admin account exists:', adminExists);
+      return adminExists;
     } catch (err) {
       console.error('Unexpected error checking if demo admin account exists:', err);
       // Default to false to ensure account creation
@@ -58,23 +50,10 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
       return false;
     }
     
-    // Safely handle data
-    if (data && data.users && Array.isArray(data.users)) {
-      // Check if any user has the matching email
-      return data.users.some(user => {
-        // Safely check if user is an object with an email property
-        if (user && typeof user === 'object') {
-          // Use type assertion to tell TypeScript this is an object with an email property
-          const userObj = user as { email?: string };
-          // Now check if the email exists and matches
-          return userObj.email && userObj.email.toLowerCase() === email.toLowerCase();
-        }
-        return false;
-      });
-    }
-    
-    // Default to false if data structure is unexpected
-    return false;
+    // Check if any user has the matching email
+    return data?.users?.some(user => 
+      user?.email?.toLowerCase() === email.toLowerCase()
+    ) || false;
   } catch (err) {
     console.error('Unexpected error checking if demo account exists:', err);
     // Default to false in case of unexpected errors

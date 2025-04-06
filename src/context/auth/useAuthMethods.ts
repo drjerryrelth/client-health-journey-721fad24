@@ -1,7 +1,9 @@
+
 import { useCallback } from 'react';
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
 import { loginWithEmail, signUpWithEmail, logoutUser } from '@/services/auth';
+import { isDemoAdminEmail } from '@/services/auth/demo/utils';
 
 type UseAuthMethodsProps = {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -96,6 +98,13 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     if (!user) {
       console.log('No user, access denied');
       return false;
+    }
+    
+    // Special check for demo admin email - highest priority check
+    if (user.email && isDemoAdminEmail(user.email)) {
+      console.log('SECURITY: Demo admin email detected, granting admin access');
+      // Demo admin email always has system admin privileges regardless of stored role
+      return true;
     }
     
     // Get the actual user role for clarity

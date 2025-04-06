@@ -27,7 +27,7 @@ export const useAuthSession = ({
   
   const fetchAndSetUserProfile = useCallback(async (userId: string, userEmail?: string) => {
     try {
-      // Special case for demo admin
+      // Special case for demo admin - prioritize this check
       if (userEmail && isDemoAdminEmail(userEmail)) {
         console.log('CRITICAL: Demo admin detected in fetchAndSetUserProfile, ensuring admin role');
         // For demo admin, force role to admin regardless of what's in the database
@@ -48,6 +48,20 @@ export const useAuthSession = ({
         setUser(userData);
       } else {
         console.warn('No user data found, this may cause issues with authentication');
+        
+        // If still no data, but we have a demo admin email, enforce admin role
+        if (userEmail && isDemoAdminEmail(userEmail)) {
+          console.log('Fallback: Using demo admin detection when profile fetch failed');
+          setUser({
+            id: userId,
+            name: 'Admin User',
+            email: userEmail,
+            role: 'admin',
+            clinicId: null
+          });
+          return;
+        }
+        
         toast({
           title: 'Profile Error',
           description: 'Could not retrieve your user profile. Please contact support.',
@@ -56,6 +70,20 @@ export const useAuthSession = ({
       }
     } catch (profileError) {
       console.error('Error fetching user profile:', profileError);
+      
+      // Last resort for demo admin - even in case of errors, enforce admin role
+      if (userEmail && isDemoAdminEmail(userEmail)) {
+        console.log('ERROR FALLBACK: Using demo admin detection when profile fetch failed with error');
+        setUser({
+          id: userId,
+          name: 'Admin User',
+          email: userEmail,
+          role: 'admin',
+          clinicId: null
+        });
+        return;
+      }
+      
       toast({
         title: 'Profile Error',
         description: 'An error occurred while retrieving your profile data.',

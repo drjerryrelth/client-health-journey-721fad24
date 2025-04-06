@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { DashboardStats } from '@/types/dashboard';
@@ -20,6 +21,13 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     
     console.log('[DashboardStats] Authentication verified, fetching data');
     
+    // Check if this is a demo admin first (highest priority check)
+    const userEmail = session.user.email;
+    if (userEmail && isDemoAdminEmail(userEmail)) {
+      console.log('[DashboardStats] Demo admin email detected, fetching system-wide statistics');
+      return await fetchSystemAdminStats();
+    }
+    
     // Get the user's role and clinicId for permission checks
     const { data: userData } = await supabase
       .from('profiles')
@@ -27,22 +35,10 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       .eq('id', session.user.id)
       .single();
     
-    // Check if this is a demo admin email (critical for proper role detection)
-    const userEmail = userData?.email || session.user.email;
-    const isAdminDemo = userEmail && isDemoAdminEmail(userEmail);
-    
-    // Get role from profile data or check if it's a known demo admin
-    const userRole = userData?.role || (isAdminDemo ? 'admin' : undefined);
+    const userRole = userData?.role;
     const userClinicId = userData?.clinic_id;
     
-    console.log('[DashboardStats] User role:', userRole, 'clinicId:', userClinicId, 'email:', userEmail, 'isAdminDemo:', isAdminDemo);
-    
-    // Special handling for demo admin users, prioritizing email check
-    if (isAdminDemo) {
-      console.log('[DashboardStats] This is the demo admin email - forcing admin role behavior');
-      // Continue with admin role even if profile record is missing
-      return await fetchSystemAdminStats();
-    }
+    console.log('[DashboardStats] User role:', userRole, 'clinicId:', userClinicId, 'email:', userEmail);
     
     // Different logic based on user role
     if (userRole === 'clinic_admin' && userClinicId) {
@@ -56,6 +52,12 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       console.log('[DashboardStats] System admin detected, fetching global statistics');
       return await fetchSystemAdminStats();
     } else {
+      // If role is missing but email is demo admin, use system admin stats
+      if (userEmail && isDemoAdminEmail(userEmail)) {
+        console.log('[DashboardStats] Fallback to demo admin detection, fetching system-wide statistics');
+        return await fetchSystemAdminStats();
+      }
+      
       // Invalid or unauthorized role
       console.error('[DashboardStats] User does not have valid role for dashboard access:', userRole);
       throw new Error('Unauthorized access to dashboard statistics');
