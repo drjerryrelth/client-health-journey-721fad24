@@ -42,7 +42,7 @@ export const useProgramForm = () => {
 
     try {
       setIsSubmitting(true);
-      console.log("Creating program with data:", formData);
+      console.log("Creating program with data:", {...formData, clinicId});
       
       // Convert duration string to number of days
       let durationInDays = 0;

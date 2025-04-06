@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/auth';
 
 interface AddProgramDialogProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ interface AddProgramDialogProps {
 }
 
 const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting, clinicId }: AddProgramDialogProps) => {
+  const { user } = useAuth();
   const [programType, setProgramType] = useState<'practice_naturals' | 'chirothin' | 'nutrition' | 'fitness' | 'keto' | 'custom'>('nutrition');
   const [customName, setCustomName] = useState('');
   const [programDuration, setProgramDuration] = useState('');
@@ -50,13 +52,18 @@ const AddProgramDialog = ({ isOpen, onClose, onSubmit, isSubmitting, clinicId }:
   };
 
   const handleSubmit = async () => {
+    // Use the clinicId prop or fall back to the user's clinicId
+    const effectiveClinicId = clinicId || user?.clinicId;
+    
+    console.log("Submitting program with clinicId:", effectiveClinicId);
+    
     await onSubmit({
       name: getProgramName(),
       type: programType,
       duration: programDuration,
       checkInFrequency,
       description: programDescription,
-      clinicId // Pass the clinicId to the submit handler
+      clinicId: effectiveClinicId
     });
   };
 

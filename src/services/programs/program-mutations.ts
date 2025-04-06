@@ -12,6 +12,14 @@ export async function createProgram(
   supplements: Omit<Program['supplements'][0], 'id'>[]
 ): Promise<Program> {
   try {
+    // Ensure we have a clinic ID
+    if (!program.clinicId) {
+      console.error('Missing clinic ID in createProgram');
+      throw new Error('Missing clinic ID. Cannot create program without a clinic ID.');
+    }
+    
+    console.log('Creating program with clinic ID:', program.clinicId);
+    
     // Convert program to database format
     const dbProgram = mapProgramToDbProgram(program);
     
@@ -22,8 +30,17 @@ export async function createProgram(
       .select()
       .single();
 
-    if (error) throw error;
-    if (!data) throw new Error('Failed to create program');
+    if (error) {
+      console.error('Error creating program:', error);
+      throw error;
+    }
+    
+    if (!data) {
+      console.error('Failed to create program - no data returned');
+      throw new Error('Failed to create program');
+    }
+    
+    console.log('Program created successfully:', data);
     
     // Create supplements for the program
     await createSupplements(supplements, data.id);

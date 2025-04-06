@@ -119,6 +119,7 @@ const ProgramsPage = () => {
         onClose={handleCloseDialog}
         onSubmit={handleSubmitProgram}
         isSubmitting={isSubmitting}
+        clinicId={user?.clinicId}
       />
 
       {/* Program Details Dialog */}
