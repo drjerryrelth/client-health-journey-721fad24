@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { initializeDemoRelationships } from "./services/demo-data-initializer";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ClinicThemeProvider } from "./components/theme/ClinicThemeProvider";
@@ -25,15 +25,15 @@ import Privacy from './pages/Privacy';
 
 // Main App component
 const App = () => {
-  // Create queryClient inside the component
-  const queryClient = new QueryClient({
+  // Create queryClient with useState to ensure it's stable across renders
+  const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5, // 5 minutes
         retry: 1,
       },
     },
-  });
+  }));
 
   return (
     <QueryClientProvider client={queryClient}>
