@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole, UserData } from '@/types/auth';
@@ -9,7 +10,7 @@ interface UseAuthMethodsProps {
 }
 
 export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => {
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = React.useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -24,9 +25,9 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setIsLoading, toast]);
 
-  const logout = async (): Promise<void> => {
+  const logout = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
       await supabase.auth.signOut();
@@ -36,9 +37,9 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setIsLoading, toast]);
 
-  const signUp = async (
+  const signUp = React.useCallback(async (
     email: string,
     password: string,
     userData: { full_name: string; role: string }
@@ -61,10 +62,10 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setIsLoading, toast]);
 
   // Improved hasRole function with better type safety
-  const hasRole = (role: UserRole | UserRole[]) => (user: UserData | null): boolean => {
+  const hasRole = React.useCallback((role: UserRole | UserRole[]) => (user: UserData | null): boolean => {
     if (!user) return false;
     
     // If no role requirement is specified, allow access
@@ -77,7 +78,7 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     
     // Handle single role
     return user.role === role;
-  };
+  }, []);
 
   return {
     login,

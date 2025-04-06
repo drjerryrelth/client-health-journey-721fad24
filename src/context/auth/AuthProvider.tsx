@@ -10,8 +10,7 @@ import { useAuthMethods } from './useAuthMethods';
 import { useAuthSession } from './useAuthSession';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Use React.useState instead of importing useState directly
-  // This ensures we're using the correct React instance
+  // Use React.useState explicitly
   const [user, setUser] = React.useState<UserData | null>(null);
   const [supabaseUser, setSupabaseUser] = React.useState<SupabaseUser | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
