@@ -107,13 +107,14 @@ Deno.serve(async (req) => {
         };
       }).filter(Boolean) as CoachData[]; // Remove any null entries from invalid data
 
+      // Add cache control headers to prevent caching
       return new Response(
         JSON.stringify(typedCoaches),
         { 
           headers: { 
             ...corsHeaders, 
             'Content-Type': 'application/json',
-            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Cache-Control': 'no-store, max-age=0, must-revalidate', 
             'Pragma': 'no-cache',
             'Expires': '0'
           }, 
@@ -173,6 +174,7 @@ Deno.serve(async (req) => {
         });
       }
       
+      // Ensure no caching with strong cache control headers
       return new Response(
         JSON.stringify(coachesWithClientCount),
         { 

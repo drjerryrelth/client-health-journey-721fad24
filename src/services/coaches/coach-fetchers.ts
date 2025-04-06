@@ -21,10 +21,11 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
     
     console.log('[CoachService] Authentication verified, user:', session.user.id);
     
-    // Use RPC call to bypass RLS issues
+    // Use RPC call to bypass RLS issues, with cache-busting
+    const timestamp = new Date().getTime();
     const { data, error } = await supabase.rpc(
       'get_clinic_coaches' as any, 
-      { clinic_id_param: clinicId }
+      { clinic_id_param: clinicId, _cache_buster: timestamp }
     );
 
     if (error) {
@@ -76,23 +77,30 @@ export async function getAllCoaches(): Promise<Coach[]> {
       throw new Error('Authentication required to fetch coaches');
     }
     
-    // Direct database query for admin users
-    console.log('[CoachService] Attempting to use admin_get_all_coaches RPC');
+    // Direct database query for admin users with cache-busting
+    console.log('[CoachService] Calling get-all-coaches edge function');
     
-    // Use the RPC function that avoids RLS issues
-    const { data, error } = await supabase.rpc('admin_get_all_coaches');
+    // Use the edge function with no-cache headers
+    const timestamp = new Date().getTime(); // Add timestamp to prevent caching
+    const { data, error } = await supabase.functions.invoke('get-all-coaches', {
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'X-Cache-Buster': timestamp.toString()
+      }
+    });
     
     if (error) {
-      console.error('[CoachService] Error from RPC function:', error);
+      console.error('[CoachService] Error from edge function:', error);
       throw error;
     }
     
     if (!Array.isArray(data)) {
-      console.error('[CoachService] Invalid data format from RPC, expected array:', data);
+      console.error('[CoachService] Invalid data format from edge function, expected array:', data);
       throw new Error('Invalid data format returned from server');
     }
     
-    console.log('[CoachService] Successfully retrieved', data.length, 'coaches via RPC');
+    console.log('[CoachService] Successfully retrieved', data.length, 'coaches via edge function');
     
     // Transform and return the coaches data using type assertions
     const coaches = data.map(coach => {

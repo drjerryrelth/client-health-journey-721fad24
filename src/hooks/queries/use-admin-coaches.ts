@@ -23,6 +23,7 @@ export function useAdminCoaches() {
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
   const { user } = useAuth();
 
   const fetchClinics = useCallback(async () => {
@@ -116,6 +117,7 @@ export function useAdminCoaches() {
 
   const refresh = useCallback(() => {
     setRetryCount(prev => prev + 1);
+    setLastRefreshTime(Date.now()); // Update refresh timestamp
     toast.info("Refreshing coaches data...");
     fetchClinics();
     fetchCoaches();
@@ -132,7 +134,23 @@ export function useAdminCoaches() {
     }
     fetchClinics();
     fetchCoaches();
-  }, [user?.role, user?.clinicId, fetchClinics, fetchCoaches]); // Critical to include both role and clinicId as dependencies
+    
+    // Auto-refresh data every minute to prevent stale data
+    const refreshInterval = setInterval(() => {
+      const currentTime = Date.now();
+      // Only refresh if it's been more than 60 seconds since last refresh
+      if (currentTime - lastRefreshTime > 60000) {
+        console.log('[useAdminCoaches] Auto-refreshing data');
+        setLastRefreshTime(currentTime);
+        fetchClinics();
+        fetchCoaches();
+      }
+    }, 60000);
+    
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [user?.role, user?.clinicId, fetchClinics, fetchCoaches, lastRefreshTime]); 
 
   const getClinicName = useCallback((clinicId: string) => {
     const name = clinics[clinicId] || `Unknown Clinic (${clinicId ? clinicId.slice(-4) : 'None'})`;
