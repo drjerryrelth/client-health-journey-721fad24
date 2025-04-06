@@ -91,7 +91,7 @@ const AppContent = () => {
 
 // Main App component
 const App = () => {
-  // Create queryClient with useState to ensure it's stable across renders
+  // Create queryClient using useState properly
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
