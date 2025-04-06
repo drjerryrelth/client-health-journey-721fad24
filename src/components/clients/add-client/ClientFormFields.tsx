@@ -7,6 +7,7 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import {
   Select,
@@ -161,7 +162,10 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({
         name="programId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Program</FormLabel>
+            <FormLabel>Program Template</FormLabel>
+            <FormDescription>
+              Select a program template to assign to this client
+            </FormDescription>
             <Select 
               onValueChange={field.onChange} 
               value={field.value || ""}
@@ -176,7 +180,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({
                       Loading programs...
                     </div>
                   ) : (
-                    <SelectValue placeholder="Select a program" />
+                    <SelectValue placeholder="Select a program template" />
                   )}
                 </SelectTrigger>
               </FormControl>
@@ -185,12 +189,12 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({
                 {programs && programs.length > 0 ? (
                   programs.map((program: Program) => (
                     <SelectItem key={program.id} value={program.id}>
-                      {program.name}
+                      {program.name} ({program.type}) - {program.duration} days
                     </SelectItem>
                   ))
                 ) : (
                   <SelectItem value="no-programs-available" disabled>
-                    {isProgramsLoading ? 'Loading programs...' : 'No programs available'}
+                    {isProgramsLoading ? 'Loading programs...' : 'No program templates available'}
                   </SelectItem>
                 )}
               </SelectContent>

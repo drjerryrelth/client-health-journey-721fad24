@@ -11,8 +11,8 @@ import { useCreateClientMutation } from '@/hooks/queries/use-client-queries';
 import ClientFormFields from './ClientFormFields';
 import { formSchema, AddClientFormValues } from './AddClientSchema';
 import { AddClientFormProps } from './index';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Info } from 'lucide-react';
 
 const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clinicId }) => {
   const { user } = useAuth();
@@ -101,7 +101,17 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                No programs found for your clinic. You should create programs first from the Programs page.
+                No program templates found for your clinic. You should create programs first from the Programs page.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {!isProgramsLoading && programs.length > 0 && (
+            <Alert variant="default" className="bg-blue-50 border-blue-200">
+              <Info className="h-4 w-4 text-blue-500" />
+              <AlertTitle>Program Templates Available</AlertTitle>
+              <AlertDescription>
+                {programs.length} program template{programs.length > 1 ? 's are' : ' is'} available for assignment.
               </AlertDescription>
             </Alert>
           )}
