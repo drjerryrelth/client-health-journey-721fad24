@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,7 +40,7 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
       programCategory: '',
       startDate: new Date().toISOString().split('T')[0],
       notes: '',
-      coachId: '',
+      coachId: 'none',
       weightDate: new Date().toISOString().split('T')[0],
       goals: [],
     },
@@ -70,8 +69,8 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
     
     // Process programId to handle the 'no-program' special value
     const programId = values.programId === 'no-program' ? null : values.programId || null;
-    // Process coachId to handle empty string
-    const coachId = values.coachId === '' ? null : values.coachId;
+    // Process coachId to handle the 'none' special value
+    const coachId = values.coachId === 'none' ? null : values.coachId;
     
     createClient({
       name: values.name,

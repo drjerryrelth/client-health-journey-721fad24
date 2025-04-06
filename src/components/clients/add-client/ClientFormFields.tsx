@@ -162,7 +162,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({
         )}
       />
 
-      {/* New Coach Selection Dropdown */}
+      {/* Coach Selection Dropdown - Fixed to use "none" as value instead of empty string */}
       <FormField
         control={form.control}
         name="coachId"
@@ -174,8 +174,8 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({
             </FormDescription>
             <Select 
               onValueChange={field.onChange} 
-              value={field.value || ""}
-              defaultValue={field.value || ""}
+              value={field.value || "none"}
+              defaultValue={field.value || "none"}
               disabled={isCoachesLoading}
             >
               <FormControl>
@@ -191,7 +191,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="">No coach assigned</SelectItem>
+                <SelectItem value="none">No coach assigned</SelectItem>
                 {coaches && coaches.length > 0 ? (
                   coaches.map((coach: Coach) => (
                     <SelectItem key={coach.id} value={coach.id}>
