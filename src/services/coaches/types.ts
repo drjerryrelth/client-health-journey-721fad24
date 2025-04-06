@@ -7,4 +7,5 @@ export interface Coach {
   status: 'active' | 'inactive';
   clinicId: string;
   clients: number;
+  clinicName?: string;
 }

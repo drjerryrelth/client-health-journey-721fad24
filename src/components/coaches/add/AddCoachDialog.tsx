@@ -9,9 +9,10 @@ import { CoachForm } from '@/components/coaches/CoachForm';
 import ErrorDialog from '@/components/coaches/ErrorDialog';
 import { CoachFormValues } from '@/components/coaches/schema/coach-form-schema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
+import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { useClinicQuery } from '@/hooks/use-clinics';
+import { Loader2 } from 'lucide-react';
 
 interface AddCoachDialogProps {
   open: boolean;
@@ -88,7 +89,8 @@ export const AddCoachDialog = ({
         name: values.name,
         email: values.email,
         phone: values.phone || null,
-        clinicId: effectiveClinicId
+        clinicId: effectiveClinicId,
+        clients: 0
       });
       
       console.log('[AddCoachDialog] Current auth context user:', user);
@@ -110,7 +112,7 @@ export const AddCoachDialog = ({
         phone: values.phone || null,
         status: 'active',
         clinicId: effectiveClinicId,
-        clients: 0  // Add the missing clients field with a default value of 0
+        clients: 0  // Add the clients field with a default value of 0
       });
 
       if (newCoach) {
@@ -182,7 +184,12 @@ export const AddCoachDialog = ({
                   </FormControl>
                   <SelectContent>
                     {clinicsLoading ? (
-                      <SelectItem value="loading" disabled>Loading clinics...</SelectItem>
+                      <SelectItem value="loading" disabled>
+                        <span className="flex items-center">
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading clinics...
+                        </span>
+                      </SelectItem>
                     ) : clinics && clinics.length > 0 ? (
                       clinics.map((clinic) => (
                         <SelectItem key={clinic.id} value={clinic.id}>
@@ -197,6 +204,7 @@ export const AddCoachDialog = ({
                 <FormDescription>
                   Select the clinic this coach will be assigned to
                 </FormDescription>
+                {!selectedClinicId && <FormMessage>Please select a clinic</FormMessage>}
               </FormItem>
             </div>
           )}
