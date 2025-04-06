@@ -76,7 +76,7 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
           <BookMarked className="h-6 w-6 text-primary" />
           <span className="font-semibold">Client Health Tracker™</span>
         </Link>
-        {isMobile && (a
+        {isMobile && (
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
