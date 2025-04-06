@@ -1,15 +1,18 @@
 
 export const demoEmails = {
-  admin: 'drrelth@contourlight.com',
+  // Primary demo accounts
+  admin: 'admin@example.com',
+  clinicAdmin: 'clinic@example.com',
   coach: 'coach@example.com',
   client: 'client@example.com',
-  clinicAdmin: 'clinic-admin@example.com',
-  // Demo emails with more realistic formats
-  coachAlt: 'support@practicenaturals.com', 
+  
+  // Alternative demo accounts
+  coachAlt: 'support@practicenaturals.com',
   clientAlt: 'drjerry@livingbetterhealthcare.com',
-  // Adding explicit demo email categories for better type checking
+  
+  // Lists for type checking
+  demoAdmins: ['admin@example.com'],
+  demoClinicAdmins: ['clinic@example.com'],
   demoCoaches: ['coach@example.com', 'support@practicenaturals.com'],
-  demoClients: ['client@example.com', 'drjerry@livingbetterhealthcare.com'],
-  demoAdmins: ['drrelth@contourlight.com'],
-  demoClinicAdmins: ['clinic-admin@example.com']
+  demoClients: ['client@example.com', 'drjerry@livingbetterhealthcare.com']
 };
