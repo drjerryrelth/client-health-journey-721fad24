@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { AdminUser, AdminUserFormData } from "@/types/admin";
 
@@ -8,18 +7,31 @@ export const AdminUserService = {
    */
   async getAllAdminUsers(): Promise<AdminUser[]> {
     console.log('Fetching all admin users');
-    // Use service role key through edge function to bypass RLS
-    const { data, error } = await supabase.functions.invoke('create-admin-user', {
-      body: { action: 'list' }
-    });
-    
-    if (error) {
-      console.error('Error fetching admin users:', error);
+    try {
+      // Use service role key through edge function to bypass RLS
+      const { data, error } = await supabase.functions.invoke('create-admin-user', {
+        body: { action: 'list' }
+      });
+      
+      if (error) {
+        console.error('Error fetching admin users:', error);
+        throw error;
+      }
+      
+      // Log the raw response to help debug
+      console.log('Raw admin users response:', data);
+      
+      if (!data || !Array.isArray(data)) {
+        console.warn('Invalid response format from admin users endpoint:', data);
+        return [];
+      }
+      
+      console.log('Admin users fetched:', data.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('Error in getAllAdminUsers:', error);
       throw error;
     }
-    
-    console.log('Admin users fetched:', data?.length || 0);
-    return data || [];
   },
 
   /**

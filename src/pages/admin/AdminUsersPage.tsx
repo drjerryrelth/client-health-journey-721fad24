@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,6 @@ const AdminUsersPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // Check if user role is 'super_admin' string, not UserRole type
   const isSuperAdmin = user?.role === 'super_admin';
   
   const { data: adminUsers, isLoading, isError, refetch, isFetching } = useAdminUsersQuery();
@@ -31,7 +29,15 @@ const AdminUsersPage = () => {
   const updateAdminUser = useUpdateAdminUserMutation();
 
   useEffect(() => {
+    console.log('AdminUsersPage mounted, forcing refetch of admin users');
     refetch();
+    
+    const refreshInterval = setInterval(() => {
+      console.log('Refreshing admin users list (interval)');
+      refetch();
+    }, 10000);
+    
+    return () => clearInterval(refreshInterval);
   }, [refetch]);
 
   const handleAdd = () => {
@@ -111,9 +117,19 @@ const AdminUsersPage = () => {
   };
 
   const handleManualRefresh = () => {
+    console.log('Manual refresh requested');
     refetch();
     sonnerToast.info('Refreshing admin users list...');
   };
+
+  useEffect(() => {
+    if (adminUsers) {
+      console.log('Admin users data updated:', adminUsers.length, 'users found');
+      adminUsers.forEach(user => {
+        console.log(`- User: ${user.full_name} (${user.email}) - Role: ${user.role}`);
+      });
+    }
+  }, [adminUsers]);
 
   return (
     <div className="container mx-auto py-6 space-y-6">

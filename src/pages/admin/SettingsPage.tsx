@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,13 +6,16 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/auth';
 
 const SettingsPage = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  
   const [profileForm, setProfileForm] = useState({
     companyName: 'HealthTracker Admin',
-    email: 'admin@healthtracker.com',
-    phone: '(555) 123-4567'
+    email: '',
+    phone: ''
   });
   
   const [securityForm, setSecurityForm] = useState({
@@ -28,6 +30,17 @@ const SettingsPage = () => {
     coachSignup: true,
     weeklyReports: true
   });
+  
+  useEffect(() => {
+    if (user) {
+      console.log('Setting user data in profile form:', user);
+      setProfileForm({
+        companyName: user.name || 'HealthTracker Admin',
+        email: user.email || '',
+        phone: ''  // We don't have phone in the user object, so leaving it blank
+      });
+    }
+  }, [user]);
   
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();

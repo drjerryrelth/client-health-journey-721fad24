@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminUserService } from '@/services/admin-user-service';
 import type { AdminUser, AdminUserFormData } from '@/types/admin';
@@ -10,8 +9,9 @@ export const useAdminUsersQuery = () => {
   return useQuery({
     queryKey: ['adminUsers'],
     queryFn: () => AdminUserService.getAllAdminUsers(),
-    staleTime: 1000, // Very short stale time to refresh more often
-    refetchOnWindowFocus: true
+    staleTime: 0, // Set to 0 to always refresh data
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,  // Always refetch when component mounts
   });
 };
 
