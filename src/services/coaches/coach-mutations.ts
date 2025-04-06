@@ -1,10 +1,12 @@
 
 import { addCoach, updateCoach } from './coach-crud';
-import { removeCoachAndReassignClients } from './coach-admin';
+import { removeCoachAndReassignClients, deleteCoach, resetCoachPassword } from './coach-admin';
 
 // Re-export the functions
 export { 
   addCoach, 
   updateCoach, 
-  removeCoachAndReassignClients 
+  removeCoachAndReassignClients,
+  deleteCoach,
+  resetCoachPassword
 };
