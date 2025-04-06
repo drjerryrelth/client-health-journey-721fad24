@@ -3,7 +3,7 @@ import React from 'react';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole, UserData } from '@/types/auth';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface UseAuthMethodsProps {
   setIsLoading: (value: boolean) => void;
@@ -16,17 +16,14 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       console.log('Login successful');
-      toast({
-        title: "Login successful",
-        description: 'Welcome back!',
+      toast.success('Login successful', {
+        description: 'Welcome back!'
       });
       return true;
     } catch (error) {
       const authError = error as AuthError;
-      toast({
-        title: "Login failed",
-        description: authError.message || 'Failed to sign in',
-        variant: "destructive",
+      toast.error('Login failed', {
+        description: authError.message || 'Failed to sign in'
       });
       console.error('Login error:', error);
       return false;
@@ -41,10 +38,8 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Logout error:', error);
-      toast({
-        title: "Logout failed",
-        description: 'Failed to sign out',
-        variant: "destructive",
+      toast.error('Logout failed', {
+        description: 'Failed to sign out'
       });
     } finally {
       setIsLoading(false);
@@ -66,16 +61,13 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         },
       });
       if (error) throw error;
-      toast({
-        title: "Registration successful",
-        description: 'Please check your email for verification.',
+      toast.success('Registration successful', {
+        description: 'Please check your email for verification.'
       });
     } catch (error) {
       const authError = error as AuthError;
-      toast({
-        title: "Registration failed",
-        description: authError.message || 'Failed to sign up',
-        variant: "destructive",
+      toast.error('Registration failed', {
+        description: authError.message || 'Failed to sign up'
       });
       console.error('Sign up error:', error);
     } finally {

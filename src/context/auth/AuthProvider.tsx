@@ -15,6 +15,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = React.useState(true);
   const navigate = useNavigate();
   
+  // Log the current auth state for debugging
+  React.useEffect(() => {
+    console.log('AuthProvider state:', {
+      user: user ? { 
+        id: user.id,
+        role: user.role,
+        name: user.name,
+        clinicId: user.clinicId 
+      } : null,
+      isAuthenticated: !!user,
+      isLoading
+    });
+  }, [user, isLoading]);
+  
   // Hook for auth session management
   const { setupAuth } = useAuthSession({
     setUser,
@@ -30,7 +44,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initialize auth once on component mount
   React.useEffect(() => {
-    setupAuth();
+    console.log('AuthProvider: Setting up auth...');
+    const cleanup = setupAuth();
+    return () => {
+      if (cleanup && typeof cleanup === 'function') {
+        cleanup();
+      }
+    };
   }, [setupAuth]);
 
   // Wrap the signUp method to match the expected return type

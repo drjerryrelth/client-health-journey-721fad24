@@ -4,7 +4,7 @@ import { User as SupabaseUser } from '@supabase/supabase-js';
 import { getCurrentSession, setupAuthListener } from '@/services/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { UserData } from '@/types/auth';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface UseAuthSessionProps {
   setUser: (user: UserData | null) => void;
@@ -40,17 +40,13 @@ export const useAuthSession = ({
                 
                 if (error) {
                   console.error('Error fetching user profile:', error);
-                  toast({
-                    title: "Error",
-                    description: 'Error loading your profile',
-                    variant: "destructive",
-                  });
+                  toast.error('Error loading your profile');
                   return;
                 }
                 
                 if (profile) {
                   // Set the user data
-                  setUser({
+                  const userData = {
                     id: profile.id,
                     name: profile.full_name || '',
                     email: session.user.email || '',
@@ -58,26 +54,36 @@ export const useAuthSession = ({
                     clinicId: profile.clinic_id,
                     avatarUrl: profile.avatar_url,
                     phone: profile.phone,
-                  });
+                  };
+                  
+                  console.log('Setting user data:', userData);
+                  setUser(userData);
                   
                   // Set Supabase user
                   setSupabaseUser(session.user);
+                  
+                  // Redirect to appropriate dashboard based on role
+                  let redirectPath = '/dashboard';
+                  if (profile.role === 'admin' || profile.role === 'super_admin') {
+                    redirectPath = '/admin/dashboard';
+                  } else if (profile.role === 'clinic_admin') {
+                    redirectPath = '/admin/dashboard';
+                  } else if (profile.role === 'coach') {
+                    redirectPath = '/coach/dashboard';
+                  } else if (profile.role === 'client') {
+                    redirectPath = '/client';
+                  }
+                  
+                  console.log('Redirecting to:', redirectPath);
+                  navigate(redirectPath, { replace: true });
                 } else {
                   // No profile found
                   console.warn('No profile found for user:', session.user.id);
-                  toast({
-                    title: "Profile Error",
-                    description: 'Your profile is incomplete. Please contact support.',
-                    variant: "destructive",
-                  });
+                  toast.error('Your profile is incomplete. Please contact support.');
                 }
               } catch (error) {
                 console.error('Error in profile fetch:', error);
-                toast({
-                  title: "Profile Error",
-                  description: 'Error loading your profile',
-                  variant: "destructive",
-                });
+                toast.error('Error loading your profile');
               }
             }
           } else if (event === 'SIGNED_OUT') {
@@ -96,7 +102,8 @@ export const useAuthSession = ({
       
       if (error) {
         console.error('Session error:', error.message);
-        throw error;
+        setIsLoading(false);
+        return;
       }
       
       if (data.session && data.session.user) {
@@ -110,12 +117,13 @@ export const useAuthSession = ({
           
           if (profileError) {
             console.error('Error fetching user profile:', profileError);
-            throw profileError;
+            setIsLoading(false);
+            return;
           }
           
           if (profile) {
             // Set the user data
-            setUser({
+            const userData = {
               id: profile.id,
               name: profile.full_name || '',
               email: data.session.user.email || '',
@@ -123,13 +131,33 @@ export const useAuthSession = ({
               clinicId: profile.clinic_id,
               avatarUrl: profile.avatar_url,
               phone: profile.phone,
-            });
+            };
             
-            // Set Supabase user
+            // Set user and Supabase user
+            setUser(userData);
             setSupabaseUser(data.session.user);
+            
+            console.log('User authenticated from existing session:', profile.role);
+            
+            // Redirect based on role if on login page
+            if (window.location.pathname === '/login') {
+              let redirectPath = '/dashboard';
+              if (profile.role === 'admin' || profile.role === 'super_admin') {
+                redirectPath = '/admin/dashboard';
+              } else if (profile.role === 'clinic_admin') {
+                redirectPath = '/admin/dashboard';
+              } else if (profile.role === 'coach') {
+                redirectPath = '/coach/dashboard';
+              } else if (profile.role === 'client') {
+                redirectPath = '/client';
+              }
+              
+              console.log('Redirecting from existing session to:', redirectPath);
+              navigate(redirectPath, { replace: true });
+            }
           } else {
             // No profile found
-            console.warn('No profile found for user:', data.session.user.id);
+            console.warn('No profile found for user from existing session:', data.session.user.id);
           }
         } catch (error) {
           console.error('Error in initial profile fetch:', error);
@@ -138,7 +166,6 @@ export const useAuthSession = ({
       
       // Cleanup function to unsubscribe when component unmounts
       return () => {
-        // Fix: access the subscription property first, then call unsubscribe
         if (authListener && authListener.subscription) {
           authListener.subscription.unsubscribe();
         }
