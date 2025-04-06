@@ -24,6 +24,7 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
     data: clients,
     isLoading,
     isError,
+    error,
     refetch
   } = useClientsQuery(activeClinicId);
   
@@ -32,7 +33,11 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
     console.log('ClientList - user role:', user?.role);
     console.log('ClientList - user clinicId:', user?.clinicId);
     console.log('ClientList - isClinicAdmin:', isClinicAdmin);
-  }, [activeClinicId, user, isClinicAdmin]);
+    
+    if (error) {
+      console.error('ClientList - Error fetching clients:', error);
+    }
+  }, [activeClinicId, user, isClinicAdmin, error]);
   
   if (isLoading) {
     return (
@@ -88,7 +93,7 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
             <TableCell className="font-medium">{client.name}</TableCell>
             <TableCell>{client.email}</TableCell>
             <TableCell>
-              {client.coachId ? 'Assigned' : 'Unassigned'}
+              {client.coach ? client.coach.name : (client.coachId ? 'Assigned' : 'Unassigned')}
             </TableCell>
             <TableCell>
               {client.programId ? 'Assigned' : 'None'}

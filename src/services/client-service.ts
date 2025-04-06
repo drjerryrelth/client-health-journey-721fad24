@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Client } from '@/types';
@@ -7,16 +8,10 @@ export class ClientService {
     try {
       console.log('Fetching clients for clinic ID:', clinicId);
       
+      // Simplified query that avoids the problematic joins causing recursion
       const { data, error } = await supabase
         .from('clients')
-        .select(`
-          *,
-          coaches:coach_id (
-            id,
-            name,
-            email
-          )
-        `)
+        .select('*')
         .eq('clinic_id', clinicId)
         .order('name', { ascending: true });
       
@@ -26,8 +21,31 @@ export class ClientService {
         return [];
       }
       
-      console.log(`Fetched ${data?.length || 0} clients for clinic ${clinicId}`);
-      return data || [];
+      // For each client, fetch coach info separately if needed
+      const clientsWithCoachInfo = await Promise.all(
+        (data || []).map(async (client) => {
+          if (client.coach_id) {
+            try {
+              const { data: coachData, error: coachError } = await supabase
+                .from('coaches')
+                .select('id, name, email')
+                .eq('id', client.coach_id)
+                .single();
+                
+              if (!coachError && coachData) {
+                return { ...client, coach: coachData };
+              }
+            } catch (coachFetchError) {
+              console.error('Error fetching coach for client:', coachFetchError);
+              // Continue without coach data
+            }
+          }
+          return client;
+        })
+      );
+      
+      console.log(`Fetched ${clientsWithCoachInfo.length || 0} clients for clinic ${clinicId}`);
+      return clientsWithCoachInfo;
     } catch (error) {
       console.error('Error in getClinicClients:', error);
       toast.error('An unexpected error occurred while loading clients');
