@@ -3,13 +3,13 @@ import React from 'react';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole, UserData } from '@/types/auth';
+import { toast } from '@/hooks/use-toast';
 
 interface UseAuthMethodsProps {
   setIsLoading: (value: boolean) => void;
-  toast: any;
 }
 
-export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => {
+export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
   const login = React.useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
@@ -19,13 +19,17 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       return true;
     } catch (error) {
       const authError = error as AuthError;
-      toast.error(authError.message || 'Failed to sign in');
+      toast({
+        title: "Login failed",
+        description: authError.message || 'Failed to sign in',
+        variant: "destructive",
+      });
       console.error('Login error:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, toast]);
+  }, [setIsLoading]);
 
   const logout = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -33,11 +37,15 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error('Failed to sign out');
+      toast({
+        title: "Logout failed",
+        description: 'Failed to sign out',
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, toast]);
+  }, [setIsLoading]);
 
   const signUp = React.useCallback(async (
     email: string,
@@ -54,15 +62,22 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
         },
       });
       if (error) throw error;
-      toast.success('Registration successful! Please check your email for verification.');
+      toast({
+        title: "Registration successful",
+        description: 'Please check your email for verification.',
+      });
     } catch (error) {
       const authError = error as AuthError;
-      toast.error(authError.message || 'Failed to sign up');
+      toast({
+        title: "Registration failed",
+        description: authError.message || 'Failed to sign up',
+        variant: "destructive",
+      });
       console.error('Sign up error:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, toast]);
+  }, [setIsLoading]);
 
   // Improved hasRole function with better type safety
   const hasRole = React.useCallback((role: UserRole | UserRole[]) => (user: UserData | null): boolean => {

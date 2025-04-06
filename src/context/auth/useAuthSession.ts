@@ -4,12 +4,12 @@ import { User as SupabaseUser } from '@supabase/supabase-js';
 import { getCurrentSession, setupAuthListener } from '@/services/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { UserData } from '@/types/auth';
+import { toast } from '@/hooks/use-toast';
 
 interface UseAuthSessionProps {
   setUser: (user: UserData | null) => void;
   setSupabaseUser: (user: SupabaseUser | null) => void;
   setIsLoading: (value: boolean) => void;
-  toast: any;
   navigate: any;
 }
 
@@ -17,7 +17,6 @@ export const useAuthSession = ({
   setUser,
   setSupabaseUser,
   setIsLoading,
-  toast,
   navigate
 }: UseAuthSessionProps) => {
   const setupAuth = React.useCallback(async () => {
@@ -41,7 +40,11 @@ export const useAuthSession = ({
                 
                 if (error) {
                   console.error('Error fetching user profile:', error);
-                  toast.error('Error loading your profile');
+                  toast({
+                    title: "Error",
+                    description: 'Error loading your profile',
+                    variant: "destructive",
+                  });
                   return;
                 }
                 
@@ -62,11 +65,19 @@ export const useAuthSession = ({
                 } else {
                   // No profile found
                   console.warn('No profile found for user:', session.user.id);
-                  toast.error('Your profile is incomplete. Please contact support.');
+                  toast({
+                    title: "Profile Error",
+                    description: 'Your profile is incomplete. Please contact support.',
+                    variant: "destructive",
+                  });
                 }
               } catch (error) {
                 console.error('Error in profile fetch:', error);
-                toast.error('Error loading your profile');
+                toast({
+                  title: "Profile Error",
+                  description: 'Error loading your profile',
+                  variant: "destructive",
+                });
               }
             }
           } else if (event === 'SIGNED_OUT') {
@@ -137,7 +148,7 @@ export const useAuthSession = ({
     } finally {
       setIsLoading(false);
     }
-  }, [setUser, setSupabaseUser, setIsLoading, toast, navigate]);
+  }, [setUser, setSupabaseUser, setIsLoading, navigate]);
   
   return { setupAuth };
 };
