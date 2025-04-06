@@ -29,7 +29,7 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
       return null;
     }
     
-    // Add timeout to prevent hanging
+    // Call the RPC function directly without any timeout wrapping
     console.log('[Coach Service] Calling add_coach RPC with data:', {
       coach_name: coach.name,
       coach_email: coach.email,
