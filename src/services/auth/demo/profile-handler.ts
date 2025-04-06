@@ -23,9 +23,11 @@ export async function ensureDemoProfileExists(userId: string, email: string): Pr
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle(); // Use maybeSingle instead of single to avoid error when no rows are found
       
+    // Only treat as an error if it's not a "no rows found" situation
     if (fetchError && !fetchError.message.includes('No rows found')) {
+      console.error('Error checking for existing profile:', fetchError);
       throw fetchError;
     }
     
@@ -81,6 +83,7 @@ export async function ensureDemoProfileExists(userId: string, email: string): Pr
         ]);
         
       if (insertError) {
+        console.error('Error inserting profile:', insertError);
         throw insertError;
       }
       
@@ -99,6 +102,7 @@ export async function ensureDemoProfileExists(userId: string, email: string): Pr
         .eq('id', userId);
         
       if (updateError) {
+        console.error('Error updating profile:', updateError);
         throw updateError;
       }
       
@@ -120,9 +124,10 @@ async function ensureDemoCoachExists(userId: string, name: string, clinicId: str
       .from('coaches')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle(); // Use maybeSingle instead of single
       
     if (fetchError && !fetchError.message.includes('No rows found')) {
+      console.error('Error checking for existing coach:', fetchError);
       throw fetchError;
     }
     
@@ -143,6 +148,7 @@ async function ensureDemoCoachExists(userId: string, name: string, clinicId: str
         ]);
         
       if (insertError) {
+        console.error('Error inserting coach:', insertError);
         throw insertError;
       }
       
@@ -161,6 +167,7 @@ async function ensureDemoCoachExists(userId: string, name: string, clinicId: str
         .eq('user_id', userId);
         
       if (updateError) {
+        console.error('Error updating coach:', updateError);
         throw updateError;
       }
       
