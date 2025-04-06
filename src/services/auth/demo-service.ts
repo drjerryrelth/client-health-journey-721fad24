@@ -5,8 +5,12 @@ export {
   demoEmails,
   isDemoEmail,
   isDemoAdminEmail,
+  isDemoCoachEmail,
   getDemoUserNameByEmail,
   getDemoRoleByEmail,
   ensureDemoProfileExists,
-  autoConfirmDemoEmail
+  autoConfirmDemoEmail,
+  isDemoClinicEmail,
+  handleDemoClinicSignup
 } from './demo';
+
