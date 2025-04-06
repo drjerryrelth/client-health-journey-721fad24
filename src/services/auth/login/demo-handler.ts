@@ -13,13 +13,15 @@ export async function handleDemoAccountCreation(email: string): Promise<void> {
   console.log(`Setting up demo account for ${email}`);
   
   try {
-    // First, check if the account exists
-    const { data: existingUser, error: checkError } = await supabase.auth.admin.getUserByEmail(email);
+    // First, check if the account exists by listing users and filtering
+    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
     
-    if (checkError) {
-      console.log('Error checking for existing user, will attempt to create:', checkError.message);
+    if (listError) {
+      console.log('Error listing users, will attempt to create:', listError.message);
       // Continue with creation if we can't confirm existence
     }
+    
+    const existingUser = users?.find(user => user.email === email);
     
     // If user doesn't exist, create it
     if (!existingUser) {

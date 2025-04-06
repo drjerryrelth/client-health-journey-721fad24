@@ -9,11 +9,18 @@ export async function autoConfirmDemoEmail(email: string): Promise<void> {
   try {
     console.log('Auto-confirming demo email:', email);
     
-    // Get the user by email
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(email);
+    // Get user by email using auth.getUser() and filtering
+    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
     
-    if (userError || !userData) {
-      console.error('Error getting user for auto-confirmation:', userError?.message);
+    if (listError) {
+      console.error('Error listing users for auto-confirmation:', listError.message);
+      return;
+    }
+    
+    const userData = users?.find(user => user.email === email);
+    
+    if (!userData) {
+      console.error('User not found for auto-confirmation with email:', email);
       return;
     }
     
