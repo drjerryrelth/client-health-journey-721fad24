@@ -1,12 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { CoachList } from '@/components/coaches';
-import { CoachService } from '@/services/coaches';
 import { Coach } from '@/services/coaches';
 import { useClinicNames } from '@/components/coaches/list/useClinicNames';
 import CoachPasswordResetDialog from '@/components/coaches/CoachPasswordResetDialog';
 import { useClinicFilter } from '@/components/coaches/list/useClinicFilter';
 import { useAuth } from '@/context/auth';
+import { useCoachList } from '@/components/coaches/list/useCoachList';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 interface CoachesListContainerProps {
   clinicId: string;
@@ -25,9 +28,6 @@ const CoachesListContainer: React.FC<CoachesListContainerProps> = ({
   isRefreshing,
   setIsRefreshing
 }) => {
-  const [coaches, setCoaches] = useState<Coach[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   
@@ -36,44 +36,27 @@ const CoachesListContainer: React.FC<CoachesListContainerProps> = ({
   
   const { getClinicName } = useClinicNames();
 
+  // Use the useCoachList hook to fetch and manage coach data
+  const { coaches, isLoading, error, refresh } = useCoachList({
+    clinicId,
+    refreshTrigger,
+    isRefreshing,
+    setIsRefreshing
+  });
+  
+  // Log important context information for debugging
   useEffect(() => {
-    const fetchCoaches = async () => {
-      if (!clinicId) {
-        console.error('Missing clinic ID in CoachesListContainer');
-        setError('Missing clinic ID');
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        if (setIsRefreshing) setIsRefreshing(true);
-        setLoading(true);
-        setError(null);
-        
-        console.log('Fetching coaches for clinic ID:', clinicId);
-        console.log('User role:', user?.role, 'User clinicId:', user?.clinicId);
-        
-        const clinicCoaches = await CoachService.getClinicCoaches(clinicId);
-        console.log('Fetched coaches:', clinicCoaches.length);
-        
-        const filteredCoaches = isClinicAdmin ? 
-          filterByClinic(clinicCoaches) : 
-          clinicCoaches;
-          
-        console.log('Filtered coaches:', filteredCoaches.length);
-        
-        setCoaches(filteredCoaches);
-      } catch (err) {
-        console.error('Error fetching coaches:', err);
-        setError('Failed to load coaches. Please try again.');
-      } finally {
-        setLoading(false);
-        if (setIsRefreshing) setIsRefreshing(false);
-      }
-    };
+    if (!clinicId) {
+      console.error('Missing clinic ID in CoachesListContainer');
+    } else {
+      console.log('CoachesListContainer with clinic ID:', clinicId);
+      console.log('User role:', user?.role, 'User clinicId:', user?.clinicId);
+    }
     
-    fetchCoaches();
-  }, [clinicId, refreshTrigger, setIsRefreshing, isClinicAdmin, filterByClinic, user]);
+    if (error) {
+      console.error('CoachesListContainer error:', error);
+    }
+  }, [clinicId, user, error]);
   
   const handleResetPassword = (coach: Coach) => {
     setSelectedCoach(coach);
@@ -86,13 +69,24 @@ const CoachesListContainer: React.FC<CoachesListContainerProps> = ({
   
   return (
     <div className="mt-6">
+      {!clinicId && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Missing Clinic ID</AlertTitle>
+          <AlertDescription>
+            Unable to load coaches without a clinic ID. Please try reloading the page.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <CoachList 
         coaches={coaches} 
-        loading={loading} 
+        loading={isLoading} 
         error={error}
         onEdit={onEdit}
         onDelete={onDelete}
         onResetPassword={handleResetPassword}
+        onRetry={refresh}
       />
       
       {selectedCoach && (

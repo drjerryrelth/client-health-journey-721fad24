@@ -28,6 +28,7 @@ export const useCoachList = ({
   const abortControllerRef = useRef<AbortController | null>(null);
   const retryTimeoutRef = useRef<number | null>(null);
   const initialLoadCompleteRef = useRef(false);
+  const retryCountRef = useRef(0);
   
   // Use a callback to allow re-triggering the load
   const loadCoaches = useCallback(async (signal?: AbortSignal) => {
@@ -58,7 +59,8 @@ export const useCoachList = ({
       }
       setError(null);
       
-      console.log('Loading coaches for clinic:', clinicId);
+      const currentRetry = ++retryCountRef.current;
+      console.log(`Loading coaches for clinic: ${clinicId} (attempt ${currentRetry})`);
       const coachesData = await CoachService.getClinicCoaches(clinicId);
       
       // Check if this is still the most recent request
@@ -124,22 +126,32 @@ export const useCoachList = ({
         }, 100);
       });
       
-      // Setup automatic retry
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
-      
-      retryTimeoutRef.current = window.setTimeout(() => {
-        if (!signal?.aborted) {
-          console.log('Automatically retrying failed coach load');
-          loadCoaches();
+      // Setup automatic retry with exponential backoff if under retry limit
+      if (retryCountRef.current < 3) {
+        if (retryTimeoutRef.current) {
+          clearTimeout(retryTimeoutRef.current);
         }
-      }, 3000);
+        
+        const backoffMs = Math.min(1000 * Math.pow(2, retryCountRef.current - 1), 5000);
+        console.log(`Automatically retrying failed coach load in ${backoffMs}ms`);
+        
+        retryTimeoutRef.current = window.setTimeout(() => {
+          if (!signal?.aborted) {
+            loadCoaches();
+          }
+        }, backoffMs);
+      } else {
+        console.log('Maximum retry attempts reached');
+        retryCountRef.current = 0; // Reset for manual retries
+      }
     }
   }, [clinicId, setIsRefreshing, isRefreshing]);
 
   // Load coaches when dependencies change
   useEffect(() => {
+    // Reset retry counter
+    retryCountRef.current = 0;
+    
     // Cancel any in-progress requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -179,6 +191,8 @@ export const useCoachList = ({
       return;
     }
     
+    // Reset retry counter for manual refresh
+    retryCountRef.current = 0;
     requestIdRef.current++; // Increment to invalidate current request
     
     // Cancel any pending retries
