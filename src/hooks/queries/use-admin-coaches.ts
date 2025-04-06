@@ -92,31 +92,32 @@ export function useAdminCoaches() {
       
       // Log each coach email for debugging
       if (coachesData.length > 0) {
-        console.log('[useAdminCoaches] Coach emails:', coachesData.map(c => c.email));
+        console.log('[useAdminCoaches] Coach emails:', coachesData.map(c => c.email).join(', '));
+      } else {
+        console.warn('[useAdminCoaches] No coaches were returned');
       }
       
       setCoaches(coachesData);
+      setLoading(false);
       
-      if (coachesData.length === 0) {
-        console.warn('[useAdminCoaches] No coaches were returned');
-        toast.info('No coaches found');
-      } else {
+      // Only show toast for empty data if we've tried at least once
+      if (coachesData.length === 0 && retryCount > 0) {
+        toast.info('No coaches found. You may need to add coaches to your clinics.');
+      } else if (coachesData.length > 0) {
         toast.success(`Successfully loaded ${coachesData.length} coaches`);
       }
-      
-      setLoading(false);
     } catch (err) {
       console.error("[useAdminCoaches] Error fetching coaches:", err);
       setError("Failed to load coaches. Please try again.");
       setErrorDetails(err instanceof Error ? err.message : String(err));
       setLoading(false);
       
-      if (retryCount < 2) {
+      if (retryCount < 3) {
         console.log(`[useAdminCoaches] Attempt ${retryCount + 1} failed, retrying automatically`);
         setRetryCount(prev => prev + 1);
         setTimeout(() => {
           fetchCoaches();
-        }, 1000);
+        }, 1500);
       }
     }
   }, [retryCount, user]);

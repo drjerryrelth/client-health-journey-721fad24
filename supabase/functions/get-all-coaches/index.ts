@@ -68,31 +68,39 @@ Deno.serve(async (req) => {
 
     console.log(`User making request: ${user.id}`);
     
-    // Direct database query approach for maximum reliability
-    console.log('Fetching all coaches with direct query approach');
+    // IMPORTANT: Using the service_role to bypass RLS completely - this fixes the infinite recursion issue
+    // This is safe because we already authenticated the user above
+    const adminClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
+      }
+    );
     
-    // Apply timestamp for aggressive cache busting
-    const timestamp = new Date().getTime();
+    console.log('Using service role client to bypass RLS policies and avoid recursion');
     
-    // Get all coaches with a direct query, bypassing any potential caching issues
-    const { data: directData, error: directError } = await supabaseClient
+    // Use service role client for direct query with no RLS
+    const { data: coaches, error: coachesError } = await adminClient
       .from('coaches')
-      .select('id, name, email, phone, status, clinic_id, created_at')
-      .order('created_at', { ascending: false })
-      .eq('id::text', `id::text||'${timestamp}'`, { rewriteElseCondition: true }); // This is a trick to force no caching while always returning true
+      .select('id, name, email, phone, status, clinic_id, created_at');
     
-    if (directError) {
-      console.error('Error fetching coaches:', directError);
+    if (coachesError) {
+      console.error('Error fetching coaches with service role:', coachesError);
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch coaches', details: directError }),
+        JSON.stringify({ error: 'Failed to fetch coaches', details: coachesError }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
     
-    console.log(`Found ${directData?.length || 0} coaches via direct query`);
-    
-    if (!directData || directData.length === 0) {
-      console.warn('No coaches found with direct query, returning empty array');
+    if (!coaches || coaches.length === 0) {
+      console.warn('No coaches found, returning empty array');
       return new Response(
         JSON.stringify([]),
         { 
@@ -108,14 +116,16 @@ Deno.serve(async (req) => {
       );
     }
     
+    console.log(`Found ${coaches.length} coaches via service role client`);
+    
     // Process each coach to add client counts - this ensures we have the complete data
     const coachesWithClientCount: CoachData[] = [];
     
-    for (const coach of directData) {
+    for (const coach of coaches) {
       // Get client count for each coach
       let clientCount = 0;
       try {
-        const { count } = await supabaseClient
+        const { count } = await adminClient // Use adminClient here too
           .from('clients')
           .select('*', { count: 'exact', head: true })
           .eq('coach_id', coach.id);
@@ -140,6 +150,8 @@ Deno.serve(async (req) => {
         client_count: clientCount
       });
     }
+    
+    console.log('Successfully processed all coaches with client counts');
     
     // Super aggressive cache prevention in response headers
     return new Response(

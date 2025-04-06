@@ -68,7 +68,7 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
  */
 export async function getAllCoaches(): Promise<Coach[]> {
   try {
-    console.log('[CoachService] Starting getAllCoaches call');
+    console.log('[CoachService] Starting getAllCoaches call with edge function');
     
     // Check authentication before proceeding
     const session = await checkAuthentication();
@@ -78,7 +78,7 @@ export async function getAllCoaches(): Promise<Coach[]> {
     }
     
     // Direct database query for admin users with aggressive cache-busting
-    console.log('[CoachService] Calling get-all-coaches edge function with cache-busting headers');
+    console.log('[CoachService] Authentication verified, calling get-all-coaches edge function');
     
     // Use the edge function with enhanced no-cache headers
     const timestamp = new Date().getTime(); 
@@ -102,7 +102,11 @@ export async function getAllCoaches(): Promise<Coach[]> {
     }
     
     console.log('[CoachService] Successfully retrieved', data.length, 'coaches via edge function');
-    console.log('[CoachService] Coach emails:', data.map(c => (c as any).email));
+    
+    if (data.length > 0) {
+      console.log('[CoachService] Coach sample:', data[0]);
+      console.log('[CoachService] Coach emails:', data.map(c => (c as any).email).join(', '));
+    }
     
     // Transform and return the coaches data using type assertions
     const coaches = data.map(coach => {
@@ -124,8 +128,20 @@ export async function getAllCoaches(): Promise<Coach[]> {
     return coaches;
   } catch (error) {
     console.error('[CoachService] Error fetching all coaches:', error);
-    toast.error('Failed to fetch coaches data. Please try again.');
-    // Return empty array as fallback instead of mock data
+    
+    // Enhanced error handling to clearly identify the issue
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('infinite recursion')) {
+      console.error('[CoachService] Database policy recursion error detected. Contact admin.');
+      toast.error('Database policy error detected. Please contact admin to fix RLS policies.');
+    } else if (errorMessage.includes('non-2xx status code')) {
+      console.error('[CoachService] Edge function returned error. Check function logs.');
+      toast.error('Server error. Try refreshing or contact admin if problem persists.');
+    } else {
+      toast.error('Failed to fetch coaches data. Please try again.');
+    }
+    
+    // Return empty array as fallback 
     return [];
   }
 }
