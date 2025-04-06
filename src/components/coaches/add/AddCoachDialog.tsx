@@ -84,13 +84,13 @@ export const AddCoachDialog = ({
     try {
       setIsSubmitting(true);
       setErrorDetails(null);
+      setShowErrorDialog(false);
       
       console.log('[AddCoachDialog] Submitting coach data:', {
         name: values.name,
         email: values.email,
         phone: values.phone || null,
-        clinicId: effectiveClinicId,
-        clients: 0
+        clinicId: effectiveClinicId
       });
       
       console.log('[AddCoachDialog] Current auth context user:', user);
@@ -105,15 +105,25 @@ export const AddCoachDialog = ({
       
       console.log('[AddCoachDialog] Session verified before submission:', session.user.id);
       
-      // Add the clients field with a default value of 0
-      const newCoach = await CoachService.addCoach({
+      // Try adding the coach with a timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Coach addition timed out')), 15000);
+      });
+      
+      // Create the coach addition promise
+      const addCoachPromise = CoachService.addCoach({
         name: values.name,
         email: values.email,
         phone: values.phone || null,
         status: 'active',
-        clinicId: effectiveClinicId,
-        clients: 0  // Add the clients field with a default value of 0
+        clinicId: effectiveClinicId
       });
+      
+      // Race between the actual operation and the timeout
+      const newCoach = await Promise.race([
+        addCoachPromise,
+        timeoutPromise
+      ]);
 
       if (newCoach) {
         toast.success(`${values.name} has been added to ${selectedClinicName}`);
@@ -139,10 +149,22 @@ export const AddCoachDialog = ({
   };
 
   const handleDialogChange = (open: boolean) => {
+    if (!open && isSubmitting) {
+      // Prevent closing while submitting
+      return;
+    }
+    
+    if (!open) {
+      // Reset error state when closing
+      setErrorDetails(null);
+      setShowErrorDialog(false);
+    }
+    
     onOpenChange(open);
   };
 
   const handleCancel = () => {
+    if (isSubmitting) return;
     handleDialogChange(false);
   };
   
@@ -154,6 +176,11 @@ export const AddCoachDialog = ({
         setSelectedClinicName(clinic.name);
       }
     }
+  };
+  
+  const handleErrorDialogClose = (open: boolean) => {
+    setShowErrorDialog(open);
+    // Don't close the main dialog when error dialog closes
   };
 
   return (
@@ -219,7 +246,7 @@ export const AddCoachDialog = ({
 
       <ErrorDialog 
         open={showErrorDialog}
-        onOpenChange={setShowErrorDialog}
+        onOpenChange={handleErrorDialogClose}
         errorDetails={errorDetails}
         title="Error Adding Coach"
       />

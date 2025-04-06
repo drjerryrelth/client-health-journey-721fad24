@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth';
 import { useCoachActions } from '@/hooks/use-coach-actions';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import AddClinicDialog from '@/components/clinics/AddClinicDialog';
 
 const ClinicsPage = () => {
   const [activeTab, setActiveTab] = useState('clinics');
@@ -16,6 +17,7 @@ const ClinicsPage = () => {
   const { isLoading: isCoachActionsLoading } = useCoachActions(); // Renamed to avoid conflict
   const [clinics, setClinics] = useState([]);
   const [isLoadingClinics, setIsLoadingClinics] = useState(true); // Renamed to avoid conflict
+  const [isAddClinicDialogOpen, setIsAddClinicDialogOpen] = useState(false);
 
   // Fetch clinics data on component mount
   React.useEffect(() => {
@@ -61,8 +63,42 @@ const ClinicsPage = () => {
 
   const handleAddClinic = () => {
     console.log('Add clinic clicked');
-    // Implement add clinic logic here
-    // Could open a modal or navigate to an add clinic page
+    setIsAddClinicDialogOpen(true);
+  };
+
+  const handleAddClinicDialogClose = (open: boolean) => {
+    setIsAddClinicDialogOpen(open);
+    if (!open) {
+      // Refresh clinics list after adding a new clinic
+      if (!isClinicAdmin) {
+        setIsLoadingClinics(true);
+        supabase
+          .from('clinics')
+          .select('*')
+          .then(({ data, error }) => {
+            if (error) throw error;
+            
+            const formattedClinics = data.map(clinic => ({
+              id: clinic.id,
+              name: clinic.name,
+              coaches: clinic.coach_count || 0,
+              clients: clinic.client_count || 0,
+              city: clinic.city,
+              state: clinic.state,
+              status: clinic.status || 'active'
+            }));
+            
+            setClinics(formattedClinics);
+          })
+          .catch(error => {
+            console.error('Error fetching clinics:', error);
+            toast.error('Failed to load clinics');
+          })
+          .finally(() => {
+            setIsLoadingClinics(false);
+          });
+      }
+    }
   };
 
   const getStatusColor = (status) => {
@@ -125,6 +161,13 @@ const ClinicsPage = () => {
           </TabsContent>
         </Tabs>
       )}
+
+      {/* Add the AddClinicDialog component */}
+      <AddClinicDialog 
+        open={isAddClinicDialogOpen} 
+        onOpenChange={handleAddClinicDialogClose}
+        onClinicAdded={() => handleAddClinicDialogClose(false)}
+      />
     </div>
   );
 };
