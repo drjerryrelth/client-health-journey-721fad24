@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus, RefreshCw, AlertCircle } from 'lucide-react';
+import { UserPlus, RefreshCw, AlertCircle, RotateCw } from 'lucide-react';
 import { useAdminCoaches } from '@/hooks/queries/use-admin-coaches';
 import CoachesErrorState from '@/components/admin/coaches/CoachesErrorState';
 import CoachesFilter from '@/components/admin/coaches/CoachesFilter';
@@ -24,6 +24,7 @@ const CoachesPage = () => {
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [filterText, setFilterText] = useState('');
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   
   const { user } = useAuth();
   
@@ -99,8 +100,16 @@ const CoachesPage = () => {
   };
   
   const handleManualRefresh = () => {
-    refresh();
-    toast.info("Refreshing coaches data...");
+    setIsManualRefreshing(true);
+    toast.info("Force refreshing coaches data...");
+    
+    // Clear existing data first
+    setTimeout(() => {
+      refresh();
+      setTimeout(() => {
+        setIsManualRefreshing(false);
+      }, 1500);
+    }, 500);
   };
 
   React.useEffect(() => {
@@ -122,12 +131,28 @@ const CoachesPage = () => {
             onClick={handleManualRefresh} 
             variant="outline" 
             size="icon"
-            disabled={loading}
+            disabled={loading || isManualRefreshing}
             className="flex items-center justify-center"
             title="Refresh coaches"
           >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={16} className={loading || isManualRefreshing ? "animate-spin" : ""} />
           </Button>
+          
+          <Button 
+            onClick={() => {
+              handleManualRefresh();
+              toast.info("Performing deep refresh...");
+            }} 
+            variant="outline" 
+            size="sm"
+            disabled={loading || isManualRefreshing}
+            className="flex items-center gap-1"
+            title="Force deep refresh of all coach data"
+          >
+            <RotateCw size={14} className={isManualRefreshing ? "animate-spin" : ""} />
+            <span>Force Reload</span>
+          </Button>
+          
           <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center gap-2">
             <UserPlus size={16} />
             <span>Add Coach</span>
@@ -163,7 +188,7 @@ const CoachesPage = () => {
           />
           
           {error ? (
-            <CoachesErrorState error={error} onRetry={refresh} />
+            <CoachesErrorState error={error} onRetry={handleManualRefresh} />
           ) : loading ? (
             <CoachesLoadingState />
           ) : (

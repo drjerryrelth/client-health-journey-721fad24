@@ -21,7 +21,7 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
     
     console.log('[CoachService] Authentication verified, user:', session.user.id);
     
-    // Use RPC call to bypass RLS issues, with cache-busting
+    // Use RPC call to bypass RLS issues, with aggressive cache-busting
     const timestamp = new Date().getTime();
     const { data, error } = await supabase.rpc(
       'get_clinic_coaches' as any, 
@@ -77,15 +77,16 @@ export async function getAllCoaches(): Promise<Coach[]> {
       throw new Error('Authentication required to fetch coaches');
     }
     
-    // Direct database query for admin users with cache-busting
-    console.log('[CoachService] Calling get-all-coaches edge function');
+    // Direct database query for admin users with aggressive cache-busting
+    console.log('[CoachService] Calling get-all-coaches edge function with cache-busting headers');
     
-    // Use the edge function with no-cache headers
-    const timestamp = new Date().getTime(); // Add timestamp to prevent caching
+    // Use the edge function with enhanced no-cache headers
+    const timestamp = new Date().getTime(); 
     const { data, error } = await supabase.functions.invoke('get-all-coaches', {
       headers: {
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
+        'Expires': '0',
         'X-Cache-Buster': timestamp.toString()
       }
     });
@@ -101,6 +102,7 @@ export async function getAllCoaches(): Promise<Coach[]> {
     }
     
     console.log('[CoachService] Successfully retrieved', data.length, 'coaches via edge function');
+    console.log('[CoachService] Coach emails:', data.map(c => (c as any).email));
     
     // Transform and return the coaches data using type assertions
     const coaches = data.map(coach => {

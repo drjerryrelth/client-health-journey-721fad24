@@ -76,7 +76,8 @@ export function useAdminCoaches() {
         coachesData = await CoachService.getClinicCoaches(user.clinicId);
       } else if (user?.role === 'admin' || user?.role === 'super_admin') {
         console.log('[useAdminCoaches] System admin role detected, fetching all coaches');
-        coachesData = await CoachService.getAllCoachesForAdmin();
+        // Force direct retrieval, bypassing any potential cached data
+        coachesData = await CoachService.getAllCoaches();
       } else {
         console.error('[useAdminCoaches] Invalid or missing role/clinicId:', user);
         throw new Error('Unauthorized or missing clinic information');
@@ -87,6 +88,11 @@ export function useAdminCoaches() {
       if (!Array.isArray(coachesData)) {
         console.error('[useAdminCoaches] Invalid coaches data format:', coachesData);
         throw new Error('Invalid data format received from service');
+      }
+      
+      // Log each coach email for debugging
+      if (coachesData.length > 0) {
+        console.log('[useAdminCoaches] Coach emails:', coachesData.map(c => c.email));
       }
       
       setCoaches(coachesData);
@@ -105,9 +111,9 @@ export function useAdminCoaches() {
       setErrorDetails(err instanceof Error ? err.message : String(err));
       setLoading(false);
       
-      if (retryCount === 0) {
-        console.log('[useAdminCoaches] First attempt failed, retrying automatically');
-        setRetryCount(1);
+      if (retryCount < 2) {
+        console.log(`[useAdminCoaches] Attempt ${retryCount + 1} failed, retrying automatically`);
+        setRetryCount(prev => prev + 1);
         setTimeout(() => {
           fetchCoaches();
         }, 1000);
@@ -116,7 +122,7 @@ export function useAdminCoaches() {
   }, [retryCount, user]);
 
   const refresh = useCallback(() => {
-    setRetryCount(prev => prev + 1);
+    setRetryCount(0); // Reset retry count
     setLastRefreshTime(Date.now()); // Update refresh timestamp
     toast.info("Refreshing coaches data...");
     fetchClinics();
@@ -132,20 +138,25 @@ export function useAdminCoaches() {
         clinicId: user.clinicId
       });
     }
+    
+    // Clear any existing data first to avoid stale displays
+    setCoaches([]);
+    
+    // Immediate data fetch
     fetchClinics();
     fetchCoaches();
     
-    // Auto-refresh data every minute to prevent stale data
+    // Auto-refresh data every 30 seconds to prevent stale data
     const refreshInterval = setInterval(() => {
       const currentTime = Date.now();
-      // Only refresh if it's been more than 60 seconds since last refresh
-      if (currentTime - lastRefreshTime > 60000) {
+      // Only refresh if it's been more than 30 seconds since last refresh
+      if (currentTime - lastRefreshTime > 30000) {
         console.log('[useAdminCoaches] Auto-refreshing data');
         setLastRefreshTime(currentTime);
         fetchClinics();
         fetchCoaches();
       }
-    }, 60000);
+    }, 30000);
     
     return () => {
       clearInterval(refreshInterval);
