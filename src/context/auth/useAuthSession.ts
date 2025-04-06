@@ -127,7 +127,10 @@ export const useAuthSession = ({
       
       // Cleanup function to unsubscribe when component unmounts
       return () => {
-        authListener?.unsubscribe();
+        // Fix: access the subscription property first, then call unsubscribe
+        if (authListener && authListener.subscription) {
+          authListener.subscription.unsubscribe();
+        }
       };
     } catch (error) {
       console.error('Auth setup error:', error);
