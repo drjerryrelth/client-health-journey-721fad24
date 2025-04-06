@@ -8,7 +8,7 @@ const defaultValue: AuthContextType = {
   supabaseUser: null,
   isAuthenticated: false,
   isLoading: true,
-  login: async () => {},
+  login: async () => false, // Return false by default
   logout: async () => {},
   hasRole: () => false,
   signUp: async () => {},

@@ -10,6 +10,7 @@ export interface UserData {
   role: UserRole;
   clinicId: string | null;
   avatarUrl?: string | null;
+  phone?: string | null; // Add phone property
 }
 
 export interface AuthContextType {

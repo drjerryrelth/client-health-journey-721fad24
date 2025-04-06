@@ -38,7 +38,7 @@ const SettingsPage = () => {
       setProfileForm({
         companyName: user.name || 'HealthTracker Admin',
         email: user.email || '',
-        phone: user.phone || ''  // Safe to use now that we've added it to the UserData type
+        phone: user.phone || ''  // Now safe to use with the updated UserData type
       });
     }
   }, [user]);
