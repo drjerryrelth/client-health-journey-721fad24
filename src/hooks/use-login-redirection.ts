@@ -51,7 +51,7 @@ export const useLoginRedirection = () => {
         console.log('Authentication check timeout - resetting loading state');
         window.location.reload(); // Force reload if stuck in loading state
       }
-    }, 10000); // Increased timeout for slower connections
+    }, 10000); // 10 second timeout for slower connections
     
     return () => clearTimeout(timeoutId);
   }, [isLoading]);

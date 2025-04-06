@@ -65,7 +65,7 @@ export const AdminUserService = {
   /**
    * Create a new admin user with auth credentials
    */
-  async createAdminUser(userData: AdminUserFormData): Promise<AdminUser> {
+  async createAdminUser(userData: AdminUserFormData & { clinicId?: string }): Promise<AdminUser> {
     try {
       console.log('Creating admin user with data:', userData);
       
@@ -92,6 +92,17 @@ export const AdminUserService = {
       if (userData.role === 'super_admin' && profileData?.role !== 'super_admin') {
         throw new Error('Only Super Admins can create other Super Admin accounts');
       }
+
+      // Prepare metadata with clinic ID for clinic admins
+      const metadata: Record<string, any> = {
+        full_name: userData.fullName,
+        role: userData.role || 'admin'
+      };
+      
+      // Add clinic_id to metadata if provided for clinic admin
+      if (userData.role === 'clinic_admin' && userData.clinicId) {
+        metadata.clinic_id = userData.clinicId;
+      }
       
       // Call our edge function instead of using client-side admin API
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
@@ -100,7 +111,8 @@ export const AdminUserService = {
           email: userData.email,
           password: userData.password,
           fullName: userData.fullName,
-          role: userData.role || 'admin'
+          role: userData.role || 'admin',
+          clinicId: userData.clinicId
         }
       });
       

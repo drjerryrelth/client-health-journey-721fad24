@@ -8,6 +8,7 @@ export interface AdminUser {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  clinic_id?: string;
 }
 
 export interface AdminUserFormData {
@@ -15,4 +16,5 @@ export interface AdminUserFormData {
   password?: string;
   fullName: string;
   role: string;
+  clinicId?: string;
 }
