@@ -1,9 +1,8 @@
 
 // Re-export everything from the coach service modules
 import { getAllCoachesForAdmin, getClinicCoaches } from './coach-fetchers';
-import { addCoach, updateCoach, removeCoachAndReassignClients } from './coach-mutations';
-import { deleteCoach, resetCoachPassword } from './coach-admin';
-import { Coach } from './types';
+import { addCoach, updateCoach } from './coach-crud';
+import { removeCoachAndReassignClients, deleteCoach, resetCoachPassword } from './coach-admin';
 
 // Export the coach service API
 export const CoachService = {
@@ -17,4 +16,4 @@ export const CoachService = {
 };
 
 // Export types
-export type { Coach };
+export type { Coach } from './types';

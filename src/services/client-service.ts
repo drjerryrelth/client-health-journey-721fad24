@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Client } from '@/types';
@@ -138,7 +137,7 @@ export class ClientService {
   
   static async createClient(newClient: Omit<Client, 'id'>): Promise<{ data: Client | null; tempPassword?: string }> {
     try {
-      console.log('Creating client:', newClient);
+      console.log('Creating client with data:', newClient);
       
       // Generate a temporary password
       const tempPassword = Math.random().toString(36).slice(-8);
@@ -151,7 +150,7 @@ export class ClientService {
           data: {
             full_name: newClient.name,
             role: 'client',
-            clinicId: newClient.clinicId
+            clinic_id: newClient.clinicId // Use clinic_id format for consistent naming
           }
         }
       });
@@ -170,8 +169,19 @@ export class ClientService {
         .from('clients')
         .insert([
           {
-            ...newClient,
-            user_id: userId // Link the user ID
+            name: newClient.name,
+            email: newClient.email,
+            phone: newClient.phone || null,
+            program_id: newClient.programId || null,
+            program_category: newClient.programCategory || null,
+            start_date: newClient.startDate,
+            notes: newClient.notes || null,
+            clinic_id: newClient.clinicId,
+            coach_id: newClient.coachId || null,
+            user_id: userId, // Link the user ID
+            initial_weight: newClient.initialWeight || null,
+            weight_date: newClient.weightDate || null,
+            goals: newClient.goals || null
           }
         ])
         .select()
@@ -179,12 +189,16 @@ export class ClientService {
       
       if (error) {
         console.error('Error creating client:', error);
-        toast.error('Failed to create client');
+        toast.error('Failed to create client: ' + error.message);
         
         // Delete the user from Supabase Auth if client creation fails
         if (userId) {
-          await supabase.auth.admin.deleteUser(userId);
-          console.log('Deleted user from Supabase Auth due to client creation failure');
+          try {
+            await supabase.auth.admin.deleteUser(userId);
+            console.log('Deleted user from Supabase Auth due to client creation failure');
+          } catch (deleteError) {
+            console.error('Error cleaning up auth user after failure:', deleteError);
+          }
         }
         
         return { data: null };
@@ -195,7 +209,11 @@ export class ClientService {
       return { data, tempPassword }; // Return the temporary password
     } catch (error) {
       console.error('Error in createClient:', error);
-      toast.error('An unexpected error occurred while creating client');
+      if (error instanceof Error) {
+        toast.error('An unexpected error occurred while creating client: ' + error.message);
+      } else {
+        toast.error('An unexpected error occurred while creating client');
+      }
       return { data: null };
     }
   }

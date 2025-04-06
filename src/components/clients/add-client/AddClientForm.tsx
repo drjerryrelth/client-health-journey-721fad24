@@ -16,7 +16,7 @@ import { AlertCircle, Info } from 'lucide-react';
 
 const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clinicId }) => {
   const { user } = useAuth();
-  const { mutate: createClient, isPending } = useCreateClientMutation();
+  const { mutate: createClient, isPending, error: createError } = useCreateClientMutation();
   const [selectedProgramType, setSelectedProgramType] = useState<string | null>(null);
   
   // Use the passed clinicId or fall back to user's clinicId
@@ -25,6 +25,7 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
   const { data: programs = [], isLoading: isProgramsLoading, error: programsError } = useProgramsQuery(effectiveClinicId);
   
   console.log("Effective clinic ID:", effectiveClinicId);
+  console.log("Current user:", user);
   console.log("Available programs:", programs);
   
   const form = useForm<AddClientFormValues>({
@@ -55,9 +56,13 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
   }, [watchedProgramId, programs]);
 
   const onSubmit = (values: AddClientFormValues) => {
-    if (!effectiveClinicId) return;
+    if (!effectiveClinicId) {
+      console.error("Missing clinic ID for client creation");
+      return;
+    }
     
     console.log("Submitting client form with values:", values);
+    console.log("Using clinic ID:", effectiveClinicId);
     
     // Process programId to handle the 'no-program' special value
     const programId = values.programId === 'no-program' ? null : values.programId || null;
@@ -77,10 +82,15 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
       goals: values.goals
     }, {
       onSuccess: (result) => {
-        if (result.tempPassword) {
+        if (result.data && result.tempPassword) {
           onSuccess(values.email, result.tempPassword);
+        } else if (result.data) {
+          onSuccess(values.email, 'Password sent via email');
         }
       },
+      onError: (error) => {
+        console.error("Error creating client:", error);
+      }
     });
   };
 
@@ -88,6 +98,26 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
     <FormProvider {...form}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          {createError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error creating client</AlertTitle>
+              <AlertDescription>
+                {createError instanceof Error ? createError.message : 'An unknown error occurred'}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {!effectiveClinicId && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Missing clinic information</AlertTitle>
+              <AlertDescription>
+                No clinic ID available. Please try logging out and back in.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {programsError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
