@@ -4,7 +4,12 @@ export const demoEmails = {
   coach: 'coach@example.com',
   client: 'client@example.com',
   clinicAdmin: 'clinic-admin@example.com',
-  // Add any additional demo emails here
-  coachAlt: 'support@practicenaturals.com', // Alternative coach email
-  clientAlt: 'drjerry@livingbetterhealthcare.com' // Alternative client email
+  // Demo emails with more realistic formats
+  coachAlt: 'support@practicenaturals.com', 
+  clientAlt: 'drjerry@livingbetterhealthcare.com',
+  // Adding explicit demo email categories for better type checking
+  demoCoaches: ['coach@example.com', 'support@practicenaturals.com'],
+  demoClients: ['client@example.com', 'drjerry@livingbetterhealthcare.com'],
+  demoAdmins: ['drrelth@contourlight.com'],
+  demoClinicAdmins: ['clinic-admin@example.com']
 };

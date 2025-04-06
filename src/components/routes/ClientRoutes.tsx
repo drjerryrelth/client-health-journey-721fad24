@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import ClientPortal from '@/pages/ClientPortal';
 import CheckIn from '@/pages/CheckIn';
@@ -9,8 +9,22 @@ import ClientProgramDetails from '@/pages/ClientProgramDetails';
 import MyProfile from '@/pages/MyProfile';
 import ClientDashboard from '@/pages/ClientDashboard';
 import MealPlanGenerator from '@/pages/MealPlanGenerator';
+import Unauthorized from '@/pages/Unauthorized';
+import { useAuth } from '@/context/auth';
+import { toast } from 'sonner';
 
 const ClientRoutes = () => {
+  const { user } = useAuth();
+  
+  // If not a client, redirect to unauthorized
+  if (user?.role !== 'client') {
+    console.log('Not a client, redirecting to unauthorized');
+    toast.error('Access denied. You do not have client permissions.');
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  console.log('Rendering ClientRoutes for client user:', user);
+  
   return (
     <Routes>
       <Route element={<MainLayout requiredRoles={['client']} />}>
@@ -26,6 +40,8 @@ const ClientRoutes = () => {
         <Route path="my-program" element={<ClientProgramDetails />} />
         <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
       </Route>
+      <Route path="unauthorized" element={<Unauthorized />} />
+      <Route path="*" element={<Navigate to="/client" replace />} />
     </Routes>
   );
 };

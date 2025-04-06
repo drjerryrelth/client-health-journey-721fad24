@@ -24,7 +24,9 @@ export function isDemoEmail(email: string): boolean {
  */
 export function isDemoAdminEmail(email: string): boolean {
   if (!email) return false;
-  return email.toLowerCase().trim() === demoEmails.admin;
+  
+  const normalizedEmail = email.toLowerCase().trim();
+  return demoEmails.demoAdmins.includes(normalizedEmail);
 }
 
 /**
@@ -32,7 +34,9 @@ export function isDemoAdminEmail(email: string): boolean {
  */
 export function isDemoClinicAdminEmail(email: string): boolean {
   if (!email) return false;
-  return email.toLowerCase().trim() === demoEmails.clinicAdmin;
+  
+  const normalizedEmail = email.toLowerCase().trim();
+  return demoEmails.demoClinicAdmins.includes(normalizedEmail);
 }
 
 /**
@@ -42,7 +46,7 @@ export function isDemoCoachEmail(email: string): boolean {
   if (!email) return false;
   
   const normalizedEmail = email.toLowerCase().trim();
-  return normalizedEmail === demoEmails.coach || normalizedEmail === demoEmails.coachAlt;
+  return demoEmails.demoCoaches.includes(normalizedEmail);
 }
 
 /**
@@ -52,7 +56,7 @@ export function isDemoClientEmail(email: string): boolean {
   if (!email) return false;
   
   const normalizedEmail = email.toLowerCase().trim();
-  return normalizedEmail === demoEmails.client || normalizedEmail === demoEmails.clientAlt;
+  return demoEmails.demoClients.includes(normalizedEmail);
 }
 
 /**
@@ -63,12 +67,14 @@ export function getDemoRoleByEmail(email: string): UserRole {
   
   const normalizedEmail = email.toLowerCase().trim();
   
-  if (normalizedEmail === demoEmails.admin) {
+  if (isDemoAdminEmail(normalizedEmail)) {
     return 'admin';
-  } else if (normalizedEmail === demoEmails.clinicAdmin) {
+  } else if (isDemoClinicAdminEmail(normalizedEmail)) {
     return 'clinic_admin';
-  } else if (normalizedEmail === demoEmails.coach || normalizedEmail === demoEmails.coachAlt) {
+  } else if (isDemoCoachEmail(normalizedEmail)) {
     return 'coach';
+  } else if (isDemoClientEmail(normalizedEmail)) {
+    return 'client';
   } else {
     return 'client'; // Default is client
   }

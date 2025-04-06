@@ -29,9 +29,10 @@ export async function ensureDemoProfileExists(userId: string, email: string): Pr
     const role = getDemoRoleByEmail(email);
     let name = email.split('@')[0];
     
-    // Special handling for admin demo account
+    // Default to no clinic ID
     let clinicId = null;
     
+    // Handle different demo account types
     if (isDemoAdminEmail(email)) {
       console.log('Ensuring admin demo profile with NO clinic ID');
       name = 'Admin User';

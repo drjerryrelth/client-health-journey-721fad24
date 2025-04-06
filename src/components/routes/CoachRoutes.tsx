@@ -38,7 +38,7 @@ const CoachRoutes = () => {
         <Route path="settings" element={<CoachSettingsPage />} />
       </Route>
       <Route path="unauthorized" element={<Unauthorized />} />
-      <Route path="*" element={<Unauthorized />} />
+      <Route path="*" element={<Navigate to="/coach/dashboard" replace />} />
     </Routes>
   );
 };

@@ -86,6 +86,16 @@ const DemoLoginButtons = ({ handleDemoLogin: propHandleDemoLogin, isSubmitting: 
           Login as Alt Client
         </Button>
       </div>
+      <div className="mt-2 grid grid-cols-1 gap-3">
+        <Button 
+          variant="outline"
+          onClick={() => handleLogin('clinic_admin', demoEmails.clinicAdmin)}
+          disabled={isSubmitting}
+          className="text-xs"
+        >
+          Login as Clinic Admin
+        </Button>
+      </div>
     </div>
   );
 };
