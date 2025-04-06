@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { checkAuthentication } from '../clinics/auth-helper';
@@ -21,23 +22,8 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
     
     console.log('[Coach Service] Authentication successful, user ID:', session.user.id);
     
-    // Ensure all required fields are present
-    if (!coach.name || !coach.email || !coach.clinicId) {
-      console.error('[Coach Service] Missing required fields for coach creation');
-      toast.error('Please provide all required coach information');
-      return null;
-    }
-    
-    // Call the RPC function directly without any timeout wrapping
-    console.log('[Coach Service] Calling add_coach RPC with data:', {
-      coach_name: coach.name,
-      coach_email: coach.email,
-      coach_phone: coach.phone,
-      coach_status: coach.status,
-      coach_clinic_id: coach.clinicId
-    });
-    
-    const { data, error } = await supabase.rpc(
+    // Add timeout to prevent hanging
+    const coachPromise = supabase.rpc(
       'add_coach', 
       {
         coach_name: coach.name,
@@ -47,6 +33,19 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
         coach_clinic_id: coach.clinicId
       }
     );
+    
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Coach addition timed out')), 10000);
+    });
+    
+    // Race between actual operation and timeout
+    const { data, error } = await Promise.race([
+      coachPromise,
+      timeoutPromise.then(() => {
+        console.warn('[Coach Service] RPC request timed out');
+        return { data: null, error: new Error('Request timed out') };
+      }),
+    ]);
 
     console.log('[Coach Service] RPC response:', { data, error });
 
@@ -173,82 +172,5 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       toast.error('Failed to update coach due to an unknown error');
     }
     return null;
-  }
-}
-
-/**
- * Deletes a coach from the database
- */
-export async function deleteCoach(id: string): Promise<boolean> {
-  try {
-    console.log('[Coach Service] Deleting coach with ID:', id);
-    
-    // Check if user is authenticated using the helper
-    const session = await checkAuthentication();
-    if (!session) {
-      console.error('[Coach Service] User is not authenticated');
-      toast.error('You must be logged in to delete a coach');
-      return false;
-    }
-    
-    // Use RPC function to delete coach to bypass any RLS policy issues
-    const { data, error } = await supabase.rpc(
-      'delete_coach',
-      { coach_id: id }
-    );
-    
-    if (error) {
-      console.error('[Coach Service] Error deleting coach via RPC:', error);
-      throw new Error(`Failed to delete coach: ${error.message}`);
-    }
-    
-    console.log('[Coach Service] Coach deleted successfully:', data);
-    toast.success('Coach deleted successfully!');
-    return true;
-  } catch (error) {
-    console.error('[Coach Service] Error deleting coach:', error);
-    if (error instanceof Error) {
-      toast.error(`Failed to delete coach: ${error.message}`);
-    } else {
-      toast.error('Failed to delete coach due to an unknown error');
-    }
-    return false;
-  }
-}
-
-/**
- * Resets password for a coach
- */
-export async function resetCoachPassword(coachEmail: string): Promise<boolean> {
-  try {
-    console.log('[Coach Service] Resetting password for coach email:', coachEmail);
-    
-    // Check if user is authenticated using the helper
-    const session = await checkAuthentication();
-    if (!session) {
-      console.error('[Coach Service] User is not authenticated');
-      toast.error('You must be logged in to reset coach password');
-      return false;
-    }
-    
-    // Use Supabase auth to send a password reset email
-    const { error } = await supabase.auth.resetPasswordForEmail(coachEmail);
-    
-    if (error) {
-      console.error('[Coach Service] Error resetting coach password:', error);
-      throw new Error(`Failed to reset coach password: ${error.message}`);
-    }
-    
-    console.log('[Coach Service] Password reset email sent successfully');
-    toast.success('Password reset email sent successfully!');
-    return true;
-  } catch (error) {
-    console.error('[Coach Service] Error resetting coach password:', error);
-    if (error instanceof Error) {
-      toast.error(`Failed to reset coach password: ${error.message}`);
-    } else {
-      toast.error('Failed to reset coach password due to an unknown error');
-    }
-    return false;
   }
 }

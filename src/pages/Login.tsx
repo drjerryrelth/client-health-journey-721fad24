@@ -1,18 +1,14 @@
 
 import React, { useEffect, useState } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useLoginRedirection } from '@/hooks/use-login-redirection';
 import { attemptSessionRecovery } from '@/services/auth/session-service';
-import { useAuth } from '@/context/auth';
-import { toast } from 'sonner';
 
 const Login = () => {
   const { isLoading, isAuthenticated, redirectDestination } = useLoginRedirection();
   const [isRecovering, setIsRecovering] = useState(false);
   const [recoveryFailed, setRecoveryFailed] = useState(false);
-  const navigate = useNavigate();
-  const { user } = useAuth();
   
   // Try session recovery on initial load, but handle failures gracefully
   useEffect(() => {
@@ -53,37 +49,16 @@ const Login = () => {
     };
   }, []);
   
-  // Direct redirection if authenticated
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log('User is authenticated, redirecting based on role...');
-      
-      let redirectPath = '/dashboard';
-      if (user.role === 'admin' || user.role === 'super_admin') {
-        redirectPath = '/admin/dashboard';
-      } else if (user.role === 'clinic_admin') {
-        redirectPath = '/admin/dashboard';
-      } else if (user.role === 'coach') {
-        redirectPath = '/coach/dashboard';
-      } else if (user.role === 'client') {
-        redirectPath = '/client';
-      }
-      
-      console.log('Redirecting to:', redirectPath);
-      navigate(redirectPath, { replace: true });
-    }
-  }, [isAuthenticated, user, navigate]);
-  
   // Immediately show login form if recovery failed
   if (recoveryFailed && !isAuthenticated) {
     return <LoginForm />;
   }
   
   // Show loading state - but only briefly
-  if ((isLoading || isRecovering) && !recoveryFailed) {
+  if (isLoading && !recoveryFailed) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
         <p className="text-sm text-gray-500">Checking authentication status...</p>
       </div>
     );

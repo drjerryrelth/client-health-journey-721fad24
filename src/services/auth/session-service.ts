@@ -4,21 +4,51 @@ import { supabase } from '@/integrations/supabase/client';
 export async function logoutUser() {
   console.log('Logging out user');
   
+  // Add timeout to prevent hanging
+  const logoutPromise = supabase.auth.signOut();
+  
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Logout timeout')), 30000); // Increased from 20000 to 30000ms
+  });
+  
   try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    // Race between actual logout and timeout
+    await Promise.race([
+      logoutPromise,
+      timeoutPromise.then(() => {
+        console.warn('Logout request timed out, forcing client-side logout');
+        // Force client-side logout regardless
+        localStorage.removeItem('sb-bgnoaxdomwkwvgcwccry-auth-token');
+        return { error: null };
+      }),
+    ]);
+    
     return { error: null };
   } catch (error) {
     console.error('Error during logout:', error);
-    // Always clear the local session on error to prevent being stuck
+    // Even if there's an error, we want to clear the local session
     localStorage.removeItem('sb-bgnoaxdomwkwvgcwccry-auth-token');
     return { error };
   }
 }
 
 export async function getCurrentSession() {
+  // Add timeout to prevent hanging
+  const sessionPromise = supabase.auth.getSession();
+  
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Session check timeout')), 30000); // Increased from 20000 to 30000ms
+  });
+  
   try {
-    return await supabase.auth.getSession();
+    // Race between actual session check and timeout
+    return await Promise.race([
+      sessionPromise,
+      timeoutPromise.then(() => {
+        console.warn('Session check timed out');
+        return { data: { session: null }, error: null };
+      }),
+    ]);
   } catch (error) {
     console.error('Error getting current session:', error);
     return { data: { session: null }, error };
@@ -30,24 +60,57 @@ export function setupAuthListener(callback: (event: string, session: any) => voi
   return supabase.auth.onAuthStateChange(callback);
 }
 
+// Enhanced session recovery with better error handling and logging
 export async function attemptSessionRecovery() {
   console.log('Attempting to recover session...');
   try {
-    // First try to get a session
-    const { data: sessionData } = await supabase.auth.getSession();
+    // First check if we already have a valid session
+    const sessionPromise = supabase.auth.getSession();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Session check timeout')), 30000); // Higher timeout
+    });
     
-    if (sessionData?.session) {
+    // Race between session check and timeout
+    const currentSession = await Promise.race([
+      sessionPromise,
+      timeoutPromise.then(() => {
+        console.warn('Session check timed out during recovery');
+        return { data: { session: null }, error: null };
+      }),
+    ]);
+    
+    if (currentSession.data?.session) {
       console.log('Valid session already exists, no recovery needed');
-      return { recovered: true, session: sessionData.session };
+      return { recovered: true, session: currentSession.data.session };
     }
     
-    // If no valid session, try to refresh
-    const { data, error } = await supabase.auth.refreshSession();
+    // If no valid session, try to refresh with timeout
+    console.log('No valid session found, attempting refresh');
+    const refreshPromise = supabase.auth.refreshSession();
+    const refreshTimeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Session refresh timeout')), 30000); // Higher timeout
+    });
+    
+    // Race between refresh and timeout
+    const { data, error } = await Promise.race([
+      refreshPromise,
+      refreshTimeoutPromise.then(() => {
+        console.warn('Session refresh timed out');
+        return { data: { session: null }, error: new Error('Session refresh timed out') };
+      }),
+    ]);
     
     if (error) {
       console.error('Session recovery failed:', error.message);
       // Clean up any potential stale tokens
-      localStorage.removeItem('sb-bgnoaxdomwkwvgcwccry-auth-token');
+      if (error.message && (
+        error.message.includes('token is expired') || 
+        error.message.includes('Auth session missing') ||
+        error.message.includes('timeout')
+      )) {
+        console.log('Token expired or missing, clearing local storage');
+        localStorage.removeItem('sb-bgnoaxdomwkwvgcwccry-auth-token');
+      }
       return { recovered: false, error };
     }
     

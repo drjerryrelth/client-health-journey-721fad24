@@ -1,12 +1,34 @@
 
-// Export all coach-related services and types
-export * from './types';
-export * from './coach-crud';
-export * from './coach-fetchers';
-export * from './coach-admin';
-export * from './coach-mutations';
-export * from './coach-service';  // Legacy service file with some methods
-export * from './coach-service-exports'; // Additional exports for backward compatibility
+// Re-export Coach Service functionality
+import { 
+  getClinicCoaches, 
+  getAllCoaches,
+  updateCoachStatus,
+  addCoach,
+  createCoach,
+  updateCoach,
+  deleteCoach,
+  resetCoachPassword 
+} from './coach-service';
 
-// For backwards compatibility and migration ease
-export * as CoachService from './coach-service';
+import { getMockCoaches } from './mock-data';
+
+// Export Coach Service API with appropriate function names
+export const CoachService = {
+  getClinicCoaches,
+  getAllCoaches,
+  getAllCoachesForAdmin: getAllCoaches, // Important alias to clarify this is for admin only
+  updateCoachStatus,
+  addCoach,
+  createCoach,
+  updateCoach,
+  deleteCoach,
+  resetCoachPassword,
+  getMockCoaches
+};
+
+// Explicitly re-export getMockCoaches for direct imports
+export { getMockCoaches };
+
+// Re-export types for external consumers
+export type { Coach } from './types';

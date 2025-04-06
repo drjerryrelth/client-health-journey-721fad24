@@ -4,66 +4,125 @@ import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { ActivityItem } from '@/types/dashboard';
 import { toast } from 'sonner';
 
-export async function fetchRecentActivities(limit: number = 10): Promise<ActivityItem[]> {
+// Function to fetch recent activities
+export async function fetchRecentActivities(limit: number = 5): Promise<ActivityItem[]> {
+  console.log(`[RecentActivities] Starting to fetch recent activities with limit: ${limit}`);
+  
   try {
-    // Verify authentication first
     const session = await checkAuthentication();
     if (!session) {
-      console.error('[ActivityService] No authenticated session found');
+      console.error('[RecentActivities] No authenticated session found');
       throw new Error('Authentication required to fetch activities');
     }
     
-    // Get the user's role and clinicId for permission checks
-    const { data: userData } = await supabase
-      .from('profiles')
-      .select('role, clinic_id')
-      .eq('id', session.user.id)
-      .single();
+    console.log('[RecentActivities] Authentication verified');
     
-    const userRole = userData?.role;
-    const userClinicId = userData?.clinic_id;
+    // Create an array to store our activities from multiple sources
+    const activities: ActivityItem[] = [];
     
-    console.log('[ActivityService] User role:', userRole, 'clinicId:', userClinicId);
-    
-    // Different query based on user role
-    let query = supabase.from('activities').select('*');
-    
-    // Clinic admins should only see their clinic's activities
-    if (userRole === 'clinic_admin' && userClinicId) {
-      query = query.eq('clinic_id', userClinicId);
+    // 1. Get recent check-ins as activities
+    try {
+      const { data: checkInsData, error: checkInsError } = await supabase
+        .from('check_ins')
+        .select('id, created_at, client_id, clients(name)')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+        
+      if (!checkInsError && checkInsData) {
+        for (const checkIn of checkInsData) {
+          // Handle clients data safely - it might be an object, not an array
+          const clientName = typeof checkIn.clients === 'object' ? 
+            (checkIn.clients as { name?: string })?.name || 'A client' : 
+            'A client';
+            
+          activities.push({
+            id: checkIn.id,
+            type: 'check_in',
+            description: `${clientName} submitted a check-in`,
+            timestamp: new Date(checkIn.created_at).toLocaleString(),
+            userId: checkIn.client_id
+          });
+        }
+        console.log(`[RecentActivities] Added ${checkInsData.length} check-ins as activities`);
+      } else if (checkInsError) {
+        console.error('[RecentActivities] Error fetching check-ins:', checkInsError);
+      }
+    } catch (error) {
+      console.error('[RecentActivities] Error processing check-ins:', error);
     }
     
-    // Order by newest first and limit results
-    const { data, error } = await query
-      .order('created_at', { ascending: false })
-      .limit(limit);
-      
-    if (error) {
-      throw error;
+    // 2. Get clinics as activities 
+    try {
+      const { data: clinicsData, error: clinicsError } = await supabase
+        .from('clinics')
+        .select('id, name, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+        
+      if (!clinicsError && clinicsData) {
+        for (const clinic of clinicsData) {
+          activities.push({
+            id: clinic.id,
+            type: 'clinic_signup',
+            description: `New clinic registered: ${clinic.name}`,
+            timestamp: new Date(clinic.created_at).toLocaleString(),
+            clinicId: clinic.id
+          });
+        }
+        console.log(`[RecentActivities] Added ${clinicsData.length} clinics as activities`);
+      } else if (clinicsError) {
+        console.error('[RecentActivities] Error fetching clinics:', clinicsError);
+      }
+    } catch (error) {
+      console.error('[RecentActivities] Error processing clinics:', error);
     }
     
-    // If no activities found, return empty array
-    if (!data || data.length === 0) {
-      return [];
+    // 3. Get coaches as activities
+    try {
+      const { data: coachesData, error: coachesError } = await supabase
+        .from('coaches')
+        .select('id, name, created_at, clinic_id, clinics(name)')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+        
+      if (!coachesError && coachesData) {
+        for (const coach of coachesData) {
+          // Handle clinics data safely - it might be an object, not an array
+          const clinicName = typeof coach.clinics === 'object' ? 
+            (coach.clinics as { name?: string })?.name || 'a clinic' : 
+            'a clinic';
+            
+          activities.push({
+            id: coach.id,
+            type: 'coach_added',
+            description: `New coach added: ${coach.name} to ${clinicName}`,
+            timestamp: new Date(coach.created_at).toLocaleString(),
+            clinicId: coach.clinic_id
+          });
+        }
+        console.log(`[RecentActivities] Added ${coachesData.length} coaches as activities`);
+      } else if (coachesError) {
+        console.error('[RecentActivities] Error fetching coaches:', coachesError);
+      }
+    } catch (error) {
+      console.error('[RecentActivities] Error processing coaches:', error);
     }
     
-    // Format activities for display
-    return data.map(activity => ({
-      id: activity.id,
-      type: activity.type || 'general',
-      description: activity.description || 'Activity logged',
-      timestamp: new Date(activity.created_at).toLocaleString(),
-      userId: activity.user_id,
-      clinicId: activity.clinic_id
-    }));
+    // Sort all activities by timestamp (newest first)
+    activities.sort((a, b) => {
+      const dateA = new Date(a.timestamp);
+      const dateB = new Date(b.timestamp);
+      return dateB.getTime() - dateA.getTime();
+    });
+    
+    // Return activities (limited to requested amount)
+    const limitedActivities = activities.slice(0, limit);
+    console.log(`[RecentActivities] Returning ${limitedActivities.length} activities`);
+    
+    return limitedActivities;
   } catch (error) {
-    console.error('[ActivityService] Error fetching activities:', error);
-    
-    // Only show toast for non-empty state errors
-    if (error instanceof Error && error.message !== 'No activities found') {
-      toast.error('Failed to load activities');
-    }
-    
+    console.error('[RecentActivities] Error fetching recent activities:', error);
+    toast.error("Could not load recent activities");
     return [];
   }
 }

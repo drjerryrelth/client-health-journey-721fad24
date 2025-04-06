@@ -23,9 +23,7 @@ export function useAdminCoaches() {
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
   const { user } = useAuth();
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const fetchClinics = useCallback(async () => {
     try {
@@ -55,10 +53,6 @@ export function useAdminCoaches() {
       }
     } catch (err) {
       console.error('[useAdminCoaches] Error fetching clinics:', err);
-      // Create fallback clinic map with unknown clinics
-      const fallbackMap: Record<string, string> = {};
-      fallbackMap['unknown'] = 'Unknown Clinic';
-      setClinics(fallbackMap);
     }
   }, [user]);
 
@@ -77,88 +71,54 @@ export function useAdminCoaches() {
       
       if (user?.role === 'clinic_admin' && user?.clinicId) {
         console.log('[useAdminCoaches] Clinic admin role detected, fetching only clinic coaches for clinic:', user.clinicId);
+        console.log('[useAdminCoaches] Clinic name:', user.name);
         coachesData = await CoachService.getClinicCoaches(user.clinicId);
       } else if (user?.role === 'admin' || user?.role === 'super_admin') {
         console.log('[useAdminCoaches] System admin role detected, fetching all coaches');
-        coachesData = await CoachService.getAllCoaches();
+        coachesData = await CoachService.getAllCoachesForAdmin();
       } else {
         console.error('[useAdminCoaches] Invalid or missing role/clinicId:', user);
-        // Use mock data as fallback instead of throwing
-        coachesData = CoachService.getMockCoaches();
+        throw new Error('Unauthorized or missing clinic information');
       }
       
       console.log('[useAdminCoaches] Received coaches data count:', coachesData?.length || 0);
       
       if (!Array.isArray(coachesData)) {
         console.error('[useAdminCoaches] Invalid coaches data format:', coachesData);
-        // Use mock data as fallback instead of throwing
-        coachesData = CoachService.getMockCoaches();
-      }
-      
-      // Log each coach email for debugging
-      if (coachesData.length > 0) {
-        console.log('[useAdminCoaches] Coach emails:', coachesData.map(c => c.email).join(', '));
-      } else {
-        console.warn('[useAdminCoaches] No coaches were returned');
+        throw new Error('Invalid data format received from service');
       }
       
       setCoaches(coachesData);
-      setLoading(false);
-      setIsInitialLoad(false);
       
-      // Only show toast for empty data if we've tried at least once
-      if (coachesData.length === 0 && retryCount > 0) {
-        toast.info('No coaches found. You may need to add coaches to your clinics.');
-      } else if (coachesData.length > 0) {
+      if (coachesData.length === 0) {
+        console.warn('[useAdminCoaches] No coaches were returned');
+        toast.info('No coaches found');
+      } else {
         toast.success(`Successfully loaded ${coachesData.length} coaches`);
       }
+      
+      setLoading(false);
     } catch (err) {
       console.error("[useAdminCoaches] Error fetching coaches:", err);
       setError("Failed to load coaches. Please try again.");
       setErrorDetails(err instanceof Error ? err.message : String(err));
       setLoading(false);
-      setIsInitialLoad(false);
       
-      // Fall back to mock data in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[useAdminCoaches] Using mock data as fallback in development');
-        setCoaches(CoachService.getMockCoaches());
-      }
-      
-      if (retryCount < 3) {
-        console.log(`[useAdminCoaches] Attempt ${retryCount + 1} failed, retrying automatically`);
-        setRetryCount(prev => prev + 1);
+      if (retryCount === 0) {
+        console.log('[useAdminCoaches] First attempt failed, retrying automatically');
+        setRetryCount(1);
         setTimeout(() => {
           fetchCoaches();
-        }, 1500);
+        }, 1000);
       }
     }
   }, [retryCount, user]);
 
   const refresh = useCallback(() => {
-    setRetryCount(0); // Reset retry count
-    setLastRefreshTime(Date.now()); // Update refresh timestamp
+    setRetryCount(prev => prev + 1);
     toast.info("Refreshing coaches data...");
     fetchClinics();
     fetchCoaches();
-  }, [fetchClinics, fetchCoaches]);
-
-  // Force a hard refresh that bypasses cache at all levels
-  const hardRefresh = useCallback(() => {
-    setRetryCount(0);
-    setLastRefreshTime(Date.now());
-    toast.info("Force refreshing all coaches data...");
-    
-    // Clear existing data first
-    setCoaches([]);
-    
-    // Force cache-busting
-    fetchClinics();
-    
-    // Add a small delay to ensure previous request is canceled
-    setTimeout(() => {
-      fetchCoaches();
-    }, 300);
   }, [fetchClinics, fetchCoaches]);
 
   useEffect(() => {
@@ -170,46 +130,9 @@ export function useAdminCoaches() {
         clinicId: user.clinicId
       });
     }
-    
-    // Clear any existing data first to avoid stale displays
-    setCoaches([]);
-    
-    // Immediate data fetch
     fetchClinics();
     fetchCoaches();
-    
-    // Auto-refresh data every 15 seconds to prevent stale data (reduced from 30 seconds)
-    const refreshInterval = setInterval(() => {
-      const currentTime = Date.now();
-      // Only refresh if it's been more than 15 seconds since last refresh
-      if (currentTime - lastRefreshTime > 15000) {
-        console.log('[useAdminCoaches] Auto-refreshing data');
-        setLastRefreshTime(currentTime);
-        fetchClinics();
-        fetchCoaches();
-      }
-    }, 15000);
-    
-    return () => {
-      clearInterval(refreshInterval);
-    };
-  }, [user?.role, user?.clinicId, fetchClinics, fetchCoaches, lastRefreshTime]); 
-
-  // Safety timeout to prevent eternal loading state
-  useEffect(() => {
-    if (loading && isInitialLoad) {
-      const timeout = setTimeout(() => {
-        if (loading) {
-          console.log('[useAdminCoaches] Safety timeout triggered to prevent eternal loading state');
-          setLoading(false);
-          setIsInitialLoad(false);
-          setError("Loading timed out. Please try refreshing the page.");
-        }
-      }, 10000); // 10 second safety timeout
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [loading, isInitialLoad]);
+  }, [user?.role, user?.clinicId, fetchClinics, fetchCoaches]); // Critical to include both role and clinicId as dependencies
 
   const getClinicName = useCallback((clinicId: string) => {
     const name = clinics[clinicId] || `Unknown Clinic (${clinicId ? clinicId.slice(-4) : 'None'})`;
@@ -228,7 +151,6 @@ export function useAdminCoaches() {
     error,
     errorDetails,
     refresh,
-    hardRefresh,
     retryCount
   };
 }

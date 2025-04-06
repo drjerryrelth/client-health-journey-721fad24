@@ -7,17 +7,9 @@ import { toast } from 'sonner';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { hasRole, isLoading, user, isAuthenticated } = useAuth();
+  const { hasRole, isLoading, user } = useAuth();
   
   useEffect(() => {
-    // First check if user is authenticated
-    if (!isLoading && !isAuthenticated) {
-      console.log('Not authenticated, redirecting to login');
-      navigate('/login', { replace: true });
-      return;
-    }
-    
-    // Then handle role-based redirection if user exists
     if (!isLoading && user) {
       console.log('Dashboard redirecting based on role:', user.role, 'clinicId:', user.clinicId);
       
@@ -27,7 +19,6 @@ const Dashboard = () => {
         navigate('/admin/dashboard', { replace: true });
       } else if (user.role === 'clinic_admin') {
         console.log('Redirecting to admin dashboard (clinic admin)');
-        // Make sure we're directing clinic admins to their proper dashboard
         navigate('/admin/dashboard', { replace: true }); 
       } else if (user.role === 'coach') {
         console.log('Redirecting to coach dashboard');
@@ -41,7 +32,7 @@ const Dashboard = () => {
         navigate('/unauthorized', { replace: true });
       }
     }
-  }, [hasRole, isLoading, navigate, user, isAuthenticated]);
+  }, [hasRole, isLoading, navigate, user]);
 
   // Display loading state while checking auth status
   return <DashboardLoader />;

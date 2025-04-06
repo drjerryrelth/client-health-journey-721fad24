@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus, RefreshCw, AlertCircle, RotateCw } from 'lucide-react';
+import { UserPlus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAdminCoaches } from '@/hooks/queries/use-admin-coaches';
 import CoachesErrorState from '@/components/admin/coaches/CoachesErrorState';
 import CoachesFilter from '@/components/admin/coaches/CoachesFilter';
@@ -25,14 +24,12 @@ const CoachesPage = () => {
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [filterText, setFilterText] = useState('');
-  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   
   const { user } = useAuth();
   
   const { isClinicAdmin, filterByClinic, userClinicId } = useClinicFilter();
   
-  // Use the enhanced hook with hardRefresh
-  const { coaches: allCoaches, loading, error, refresh, hardRefresh, retryCount } = useAdminCoaches();
+  const { coaches: allCoaches, loading, error, refresh, retryCount } = useAdminCoaches();
   
   useEffect(() => {
     if (isClinicAdmin && user) {
@@ -69,20 +66,17 @@ const CoachesPage = () => {
   
   const handleAddDialogClose = (open: boolean) => {
     setIsAddDialogOpen(open);
-    if (!open) {
-      // Force hard refresh when dialog closes to ensure new coach appears
-      hardRefresh();
-    }
+    if (!open) refresh();
   };
   
   const handleEditDialogClose = (open: boolean) => {
     setIsEditDialogOpen(open);
-    if (!open) hardRefresh();
+    if (!open) refresh();
   };
   
   const handleDeleteDialogClose = (open: boolean) => {
     setIsDeleteDialogOpen(open);
-    if (!open) hardRefresh();
+    if (!open) refresh();
   };
   
   const handleResetPasswordDialogClose = (open: boolean) => {
@@ -105,41 +99,9 @@ const CoachesPage = () => {
   };
   
   const handleManualRefresh = () => {
-    setIsManualRefreshing(true);
-    toast.info("Force refreshing coaches data...");
-    
-    // Force a complete data refresh
-    setTimeout(() => {
-      refresh();
-      setTimeout(() => {
-        setIsManualRefreshing(false);
-      }, 1500);
-    }, 500);
+    refresh();
+    toast.info("Refreshing coaches data...");
   };
-  
-  const handleHardRefresh = () => {
-    setIsManualRefreshing(true);
-    toast.info("Performing complete data reload...");
-    
-    // Clear existing data and force a hard refresh
-    setTimeout(async () => {
-      // Force hard refresh
-      hardRefresh();
-      
-      // Show success toast after a delay
-      setTimeout(() => {
-        setIsManualRefreshing(false);
-        toast.success("Data refreshed from server");
-      }, 1500);
-    }, 500);
-  };
-
-  // Run hard refresh on initial load
-  useEffect(() => {
-    // Initial hard refresh to ensure fresh data
-    hardRefresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   React.useEffect(() => {
     if (isClinicAdmin) {
@@ -160,25 +122,12 @@ const CoachesPage = () => {
             onClick={handleManualRefresh} 
             variant="outline" 
             size="icon"
-            disabled={loading || isManualRefreshing}
+            disabled={loading}
             className="flex items-center justify-center"
             title="Refresh coaches"
           >
-            <RefreshCw size={16} className={loading || isManualRefreshing ? "animate-spin" : ""} />
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           </Button>
-          
-          <Button 
-            onClick={handleHardRefresh} 
-            variant="default" 
-            size="sm"
-            disabled={loading || isManualRefreshing}
-            className="flex items-center gap-1 bg-primary text-white hover:bg-primary/90"
-            title="Force deep refresh of all coach data"
-          >
-            <RotateCw size={14} className={isManualRefreshing ? "animate-spin" : ""} />
-            <span>Hard Refresh</span>
-          </Button>
-          
           <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center gap-2">
             <UserPlus size={16} />
             <span>Add Coach</span>
@@ -214,9 +163,9 @@ const CoachesPage = () => {
           />
           
           {error ? (
-            <CoachesErrorState error={error} onRetry={handleHardRefresh} />
+            <CoachesErrorState error={error} onRetry={refresh} />
           ) : loading ? (
-            <CoachesLoadingState retryCount={retryCount} />
+            <CoachesLoadingState />
           ) : (
             <CoachesTable 
               coaches={filteredCoaches}
@@ -234,7 +183,7 @@ const CoachesPage = () => {
         onOpenChange={handleAddDialogClose} 
         clinicId={userClinicId || undefined}
         clinicName={user?.name || clinicName}
-        onCoachAdded={hardRefresh}
+        onCoachAdded={refresh}
       />
       
       {selectedCoach && (
@@ -244,21 +193,21 @@ const CoachesPage = () => {
             open={isEditDialogOpen} 
             onOpenChange={handleEditDialogClose} 
             clinicName={user?.name || clinicName}
-            onCoachUpdated={hardRefresh}
+            onCoachUpdated={refresh}
           />
           
           <DeleteCoachDialog 
             coach={selectedCoach} 
             open={isDeleteDialogOpen} 
             onOpenChange={handleDeleteDialogClose} 
-            onCoachDeleted={hardRefresh}
+            onCoachDeleted={refresh}
           />
           
           <ResetCoachPasswordDialog 
             coach={selectedCoach} 
             open={isResetPasswordDialogOpen} 
             onOpenChange={handleResetPasswordDialogClose} 
-            onPasswordReset={hardRefresh}
+            onPasswordReset={refresh}
           />
         </>
       )}

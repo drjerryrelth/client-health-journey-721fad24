@@ -1,24 +1,142 @@
-// Legacy service file - keeping for backward compatibility 
-// New code should import directly from the specific files
 
 import { Coach } from './types';
-import { getAllCoaches, getClinicCoaches } from './coach-fetchers';
-import { getMockCoaches, createMockCoach } from './mock-data';
-// Import CRUD operations from the new exports file
-import { addCoach, updateCoach, deleteCoach, resetCoachPassword } from './coach-service-exports';
+import { supabase } from '@/lib/supabase';
 
-// Export methods for backward compatibility
-export { 
-  getClinicCoaches,
-  getAllCoaches,
-  getMockCoaches,
-  createMockCoach,
-  // Also export CRUD operations
-  addCoach,
-  updateCoach,
-  deleteCoach,
-  resetCoachPassword
+// Get coaches for a specific clinic
+export const getClinicCoaches = async (clinicId: string): Promise<Coach[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('coaches')
+      .select('*')
+      .eq('clinicId', clinicId);
+      
+    if (error) {
+      console.error('Error fetching coaches for clinic:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (err) {
+    console.error('Error in getClinicCoaches:', err);
+    return [];
+  }
 };
 
-// Legacy demo data - to be replaced with actual data from Supabase
-export const mockCoaches: Coach[] = getMockCoaches();
+// Get all coaches (for admin use)
+export const getAllCoaches = async (): Promise<Coach[]> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('get-all-coaches');
+    
+    if (error) {
+      console.error('Error fetching all coaches:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (err) {
+    console.error('Error in getAllCoaches:', err);
+    return [];
+  }
+};
+
+// Update coach status (active/inactive)
+export const updateCoachStatus = async (coachId: string, status: 'active' | 'inactive'): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('coaches')
+      .update({ status })
+      .eq('id', coachId);
+      
+    if (error) {
+      throw error;
+    }
+    
+    return true;
+  } catch (err) {
+    console.error('Error updating coach status:', err);
+    return false;
+  }
+};
+
+// Add a new coach - using "addCoach" name for compatibility
+export const addCoach = async (coachData: Omit<Coach, 'id'>): Promise<Coach | null> => {
+  return createCoach(coachData);
+};
+
+// Add a new coach - primary implementation (both functions point to this implementation)
+export const createCoach = async (coachData: Omit<Coach, 'id'>): Promise<Coach | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('coaches')
+      .insert(coachData)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Error adding coach:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (err) {
+    console.error('Error in createCoach:', err);
+    return null;
+  }
+};
+
+// Update coach information
+export const updateCoach = async (coachId: string, coachData: Partial<Coach>): Promise<Coach | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('coaches')
+      .update(coachData)
+      .eq('id', coachId)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Error updating coach:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (err) {
+    console.error('Error in updateCoach:', err);
+    return null;
+  }
+};
+
+// Delete a coach
+export const deleteCoach = async (coachId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('coaches')
+      .delete()
+      .eq('id', coachId);
+      
+    if (error) {
+      throw error;
+    }
+    
+    return true;
+  } catch (err) {
+    console.error('Error deleting coach:', err);
+    return false;
+  }
+};
+
+// Reset coach password
+export const resetCoachPassword = async (coachEmail: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(coachEmail);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return true;
+  } catch (err) {
+    console.error('Error resetting coach password:', err);
+    return false;
+  }
+};

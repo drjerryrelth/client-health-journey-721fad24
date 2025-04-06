@@ -42,16 +42,7 @@ Deno.serve(async (req) => {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { 
-        global: { 
-          headers: { 
-            Authorization: authHeader,
-            'Cache-Control': 'no-cache, no-store',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          } 
-        } 
-      }
+      { global: { headers: { Authorization: authHeader } } }
     )
 
     // Get the user information to verify they are an admin
@@ -68,50 +59,127 @@ Deno.serve(async (req) => {
 
     console.log(`User making request: ${user.id}`);
     
-    // CRITICAL: Using the service_role to bypass RLS completely
-    // This is safe because we already authenticated the user above
-    const adminClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        global: {
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            // Add random query parameter to prevent caching
-            'X-Cache-Buster': Date.now().toString()
-          }
-        }
+    console.log('Using admin_get_all_coaches RPC function');
+    
+    try {
+      // Use the security-definer RPC function to avoid RLS issues
+      const { data: coaches, error: coachesError } = await supabaseClient
+        .rpc('admin_get_all_coaches');
+
+      if (coachesError) {
+        console.error('Error fetching coaches with RPC:', coachesError);
+        throw coachesError;
       }
-    );
-    
-    console.log('Using service role client to bypass RLS policies and ensure complete data access');
-    
-    // Use a simple query instead of the options() method which was causing issues
-    const timestamp = new Date().getTime();
-    const { data: coaches, error: coachesError } = await adminClient
-      .from('coaches')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (coachesError) {
-      console.error('Error fetching coaches with service role:', coachesError);
+      
+      // Log what we received to diagnose issues
+      console.log('Raw RPC response:', JSON.stringify(coaches).substring(0, 200) + '...');
+      
+      if (!coaches || !Array.isArray(coaches)) {
+        console.log('No coaches found or invalid response format');
+        return new Response(
+          JSON.stringify([]),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      }
+
+      console.log(`Found ${coaches.length} coaches via RPC function`);
+
+      // Cast to any[] to safely process the data
+      const coachesAny = coaches as any[];
+      
+      // Transform and validate each coach object
+      const typedCoaches = coachesAny.map(coach => {
+        // Skip invalid entries
+        if (!coach || typeof coach !== 'object') {
+          console.warn('Invalid coach data in response');
+          return null;
+        }
+        
+        // Process valid entries with proper type conversions
+        return {
+          id: String(coach.id || ''),
+          name: String(coach.name || ''),
+          email: String(coach.email || ''),
+          phone: coach.phone !== null ? String(coach.phone) : null,
+          status: String(coach.status || 'inactive'),
+          clinic_id: String(coach.clinic_id || ''),
+          client_count: typeof coach.client_count === 'number' ? coach.client_count : 0
+        };
+      }).filter(Boolean) as CoachData[]; // Remove any null entries from invalid data
+
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch coaches', details: coachesError }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-    
-    if (!coaches || coaches.length === 0) {
-      console.warn('No coaches found in database, returning empty array');
-      return new Response(
-        JSON.stringify([]),
+        JSON.stringify(typedCoaches),
         { 
           headers: { 
             ...corsHeaders, 
             'Content-Type': 'application/json',
-            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }, 
+          status: 200 
+        }
+      )
+    } catch (rpcError) {
+      console.error('RPC approach failed:', rpcError);
+      
+      // Fall back to direct query if RPC fails
+      console.log('Falling back to direct query');
+      const { data: directData, error: directError } = await supabaseClient
+        .from('coaches')
+        .select('id, name, email, phone, status, clinic_id')
+        .order('created_at', { ascending: false });
+      
+      if (directError) {
+        console.error('Error with fallback query:', directError);
+        throw directError;
+      }
+      
+      if (!directData || directData.length === 0) {
+        console.log('No coaches found with direct query');
+        return new Response(
+          JSON.stringify([]),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      }
+      
+      // Process each coach to add client counts
+      const coachesWithClientCount: CoachData[] = [];
+      
+      for (const coach of directData) {
+        // Get client count
+        let clientCount = 0;
+        try {
+          const { count } = await supabaseClient
+            .from('clients')
+            .select('*', { count: 'exact', head: true })
+            .eq('coach_id', coach.id);
+            
+          clientCount = count || 0;
+        } catch (countErr) {
+          console.error(`Error counting clients for coach ${coach.id}:`, countErr);
+        }
+        
+        coachesWithClientCount.push({
+          id: String(coach.id || ''),
+          name: String(coach.name || ''),
+          email: String(coach.email || ''),
+          phone: coach.phone,
+          status: (coach.status === 'active' || coach.status === 'inactive') 
+            ? coach.status 
+            : "inactive",
+          clinic_id: String(coach.clinic_id || ''),
+          client_count: clientCount
+        });
+      }
+      
+      return new Response(
+        JSON.stringify(coachesWithClientCount),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
             'Pragma': 'no-cache',
             'Expires': '0'
           }, 
@@ -119,60 +187,6 @@ Deno.serve(async (req) => {
         }
       );
     }
-    
-    console.log(`Found ${coaches.length} coaches via admin client direct query`);
-    console.log(`First coach: ${coaches[0].email}, Last coach: ${coaches[coaches.length-1].email}`);
-    
-    // Process each coach to add client counts
-    const coachesWithClientCount: CoachData[] = [];
-    
-    for (const coach of coaches) {
-      // Get client count for each coach
-      let clientCount = 0;
-      try {
-        const { count } = await adminClient
-          .from('clients')
-          .select('*', { count: 'exact', head: true })
-          .eq('coach_id', coach.id);
-          
-        clientCount = count || 0;
-      } catch (countErr) {
-        console.error(`Error counting clients for coach ${coach.id}:`, countErr);
-      }
-      
-      // Log each coach for debugging
-      console.log(`Processing coach: ${coach.name} (${coach.email}), ID: ${coach.id}, created: ${coach.created_at}`);
-      
-      coachesWithClientCount.push({
-        id: String(coach.id || ''),
-        name: String(coach.name || ''),
-        email: String(coach.email || ''),
-        phone: coach.phone,
-        status: (coach.status === 'active' || coach.status === 'inactive') 
-          ? coach.status 
-          : "inactive",
-        clinic_id: String(coach.clinic_id || ''),
-        client_count: clientCount
-      });
-    }
-    
-    console.log(`Successfully processed all ${coachesWithClientCount.length} coaches with client counts`);
-    
-    // Super aggressive cache prevention in response headers
-    return new Response(
-      JSON.stringify(coachesWithClientCount),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-          'Surrogate-Control': 'no-store',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }, 
-        status: 200 
-      }
-    );
   } catch (error) {
     console.error('Unexpected error:', error);
     return new Response(

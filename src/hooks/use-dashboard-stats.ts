@@ -2,28 +2,33 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchDashboardStats } from '@/services/dashboard/stats-service';
 import { fetchRecentActivities } from '@/services/dashboard/activity-service';
-import { useAuth } from '@/context/auth';
+import { DashboardStats, ActivityItem } from '@/types/dashboard';
 
+// Re-export types for backward compatibility
+export type { DashboardStats, ActivityItem };
+
+// Hook to use dashboard stats
 export function useDashboardStats() {
-  const { user } = useAuth();
-  
   return useQuery({
-    queryKey: ['dashboard-stats', user?.role, user?.clinicId],
-    queryFn: () => fetchDashboardStats(),
-    retry: 2,
+    queryKey: ['dashboard-stats'],
+    queryFn: fetchDashboardStats,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: false,
+    retry: 3, // Increase retry count to help with intermittent errors
+    retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff
+    refetchOnWindowFocus: false, // Don't refetch when window gets focus
+    refetchOnMount: true // Always refetch when component mounts
   });
 }
 
-export function useRecentActivities(limit: number = 10) {
-  const { user } = useAuth();
-  
+// Hook to use recent activities
+export function useRecentActivities(limit: number = 5) {
   return useQuery({
-    queryKey: ['recent-activities', user?.role, user?.clinicId, limit],
+    queryKey: ['recent-activities', limit],
     queryFn: () => fetchRecentActivities(limit),
-    retry: 2,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    retry: 3, // Increase retry count
+    retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff
+    refetchOnWindowFocus: false, // Don't refetch when window gets focus
+    refetchOnMount: true // Always refetch when component mounts
   });
 }

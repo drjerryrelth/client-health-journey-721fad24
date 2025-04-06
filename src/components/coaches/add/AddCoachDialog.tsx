@@ -105,24 +105,31 @@ export const AddCoachDialog = ({
       
       console.log('[AddCoachDialog] Session verified before submission:', session.user.id);
       
-      // Add the coach with all required fields
-      const newCoach = await CoachService.addCoach({
+      // Try adding the coach with a timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Coach addition timed out')), 15000);
+      });
+      
+      // Create the coach addition promise
+      const addCoachPromise = CoachService.addCoach({
         name: values.name,
         email: values.email,
         phone: values.phone || null,
         status: 'active',
         clinicId: effectiveClinicId,
-        clients: 0
+        clients: 0 // Add the clients field with default value 0
       });
+      
+      // Race between the actual operation and the timeout
+      const newCoach = await Promise.race([
+        addCoachPromise,
+        timeoutPromise
+      ]);
 
       if (newCoach) {
-        console.log('[AddCoachDialog] Coach added successfully:', newCoach);
         toast.success(`${values.name} has been added to ${selectedClinicName}`);
         onOpenChange(false);
-        if (onCoachAdded) {
-          console.log('[AddCoachDialog] Triggering onCoachAdded callback');
-          onCoachAdded();
-        }
+        if (onCoachAdded) onCoachAdded();
       } else {
         throw new Error("Coach addition failed - service returned null");
       }

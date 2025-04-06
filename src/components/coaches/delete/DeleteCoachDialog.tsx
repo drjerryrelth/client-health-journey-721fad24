@@ -36,15 +36,10 @@ export const DeleteCoachDialog = ({
     setError(null);
     
     try {
-      const success = await CoachService.deleteCoach(coach.id);
-      
-      if (success) {
-        toast.success(`${coach.name} has been removed`);
-        onOpenChange(false);
-        if (onCoachDeleted) onCoachDeleted();
-      } else {
-        throw new Error('Failed to delete coach');
-      }
+      await CoachService.deleteCoach(coach.id);
+      toast.success(`${coach.name} has been removed`);
+      onOpenChange(false);
+      if (onCoachDeleted) onCoachDeleted();
     } catch (err) {
       console.error('Error deleting coach:', err);
       setError(err instanceof Error ? err.message : 'An unknown error occurred');

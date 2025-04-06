@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
 import { AuthContextType } from '@/types/auth';
 
 // Default context value
@@ -8,7 +8,7 @@ const defaultValue: AuthContextType = {
   supabaseUser: null,
   isAuthenticated: false,
   isLoading: true,
-  login: async () => false, // Return false by default
+  login: async () => {},
   logout: async () => {},
   hasRole: () => false,
   signUp: async () => {},

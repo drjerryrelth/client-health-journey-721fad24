@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -50,8 +51,11 @@ const ClientList = ({ clinicId }: ClientListProps) => {
         userRole: user?.role
       });
       
-      // Simpler query that doesn't join with programs or coaches to avoid relationship errors
-      let query = supabase.from('clients').select('*');
+      let query = supabase.from('clients').select(`
+        *,
+        programs:program_id (name),
+        coaches:coach_id (name, email)
+      `);
       
       // Filter by clinic ID if provided or if user is clinic admin
       if (effectiveClinicId) {
@@ -70,9 +74,9 @@ const ClientList = ({ clinicId }: ClientListProps) => {
         console.log(`Found ${mappedClients.length} clients for ${isClinicAdmin ? 'clinic admin' : 'system admin'}`);
         setClients(mappedClients);
         
-        // Fetch program and coach details separately to avoid join issues
-        if (mappedClients.length > 0) {
-          await fetchProgramAndCoachDetails(mappedClients);
+        // Verify we have the expected number of clients (4 for clinic admin)
+        if (isClinicAdmin) {
+          console.log(`Clinic Admin expects 4 clients - actual count: ${mappedClients.length}`);
         }
       }
     } catch (err: any) {
@@ -81,60 +85,6 @@ const ClientList = ({ clinicId }: ClientListProps) => {
       toast.error('Failed to load clients');
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Fetch program and coach details separately to avoid join issues
-  const fetchProgramAndCoachDetails = async (clientList: Client[]) => {
-    try {
-      // Create lists of program and coach IDs to fetch
-      const programIds = clientList.filter(c => c.programId).map(c => c.programId) as string[];
-      const coachIds = clientList.filter(c => c.coachId).map(c => c.coachId) as string[];
-      
-      // Only fetch if we have IDs
-      if (programIds.length > 0) {
-        const { data: programsData } = await supabase
-          .from('programs')
-          .select('id, name')
-          .in('id', programIds);
-          
-        if (programsData) {
-          // Create a map of program data
-          const programMap = new Map(programsData.map(p => [p.id, p.name]));
-          
-          // Add program names to clients
-          clientList.forEach(client => {
-            if (client.programId && programMap.has(client.programId)) {
-              (client as any).programs = { name: programMap.get(client.programId) };
-            }
-          });
-        }
-      }
-      
-      if (coachIds.length > 0) {
-        const { data: coachesData } = await supabase
-          .from('coaches')
-          .select('id, name, email')
-          .in('id', coachIds);
-          
-        if (coachesData) {
-          // Create a map of coach data
-          const coachMap = new Map(coachesData.map(c => [c.id, { name: c.name, email: c.email }]));
-          
-          // Add coach names to clients
-          clientList.forEach(client => {
-            if (client.coachId && coachMap.has(client.coachId)) {
-              (client as any).coaches = coachMap.get(client.coachId);
-            }
-          });
-        }
-      }
-      
-      // Update state with enhanced client data
-      setClients([...clientList]);
-    } catch (error) {
-      console.error('Error fetching program and coach details:', error);
-      // Continue with the basic client data we already have
     }
   };
 
