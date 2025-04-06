@@ -73,9 +73,10 @@ export const useProgramForm = () => {
 
       // Close dialog
       setShowAddProgramDialog(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating program:", error);
-      toast.error("Failed to create program. Please try again.");
+      const errorMessage = error?.message || "Failed to create program. Try again.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

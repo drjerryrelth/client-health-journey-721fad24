@@ -54,12 +54,26 @@ export const useProgramQuery = (programId?: string) => {
 
 export const useCreateProgramMutation = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   
   return useMutation({
     mutationFn: ({ program, supplements }: { 
       program: Omit<Program, 'id' | 'supplements'>; 
       supplements: Omit<Program['supplements'][0], 'id'>[] 
-    }) => ProgramService.createProgram(program, supplements),
+    }) => {
+      // Ensure the program has a clinic ID even if not provided
+      const effectiveProgram = {
+        ...program,
+        clinicId: program.clinicId || user?.clinicId || ''
+      };
+      
+      if (!effectiveProgram.clinicId) {
+        throw new Error('No clinic ID available. Cannot create program.');
+      }
+      
+      console.log(`Creating program with effective clinicId: ${effectiveProgram.clinicId}`);
+      return ProgramService.createProgram(effectiveProgram, supplements);
+    },
     onSuccess: (data) => {
       // Update programs query cache
       queryClient.invalidateQueries({ queryKey: ['programs'] });

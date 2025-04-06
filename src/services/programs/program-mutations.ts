@@ -32,6 +32,9 @@ export async function createProgram(
 
     if (error) {
       console.error('Error creating program:', error);
+      if (error.message.includes('row-level security')) {
+        throw new Error('Permission denied: You can only create programs for your own clinic.');
+      }
       throw error;
     }
     
