@@ -38,7 +38,7 @@ const DemoLoginButtons = ({ handleDemoLogin: propHandleDemoLogin, isSubmitting: 
         <AlertTitle className="text-yellow-800">Demo Accounts</AlertTitle>
         <AlertDescription className="text-xs text-yellow-800">
           Use these buttons to instantly access demo accounts. All demo accounts use the password "password123".
-          Coach can also use "support@practicenaturals.com" as a secondary demo email.
+          Coach can also use "support@practicenaturals.com" and Client can use "drjerry@livingbetterhealthcare.com" as alternative demo emails.
         </AlertDescription>
       </Alert>
       
@@ -66,6 +66,24 @@ const DemoLoginButtons = ({ handleDemoLogin: propHandleDemoLogin, isSubmitting: 
           className="text-xs"
         >
           Login as Client
+        </Button>
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        <Button 
+          variant="outline"
+          onClick={() => handleLogin('coach', demoEmails.coachAlt)}
+          disabled={isSubmitting}
+          className="text-xs"
+        >
+          Login as Alt Coach
+        </Button>
+        <Button 
+          variant="outline"
+          onClick={() => handleLogin('client', demoEmails.clientAlt)}
+          disabled={isSubmitting}
+          className="text-xs"
+        >
+          Login as Alt Client
         </Button>
       </div>
     </div>

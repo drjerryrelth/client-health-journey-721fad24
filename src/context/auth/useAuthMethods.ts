@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
 import { loginWithEmail, signUpWithEmail, logoutUser } from '@/services/auth';
-import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoCoachEmail, isDemoEmail } from '@/services/auth/demo/utils';
+import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoCoachEmail, isDemoClientEmail } from '@/services/auth/demo/utils';
 
 type UseAuthMethodsProps = {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -148,6 +148,26 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       // If required roles include 'coach', grant access
       if (requiredRoles.includes('coach')) {
         console.log('SECURITY: Coach accessing permitted route');
+        return true;
+      }
+    }
+    
+    // PRIORITY 1.85: Special check for client users 
+    if (user.role === 'client' || (user.email && isDemoClientEmail(user.email))) {
+      console.log('SECURITY: Client role detected, checking appropriate access');
+      
+      // Convert required role to array for easier checking
+      const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+      
+      // Check if the required roles include admin or coach routes - clients should not access these
+      if (requiredRoles.includes('admin') || requiredRoles.includes('clinic_admin') || requiredRoles.includes('coach')) {
+        console.log('SECURITY: Client attempting to access admin or coach route, denying access');
+        return false;
+      }
+      
+      // If required roles include 'client', grant access
+      if (requiredRoles.includes('client')) {
+        console.log('SECURITY: Client accessing permitted route');
         return true;
       }
     }

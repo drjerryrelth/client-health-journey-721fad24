@@ -43,6 +43,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
         window.location.href = '/coach/dashboard';
       }, 100);
     }
+    
+    // Additional check for client users trying to access admin or coach routes
+    if (user?.role === 'client') {
+      if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/coach')) {
+        console.error('SECURITY VIOLATION: Client attempting to access admin or coach route:', location.pathname);
+        toast.error("Access denied. You don't have permission to access this page.");
+        setTimeout(() => {
+          window.location.href = '/client';
+        }, 100);
+      }
+    }
   }, [location.pathname, user?.role]);
   
   // Show loading state
@@ -91,6 +102,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
     return <Navigate to="/unauthorized" replace />;
   }
   
+  // Check for client users trying to access admin or coach routes
+  if (user?.role === 'client') {
+    if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/coach')) {
+      console.error('SECURITY VIOLATION: Blocking client from accessing admin or coach route:', location.pathname);
+      toast.error("Access denied. You don't have permission to access this page.");
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+  
   // CRITICAL SECURITY FIX: Apply specialized role checking logic
   let hasPermission = false;
   
@@ -113,6 +133,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
     // Block coaches from admin routes
     if (requiredRoles.includes('admin') || requiredRoles.includes('clinic_admin')) {
       console.error('SECURITY VIOLATION: Blocking coach from accessing admin route');
+      hasPermission = false;
+    }
+  }
+  // For client users, only allow access to client routes
+  else if (user?.role === 'client') {
+    // Clients can ONLY access routes that explicitly include client role
+    hasPermission = requiredRoles.includes('client');
+    
+    // Block clients from admin and coach routes
+    if (requiredRoles.includes('admin') || requiredRoles.includes('clinic_admin') || requiredRoles.includes('coach')) {
+      console.error('SECURITY VIOLATION: Blocking client from accessing admin or coach route');
       hasPermission = false;
     }
   }
