@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserRole } from '@/types';
 import { demoEmails } from '@/services/auth/demo';
 import { useNavigate } from 'react-router-dom';
+import { isDemoCoachEmail } from '@/services/auth/demo/utils';
 
 export const useDemoLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,6 +21,12 @@ export const useDemoLogin = () => {
     if (type === 'admin') {
       email = demoEmails.admin; // Always use the correct admin email from constants
       console.log(`Using admin demo account: ${email}`);
+    }
+    
+    // Coach demo account special handling
+    if (type === 'coach' && !isDemoCoachEmail(email)) {
+      email = demoEmails.coach; // Use the primary coach email if not already using a coach demo email
+      console.log(`Using coach demo account: ${email}`);
     }
     
     try {

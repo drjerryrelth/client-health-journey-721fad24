@@ -1,269 +1,159 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { demoEmails } from './constants';
-import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoCoachEmail } from './utils';
+import { getDemoRoleByEmail, isDemoAdminEmail, isDemoCoachEmail, isDemoClinicAdminEmail } from './utils';
+import { toast } from 'sonner';
 
-// Helper function to ensure demo profile exists with correct role based on email
-export async function ensureDemoProfileExists(userId: string, email: string) {
-  console.log('Ensuring demo profile exists for user:', userId, 'email:', email);
-  
-  // Determine role based on email - critical for correct role assignment
-  let role = 'client'; // default
-  let fullName = 'Demo User';
-  let clinicId = undefined; // Default no clinic
-  
-  // CRITICAL: Special case for demo admin - highest priority check
-  if (isDemoAdminEmail(email)) {
-    role = 'admin';
-    fullName = 'Admin User';
-    console.log('CRITICAL: This is the demo admin email - ensuring admin role is applied WITHOUT clinic ID');
-    // Explicitly set clinicId to null for admin demo
-    clinicId = null;
-    
-    // Special case admin profile handling
-    try {
-      // Check if admin profile exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (!existingProfile) {
-        console.log('Admin demo profile not found, creating one with admin role');
-        
-        // Create admin profile
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: userId,
-            full_name: 'Admin User',
-            email: email,
-            role: 'admin',
-            clinic_id: null
-          });
-          
-        if (insertError) {
-          console.error('Error creating admin demo profile:', insertError);
-        } else {
-          console.log('Admin demo profile created successfully');
-        }
-      } else {
-        // CRITICAL: Ensure admin profile has the correct role and NO clinic_id
-        if (existingProfile.role !== 'admin' || existingProfile.clinic_id !== null) {
-          console.log('Updating admin demo profile to ensure correct role and no clinic ID');
-          
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ 
-              role: 'admin', 
-              clinic_id: null,
-              full_name: 'Admin User'
-            })
-            .eq('id', userId);
-            
-          if (updateError) {
-            console.error('Error updating admin demo profile:', updateError);
-          } else {
-            console.log('Admin demo profile updated successfully');
-          }
-        }
-      }
-      
-      // For admin demo, always return 'admin' role
-      return 'admin';
-    } catch (error) {
-      console.error('Error handling admin demo profile:', error);
-      return 'admin'; // Return admin role even if there's an error
-    }
-  } 
-  // CRITICAL: Special case for clinic admin demo email
-  else if (isDemoClinicAdminEmail(email)) {
-    role = 'clinic_admin';
-    fullName = 'Clinic Admin User';
-    clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
-    console.log('CRITICAL: This is the demo clinic admin email - ensuring clinic_admin role with clinic ID:', clinicId);
-    
-    // Special case clinic admin profile handling
-    try {
-      // Check if clinic admin profile exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (!existingProfile) {
-        console.log('Clinic admin demo profile not found, creating one with clinic_admin role');
-        
-        // Create clinic admin profile
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: userId,
-            full_name: 'Clinic Admin User',
-            email: email,
-            role: 'clinic_admin',
-            clinic_id: clinicId
-          });
-          
-        if (insertError) {
-          console.error('Error creating clinic admin demo profile:', insertError);
-        } else {
-          console.log('Clinic admin demo profile created successfully');
-        }
-      } else {
-        // CRITICAL: Ensure clinic admin profile has the correct role and clinic_id
-        if (existingProfile.role !== 'clinic_admin' || existingProfile.clinic_id !== clinicId) {
-          console.log('Updating clinic admin demo profile to ensure correct role and clinic ID');
-          
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ 
-              role: 'clinic_admin', 
-              clinic_id: clinicId,
-              full_name: 'Clinic Admin User'
-            })
-            .eq('id', userId);
-            
-          if (updateError) {
-            console.error('Error updating clinic admin demo profile:', updateError);
-          } else {
-            console.log('Clinic admin demo profile updated successfully');
-          }
-        }
-      }
-      
-      // For clinic admin demo, always return 'clinic_admin' role
-      return 'clinic_admin';
-    } catch (error) {
-      console.error('Error handling clinic admin demo profile:', error);
-      return 'clinic_admin'; // Return clinic_admin role even if there's an error
-    }
-  } 
-  // CRITICAL: Special case for coach demo emails
-  else if (isDemoCoachEmail(email)) {
-    role = 'coach';
-    fullName = 'Coach User';
-    clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
-    console.log('CRITICAL: This is a demo coach email - ensuring coach role with clinic ID:', clinicId);
-    
-    try {
-      // Check if coach profile exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (!existingProfile) {
-        console.log('Coach demo profile not found, creating one with coach role');
-        
-        // Create coach profile
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: userId,
-            full_name: 'Coach User',
-            email: email,
-            role: 'coach',
-            clinic_id: clinicId
-          });
-          
-        if (insertError) {
-          console.error('Error creating coach demo profile:', insertError);
-        } else {
-          console.log('Coach demo profile created successfully');
-        }
-      } else {
-        // CRITICAL: Ensure coach profile has the correct role and clinic_id
-        if (existingProfile.role !== 'coach' || existingProfile.clinic_id !== clinicId) {
-          console.log('Updating coach demo profile to ensure correct role and clinic ID');
-          
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ 
-              role: 'coach', 
-              clinic_id: clinicId,
-              full_name: 'Coach User'
-            })
-            .eq('id', userId);
-            
-          if (updateError) {
-            console.error('Error updating coach demo profile:', updateError);
-          } else {
-            console.log('Coach demo profile updated successfully');
-          }
-        }
-      }
-      
-      // For coach demo, always return 'coach' role
-      return 'coach';
-    } catch (error) {
-      console.error('Error handling coach demo profile:', error);
-      return 'coach'; // Return coach role even if there's an error
-    }
-  }
-  else if (email === demoEmails.client) {
-    role = 'client';
-    fullName = 'Client User';
-    clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
-  }
-  
-  // Handle non-special demo profiles
+// Default clinic ID for demo purposes
+const DEMO_CLINIC_ID = '65196bd4-f754-4c4e-9649-2bf478016701';
+
+/**
+ * Ensures that a demo user profile exists in the database with the correct role.
+ * This is called after a demo user logs in.
+ */
+export async function ensureDemoProfileExists(userId: string, email: string): Promise<void> {
   try {
-    const { data: profile, error: fetchError } = await supabase
+    console.log(`Ensuring demo profile exists for ${email} (userId: ${userId})`);
+    
+    // Check if profile already exists
+    const { data: existingProfile, error: fetchError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
-    
-    if (fetchError || !profile) {
-      console.log('Demo profile not found, creating one with role:', role);
       
-      // Create profile if it doesn't exist
+    if (fetchError && !fetchError.message.includes('No rows found')) {
+      throw fetchError;
+    }
+    
+    // Determine role based on email
+    const role = getDemoRoleByEmail(email);
+    let name = email.split('@')[0];
+    
+    // Special handling for admin demo account
+    let clinicId = null;
+    
+    if (isDemoAdminEmail(email)) {
+      console.log('Ensuring admin demo profile with NO clinic ID');
+      name = 'Admin User';
+      // Admin has no clinic ID
+    } 
+    else if (isDemoClinicAdminEmail(email)) {
+      console.log('Ensuring clinic admin demo profile with clinic ID');
+      name = 'Clinic Admin User';
+      clinicId = DEMO_CLINIC_ID;
+    }
+    else if (isDemoCoachEmail(email)) {
+      console.log('Ensuring coach demo profile with clinic ID');
+      name = 'Coach User';
+      clinicId = DEMO_CLINIC_ID;
+      
+      // Also ensure coach record exists
+      await ensureDemoCoachExists(userId, name, clinicId);
+    }
+    
+    // If profile doesn't exist, create it
+    if (!existingProfile) {
+      console.log(`Creating new profile for demo user ${email} with role ${role}`);
+      
       const { error: insertError } = await supabase
         .from('profiles')
-        .insert({
-          id: userId,
-          full_name: fullName,
-          email: email,
-          role: role,
-          clinic_id: clinicId,
-        });
-      
+        .insert([
+          { 
+            id: userId, 
+            name, 
+            email, 
+            role,
+            clinic_id: clinicId
+          }
+        ]);
+        
       if (insertError) {
-        console.error('Error creating demo profile:', insertError);
-        console.log('This may be due to RLS policies. The app will continue with in-memory profile data.');
-      } else {
-        console.log('Demo profile created successfully with role:', role);
+        throw insertError;
       }
+      
+      console.log(`Created profile for demo user ${email}`);
     } else {
-      // ALWAYS update existing profile to ensure role matches the email 
-      // This is critical - we want to force the role to match the predefined demo emails
-      console.log(`Updating profile role from ${profile.role} to ${role} to match demo email`);
+      // Profile exists, update it to ensure correct role and clinic ID
+      console.log(`Updating existing profile for demo user ${email} to role ${role}`);
       
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
-          role: role, 
-          full_name: fullName,
+          name, 
+          role,
           clinic_id: clinicId
         })
         .eq('id', userId);
-      
+        
       if (updateError) {
-        console.error('Error updating demo profile:', updateError);
-        console.log('This may be due to RLS policies. The app will continue with in-memory profile data.');
-      } else {
-        console.log('Demo profile updated successfully with role:', role);
+        throw updateError;
       }
+      
+      console.log(`Updated profile for demo user ${email}`);
+    }
+  } catch (error) {
+    console.error('Error ensuring demo profile exists:', error);
+    toast.error('Failed to initialize demo profile');
+  }
+}
+
+/**
+ * Ensures that a demo coach exists in the coaches table
+ */
+async function ensureDemoCoachExists(userId: string, name: string, clinicId: string): Promise<void> {
+  try {
+    // Check if coach record already exists
+    const { data: existingCoach, error: fetchError } = await supabase
+      .from('coaches')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+      
+    if (fetchError && !fetchError.message.includes('No rows found')) {
+      throw fetchError;
     }
     
-    // Return the role that should be used (even if database update failed)
-    return role;
+    // If coach doesn't exist, create it
+    if (!existingCoach) {
+      console.log(`Creating new coach record for user ${userId} in clinic ${clinicId}`);
+      
+      const { error: insertError } = await supabase
+        .from('coaches')
+        .insert([
+          { 
+            user_id: userId,
+            name,
+            clinic_id: clinicId,
+            status: 'active'
+          }
+        ]);
+        
+      if (insertError) {
+        throw insertError;
+      }
+      
+      console.log(`Created coach record for user ${userId}`);
+    } else {
+      // Coach exists, update it to ensure correct clinic ID
+      console.log(`Updating existing coach record for user ${userId}`);
+      
+      const { error: updateError } = await supabase
+        .from('coaches')
+        .update({ 
+          name,
+          clinic_id: clinicId,
+          status: 'active'
+        })
+        .eq('user_id', userId);
+        
+      if (updateError) {
+        throw updateError;
+      }
+      
+      console.log(`Updated coach record for user ${userId}`);
+    }
   } catch (error) {
-    console.error('Error handling demo profile:', error);
-    return role; // Return the determined role even if there was an error
+    console.error('Error ensuring demo coach exists:', error);
+    toast.error('Failed to initialize demo coach');
   }
 }

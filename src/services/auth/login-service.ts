@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { isDemoEmail, ensureDemoProfileExists, isDemoAdminEmail } from './demo';
+import { isDemoEmail, ensureDemoProfileExists, isDemoAdminEmail, isDemoCoachEmail } from './demo';
 import { handleDemoAccountCreation } from './login/demo-handler';
 
 export async function loginWithEmail(email: string, password: string) {
@@ -13,6 +13,10 @@ export async function loginWithEmail(email: string, password: string) {
     // Special handling for admin demo
     if (isDemoAdminEmail(email)) {
       console.log('CRITICAL: This is an admin demo login attempt');
+    }
+    // Special handling for coach demo
+    if (isDemoCoachEmail(email)) {
+      console.log('CRITICAL: This is a coach demo login attempt');
     }
     await handleDemoAccountCreation(email);
   }
@@ -44,6 +48,11 @@ export async function loginWithEmail(email: string, password: string) {
       // Special check for admin demo
       if (isDemoAdminEmail(email)) {
         console.log('CRITICAL: This is an admin demo login success, ensuring admin profile exists with NO clinic ID');
+      }
+      
+      // Special check for coach demo
+      if (isDemoCoachEmail(email)) {
+        console.log('CRITICAL: This is a coach demo login success, ensuring coach profile exists with proper clinic ID');
       }
       
       // Ensure profile exists with correct role based on email

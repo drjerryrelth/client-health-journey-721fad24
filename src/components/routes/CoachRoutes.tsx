@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import CoachDashboard from '@/pages/CoachDashboard';
 import ClientsPage from '@/pages/admin/ClientsPage';
@@ -10,8 +10,21 @@ import CoachSettingsPage from '@/pages/coach/CoachSettingsPage';
 import ReportsPage from '@/pages/coach/CoachReportsPage';
 import MealPlanGenerator from '@/pages/MealPlanGenerator';
 import Unauthorized from '@/pages/Unauthorized';
+import { useAuth } from '@/context/auth';
+import { toast } from 'sonner';
 
 const CoachRoutes = () => {
+  const { user } = useAuth();
+  
+  // If not a coach, redirect to unauthorized
+  if (user?.role !== 'coach') {
+    console.log('Not a coach, redirecting to unauthorized');
+    toast.error('Access denied. You do not have coach permissions.');
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  console.log('Rendering CoachRoutes for coach user:', user);
+  
   return (
     <Routes>
       <Route element={<MainLayout requiredRoles={['coach']} />}>

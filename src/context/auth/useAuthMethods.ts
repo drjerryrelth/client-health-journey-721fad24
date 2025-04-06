@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
 import { loginWithEmail, signUpWithEmail, logoutUser } from '@/services/auth';
-import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoEmail } from '@/services/auth/demo/utils';
+import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoCoachEmail, isDemoEmail } from '@/services/auth/demo/utils';
 
 type UseAuthMethodsProps = {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -132,8 +132,8 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       console.log('SECURITY: Using standard role checking for clinic admin');
     }
     
-    // PRIORITY 1.75: Special check for coach users
-    if (user.role === 'coach') {
+    // PRIORITY 1.75: Special check for coach users 
+    if (user.role === 'coach' || (user.email && isDemoCoachEmail(user.email))) {
       console.log('SECURITY: Coach role detected, checking appropriate access');
       
       // Convert required role to array for easier checking

@@ -38,7 +38,7 @@ const DemoLoginButtons = ({ handleDemoLogin: propHandleDemoLogin, isSubmitting: 
         <AlertTitle className="text-yellow-800">Demo Accounts</AlertTitle>
         <AlertDescription className="text-xs text-yellow-800">
           Use these buttons to instantly access demo accounts. All demo accounts use the password "password123".
-          If login fails, it may be because email confirmation is required in Supabase.
+          Coach can also use "support@practicenaturals.com" as a secondary demo email.
         </AlertDescription>
       </Alert>
       
