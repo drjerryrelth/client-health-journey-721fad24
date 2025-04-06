@@ -15,7 +15,7 @@ export const useLoginRedirection = () => {
       console.log('User authenticated, redirecting...', user.role, 'clinicId:', user.clinicId);
       
       // Add toast notification for clarity
-      toast.success(`Logged in as ${user.role === 'clinic_admin' ? 'Clinic Admin' : user.role}`);
+      let roleDisplay = '';
       
       // Determine redirect destination based on role
       let destination: string;
@@ -23,20 +23,27 @@ export const useLoginRedirection = () => {
       // Handle each role type specifically
       if (user.role === 'admin' || user.role === 'super_admin') {
         destination = '/admin/dashboard';
+        roleDisplay = user.role === 'super_admin' ? 'Super Admin' : 'System Admin';
         console.log('Redirecting to admin dashboard (system admin)');
       } else if (user.role === 'clinic_admin') {
         destination = '/admin/dashboard';
+        roleDisplay = 'Clinic Admin';
         console.log('Redirecting to admin dashboard (clinic admin)');
       } else if (user.role === 'coach') {
         destination = '/coach/dashboard';
+        roleDisplay = 'Coach';
         console.log('Redirecting to coach dashboard');
       } else if (user.role === 'client') {
-        destination = '/client'; // Changed from /client/dashboard to /client
+        destination = '/client'; // Client root path
+        roleDisplay = 'Client';
         console.log('Client user detected, redirecting to /client');
       } else {
         toast.error(`Unknown role: ${user.role}`);
         return;
       }
+      
+      // Show welcome toast with role information
+      toast.success(`Logged in as ${roleDisplay}${user.name ? ': ' + user.name : ''}`);
       
       setRedirectDestination(destination);
       console.log('Redirecting to:', destination);

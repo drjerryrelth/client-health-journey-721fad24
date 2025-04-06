@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus, RefreshCw } from 'lucide-react';
+import { UserPlus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAdminCoaches } from '@/hooks/queries/use-admin-coaches';
 import CoachesErrorState from '@/components/admin/coaches/CoachesErrorState';
 import CoachesFilter from '@/components/admin/coaches/CoachesFilter';
@@ -15,6 +15,7 @@ import { ResetCoachPasswordDialog } from '@/components/coaches/reset-password/Re
 import { Coach } from '@/services/coaches';
 import { useClinicFilter } from '@/components/coaches/list/useClinicFilter';
 import { useAuth } from '@/context/auth';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const CoachesPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -140,6 +141,17 @@ const CoachesPage = () => {
           </Button>
         </div>
       </div>
+
+      {isClinicAdmin && (
+        <Alert className="bg-primary-50 border-primary-200">
+          <AlertCircle className="h-4 w-4 text-primary" />
+          <AlertTitle>Clinic Admin View</AlertTitle>
+          <AlertDescription>
+            You are viewing coaches for {user?.name || 'your clinic'} only. 
+            As a clinic administrator, you can manage all coaches and clients within your clinic.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>

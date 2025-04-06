@@ -1,38 +1,52 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { UserCircle, LogOut } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { User, LogOut, Settings, Shield, Users, LucideIcon } from "lucide-react";
 import { UserData } from "@/types/auth";
 
 interface SidebarProfileProps {
   user: UserData;
-  onLogout: () => Promise<void>;
-  userRole?: string;
+  onLogout: () => void;
+  userRole: string;
+  roleIcon?: LucideIcon;
 }
 
-const SidebarProfile: React.FC<SidebarProfileProps> = ({ user, onLogout, userRole }) => {
-  // Display the provided userRole if available, otherwise capitalize the user's role
-  const displayRole = userRole || (user.role.charAt(0).toUpperCase() + user.role.slice(1));
-  
+const SidebarProfile: React.FC<SidebarProfileProps> = ({ 
+  user, 
+  onLogout, 
+  userRole,
+  roleIcon: RoleIcon = User 
+}) => {
+  if (!user) return null;
+
   return (
     <div className="mt-auto p-4 border-t">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="rounded-full bg-primary/10 p-1">
-          <UserCircle className="h-6 w-6 text-primary" />
+      <div className="flex items-center gap-3">
+        <div className="bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
+          <RoleIcon className="h-5 w-5 text-primary" />
         </div>
-        <div>
-          <p className="text-sm font-medium">{user.name}</p>
-          <p className="text-xs text-muted-foreground capitalize">{displayRole}</p>
+        <div className="flex-1 overflow-hidden">
+          <p className="text-sm font-medium truncate">{user.name}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {userRole}
+          </p>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Settings className="h-4 w-4" />
+              <span className="sr-only">Settings</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      <Button
-        variant="outline"
-        className="w-full justify-start gap-2"
-        onClick={onLogout}
-      >
-        <LogOut className="h-4 w-4" />
-        Log out
-      </Button>
     </div>
   );
 };

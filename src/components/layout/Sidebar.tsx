@@ -1,10 +1,10 @@
 
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth";
-import { BookMarked, Menu, X } from "lucide-react";
+import { BookMarked, Menu, Shield, User, Users, X } from "lucide-react";
 import SidebarNav from "./sidebar/SidebarNav";
 import SidebarProfile from "./sidebar/SidebarProfile";
 import { adminNavItems, clinicAdminNavItems } from "./sidebar/AdminNavItems";
@@ -22,6 +22,7 @@ interface SidebarProps {
 export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (!user) return null;
 
@@ -29,14 +30,17 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
   let navItems = clientNavItems; // Default fallback
   let userRole: UserRole = user.role;
   let displayRoleText: string = userRole;
+  let roleIcon = User;
   
   // Strict role-based navigation
   if (user.role === 'admin' || user.role === 'super_admin') {
     navItems = adminNavItems;
     displayRoleText = user.role === 'super_admin' ? 'Super Admin' : 'System Admin';
+    roleIcon = Shield;
   } else if (user.role === 'clinic_admin') {
     navItems = clinicAdminNavItems; // Clinic admin gets a more limited set of navigation items
     displayRoleText = 'Clinic Admin';
+    roleIcon = Shield;
     
     // Emergency redirect if a clinic admin somehow accesses a system admin route
     // This is a critical security measure
@@ -46,15 +50,17 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
       toast.error("You don't have permission to access this page");
       // Force a redirect
       setTimeout(() => {
-        window.location.href = '/admin/dashboard';
+        navigate('/admin/dashboard', { replace: true });
       }, 10);
     }
   } else if (user.role === 'coach') {
     navItems = coachNavItems;
     displayRoleText = 'Coach';
+    roleIcon = Users;
   } else if (user.role === 'client') {
     navItems = clientNavItems;
     displayRoleText = 'Client';
+    roleIcon = User;
   } else {
     displayRoleText = 'Unknown Role';
     console.error('Unknown user role detected:', user.role);
@@ -91,6 +97,7 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
         user={user} 
         onLogout={logout} 
         userRole={displayRoleText}
+        roleIcon={roleIcon}
       />
     </div>
   );

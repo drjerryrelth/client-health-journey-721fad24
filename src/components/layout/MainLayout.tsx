@@ -1,6 +1,7 @@
+
 import React, { useEffect } from 'react';
 import { useAuth } from '@/context/auth';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import TopBar from './TopBar';
 import { UserRole } from '@/types';
@@ -10,16 +11,19 @@ interface MainLayoutProps {
   requiredRoles?: UserRole[];
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'super_admin', 'clinic_admin', 'coach', 'client'] }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ 
+  requiredRoles = ['admin', 'super_admin', 'clinic_admin', 'coach', 'client'] 
+}) => {
   const { isAuthenticated, isLoading, hasRole, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Direct role-based path checking on every route change
   useEffect(() => {
     if (!user || isLoading) return;
     
     // Core permissions enforcement - redirects for security violations
-    const adminOnlyPaths = ['/admin/clinics', '/admin/admin-users'];
+    const systemAdminOnlyPaths = ['/admin/clinics', '/admin/admin-users'];
     const adminPaths = ['/admin'];
     const coachPaths = ['/coach'];
     const clientPaths = ['/client'];
@@ -34,11 +38,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
       clinicId: user.clinicId
     });
     
+    // CRITICAL SECURITY ENFORCEMENT - Strict path based checks
+    
     // Clinic admin trying to access system admin routes
-    if (user.role === 'clinic_admin' && adminOnlyPaths.some(path => currentPath.startsWith(path))) {
+    if (user.role === 'clinic_admin' && systemAdminOnlyPaths.some(path => currentPath.startsWith(path))) {
       console.error('SECURITY VIOLATION: Clinic admin accessing system admin route:', currentPath);
       toast.error("Access denied. You don't have permission to access this page.");
-      setTimeout(() => window.location.href = '/admin/dashboard', 100);
+      navigate('/admin/dashboard', { replace: true });
       return;
     }
     
@@ -46,7 +52,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
     if (user.role === 'coach' && adminPaths.some(path => currentPath.startsWith(path))) {
       console.error('SECURITY VIOLATION: Coach accessing admin route:', currentPath);
       toast.error("Access denied. You don't have permission to access this page.");
-      setTimeout(() => window.location.href = '/coach/dashboard', 100);
+      navigate('/coach/dashboard', { replace: true });
       return;
     }
     
@@ -58,15 +64,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
       ) {
         console.error('SECURITY VIOLATION: Client accessing admin or coach route:', currentPath);
         toast.error("Access denied. You don't have permission to access this page.");
-        setTimeout(() => window.location.href = '/client', 100);
+        navigate('/client', { replace: true });
         return;
       }
     }
-    
-    // Admin accessing coach/client paths - this is allowed, so no redirect
-    // Clinic admin accessing coach paths - this is allowed, so no redirect
-    // Coach accessing client paths - this is allowed, so no redirect
-  }, [location.pathname, user, isLoading]);
+  }, [location.pathname, user, isLoading, navigate]);
   
   // Show loading state
   if (isLoading) {
@@ -148,7 +150,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
   
   if (!hasPermission) {
     toast.error("Access denied. You don't have permission to access this page.");
-    return <Navigate to="/unauthorized" replace />;
+    
+    // Direct users to their appropriate home page based on role
+    let redirectPath = '/unauthorized';
+    if (user?.role === 'client') redirectPath = '/client';
+    else if (user?.role === 'coach') redirectPath = '/coach/dashboard';
+    else if (user?.role === 'clinic_admin') redirectPath = '/admin/dashboard';
+    else if (user?.role === 'admin' || user?.role === 'super_admin') redirectPath = '/admin/dashboard';
+    
+    return <Navigate to={redirectPath} replace />;
   }
   
   return (

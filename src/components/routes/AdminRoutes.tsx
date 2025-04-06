@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ClientsPage from '@/pages/admin/ClientsPage';
@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 const AdminRoutes = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Strict type checking
   const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
@@ -39,16 +40,20 @@ const AdminRoutes = () => {
     if (isClinicAdmin) {
       const currentPath = window.location.pathname;
       // These paths are strictly forbidden for clinic admins
-      const forbiddenPaths = ['/admin/clinics', '/admin/admin-users'];
+      const forbiddenPaths = [
+        '/admin/clinics', 
+        '/admin/admin-users',
+        '/admin/system-settings'
+      ];
       
       if (forbiddenPaths.some(path => currentPath.startsWith(path))) {
         console.error('SECURITY VIOLATION: Clinic admin attempting to access forbidden route:', currentPath);
         toast.error('Access denied. You do not have permission to access this page.');
         // Force a redirect
-        window.location.href = '/admin/dashboard';
+        navigate('/admin/dashboard', { replace: true });
       }
     }
-  }, [location.pathname, isClinicAdmin]);
+  }, [location.pathname, isClinicAdmin, navigate]);
   
   // CRITICAL SECURITY ENFORCEMENT: Different routes for different admin types
   // This separation ensures clinic admins can NEVER access system admin routes
