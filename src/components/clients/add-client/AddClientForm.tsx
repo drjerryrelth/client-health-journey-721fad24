@@ -84,13 +84,13 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
   return (
     <FormProvider {...form}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           <ClientFormFields 
             programs={programs} 
             selectedProgramType={selectedProgramType} 
           />
 
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             <Button 
               type="button" 
               variant="outline" 

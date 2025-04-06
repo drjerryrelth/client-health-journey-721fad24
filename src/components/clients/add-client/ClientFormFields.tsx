@@ -29,7 +29,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
   const form = useFormContext<AddClientFormValues>();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <FormField
         control={form.control}
         name="name"
@@ -72,7 +72,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
         )}
       />
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <FormField
           control={form.control}
           name="initialWeight"
@@ -97,7 +97,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
           name="weightDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Weight Measurement Date</FormLabel>
+              <FormLabel>Weight Date</FormLabel>
               <FormControl>
                 <Input type="date" {...field} />
               </FormControl>
@@ -113,7 +113,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
         render={() => (
           <FormItem>
             <FormLabel>Client Goals (Select all that apply)</FormLabel>
-            <div className="grid grid-cols-2 gap-4 mt-2">
+            <div className="grid grid-cols-2 gap-2 mt-1">
               {clientGoals.map((goal) => (
                 <FormField
                   key={goal.id}
@@ -123,7 +123,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
                     return (
                       <FormItem
                         key={goal.id}
-                        className="flex flex-row items-start space-x-3 space-y-0"
+                        className="flex flex-row items-start space-x-2 space-y-0"
                       >
                         <FormControl>
                           <Checkbox
@@ -137,7 +137,7 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
                             }}
                           />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <FormLabel className="font-normal text-sm">
                           {goal.label}
                         </FormLabel>
                       </FormItem>
@@ -213,33 +213,35 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({ programs, selectedP
         />
       )}
 
-      <FormField
-        control={form.control}
-        name="startDate"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Start Date</FormLabel>
-            <FormControl>
-              <Input type="date" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <FormField
+          control={form.control}
+          name="startDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Start Date</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <FormField
-        control={form.control}
-        name="notes"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Notes (optional)</FormLabel>
-            <FormControl>
-              <Input placeholder="Additional notes" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes (optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="Additional notes" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
     </div>
   );
 };
