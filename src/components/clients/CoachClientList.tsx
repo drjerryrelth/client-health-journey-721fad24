@@ -19,7 +19,16 @@ const CoachClientList = ({ onAddClient }: { onAddClient: () => void }) => {
     
     // First filter by clinic, then by coach ID
     const clinicClients = filterByClinic(clients);
-    return clinicClients.filter(client => client.coachId === user.id);
+    const filteredClients = clinicClients.filter(client => client.coachId === user.id);
+    
+    console.log('Coach client filtering:', {
+      totalClients: clients.length,
+      clinicFilteredClients: clinicClients.length,
+      coachFilteredClients: filteredClients.length,
+      coachId: user.id
+    });
+    
+    return filteredClients;
   }, [clients, user, filterByClinic]);
 
   // Handle client row click
