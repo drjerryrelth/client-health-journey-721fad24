@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,7 @@ import { Coach } from '@/services/coaches';
 import { useClinicFilter } from '@/components/coaches/list/useClinicFilter';
 import { useAuth } from '@/context/auth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { toast } from 'sonner';
 
 const CoachesPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -25,16 +25,12 @@ const CoachesPage = () => {
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [filterText, setFilterText] = useState('');
   
-  // Get the user's role information
   const { user } = useAuth();
   
-  // Get the clinic filter functions
   const { isClinicAdmin, filterByClinic, userClinicId } = useClinicFilter();
   
-  // Fetch coaches data based on user role
   const { coaches: allCoaches, loading, error, refresh, retryCount } = useAdminCoaches();
   
-  // Enhanced logging for debugging clinic admin view
   useEffect(() => {
     if (isClinicAdmin && user) {
       console.log("Clinic Admin viewing Coaches page:", {
@@ -49,10 +45,8 @@ const CoachesPage = () => {
     }
   }, [isClinicAdmin, user, allCoaches]);
   
-  // Apply clinic filtering to ensure clinic admins only see their clinic's coaches
   const coaches = filterByClinic(allCoaches);
   
-  // Enhanced logging after filtering
   useEffect(() => {
     if (coaches && coaches.length > 0) {
       console.log(`Displaying ${coaches.length} coaches after clinic filtering`);
@@ -109,7 +103,6 @@ const CoachesPage = () => {
     toast.info("Refreshing coaches data...");
   };
 
-  // Check if the page is being loaded for a clinic admin directly on the admin/coaches route
   React.useEffect(() => {
     if (isClinicAdmin) {
       console.log('Strict enforcement: Clinic admin accessing coaches page with clinicId:', user?.clinicId);
