@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ClientsPage from '@/pages/admin/ClientsPage';
@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 
 const AdminRoutes = () => {
   const { user } = useAuth();
+  const location = useLocation();
   
   // Strict type checking
   const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
@@ -47,12 +48,17 @@ const AdminRoutes = () => {
         window.location.href = '/admin/dashboard';
       }
     }
-  }, [isClinicAdmin]);
+  }, [location.pathname, isClinicAdmin]);
   
   // CRITICAL SECURITY ENFORCEMENT: Different routes for different admin types
   // This separation ensures clinic admins can NEVER access system admin routes
   if (isClinicAdmin) {
     console.log('Rendering CLINIC ADMIN routes only - restricted access');
+    console.log('Clinic admin info:', {
+      name: user?.name,
+      clinicId: user?.clinicId
+    });
+    
     return (
       <Routes>
         {/* Use specialized layout with strict role enforcement */}

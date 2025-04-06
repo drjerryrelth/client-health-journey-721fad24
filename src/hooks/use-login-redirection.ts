@@ -15,7 +15,7 @@ export const useLoginRedirection = () => {
       console.log('User authenticated, redirecting...', user.role, 'clinicId:', user.clinicId);
       
       // Add toast notification for clarity
-      toast.success(`Logged in as ${user.role}`);
+      toast.success(`Logged in as ${user.role === 'clinic_admin' ? 'Clinic Admin' : user.role}`);
       
       // Determine redirect destination based on role
       let destination: string;

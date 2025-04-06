@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserPlus, RefreshCw } from 'lucide-react';
@@ -33,8 +33,31 @@ const CoachesPage = () => {
   // Fetch coaches data based on user role
   const { coaches: allCoaches, loading, error, refresh, retryCount } = useAdminCoaches();
   
+  // Enhanced logging for debugging clinic admin view
+  useEffect(() => {
+    if (isClinicAdmin && user) {
+      console.log("Clinic Admin viewing Coaches page:", {
+        clinicId: user.clinicId,
+        name: user.name,
+        role: user.role
+      });
+    }
+    
+    if (allCoaches && allCoaches.length > 0) {
+      console.log(`Found ${allCoaches.length} coaches before filtering by clinic`);
+    }
+  }, [isClinicAdmin, user, allCoaches]);
+  
   // Apply clinic filtering to ensure clinic admins only see their clinic's coaches
   const coaches = filterByClinic(allCoaches);
+  
+  // Enhanced logging after filtering
+  useEffect(() => {
+    if (coaches && coaches.length > 0) {
+      console.log(`Displaying ${coaches.length} coaches after clinic filtering`);
+      console.log("First coach sample:", coaches[0]);
+    }
+  }, [coaches]);
   
   const filteredCoaches = coaches.filter(coach => {
     const searchText = filterText.toLowerCase();
@@ -42,7 +65,7 @@ const CoachesPage = () => {
       coach.name.toLowerCase().includes(searchText) ||
       coach.email.toLowerCase().includes(searchText) ||
       (coach.phone && coach.phone.includes(searchText)) ||
-      coach.clinicName.toLowerCase().includes(searchText)
+      (coach.clinicName && coach.clinicName.toLowerCase().includes(searchText))
     );
   });
   
@@ -92,7 +115,9 @@ const CoachesPage = () => {
     }
   }, [isClinicAdmin]);
   
-  const clinicName = isClinicAdmin ? user?.name || 'Your Clinic' : 'All Clinics';
+  const clinicName = user?.clinicId ? 
+    (isClinicAdmin ? user.name || 'Your Clinic' : 'All Clinics') : 
+    'Unknown Clinic';
   
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -121,7 +146,7 @@ const CoachesPage = () => {
           <CardTitle>Manage Coaches</CardTitle>
           <CardDescription>
             {isClinicAdmin 
-              ? "Manage coaches for your clinic" 
+              ? `Manage coaches for ${user?.name || 'your clinic'}` 
               : "View and manage all coaches across clinics"}
           </CardDescription>
         </CardHeader>
@@ -152,7 +177,7 @@ const CoachesPage = () => {
         open={isAddDialogOpen} 
         onOpenChange={handleAddDialogClose} 
         clinicId={userClinicId || undefined}
-        clinicName={clinicName}
+        clinicName={user?.name || clinicName}
         onCoachAdded={refresh}
       />
       
@@ -162,7 +187,7 @@ const CoachesPage = () => {
             coach={selectedCoach} 
             open={isEditDialogOpen} 
             onOpenChange={handleEditDialogClose} 
-            clinicName={clinicName}
+            clinicName={user?.name || clinicName}
             onCoachUpdated={refresh}
           />
           

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CoachService } from '@/services/coaches';
 import ClinicService from '@/services/clinic-service';
 import { toast } from 'sonner';
@@ -25,7 +25,7 @@ export function useAdminCoaches() {
   const [retryCount, setRetryCount] = useState(0);
   const { user } = useAuth();
 
-  const fetchClinics = async () => {
+  const fetchClinics = useCallback(async () => {
     try {
       // Only system admins should fetch all clinics
       if (user?.role === 'admin' || user?.role === 'super_admin') {
@@ -45,14 +45,18 @@ export function useAdminCoaches() {
           clinicMap[singleClinic.id] = singleClinic.name;
           setClinics(clinicMap);
           console.log('[useAdminCoaches] Single clinic map created for clinic admin:', clinicMap);
+          console.log('[useAdminCoaches] Clinic admin details:', {
+            name: user.name,
+            clinicId: user.clinicId
+          });
         }
       }
     } catch (err) {
       console.error('[useAdminCoaches] Error fetching clinics:', err);
     }
-  };
+  }, [user]);
 
-  const fetchCoaches = async () => {
+  const fetchCoaches = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -66,7 +70,8 @@ export function useAdminCoaches() {
       let coachesData;
       
       if (user?.role === 'clinic_admin' && user?.clinicId) {
-        console.log('[useAdminCoaches] Clinic admin role detected, fetching only clinic coaches');
+        console.log('[useAdminCoaches] Clinic admin role detected, fetching only clinic coaches for clinic:', user.clinicId);
+        console.log('[useAdminCoaches] Clinic name:', user.name);
         coachesData = await CoachService.getClinicCoaches(user.clinicId);
       } else if (user?.role === 'admin' || user?.role === 'super_admin') {
         console.log('[useAdminCoaches] System admin role detected, fetching all coaches');
@@ -76,7 +81,7 @@ export function useAdminCoaches() {
         throw new Error('Unauthorized or missing clinic information');
       }
       
-      console.log('[useAdminCoaches] Received coaches data:', coachesData);
+      console.log('[useAdminCoaches] Received coaches data count:', coachesData?.length || 0);
       
       if (!Array.isArray(coachesData)) {
         console.error('[useAdminCoaches] Invalid coaches data format:', coachesData);
@@ -107,25 +112,32 @@ export function useAdminCoaches() {
         }, 1000);
       }
     }
-  };
+  }, [retryCount, user]);
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     setRetryCount(prev => prev + 1);
     toast.info("Refreshing coaches data...");
     fetchClinics();
     fetchCoaches();
-  };
+  }, [fetchClinics, fetchCoaches]);
 
   useEffect(() => {
     console.log('[useAdminCoaches] Hook mounted, fetching coaches');
     console.log('[useAdminCoaches] Current user role:', user?.role, 'clinicId:', user?.clinicId);
+    if (user?.role === 'clinic_admin') {
+      console.log('[useAdminCoaches] Clinic admin details:', {
+        name: user.name,
+        clinicId: user.clinicId
+      });
+    }
     fetchClinics();
     fetchCoaches();
-  }, [user?.role, user?.clinicId]); // Critical to include both role and clinicId as dependencies
+  }, [user?.role, user?.clinicId, fetchClinics, fetchCoaches]); // Critical to include both role and clinicId as dependencies
 
-  const getClinicName = (clinicId: string) => {
-    return clinics[clinicId] || `Unknown Clinic (${clinicId ? clinicId.slice(-4) : 'None'})`;
-  };
+  const getClinicName = useCallback((clinicId: string) => {
+    const name = clinics[clinicId] || `Unknown Clinic (${clinicId ? clinicId.slice(-4) : 'None'})`;
+    return name;
+  }, [clinics]);
 
   // Enrich coaches with clinic names
   const coachesWithClinicNames = coaches.map(coach => ({

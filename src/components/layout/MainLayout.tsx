@@ -27,6 +27,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
     
     const currentPath = location.pathname;
     
+    // Enhanced logging for clinic admins to debug access issues
+    if (user.role === 'clinic_admin') {
+      console.log('Clinic admin path check:', {
+        path: currentPath,
+        name: user.name,
+        clinicId: user.clinicId
+      });
+    }
+    
     // Clinic admin trying to access system admin routes
     if (user.role === 'clinic_admin' && adminOnlyPaths.some(path => currentPath.startsWith(path))) {
       console.error('SECURITY VIOLATION: Clinic admin accessing system admin route:', currentPath);
@@ -79,6 +88,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ requiredRoles = ['admin', 'supe
   // Detailed role and permission logging for debugging
   console.log('MainLayout - User role:', user?.role);
   console.log('MainLayout - User clinicId:', user?.clinicId);
+  console.log('MainLayout - User name:', user?.name);
   console.log('MainLayout - Required roles:', requiredRoles);
   console.log('MainLayout - Current path:', location.pathname);
   

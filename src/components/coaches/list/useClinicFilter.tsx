@@ -1,5 +1,6 @@
 
 import { useAuth } from '@/context/auth';
+import { useEffect } from 'react';
 
 /**
  * Custom hook to filter data based on user role and clinic ID
@@ -16,6 +17,17 @@ export function useClinicFilter() {
   
   // Get the user's clinic ID (if any)
   const userClinicId = user?.clinicId;
+  
+  // Enhanced logging for clinic admins
+  useEffect(() => {
+    if (isClinicAdmin && userClinicId) {
+      console.log('Clinic admin detected in useClinicFilter:', {
+        name: user?.name,
+        clinicId: userClinicId,
+        role: user?.role
+      });
+    }
+  }, [isClinicAdmin, userClinicId, user]);
   
   /**
    * Filter function that can be applied to any data array with clinicId property
@@ -34,7 +46,9 @@ export function useClinicFilter() {
     // Clinic admins can only see their clinic's data
     if (isClinicAdmin && userClinicId) {
       console.log(`Clinic admin detected, filtering data to clinic ${userClinicId}`);
-      return data.filter(item => item.clinicId === userClinicId);
+      const filteredData = data.filter(item => item.clinicId === userClinicId);
+      console.log(`Filtered from ${data.length} items to ${filteredData.length} items`);
+      return filteredData;
     }
     
     // For other roles or missing clinic ID, return empty array
@@ -49,4 +63,3 @@ export function useClinicFilter() {
     filterByClinic
   };
 }
-

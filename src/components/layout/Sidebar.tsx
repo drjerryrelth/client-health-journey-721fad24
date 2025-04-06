@@ -59,7 +59,8 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
   console.log("Sidebar user info:", {
     role: user.role,
     clinicId: user.clinicId,
-    displayRoleText
+    displayRoleText,
+    name: user.name
   });
 
   return (
@@ -75,7 +76,7 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
           <BookMarked className="h-6 w-6 text-primary" />
           <span className="font-semibold">Client Health Tracker™</span>
         </Link>
-        {isMobile && (
+        {isMobile && (a
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
