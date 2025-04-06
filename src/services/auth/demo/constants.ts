@@ -13,3 +13,6 @@ export const demoEmails = {
   demoAdmins: ['drrelth@contourlight.com'],
   demoClinicAdmins: ['clinic-admin@example.com']
 };
+
+// Default clinic ID for demo purposes
+export const DEMO_CLINIC_ID = '65196bd4-f754-4c4e-9649-2bf478016701';

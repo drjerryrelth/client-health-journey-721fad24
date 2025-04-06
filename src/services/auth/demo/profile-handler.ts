@@ -1,10 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { getDemoRoleByEmail, isDemoAdminEmail, isDemoCoachEmail, isDemoClinicAdminEmail, isDemoClientEmail } from './utils';
 import { toast } from 'sonner';
-
-// Default clinic ID for demo purposes
-const DEMO_CLINIC_ID = '65196bd4-f754-4c4e-9649-2bf478016701';
+import { DEMO_CLINIC_ID } from './constants';
 
 /**
  * Ensures that a demo user profile exists in the database with the correct role.

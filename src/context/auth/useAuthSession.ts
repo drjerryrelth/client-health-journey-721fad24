@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { UserData } from '@/types/auth';
@@ -8,6 +7,7 @@ import {
   setupAuthListener 
 } from '@/services/auth';
 import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoCoachEmail, isDemoClientEmail } from '@/services/auth/demo/utils';
+import { DEMO_CLINIC_ID } from '@/services/auth/demo/constants';
 
 type UseAuthSessionProps = {
   setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
@@ -44,8 +44,8 @@ export const useAuthSession = ({
       // Special case for demo clinic admin - second highest priority check
       if (userEmail && isDemoClinicAdminEmail(userEmail)) {
         console.log('CRITICAL: Demo clinic admin detected in fetchAndSetUserProfile, ensuring clinic_admin role');
-        // Default clinic ID for demo clinic admin
-        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        // Use the constant instead of process.env
+        const clinicId = DEMO_CLINIC_ID;
         // For demo clinic admin, force role to clinic_admin with specific clinic ID
         setUser({
           id: userId,
@@ -60,8 +60,8 @@ export const useAuthSession = ({
       // Special case for demo coach - third highest priority check
       if (userEmail && isDemoCoachEmail(userEmail)) {
         console.log('CRITICAL: Demo coach detected in fetchAndSetUserProfile, ensuring coach role');
-        // Default clinic ID for demo coach
-        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        // Use the constant instead of process.env
+        const clinicId = DEMO_CLINIC_ID;
         // Name depends on which coach demo email is used
         const name = userEmail === 'support@practicenaturals.com' ? 'Support Coach' : 'Coach User';
         // For demo coach, force role to coach with specific clinic ID
@@ -78,8 +78,8 @@ export const useAuthSession = ({
       // Special case for demo client - fourth highest priority check
       if (userEmail && isDemoClientEmail(userEmail)) {
         console.log('CRITICAL: Demo client detected in fetchAndSetUserProfile, ensuring client role');
-        // Default clinic ID for demo client
-        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        // Use the constant instead of process.env
+        const clinicId = DEMO_CLINIC_ID;
         // Name depends on which client demo email is used
         const name = userEmail === 'drjerry@livingbetterhealthcare.com' ? 'Dr. Jerry' : 'Client User';
         // For demo client, force role to client with specific clinic ID
@@ -117,7 +117,7 @@ export const useAuthSession = ({
         // If still no data, but we have a demo clinic admin email, enforce clinic_admin role
         if (userEmail && isDemoClinicAdminEmail(userEmail)) {
           console.log('Fallback: Using demo clinic admin detection when profile fetch failed');
-          const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+          const clinicId = DEMO_CLINIC_ID;
           setUser({
             id: userId,
             name: 'Clinic Admin User',
@@ -131,7 +131,7 @@ export const useAuthSession = ({
         // If still no data, but we have a demo coach email, enforce coach role
         if (userEmail && isDemoCoachEmail(userEmail)) {
           console.log('Fallback: Using demo coach detection when profile fetch failed');
-          const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+          const clinicId = DEMO_CLINIC_ID;
           const name = userEmail === 'support@practicenaturals.com' ? 'Support Coach' : 'Coach User';
           setUser({
             id: userId,
@@ -146,7 +146,7 @@ export const useAuthSession = ({
         // If still no data, but we have a demo client email, enforce client role
         if (userEmail && isDemoClientEmail(userEmail)) {
           console.log('Fallback: Using demo client detection when profile fetch failed');
-          const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+          const clinicId = DEMO_CLINIC_ID;
           const name = userEmail === 'drjerry@livingbetterhealthcare.com' ? 'Dr. Jerry' : 'Client User';
           setUser({
             id: userId,
@@ -183,7 +183,7 @@ export const useAuthSession = ({
       // Last resort for demo clinic admin - even in case of errors, enforce clinic_admin role
       if (userEmail && isDemoClinicAdminEmail(userEmail)) {
         console.log('ERROR FALLBACK: Using demo clinic admin detection when profile fetch failed with error');
-        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        const clinicId = DEMO_CLINIC_ID;
         setUser({
           id: userId,
           name: 'Clinic Admin User',
@@ -197,7 +197,7 @@ export const useAuthSession = ({
       // Last resort for demo coach - even in case of errors, enforce coach role
       if (userEmail && isDemoCoachEmail(userEmail)) {
         console.log('ERROR FALLBACK: Using demo coach detection when profile fetch failed with error');
-        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        const clinicId = DEMO_CLINIC_ID;
         const name = userEmail === 'support@practicenaturals.com' ? 'Support Coach' : 'Coach User';
         setUser({
           id: userId,
@@ -212,7 +212,7 @@ export const useAuthSession = ({
       // Last resort for demo client - even in case of errors, enforce client role
       if (userEmail && isDemoClientEmail(userEmail)) {
         console.log('ERROR FALLBACK: Using demo client detection when profile fetch failed with error');
-        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        const clinicId = DEMO_CLINIC_ID;
         const name = userEmail === 'drjerry@livingbetterhealthcare.com' ? 'Dr. Jerry' : 'Client User';
         setUser({
           id: userId,
