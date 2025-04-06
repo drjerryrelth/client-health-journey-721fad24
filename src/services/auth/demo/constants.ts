@@ -1,7 +1,8 @@
 
-// Demo email addresses used throughout the application
 export const demoEmails = {
-  admin: 'drrelth@contourlight.com', // Updated admin email
-  coach: 'support@practicenaturals.com', // Corrected coach email to use .com instead of .cm
-  client: 'drjerry@livingbetterhealthcare.com' // Updated client email
+  admin: 'drrelth@contourlight.com',
+  coach: 'coach@example.com',
+  client: 'client@example.com',
+  clinicAdmin: 'clinic-admin@example.com' // Adding clinic admin demo email
 };
+

@@ -7,7 +7,7 @@ import {
   getCurrentSession,
   setupAuthListener 
 } from '@/services/auth';
-import { isDemoAdminEmail } from '@/services/auth/demo/utils';
+import { isDemoAdminEmail, isDemoClinicAdminEmail } from '@/services/auth/demo/utils';
 
 type UseAuthSessionProps = {
   setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
@@ -41,6 +41,22 @@ export const useAuthSession = ({
         return;
       }
       
+      // Special case for demo clinic admin - second highest priority check
+      if (userEmail && isDemoClinicAdminEmail(userEmail)) {
+        console.log('CRITICAL: Demo clinic admin detected in fetchAndSetUserProfile, ensuring clinic_admin role');
+        // Default clinic ID for demo clinic admin
+        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        // For demo clinic admin, force role to clinic_admin with specific clinic ID
+        setUser({
+          id: userId,
+          name: 'Clinic Admin User',
+          email: userEmail,
+          role: 'clinic_admin',
+          clinicId: clinicId // Clinic admin must have a clinic
+        });
+        return;
+      }
+      
       const userData = await fetchUserProfile(userId);
       
       if (userData) {
@@ -58,6 +74,20 @@ export const useAuthSession = ({
             email: userEmail,
             role: 'admin',
             clinicId: null
+          });
+          return;
+        }
+        
+        // If still no data, but we have a demo clinic admin email, enforce clinic_admin role
+        if (userEmail && isDemoClinicAdminEmail(userEmail)) {
+          console.log('Fallback: Using demo clinic admin detection when profile fetch failed');
+          const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+          setUser({
+            id: userId,
+            name: 'Clinic Admin User',
+            email: userEmail,
+            role: 'clinic_admin',
+            clinicId: clinicId
           });
           return;
         }
@@ -80,6 +110,20 @@ export const useAuthSession = ({
           email: userEmail,
           role: 'admin',
           clinicId: null
+        });
+        return;
+      }
+      
+      // Last resort for demo clinic admin - even in case of errors, enforce clinic_admin role
+      if (userEmail && isDemoClinicAdminEmail(userEmail)) {
+        console.log('ERROR FALLBACK: Using demo clinic admin detection when profile fetch failed with error');
+        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        setUser({
+          id: userId,
+          name: 'Clinic Admin User',
+          email: userEmail,
+          role: 'clinic_admin',
+          clinicId: clinicId
         });
         return;
       }
@@ -203,3 +247,4 @@ export const useAuthSession = ({
     fetchAndSetUserProfile
   };
 };
+

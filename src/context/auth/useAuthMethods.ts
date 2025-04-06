@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
 import { loginWithEmail, signUpWithEmail, logoutUser } from '@/services/auth';
-import { isDemoAdminEmail } from '@/services/auth/demo/utils';
+import { isDemoAdminEmail, isDemoClinicAdminEmail } from '@/services/auth/demo/utils';
 
 type UseAuthMethodsProps = {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -107,6 +107,31 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       return true;
     }
     
+    // PRIORITY 1.5: Special check for demo clinic admin email
+    if (user.email && isDemoClinicAdminEmail(user.email)) {
+      console.log('SECURITY: Demo clinic admin email detected, checking clinic-level access');
+      // For clinic admins, we need to check if they're trying to access clinic-level resources
+      // They should NOT have access to system-wide admin features
+      
+      // Convert required role to array for easier checking
+      const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+      
+      // Check if the required roles include 'admin' but not 'clinic_admin' - this indicates a system-admin-only route
+      if (requiredRoles.includes('admin') && !requiredRoles.includes('clinic_admin')) {
+        console.log('SECURITY: Clinic admin attempting to access system admin route, denying access');
+        return false;
+      }
+      
+      // If required roles include 'clinic_admin', grant access
+      if (requiredRoles.includes('clinic_admin')) {
+        console.log('SECURITY: Clinic admin accessing permitted route');
+        return true;
+      }
+      
+      // For any other role requirement, use standard role checking
+      console.log('SECURITY: Using standard role checking for clinic admin');
+    }
+    
     // Get the actual user role for clarity
     const actualRole = user.role;
     console.log('Actual user role:', actualRole);
@@ -117,7 +142,27 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
       return true;
     }
     
-    // PRIORITY 3: Convert required role to array for easier checking
+    // PRIORITY 3: Clinic admins have special restrictions - they should not access system admin routes
+    if (actualRole === 'clinic_admin') {
+      console.log('User is clinic_admin, checking restricted access');
+      
+      // Convert required role to array for easier checking
+      const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+      
+      // Check if the required roles include 'admin' but not 'clinic_admin' - this indicates a system-admin-only route
+      if (requiredRoles.includes('admin') && !requiredRoles.includes('clinic_admin')) {
+        console.log('SECURITY: Clinic admin attempting to access system admin route, denying access');
+        return false;
+      }
+      
+      // If required roles include 'clinic_admin', grant access
+      if (requiredRoles.includes('clinic_admin')) {
+        console.log('SECURITY: Clinic admin accessing permitted route');
+        return true;
+      }
+    }
+    
+    // PRIORITY 4: Convert required role to array for easier checking
     const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     
     // Matching roles check
@@ -138,3 +183,4 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     hasRole,
   };
 };
+

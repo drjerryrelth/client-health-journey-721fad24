@@ -27,15 +27,18 @@ export function useClinicFilter() {
   const filterByClinic = <T extends { clinicId: string }>(data: T[]): T[] => {
     // System admins can see all data
     if (isSystemAdmin) {
+      console.log('System admin detected, showing all data across clinics');
       return data;
     }
     
     // Clinic admins can only see their clinic's data
     if (isClinicAdmin && userClinicId) {
+      console.log(`Clinic admin detected, filtering data to clinic ${userClinicId}`);
       return data.filter(item => item.clinicId === userClinicId);
     }
     
     // For other roles or missing clinic ID, return empty array
+    console.log('Neither system admin nor clinic admin with valid clinic ID, returning empty array');
     return [];
   };
   
@@ -46,3 +49,4 @@ export function useClinicFilter() {
     filterByClinic
   };
 }
+

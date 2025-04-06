@@ -1,11 +1,10 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { checkAuthentication } from '@/services/clinics/auth-helper';
 import { DashboardStats } from '@/types/dashboard';
 import { toast } from 'sonner';
 import { getCoachCount } from '@/services/coaches/admin-coach-service';
 import { CoachService } from '@/services/coaches';
-import { isDemoAdminEmail } from '@/services/auth/demo/utils';
+import { isDemoAdminEmail, isDemoClinicAdminEmail } from '@/services/auth/demo/utils';
 
 // Function to fetch dashboard statistics with role-based security filtering
 export async function fetchDashboardStats(): Promise<DashboardStats> {
@@ -28,6 +27,13 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       return await fetchSystemAdminStats();
     }
     
+    // PRIORITY 1.5: Check if this is a demo clinic admin
+    if (userEmail && isDemoClinicAdminEmail(userEmail)) {
+      console.log('[DashboardStats] Demo clinic admin email detected, fetching clinic-specific statistics');
+      const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+      return await fetchClinicAdminStats(clinicId);
+    }
+    
     // PRIORITY 2: Get the user's role and clinicId for permission checks
     const { data: userData } = await supabase
       .from('profiles')
@@ -48,14 +54,20 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     } 
     else if (userRole === 'clinic_admin' && userClinicId) {
       // CLINIC ADMIN: Only fetch data for their specific clinic
-      console.log('[DashboardStats] Clinic admin detected, fetching limited statistics');
+      console.log('[DashboardStats] Clinic admin detected, fetching limited statistics for clinic:', userClinicId);
       return await fetchClinicAdminStats(userClinicId);
     } 
     else {
-      // PRIORITY 4: Final fallback for demo admin users - check email again
+      // PRIORITY 4: Final fallback for demo users
       if (userEmail && isDemoAdminEmail(userEmail)) {
         console.log('[DashboardStats] Fallback to demo admin detection, fetching system-wide statistics');
         return await fetchSystemAdminStats();
+      }
+      
+      if (userEmail && isDemoClinicAdminEmail(userEmail)) {
+        console.log('[DashboardStats] Fallback to demo clinic admin detection, fetching clinic-specific statistics');
+        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        return await fetchClinicAdminStats(clinicId);
       }
       
       // Invalid or unauthorized role
