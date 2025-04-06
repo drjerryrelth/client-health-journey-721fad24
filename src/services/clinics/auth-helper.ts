@@ -1,21 +1,28 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { Session } from '@supabase/supabase-js';
 
-export const checkAuthentication = async () => {
+/**
+ * Helper function to check if user is authenticated
+ * Returns the session if authenticated, null otherwise
+ */
+export async function checkAuthentication(): Promise<Session | null> {
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData?.session) {
-      console.error('User not authenticated');
-      toast.error('You must be logged in to perform this action');
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Authentication error:', error.message);
       return null;
     }
     
-    console.log('Authentication successful, user is logged in');
-    return sessionData.session;
-  } catch (error) {
-    console.error('Authentication error:', error);
-    toast.error('Authentication failed');
+    if (!data.session) {
+      console.log('No active session found');
+      return null;
+    }
+    
+    return data.session;
+  } catch (err) {
+    console.error('Unexpected error during authentication check:', err);
     return null;
   }
-};
+}
