@@ -1,73 +1,64 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Building } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/context/auth';
+import { isSystemAdmin } from '@/utils/role-based-access';
 
 interface Clinic {
   id: string;
   name: string;
-  logo?: string | null;
-  primary_color?: string | null;
-  secondary_color?: string | null;
 }
 
 interface ClinicSelectorProps {
-  clinics: Clinic[] | undefined;
+  clinics: Clinic[];
   selectedClinicId: string | null;
   onSelectClinic: (clinicId: string) => void;
   isLoading: boolean;
 }
 
-const ClinicSelector = ({ 
-  clinics, 
-  selectedClinicId, 
-  onSelectClinic, 
-  isLoading 
-}: ClinicSelectorProps) => {
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Select Clinic</CardTitle>
-          <CardDescription>Choose a clinic to customize its appearance</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center items-center h-32">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
+export const ClinicSelector: React.FC<ClinicSelectorProps> = ({
+  clinics,
+  selectedClinicId,
+  onSelectClinic,
+  isLoading
+}) => {
+  const { user } = useAuth();
+  const isAdmin = isSystemAdmin(user);
+  
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader>
         <CardTitle>Select Clinic</CardTitle>
-        <CardDescription>Choose a clinic to customize its appearance</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
-          {clinics?.map(clinic => (
-            <div
-              key={clinic.id}
-              className={`p-3 rounded-md cursor-pointer flex items-center ${
-                selectedClinicId === clinic.id ? 'bg-primary/10 border border-primary/30' : 'hover:bg-gray-100'
-              }`}
-              onClick={() => onSelectClinic(clinic.id)}
-            >
-              <Building className="mr-2 h-5 w-5 text-gray-500" />
-              <span>{clinic.name}</span>
-            </div>
-          ))}
-          
-          {(!clinics || clinics.length === 0) && (
-            <p className="text-gray-500 text-center py-4">No clinics available</p>
-          )}
-        </div>
+        {isLoading ? (
+          <div className="h-9 bg-gray-200 animate-pulse rounded" />
+        ) : (
+          <Select
+            value={selectedClinicId || ''}
+            onValueChange={onSelectClinic}
+            disabled={!isAdmin || clinics.length <= 1}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a clinic" />
+            </SelectTrigger>
+            <SelectContent>
+              {clinics.map((clinic) => (
+                <SelectItem key={clinic.id} value={clinic.id}>
+                  {clinic.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        
+        {!isAdmin && (
+          <p className="mt-2 text-sm text-gray-500">
+            As a clinic admin, you can only customize your own clinic.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
 };
-
-export default ClinicSelector;

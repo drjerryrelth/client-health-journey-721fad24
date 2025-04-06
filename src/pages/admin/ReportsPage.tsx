@@ -1,32 +1,63 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Banknote, Activity, TrendingUp, Users } from 'lucide-react';
+import { useAuth } from '@/context/auth';
+import { isSystemAdmin, isClinicAdmin } from '@/utils/role-based-access';
 
 const ReportsPage = () => {
-  // Mock monthly revenue data
-  const revenueData = [
-    { month: 'Jan', revenue: 12000, clients: 18 },
-    { month: 'Feb', revenue: 15000, clients: 22 },
-    { month: 'Mar', revenue: 18000, clients: 28 },
-    { month: 'Apr', revenue: 20000, clients: 32 },
-    { month: 'May', revenue: 22000, clients: 35 },
-    { month: 'Jun', revenue: 25000, clients: 40 }
-  ];
+  const { user } = useAuth();
+  const [revenueData, setRevenueData] = useState([]);
+  const [subscriptionData, setSubscriptionData] = useState([]);
+  
+  useEffect(() => {
+    // Load different data based on user role
+    if (isSystemAdmin(user)) {
+      // System admin sees all clinics data
+      setRevenueData([
+        { month: 'Jan', revenue: 12000, clients: 18 },
+        { month: 'Feb', revenue: 15000, clients: 22 },
+        { month: 'Mar', revenue: 18000, clients: 28 },
+        { month: 'Apr', revenue: 20000, clients: 32 },
+        { month: 'May', revenue: 22000, clients: 35 },
+        { month: 'Jun', revenue: 25000, clients: 40 }
+      ]);
+      
+      setSubscriptionData([
+        { id: 1, name: 'Wellness Center', plan: 'Enterprise', price: '$499/month', startDate: '10/15/2023', clients: 18 },
+        { id: 2, name: 'Practice Naturals', plan: 'Premium', price: '$299/month', startDate: '11/03/2023', clients: 12 },
+        { id: 3, name: 'Health Partners', plan: 'Standard', price: '$199/month', startDate: '01/22/2024', clients: 9 }
+      ]);
+    } else if (isClinicAdmin(user)) {
+      // Clinic admin only sees their clinic's data
+      setRevenueData([
+        { month: 'Jan', revenue: 4500, clients: 7 },
+        { month: 'Feb', revenue: 5200, clients: 8 },
+        { month: 'Mar', revenue: 6000, clients: 10 },
+        { month: 'Apr', revenue: 6800, clients: 12 },
+        { month: 'May', revenue: 7200, clients: 14 },
+        { month: 'Jun', revenue: 8000, clients: 15 }
+      ]);
+      
+      // Single clinic's subscription data
+      setSubscriptionData([
+        { id: 1, name: user?.name || 'Your Clinic', plan: 'Premium', price: '$299/month', startDate: '11/03/2023', clients: 15 }
+      ]);
+    }
+  }, [user]);
 
-  // Mock subscription plans data
-  const subscriptionData = [
-    { id: 1, name: 'Wellness Center', plan: 'Enterprise', price: '$499/month', startDate: '10/15/2023', clients: 18 },
-    { id: 2, name: 'Practice Naturals', plan: 'Premium', price: '$299/month', startDate: '11/03/2023', clients: 12 },
-    { id: 3, name: 'Health Partners', plan: 'Standard', price: '$199/month', startDate: '01/22/2024', clients: 9 }
-  ];
+  // Dashboard header changes based on user role
+  const dashboardTitle = isClinicAdmin(user) ? 'Clinic Financial Reports' : 'System Financial Reports';
+  const dashboardDescription = isClinicAdmin(user) 
+    ? 'Overview of your clinic performance' 
+    : 'Overview of all clinics performance';
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Financial Reports</h1>
-        <p className="text-gray-500">Overview of your business performance</p>
+        <h1 className="text-2xl font-bold text-gray-900">{dashboardTitle}</h1>
+        <p className="text-gray-500">{dashboardDescription}</p>
       </div>
       
       {/* Financial Summary Cards */}
@@ -37,29 +68,39 @@ const ReportsPage = () => {
             <Banknote className="h-4 w-4 text-primary-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$112,000</div>
+            <div className="text-2xl font-bold">
+              {isClinicAdmin(user) ? '$37,700' : '$112,000'}
+            </div>
             <p className="text-xs text-green-500">+8% from last month</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {isClinicAdmin(user) ? 'Your Subscription' : 'Active Subscriptions'}
+            </CardTitle>
             <Activity className="h-4 w-4 text-primary-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-green-500">+1 from last month</p>
+            <div className="text-2xl font-bold">{isClinicAdmin(user) ? 'Premium' : '3'}</div>
+            <p className="text-xs text-green-500">
+              {isClinicAdmin(user) ? 'Active' : '+1 from last month'}
+            </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Avg. Revenue per Clinic</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {isClinicAdmin(user) ? 'Monthly Revenue' : 'Avg. Revenue per Clinic'}
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-primary-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$331/mo</div>
+            <div className="text-2xl font-bold">
+              {isClinicAdmin(user) ? '$8,000/mo' : '$331/mo'}
+            </div>
             <p className="text-xs text-green-500">+5% from last month</p>
           </CardContent>
         </Card>
@@ -70,8 +111,10 @@ const ReportsPage = () => {
             <Users className="h-4 w-4 text-primary-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">40</div>
-            <p className="text-xs text-green-500">+5 from last month</p>
+            <div className="text-2xl font-bold">{isClinicAdmin(user) ? '15' : '40'}</div>
+            <p className="text-xs text-green-500">
+              {isClinicAdmin(user) ? '+1 from last month' : '+5 from last month'}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -79,7 +122,9 @@ const ReportsPage = () => {
       {/* Revenue Chart */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Monthly Revenue</CardTitle>
+          <CardTitle>
+            {isClinicAdmin(user) ? 'Your Clinic Monthly Revenue' : 'System Monthly Revenue'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
@@ -110,7 +155,9 @@ const ReportsPage = () => {
       {/* Subscriptions Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Subscription Plans</CardTitle>
+          <CardTitle>
+            {isClinicAdmin(user) ? 'Your Subscription' : 'All Subscriptions'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
