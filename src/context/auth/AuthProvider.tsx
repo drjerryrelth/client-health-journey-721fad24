@@ -7,6 +7,7 @@ import { UserData, AuthContextType } from '@/types/auth';
 import { AuthContext } from './AuthContext';
 import { useAuthMethods } from './useAuthMethods';
 import { useAuthSession } from './useAuthSession';
+import { toast } from 'sonner';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Use React.useState explicitly
