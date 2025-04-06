@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { checkAuthentication } from '../clinics/auth-helper';
@@ -174,5 +173,45 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       toast.error('Failed to update coach due to an unknown error');
     }
     return null;
+  }
+}
+
+/**
+ * Deletes a coach from the database
+ */
+export async function deleteCoach(id: string): Promise<boolean> {
+  try {
+    console.log('[Coach Service] Deleting coach with ID:', id);
+    
+    // Check if user is authenticated using the helper
+    const session = await checkAuthentication();
+    if (!session) {
+      console.error('[Coach Service] User is not authenticated');
+      toast.error('You must be logged in to delete a coach');
+      return false;
+    }
+    
+    // Use RPC function to delete coach to bypass any RLS policy issues
+    const { data, error } = await supabase.rpc(
+      'delete_coach',
+      { coach_id: id }
+    );
+    
+    if (error) {
+      console.error('[Coach Service] Error deleting coach via RPC:', error);
+      throw new Error(`Failed to delete coach: ${error.message}`);
+    }
+    
+    console.log('[Coach Service] Coach deleted successfully:', data);
+    toast.success('Coach deleted successfully!');
+    return true;
+  } catch (error) {
+    console.error('[Coach Service] Error deleting coach:', error);
+    if (error instanceof Error) {
+      toast.error(`Failed to delete coach: ${error.message}`);
+    } else {
+      toast.error('Failed to delete coach due to an unknown error');
+    }
+    return false;
   }
 }
