@@ -59,6 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signUp(email, password, userData);
   };
 
+  // Create a hasRoleWrapper function that takes the user from context
+  const hasRoleWrapper = (roleToCheck: UserRole | UserRole[]): boolean => {
+    const roleCheckFn = hasRole(roleToCheck);
+    return roleCheckFn(user);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -68,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         logout,
-        hasRole: (role: UserRole | UserRole[]) => hasRole(role)(user),
+        hasRole: hasRoleWrapper,
         signUp: wrappedSignUp,
       }}
     >

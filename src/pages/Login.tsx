@@ -5,6 +5,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useLoginRedirection } from '@/hooks/use-login-redirection';
 import { attemptSessionRecovery } from '@/services/auth/session-service';
 import { useAuth } from '@/context/auth';
+import { toast } from 'sonner';
 
 const Login = () => {
   const { isLoading, isAuthenticated, redirectDestination } = useLoginRedirection();
