@@ -40,8 +40,8 @@ const ClientRoutes = () => {
   return (
     <Routes>
       <Route element={<MainLayout requiredRoles={['client']} />}>
-        <Route index element={<ClientPortal />} />
-        <Route path="dashboard" element={<ClientPortal />} />
+        <Route index element={<ClientDashboard />} />
+        <Route path="dashboard" element={<ClientDashboard />} />
         <Route path="messages" element={<ClientPortal />} />
         <Route path="journal" element={<ClientPortal />} />
         <Route path="resources" element={<ClientPortal />} />
