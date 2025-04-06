@@ -29,7 +29,70 @@ export async function ensureDemoProfileExists(userId: string, email: string) {
   }
   
   try {
-    // Check if profile exists first
+    // First, specifically check if this is a demo admin - higher priority check
+    if (isDemoAdminEmail(email)) {
+      console.log('Critical path: Verifying admin demo profile setup');
+      
+      // For admin demos, always ensure the profile exists with admin role and no clinic_id
+      const { data: adminProfile, error: adminCheckError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (adminCheckError || !adminProfile) {
+        console.log('Admin demo profile not found, creating one');
+        
+        try {
+          // Create admin profile
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              full_name: 'Admin User',
+              email: email,
+              role: 'admin',
+              clinic_id: null
+            });
+            
+          if (insertError) {
+            console.error('Error creating admin demo profile:', insertError);
+          } else {
+            console.log('Admin demo profile created successfully');
+          }
+        } catch (err) {
+          console.error('Unexpected error creating admin profile:', err);
+        }
+      } else {
+        // Ensure admin profile has the correct role and NO clinic_id
+        if (adminProfile.role !== 'admin' || adminProfile.clinic_id !== null) {
+          console.log('Updating admin demo profile to ensure correct role and no clinic ID');
+          
+          try {
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ 
+                role: 'admin', 
+                clinic_id: null 
+              })
+              .eq('id', userId);
+              
+            if (updateError) {
+              console.error('Error updating admin demo profile:', updateError);
+            } else {
+              console.log('Admin demo profile updated successfully');
+            }
+          } catch (err) {
+            console.error('Unexpected error updating admin profile:', err);
+          }
+        }
+      }
+      
+      // For admin demo, always return 'admin' role
+      return 'admin';
+    }
+    
+    // Standard check for non-admin demo profiles
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
       .select('*')

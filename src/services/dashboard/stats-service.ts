@@ -27,15 +27,19 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       .eq('id', session.user.id)
       .single();
     
+    // Check if this is a demo admin email (critical for proper role detection)
+    const userEmail = userData?.email || session.user.email;
+    const isAdminDemo = userEmail && isDemoAdminEmail(userEmail);
+    
     // Get role from profile data or check if it's a known demo admin
-    const userRole = userData?.role || (userData?.email && isDemoAdminEmail(userData.email) ? 'admin' : undefined);
+    const userRole = userData?.role || (isAdminDemo ? 'admin' : undefined);
     const userClinicId = userData?.clinic_id;
     
-    console.log('[DashboardStats] User role:', userRole, 'clinicId:', userClinicId, 'email:', userData?.email);
+    console.log('[DashboardStats] User role:', userRole, 'clinicId:', userClinicId, 'email:', userEmail, 'isAdminDemo:', isAdminDemo);
     
-    // Special handling for demo admin users who might not have a proper profile record
-    if (!userRole && userData?.email && isDemoAdminEmail(userData.email)) {
-      console.log('[DashboardStats] This is the demo admin email - forcing admin role');
+    // Special handling for demo admin users, prioritizing email check
+    if (isAdminDemo) {
+      console.log('[DashboardStats] This is the demo admin email - forcing admin role behavior');
       // Continue with admin role even if profile record is missing
       return await fetchSystemAdminStats();
     }
@@ -47,7 +51,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       return await fetchClinicAdminStats(userClinicId);
     } 
     // For system admins, keep the existing functionality
-    else if (userRole === 'admin' || userRole === 'super_admin' || (userData?.email && isDemoAdminEmail(userData.email))) {
+    else if (userRole === 'admin' || userRole === 'super_admin') {
       // SYSTEM ADMIN: Fetch all clinics data
       console.log('[DashboardStats] System admin detected, fetching global statistics');
       return await fetchSystemAdminStats();

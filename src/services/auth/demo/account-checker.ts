@@ -20,7 +20,7 @@ export async function isDemoAccountExists(email: string): Promise<boolean> {
       return false;
     }
     
-    // Type the users data properly to fix the TypeScript error
+    // Safely handle data
     if (data && data.users && Array.isArray(data.users)) {
       // Check if any user has the matching email
       return data.users.some(user => {
