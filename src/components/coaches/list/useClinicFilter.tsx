@@ -36,7 +36,7 @@ export function useClinicFilter() {
    * - Only clinic-specific data for clinic admins
    * - Empty array for unauthorized users
    */
-  const filterByClinic = <T extends { clinicId: string }>(data: T[]): T[] => {
+  const filterByClinic = <T extends { clinicId?: string, clinic_id?: string }>(data: T[]): T[] => {
     if (!data || !Array.isArray(data)) {
       console.warn('Invalid data passed to filterByClinic: ', data);
       return [];
@@ -51,7 +51,11 @@ export function useClinicFilter() {
     // Clinic admins can only see their clinic's data
     if (isClinicAdmin && userClinicId) {
       console.log(`Clinic admin detected, filtering data to clinic ${userClinicId}`);
-      const filteredData = data.filter(item => item.clinicId === userClinicId);
+      const filteredData = data.filter(item => {
+        // Check both clinicId and clinic_id properties to handle different naming conventions
+        const itemClinicId = item.clinicId || item.clinic_id;
+        return itemClinicId === userClinicId;
+      });
       console.log(`Filtered from ${data.length} items to ${filteredData.length} items`);
       return filteredData;
     }
