@@ -75,9 +75,9 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
     }
   }, [setIsLoading]);
 
-  // Properly type the hasRole function to return a function with the correct signature
-  const hasRole = React.useCallback((roleToCheck: UserRole | UserRole[]) => {
-    // Explicitly defining the return type of the inner function
+  // Define the hasRole function with proper return type
+  const hasRole = React.useCallback((roleToCheck: UserRole | UserRole[]): ((user: UserData | null) => boolean) => {
+    // Return a function that takes a user and checks if they have the role
     return (user: UserData | null): boolean => {
       if (!user) return false;
       
