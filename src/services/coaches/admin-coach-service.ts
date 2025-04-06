@@ -98,6 +98,7 @@ export async function getAllCoachesForAdmin(): Promise<Coach[]> {
         phone: coachObj.phone || '',
         status: (coachObj.status === 'active' ? 'active' : 'inactive') as 'active' | 'inactive',
         clinicId: String(coachObj.clinic_id || ''),
+        clinic_id: String(coachObj.clinic_id || ''), // Add clinic_id to match the Coach type
         clients: Number(coachObj.client_count || 0)
       };
     });

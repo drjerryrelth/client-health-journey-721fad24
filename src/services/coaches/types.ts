@@ -1,5 +1,5 @@
 
-// Update Coach type to fix the 'clients' type mismatch
+// Update Coach type to fix the inconsistent types and make clinic_id optional
 export type Coach = {
   id: string;
   name: string;
@@ -7,6 +7,6 @@ export type Coach = {
   phone: string | null;
   status: 'active' | 'inactive';
   clinicId: string;
-  clinic_id: string;
-  clients: any[]; // Changed from number to any[]
+  clinic_id?: string; // Make this optional since it's redundant with clinicId
+  clients: number; // Changed back to number since most code expects this to be a number
 };

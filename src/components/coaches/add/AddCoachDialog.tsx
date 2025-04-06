@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
@@ -37,13 +36,10 @@ export const AddCoachDialog = ({
   const { user } = useAuth();
   const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   
-  // Fetch clinics if user is a system admin
   const { data: clinics, isLoading: clinicsLoading } = useClinicQuery();
   
-  // Use the clinic ID from props or user context if not a system admin
   const effectiveClinicId = selectedClinicId || user?.clinicId;
   
-  // Reset the selected clinic when the dialog opens/closes or clinicId prop changes
   useEffect(() => {
     if (open) {
       setSelectedClinicId(clinicId);
@@ -51,7 +47,6 @@ export const AddCoachDialog = ({
     }
   }, [open, clinicId, clinicName]);
   
-  // Update clinic name when selected clinic changes
   useEffect(() => {
     if (isSystemAdmin && selectedClinicId && clinics) {
       const clinic = clinics.find(c => c.id === selectedClinicId);
@@ -105,22 +100,20 @@ export const AddCoachDialog = ({
       
       console.log('[AddCoachDialog] Session verified before submission:', session.user.id);
       
-      // Try adding the coach with a timeout
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Coach addition timed out')), 15000);
       });
       
-      // Create the coach addition promise
       const addCoachPromise = CoachService.addCoach({
         name: values.name,
         email: values.email,
         phone: values.phone || null,
         status: 'active',
         clinicId: effectiveClinicId,
-        clients: 0 // Add the clients field with default value 0
+        clinic_id: effectiveClinicId,
+        clients: 0
       });
       
-      // Race between the actual operation and the timeout
       const newCoach = await Promise.race([
         addCoachPromise,
         timeoutPromise
@@ -151,12 +144,10 @@ export const AddCoachDialog = ({
 
   const handleDialogChange = (open: boolean) => {
     if (!open && isSubmitting) {
-      // Prevent closing while submitting
       return;
     }
     
     if (!open) {
-      // Reset error state when closing
       setErrorDetails(null);
       setShowErrorDialog(false);
     }
@@ -181,7 +172,6 @@ export const AddCoachDialog = ({
   
   const handleErrorDialogClose = (open: boolean) => {
     setShowErrorDialog(open);
-    // Don't close the main dialog when error dialog closes
   };
 
   return (
@@ -195,7 +185,6 @@ export const AddCoachDialog = ({
             </DialogDescription>
           </DialogHeader>
           
-          {/* Add clinic selector for system admins */}
           {isSystemAdmin && (
             <div className="mb-4">
               <FormItem>

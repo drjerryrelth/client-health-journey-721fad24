@@ -12,6 +12,7 @@ export interface CoachWithClinic {
   phone: string | null;
   status: 'active' | 'inactive';
   clinicId: string;
+  clinic_id?: string; // Add this to match Coach type
   clinicName: string;
   clients: number;
 }

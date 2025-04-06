@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Coach } from './types';
 
@@ -40,7 +39,7 @@ export const getAllCoachesForAdmin = async (): Promise<Coach[]> => {
       status: coach.status || 'inactive',
       clinicId: coach.clinic_id,
       clinic_id: coach.clinic_id,
-      clients: [] // Initialize with empty array
+      clients: 0 // Initialize with number (not array)
     }));
     
     return mappedCoaches;
@@ -112,7 +111,7 @@ async function tryDirectQuery(clinicId: string): Promise<Coach[]> {
       status: coach.status || 'inactive',
       clinicId: coach.clinic_id,
       clinic_id: coach.clinic_id,
-      clients: []
+      clients: 0 // Use number instead of array
     }));
     
     return mappedCoaches;
@@ -142,7 +141,7 @@ async function tryProcedureCall(clinicId: string): Promise<Coach[]> {
       status: coach.status || 'inactive',
       clinicId: coach.clinic_id,
       clinic_id: coach.clinic_id,
-      clients: []
+      clients: 0 // Use number instead of array
     }));
     
     return mappedCoaches;
@@ -175,7 +174,7 @@ async function tryPermissiveQuery(clinicId: string): Promise<Coach[]> {
       status: coach.status || 'inactive',
       clinicId: coach.clinic_id,
       clinic_id: coach.clinic_id,
-      clients: []
+      clients: 0 // Use number instead of array
     }));
     
     return mappedCoaches;

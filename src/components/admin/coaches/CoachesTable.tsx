@@ -30,6 +30,12 @@ const CoachesTable: React.FC<CoachesTableProps> = ({
 }) => {
   const hasActions = Boolean(onEdit || onDelete || onResetPassword);
   
+  // Function to convert CoachWithClinic to Coach for action handlers
+  const coachWithClinicToCoach = (coachWithClinic: CoachWithClinic): Coach => ({
+    ...coachWithClinic,
+    clinic_id: coachWithClinic.clinicId, // Add missing clinic_id
+  });
+  
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -81,18 +87,18 @@ const CoachesTable: React.FC<CoachesTableProps> = ({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {onEdit && (
-                          <DropdownMenuItem onClick={() => onEdit(coach)}>
+                          <DropdownMenuItem onClick={() => onEdit(coachWithClinicToCoach(coach))}>
                             Edit
                           </DropdownMenuItem>
                         )}
                         {onResetPassword && (
-                          <DropdownMenuItem onClick={() => onResetPassword(coach)}>
+                          <DropdownMenuItem onClick={() => onResetPassword(coachWithClinicToCoach(coach))}>
                             Reset Password
                           </DropdownMenuItem>
                         )}
                         {onDelete && (
                           <DropdownMenuItem 
-                            onClick={() => onDelete(coach)}
+                            onClick={() => onDelete(coachWithClinicToCoach(coach))}
                             className="text-red-600 focus:text-red-600"
                           >
                             Delete

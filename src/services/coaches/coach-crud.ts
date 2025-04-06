@@ -85,6 +85,7 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
       phone: responseData.phone,
       status: responseData.status as 'active' | 'inactive',
       clinicId: responseData.clinic_id, // Map clinic_id back to clinicId for our frontend
+      clinic_id: responseData.clinic_id, // Include clinic_id too
       clients: 0
     };
     
@@ -164,6 +165,7 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       phone: responseData.phone,
       status: responseData.status as 'active' | 'inactive',
       clinicId: responseData.clinic_id, // Map clinic_id back to clinicId for our frontend
+      clinic_id: responseData.clinic_id, // Include clinic_id too
       clients: responseData.client_count || 0
     };
     

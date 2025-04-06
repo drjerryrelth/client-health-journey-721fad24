@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
@@ -73,7 +72,8 @@ const AddCoachDialog = ({
         phone: values.phone || null,
         status: 'active',
         clinicId: clinicId,
-        clients: 0 // Add the clients field with default value 0
+        clinic_id: clinicId,
+        clients: 0
       });
 
       if (newCoach) {

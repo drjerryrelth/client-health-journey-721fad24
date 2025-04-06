@@ -10,6 +10,7 @@ export const getMockCoaches = (): Coach[] => {
       phone: '555-123-4567',
       status: 'active',
       clinicId: '1',
+      clinic_id: '1',
       clients: 12
     },
     {
@@ -19,6 +20,7 @@ export const getMockCoaches = (): Coach[] => {
       phone: '555-987-6543',
       status: 'active',
       clinicId: '1',
+      clinic_id: '1',
       clients: 8
     },
     {
@@ -28,6 +30,7 @@ export const getMockCoaches = (): Coach[] => {
       phone: '555-555-5555',
       status: 'inactive',
       clinicId: '2',
+      clinic_id: '2',
       clients: 0
     }
   ];
