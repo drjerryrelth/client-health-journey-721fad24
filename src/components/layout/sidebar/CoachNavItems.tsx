@@ -14,7 +14,7 @@ import { NavItem } from "./AdminNavItems";
 export const coachNavItems: NavItem[] = [
   {
     title: "Dashboard",
-    href: "/coach-dashboard",
+    href: "/coach/dashboard",
     icon: Home,
   },
   {
