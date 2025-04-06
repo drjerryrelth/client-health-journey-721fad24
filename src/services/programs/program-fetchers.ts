@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Program, mapDbProgramToProgram } from '@/types';
 import { SupplementRow } from '@/types/database';
@@ -28,7 +29,7 @@ export async function getClinicPrograms(clinicId: string, global: boolean = true
     }
     
     // Order the results by name
-    const { data, error } = await query.order('name');
+    let { data, error } = await query.order('name'); // Changed from const to let
 
     if (error) {
       console.error("Error fetching programs:", error);
@@ -60,7 +61,7 @@ export async function getClinicPrograms(clinicId: string, global: boolean = true
         }
         
         console.log("Found", globalData.length, "global programs");
-        data = globalData;
+        data = globalData; // Now we can reassign data since it's a let variable
       } else {
         return [];
       }

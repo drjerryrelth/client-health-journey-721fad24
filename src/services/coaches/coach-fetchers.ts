@@ -40,7 +40,7 @@ export const getAllCoachesForAdmin = async (): Promise<Coach[]> => {
       status: coach.status || 'inactive',
       clinicId: coach.clinic_id,
       clinic_id: coach.clinic_id,
-      clients: []
+      clients: [] // Initialize with empty array
     }));
     
     return mappedCoaches;

@@ -1,4 +1,3 @@
-
 import { ProfileRow, ClientRow, ProgramRow, SupplementRow, CheckInRow, ClinicRow } from './database';
 
 // Update the UserRole type to include a specific 'clinic_admin' role
@@ -42,6 +41,7 @@ export type Program = {
   clinicId: string;
   clientCount?: number; // Add this field to track number of enrolled clients
   supplements: Supplement[]; // Add back the supplements property
+  isGlobal?: boolean; // Add isGlobal property
 };
 
 export type Supplement = {
