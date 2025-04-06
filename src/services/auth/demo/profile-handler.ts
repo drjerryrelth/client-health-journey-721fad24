@@ -1,5 +1,12 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { getDemoRoleByEmail, isDemoAdminEmail, isDemoCoachEmail, isDemoClinicAdminEmail, isDemoClientEmail } from './utils';
+import { 
+  getDemoRoleByEmail, 
+  isDemoAdminEmail, 
+  isDemoCoachEmail, 
+  isDemoClinicAdminEmail, 
+  isDemoClientEmail 
+} from './utils';
 import { toast } from 'sonner';
 import { DEMO_CLINIC_ID } from './constants';
 

@@ -6,10 +6,10 @@ export {
   isDemoAdminEmail, 
   isDemoCoachEmail,
   isDemoClinicAdminEmail,
+  isDemoClientEmail,
   getDemoUserNameByEmail,
   getDemoRoleByEmail,
   autoConfirmDemoEmail, 
   isDemoClinicEmail, 
   handleDemoClinicSignup 
 } from './demo';
-

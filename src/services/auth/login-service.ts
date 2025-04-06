@@ -1,6 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { isDemoEmail, ensureDemoProfileExists, isDemoAdminEmail, isDemoCoachEmail, isDemoClientEmail } from './demo';
+import { 
+  isDemoEmail, 
+  ensureDemoProfileExists, 
+  isDemoAdminEmail, 
+  isDemoCoachEmail, 
+  isDemoClientEmail 
+} from './demo';
 import { handleDemoAccountCreation } from './login/demo-handler';
 
 export async function loginWithEmail(email: string, password: string) {

@@ -48,3 +48,52 @@ export const isDemoEmail = (email: string): boolean => {
     isDemoClientEmail(email)
   );
 };
+
+/**
+ * Helper function to determine if an email address is for a demo clinic signup
+ * Demo clinic emails will follow a specific pattern for easy identification
+ * @param email The email to check
+ */
+export const isDemoClinicEmail = (email: string): boolean => {
+  // Accept ANY @example.com email as a demo email
+  return email.toLowerCase().endsWith('@example.com');
+};
+
+/**
+ * Gets a user's display name based on their demo email
+ */
+export const getDemoUserNameByEmail = (email: string): string => {
+  if (!email) return 'Demo User';
+  
+  if (isDemoAdminEmail(email)) return 'Admin User';
+  if (isDemoClinicAdminEmail(email)) return 'Clinic Admin User';
+  if (isDemoCoachEmail(email)) {
+    return email === 'support@practicenaturals.com' ? 'Support Coach' : 'Coach User';
+  }
+  if (isDemoClientEmail(email)) {
+    return email === 'drjerry@livingbetterhealthcare.com' ? 'Dr. Jerry' : 'Client User';
+  }
+  
+  // Generic email handling
+  const username = email.split('@')[0];
+  // Capitalize first letter of each word
+  return username
+    .split(/[-_.]/g)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+};
+
+/**
+ * Gets a user's role based on their demo email
+ */
+export const getDemoRoleByEmail = (email: string): string => {
+  if (!email) return 'client';
+  
+  if (isDemoAdminEmail(email)) return 'admin';
+  if (isDemoClinicAdminEmail(email)) return 'clinic_admin';
+  if (isDemoCoachEmail(email)) return 'coach';
+  if (isDemoClientEmail(email)) return 'client';
+  
+  // Default role
+  return 'client';
+};

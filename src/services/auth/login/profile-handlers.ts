@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { ensureDemoProfileExists } from '../demo';
 
 // Helper to ensure clinic profile exists

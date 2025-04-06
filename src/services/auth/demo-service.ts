@@ -6,6 +6,8 @@ export {
   isDemoEmail,
   isDemoAdminEmail,
   isDemoCoachEmail,
+  isDemoClientEmail,
+  isDemoClinicAdminEmail,
   getDemoUserNameByEmail,
   getDemoRoleByEmail,
   ensureDemoProfileExists,
@@ -13,4 +15,3 @@ export {
   isDemoClinicEmail,
   handleDemoClinicSignup
 } from './demo';
-
