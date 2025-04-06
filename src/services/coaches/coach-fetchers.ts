@@ -31,7 +31,19 @@ export const getAllCoachesForAdmin = async (): Promise<Coach[]> => {
       throw new Error(`Failed to fetch coaches: ${error.message}`);
     }
     
-    return data || [];
+    // Map the database results to the Coach type
+    const mappedCoaches: Coach[] = (data || []).map(coach => ({
+      id: coach.id,
+      name: coach.name, 
+      email: coach.email,
+      phone: coach.phone || null,
+      status: coach.status || 'inactive',
+      clinicId: coach.clinic_id,
+      clinic_id: coach.clinic_id,
+      clients: []
+    }));
+    
+    return mappedCoaches;
   } catch (err) {
     console.error("Error in getAllCoachesForAdmin:", err);
     throw err;
@@ -91,7 +103,19 @@ async function tryDirectQuery(clinicId: string): Promise<Coach[]> {
       return [];
     }
     
-    return data || [];
+    // Map the database results to the Coach type
+    const mappedCoaches: Coach[] = (data || []).map(coach => ({
+      id: coach.id,
+      name: coach.name, 
+      email: coach.email,
+      phone: coach.phone || null,
+      status: coach.status || 'inactive',
+      clinicId: coach.clinic_id,
+      clinic_id: coach.clinic_id,
+      clients: []
+    }));
+    
+    return mappedCoaches;
   } catch (err) {
     console.warn("Error in tryDirectQuery:", err);
     return [];
@@ -109,7 +133,19 @@ async function tryProcedureCall(clinicId: string): Promise<Coach[]> {
       return [];
     }
     
-    return data || [];
+    // Map the database results to the Coach type
+    const mappedCoaches: Coach[] = (data || []).map(coach => ({
+      id: coach.id,
+      name: coach.name, 
+      email: coach.email,
+      phone: coach.phone || null,
+      status: coach.status || 'inactive',
+      clinicId: coach.clinic_id,
+      clinic_id: coach.clinic_id,
+      clients: []
+    }));
+    
+    return mappedCoaches;
   } catch (err) {
     console.warn("Error in tryProcedureCall:", err);
     return [];
@@ -130,7 +166,19 @@ async function tryPermissiveQuery(clinicId: string): Promise<Coach[]> {
       return [];
     }
     
-    return data || [];
+    // Map the database results to the Coach type
+    const mappedCoaches: Coach[] = (data || []).map(coach => ({
+      id: coach.id,
+      name: coach.name, 
+      email: coach.email,
+      phone: coach.phone || null,
+      status: coach.status || 'inactive',
+      clinicId: coach.clinic_id,
+      clinic_id: coach.clinic_id,
+      clients: []
+    }));
+    
+    return mappedCoaches;
   } catch (err) {
     console.warn("Error in tryPermissiveQuery:", err);
     return [];

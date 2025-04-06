@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
@@ -21,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Program } from '@/types';
 import { Coach } from '@/services/coaches';
 import { AddClientFormValues, clientGoals } from './AddClientSchema';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Globe } from 'lucide-react';
 
 interface ClientFormFieldsProps {
   programs: Program[];
@@ -162,7 +161,6 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({
         )}
       />
 
-      {/* Coach Selection Dropdown - Fixed to use "none" as value instead of empty string */}
       <FormField
         control={form.control}
         name="coachId"
@@ -243,6 +241,11 @@ const ClientFormFields: React.FC<ClientFormFieldsProps> = ({
                   programs.map((program: Program) => (
                     <SelectItem key={program.id} value={program.id}>
                       {program.name} ({program.type}) - {program.duration} days
+                      {program.isGlobal && (
+                        <span className="ml-2 inline-flex items-center">
+                          <Globe className="h-3 w-3 text-blue-500" />
+                        </span>
+                      )}
                     </SelectItem>
                   ))
                 ) : (

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -145,7 +146,7 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                No program templates found for your clinic. You should create programs first from the Programs page.
+                No program templates available. The System Admin needs to create program templates.
               </AlertDescription>
             </Alert>
           )}
@@ -165,6 +166,11 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
               <AlertTitle>Program Templates Available</AlertTitle>
               <AlertDescription>
                 {programs.length} program template{programs.length > 1 ? 's are' : ' is'} available for assignment.
+                {programs.some(p => p.isGlobal) && (
+                  <span className="block mt-1 text-xs text-blue-600">
+                    Some templates are system-wide and available to all clinics.
+                  </span>
+                )}
               </AlertDescription>
             </Alert>
           )}

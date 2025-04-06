@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/auth';
 import { ProgramService } from '@/services/programs';
@@ -23,7 +22,8 @@ export const useProgramsQuery = (clinicId?: string) => {
         
         if (effectiveClinicId) {
           console.log(`Using effective clinic ID: ${effectiveClinicId} to fetch programs`);
-          programs = await ProgramService.getClinicPrograms(effectiveClinicId);
+          // Set global=true to fetch both clinic-specific and global programs
+          programs = await ProgramService.getClinicPrograms(effectiveClinicId, true);
           console.log(`Fetched ${programs?.length || 0} programs for clinic ${effectiveClinicId}:`, programs);
         } else {
           console.log('No clinic ID available, fetching all programs');

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Program, mapDbProgramToProgram } from '@/types';
 import { SupplementRow } from '@/types/database';
@@ -6,32 +5,65 @@ import { getSupplementsByProgramId } from './supplement-service';
 
 /**
  * Fetches all programs for a specific clinic with their supplements and client counts
+ * Also includes global programs when global=true
  */
-export async function getClinicPrograms(clinicId: string): Promise<Program[]> {
+export async function getClinicPrograms(clinicId: string, global: boolean = true): Promise<Program[]> {
   try {
-    console.log("ProgramService: Fetching programs for clinic ID:", clinicId);
+    console.log("ProgramService: Fetching programs for clinic ID:", clinicId, "including global:", global);
     
     if (!clinicId) {
       console.error("Missing clinic ID in getClinicPrograms");
       return [];
     }
     
-    const { data, error } = await supabase
-      .from('programs')
-      .select('*')
-      .eq('clinic_id', clinicId)
-      .order('name');
+    // Build the query - using global flag to determine whether to include all programs
+    let query = supabase.from('programs').select('*');
+    
+    if (global) {
+      // If global flag is true, fetch both clinic-specific and global programs (null clinic_id)
+      query = query.or(`clinic_id.eq.${clinicId},clinic_id.is.null`);
+    } else {
+      // Otherwise, just fetch clinic-specific programs
+      query = query.eq('clinic_id', clinicId);
+    }
+    
+    // Order the results by name
+    const { data, error } = await query.order('name');
 
     if (error) {
       console.error("Error fetching programs:", error);
       throw error;
     }
     
-    console.log("Programs data returned for clinic:", data?.length || 0, "programs");
+    console.log("Programs data returned:", data?.length || 0, "programs");
     
     if (!data || data.length === 0) {
-      console.log("No programs found for clinic:", clinicId);
-      return [];
+      console.log("No programs found for clinic:", clinicId, "with global flag:", global);
+      
+      // If no programs found with clinic ID, try to fetch global programs if we haven't already
+      if (!global) {
+        console.log("Attempting to fetch global programs as fallback");
+        const { data: globalData, error: globalError } = await supabase
+          .from('programs')
+          .select('*')
+          .is('clinic_id', null)
+          .order('name');
+          
+        if (globalError) {
+          console.error("Error fetching global programs:", globalError);
+          return [];
+        }
+        
+        if (!globalData || globalData.length === 0) {
+          console.log("No global programs found either");
+          return [];
+        }
+        
+        console.log("Found", globalData.length, "global programs");
+        data = globalData;
+      } else {
+        return [];
+      }
     }
     
     // Fetch supplements for each program and add client count
@@ -56,7 +88,10 @@ export async function getClinicPrograms(clinicId: string): Promise<Program[]> {
           // Add client count to the program object
           mappedProgram.clientCount = clientCount || 0;
           
-          console.log(`Program ${program.id} (${program.name}) has ${clientCount || 0} clients`);
+          // Add isGlobal flag for UI if needed
+          mappedProgram.isGlobal = program.clinic_id === null;
+          
+          console.log(`Program ${program.id} (${program.name}) has ${clientCount || 0} clients, isGlobal: ${mappedProgram.isGlobal}`);
           
           return mappedProgram;
         } catch (error) {
@@ -64,6 +99,7 @@ export async function getClinicPrograms(clinicId: string): Promise<Program[]> {
           const mappedProgram = mapDbProgramToProgram(program);
           mappedProgram.supplements = [];
           mappedProgram.clientCount = 0;
+          mappedProgram.isGlobal = program.clinic_id === null;
           return mappedProgram;
         }
       })
