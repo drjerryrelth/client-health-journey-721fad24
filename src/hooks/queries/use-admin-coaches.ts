@@ -71,7 +71,14 @@ export function useAdminCoaches() {
       
       if (user?.role === 'clinic_admin' && user?.clinicId) {
         console.log('[useAdminCoaches] Clinic admin role detected, fetching only clinic coaches for clinic:', user.clinicId);
-        coachesData = await CoachService.getClinicCoaches(user.clinicId);
+        try {
+          coachesData = await CoachService.getClinicCoaches(user.clinicId);
+          console.log('[useAdminCoaches] Successfully fetched coaches for clinic admin:', coachesData?.length || 0);
+        } catch (err) {
+          console.error('[useAdminCoaches] Error fetching clinic coaches:', err);
+          // Provide specific error message for clinic admins
+          throw new Error(`Failed to fetch coaches for your clinic: ${err.message || 'Unknown error'}`);
+        }
       } else if (user?.role === 'admin' || user?.role === 'super_admin') {
         console.log('[useAdminCoaches] System admin role detected, fetching all coaches');
         coachesData = await CoachService.getAllCoachesForAdmin();

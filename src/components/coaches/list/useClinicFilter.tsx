@@ -37,6 +37,11 @@ export function useClinicFilter() {
    * - Empty array for unauthorized users
    */
   const filterByClinic = <T extends { clinicId: string }>(data: T[]): T[] => {
+    if (!data || !Array.isArray(data)) {
+      console.warn('Invalid data passed to filterByClinic: ', data);
+      return [];
+    }
+    
     // System admins can see all data
     if (isSystemAdmin) {
       console.log('System admin detected, showing all data across clinics');

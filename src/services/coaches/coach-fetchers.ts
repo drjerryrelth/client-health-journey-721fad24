@@ -12,6 +12,11 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
   try {
     console.log('[CoachService] Fetching coaches for clinic:', clinicId);
     
+    if (!clinicId) {
+      console.error('[CoachService] Missing clinic ID');
+      throw new Error('Clinic ID is required to fetch coaches');
+    }
+    
     // Check authentication before proceeding
     const session = await checkAuthentication();
     if (!session) {
@@ -23,7 +28,7 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
     
     // Use RPC call to bypass RLS issues
     const { data, error } = await supabase.rpc(
-      'get_clinic_coaches' as any, 
+      'get_clinic_coaches', 
       { clinic_id_param: clinicId }
     );
 
@@ -34,13 +39,17 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
     
     console.log('[CoachService] Fetched coaches data from RPC:', data);
     
-    if (!Array.isArray(data)) {
-      console.error('[CoachService] Invalid data format, expected array:', data);
-      throw new Error('Invalid data format returned from server');
+    if (!data) {
+      console.error('[CoachService] No data returned');
+      return [];
     }
     
     // Transform and return the coaches data using type assertions
     return data.map(coach => {
+      // Skip null coaches
+      if (!coach) return null;
+      
+      // Access properties safely
       const coachObj = coach as any;
       return {
         id: String(coachObj.id || ''),
@@ -53,11 +62,11 @@ export async function getClinicCoaches(clinicId: string): Promise<Coach[]> {
         clinicId: String(coachObj.clinic_id || ''),
         clients: Number(coachObj.client_count || 0)
       };
-    });
+    }).filter(Boolean);
   } catch (error) {
     console.error('[CoachService] Error fetching clinic coaches:', error);
     toast.error('Failed to fetch coaches data. Please try again.');
-    // Return empty array as fallback instead of mock data to force frontend to show "No coaches found"
+    // Return empty array as fallback
     return [];
   }
 }
@@ -115,7 +124,7 @@ export async function getAllCoaches(): Promise<Coach[]> {
   } catch (error) {
     console.error('[CoachService] Error fetching all coaches:', error);
     toast.error('Failed to fetch coaches data. Please try again.');
-    // Return empty array as fallback instead of mock data
+    // Return empty array as fallback
     return [];
   }
 }

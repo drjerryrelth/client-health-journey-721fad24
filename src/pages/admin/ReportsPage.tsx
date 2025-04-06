@@ -59,8 +59,8 @@ const ReportsPage = () => {
   }, [user]);
 
   // Dashboard header changes based on user role
-  const dashboardTitle = user?.role === 'clinic_admin' ? 'Clinic Financial Reports' : 'System Financial Reports';
-  const dashboardDescription = user?.role === 'clinic_admin' 
+  const dashboardTitle = isClinicAdmin(user) ? 'Clinic Financial Reports' : 'System Financial Reports';
+  const dashboardDescription = isClinicAdmin(user) 
     ? 'Overview of your clinic performance' 
     : 'Overview of all clinics performance';
 
