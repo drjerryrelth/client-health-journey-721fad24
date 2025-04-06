@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,8 @@ const CoachesPage = () => {
   
   const { isClinicAdmin, filterByClinic, userClinicId } = useClinicFilter();
   
-  const { coaches: allCoaches, loading, error, refresh, retryCount } = useAdminCoaches();
+  // Use the enhanced hook with hardRefresh
+  const { coaches: allCoaches, loading, error, refresh, hardRefresh, retryCount } = useAdminCoaches();
   
   useEffect(() => {
     if (isClinicAdmin && user) {
@@ -67,17 +69,20 @@ const CoachesPage = () => {
   
   const handleAddDialogClose = (open: boolean) => {
     setIsAddDialogOpen(open);
-    if (!open) refresh();
+    if (!open) {
+      // Force hard refresh when dialog closes to ensure new coach appears
+      hardRefresh();
+    }
   };
   
   const handleEditDialogClose = (open: boolean) => {
     setIsEditDialogOpen(open);
-    if (!open) refresh();
+    if (!open) hardRefresh();
   };
   
   const handleDeleteDialogClose = (open: boolean) => {
     setIsDeleteDialogOpen(open);
-    if (!open) refresh();
+    if (!open) hardRefresh();
   };
   
   const handleResetPasswordDialogClose = (open: boolean) => {
@@ -118,8 +123,8 @@ const CoachesPage = () => {
     
     // Clear existing data and force a hard refresh
     setTimeout(async () => {
-      // Force refresh
-      await refresh();
+      // Force hard refresh
+      hardRefresh();
       
       // Show success toast after a delay
       setTimeout(() => {
@@ -128,6 +133,13 @@ const CoachesPage = () => {
       }, 1500);
     }, 500);
   };
+
+  // Run hard refresh on initial load
+  useEffect(() => {
+    // Initial hard refresh to ensure fresh data
+    hardRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     if (isClinicAdmin) {
@@ -202,9 +214,9 @@ const CoachesPage = () => {
           />
           
           {error ? (
-            <CoachesErrorState error={error} onRetry={handleManualRefresh} />
+            <CoachesErrorState error={error} onRetry={handleHardRefresh} />
           ) : loading ? (
-            <CoachesLoadingState />
+            <CoachesLoadingState retryCount={retryCount} />
           ) : (
             <CoachesTable 
               coaches={filteredCoaches}
@@ -222,7 +234,7 @@ const CoachesPage = () => {
         onOpenChange={handleAddDialogClose} 
         clinicId={userClinicId || undefined}
         clinicName={user?.name || clinicName}
-        onCoachAdded={refresh}
+        onCoachAdded={hardRefresh}
       />
       
       {selectedCoach && (
@@ -232,21 +244,21 @@ const CoachesPage = () => {
             open={isEditDialogOpen} 
             onOpenChange={handleEditDialogClose} 
             clinicName={user?.name || clinicName}
-            onCoachUpdated={refresh}
+            onCoachUpdated={hardRefresh}
           />
           
           <DeleteCoachDialog 
             coach={selectedCoach} 
             open={isDeleteDialogOpen} 
             onOpenChange={handleDeleteDialogClose} 
-            onCoachDeleted={refresh}
+            onCoachDeleted={hardRefresh}
           />
           
           <ResetCoachPasswordDialog 
             coach={selectedCoach} 
             open={isResetPasswordDialogOpen} 
             onOpenChange={handleResetPasswordDialogClose} 
-            onPasswordReset={refresh}
+            onPasswordReset={hardRefresh}
           />
         </>
       )}

@@ -80,16 +80,19 @@ export async function getAllCoaches(): Promise<Coach[]> {
     // Direct database query for admin users with aggressive cache-busting
     console.log('[CoachService] Authentication verified, calling get-all-coaches edge function');
     
-    // Use the edge function with enhanced no-cache headers
-    const timestamp = new Date().getTime(); 
-    const { data, error } = await supabase.functions.invoke('get-all-coaches', {
+    // Use the edge function with enhanced no-cache headers and a random timestamp to force a fresh request
+    const timestamp = Date.now(); 
+    const requestOptions = {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
         'X-Cache-Buster': timestamp.toString()
-      }
-    });
+      },
+      noResolveJson: false
+    };
+    
+    const { data, error } = await supabase.functions.invoke('get-all-coaches', requestOptions);
     
     if (error) {
       console.error('[CoachService] Error from edge function:', error);

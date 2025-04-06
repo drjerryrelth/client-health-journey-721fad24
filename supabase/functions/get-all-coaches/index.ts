@@ -88,17 +88,12 @@ Deno.serve(async (req) => {
     
     console.log('Using service role client to bypass RLS policies and ensure complete data access');
     
-    // IMPORTANT: Use a direct query with a more permissive query to catch all coaches
-    // We're removing any potential RLS constraints by using the admin client
+    // Fix: Remove the `.options()` method which is causing the error
     const timestamp = new Date().getTime();
     const { data: coaches, error: coachesError } = await adminClient
       .from('coaches')
       .select('*')
-      .order('created_at', { ascending: false })
-      .options({
-        count: 'exact',
-        head: false
-      });
+      .order('created_at', { ascending: false });
     
     if (coachesError) {
       console.error('Error fetching coaches with service role:', coachesError);

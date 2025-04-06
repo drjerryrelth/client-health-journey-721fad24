@@ -25,6 +25,7 @@ export function useAdminCoaches() {
   const [retryCount, setRetryCount] = useState(0);
   const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
   const { user } = useAuth();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const fetchClinics = useCallback(async () => {
     try {
@@ -100,6 +101,7 @@ export function useAdminCoaches() {
       
       setCoaches(coachesData);
       setLoading(false);
+      setIsInitialLoad(false);
       
       // Only show toast for empty data if we've tried at least once
       if (coachesData.length === 0 && retryCount > 0) {
@@ -112,6 +114,7 @@ export function useAdminCoaches() {
       setError("Failed to load coaches. Please try again.");
       setErrorDetails(err instanceof Error ? err.message : String(err));
       setLoading(false);
+      setIsInitialLoad(false);
       
       if (retryCount < 3) {
         console.log(`[useAdminCoaches] Attempt ${retryCount + 1} failed, retrying automatically`);
@@ -129,6 +132,24 @@ export function useAdminCoaches() {
     toast.info("Refreshing coaches data...");
     fetchClinics();
     fetchCoaches();
+  }, [fetchClinics, fetchCoaches]);
+
+  // Force a hard refresh that bypasses cache at all levels
+  const hardRefresh = useCallback(() => {
+    setRetryCount(0);
+    setLastRefreshTime(Date.now());
+    toast.info("Force refreshing all coaches data...");
+    
+    // Clear existing data first
+    setCoaches([]);
+    
+    // Force cache-busting
+    fetchClinics();
+    
+    // Add a small delay to ensure previous request is canceled
+    setTimeout(() => {
+      fetchCoaches();
+    }, 300);
   }, [fetchClinics, fetchCoaches]);
 
   useEffect(() => {
@@ -165,6 +186,22 @@ export function useAdminCoaches() {
     };
   }, [user?.role, user?.clinicId, fetchClinics, fetchCoaches, lastRefreshTime]); 
 
+  // Safety timeout to prevent eternal loading state
+  useEffect(() => {
+    if (loading && isInitialLoad) {
+      const timeout = setTimeout(() => {
+        if (loading) {
+          console.log('[useAdminCoaches] Safety timeout triggered to prevent eternal loading state');
+          setLoading(false);
+          setIsInitialLoad(false);
+          setError("Loading timed out. Please try refreshing the page.");
+        }
+      }, 10000); // 10 second safety timeout
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [loading, isInitialLoad]);
+
   const getClinicName = useCallback((clinicId: string) => {
     const name = clinics[clinicId] || `Unknown Clinic (${clinicId ? clinicId.slice(-4) : 'None'})`;
     return name;
@@ -182,6 +219,7 @@ export function useAdminCoaches() {
     error,
     errorDetails,
     refresh,
+    hardRefresh,
     retryCount
   };
 }
