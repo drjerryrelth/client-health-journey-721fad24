@@ -9,6 +9,7 @@ export const useLoginRedirection = () => {
   const { isAuthenticated, hasRole, isLoading, user } = useAuth();
   const [redirectDestination, setRedirectDestination] = useState<string | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
+  const [recoveryAttempted, setRecoveryAttempted] = useState(false);
   const navigate = useNavigate();
   
   // Improved redirect logic as a callback to ensure consistency
@@ -72,10 +73,11 @@ export const useLoginRedirection = () => {
     }
   }, [isAuthenticated, isLoading, isRecovering, user, navigate, determineRedirectDestination]);
   
-  // Add session recovery to handle edge cases
+  // Add session recovery to handle edge cases - with improved state tracking
   useEffect(() => {
-    // Only attempt recovery if we're not already authenticated and not already loading
-    if (!isAuthenticated && !isLoading && !isRecovering) {
+    // Only attempt recovery if we're not already authenticated, not already loading, 
+    // not already recovering, and haven't attempted recovery yet
+    if (!isAuthenticated && !isLoading && !isRecovering && !recoveryAttempted) {
       const doSessionRecovery = async () => {
         setIsRecovering(true);
         try {
@@ -86,32 +88,42 @@ export const useLoginRedirection = () => {
           console.error('Session recovery failed:', err);
         } finally {
           setIsRecovering(false);
+          setRecoveryAttempted(true); // Mark that we've attempted recovery
         }
       };
       
       doSessionRecovery();
     }
-  }, [isAuthenticated, isLoading, isRecovering]);
+  }, [isAuthenticated, isLoading, isRecovering, recoveryAttempted]);
   
-  // Add timeout to prevent infinite loading
+  // Add timeout to prevent infinite loading - with better fallback
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (isLoading) {
+      if (isLoading && !isRecovering) {
         console.log('Authentication check timeout - attempting recovery');
         // Instead of forcing reload, attempt recovery first
+        setIsRecovering(true);
         attemptSessionRecovery()
           .then(result => {
             if (!result.recovered) {
-              console.log('Recovery failed after timeout, refreshing page');
-              window.location.reload();
+              console.log('Recovery failed after timeout, forcing login flow');
+              setIsRecovering(false);
+              // Don't reload page, just force login flow by marking recovery as attempted
+              setRecoveryAttempted(true);
+            } else {
+              setIsRecovering(false);
             }
           })
-          .catch(() => window.location.reload());
+          .catch(() => {
+            console.log('Recovery exception after timeout, forcing login flow');
+            setIsRecovering(false);
+            setRecoveryAttempted(true);
+          });
       }
-    }, 15000); // 15 second timeout for slower connections (increased from 10s)
+    }, 20000); // 20 second timeout for slower connections (increased from 15s)
     
     return () => clearTimeout(timeoutId);
-  }, [isLoading]);
+  }, [isLoading, isRecovering]);
 
   return {
     isLoading: isLoading || isRecovering,

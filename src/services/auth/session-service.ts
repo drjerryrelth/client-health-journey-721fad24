@@ -8,7 +8,7 @@ export async function logoutUser() {
   const logoutPromise = supabase.auth.signOut();
   
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Logout timeout')), 20000); // Increased from 5000 to 20000ms
+    setTimeout(() => reject(new Error('Logout timeout')), 30000); // Increased from 20000 to 30000ms
   });
   
   try {
@@ -37,7 +37,7 @@ export async function getCurrentSession() {
   const sessionPromise = supabase.auth.getSession();
   
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Session check timeout')), 20000); // Increased from 5000 to 20000ms
+    setTimeout(() => reject(new Error('Session check timeout')), 30000); // Increased from 20000 to 30000ms
   });
   
   try {
@@ -65,21 +65,50 @@ export async function attemptSessionRecovery() {
   console.log('Attempting to recover session...');
   try {
     // First check if we already have a valid session
-    const currentSession = await supabase.auth.getSession();
+    const sessionPromise = supabase.auth.getSession();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Session check timeout')), 30000); // Higher timeout
+    });
+    
+    // Race between session check and timeout
+    const currentSession = await Promise.race([
+      sessionPromise,
+      timeoutPromise.then(() => {
+        console.warn('Session check timed out during recovery');
+        return { data: { session: null }, error: null };
+      }),
+    ]);
+    
     if (currentSession.data?.session) {
       console.log('Valid session already exists, no recovery needed');
       return { recovered: true, session: currentSession.data.session };
     }
     
-    // If no valid session, try to refresh
+    // If no valid session, try to refresh with timeout
     console.log('No valid session found, attempting refresh');
-    const { data, error } = await supabase.auth.refreshSession();
+    const refreshPromise = supabase.auth.refreshSession();
+    const refreshTimeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Session refresh timeout')), 30000); // Higher timeout
+    });
+    
+    // Race between refresh and timeout
+    const { data, error } = await Promise.race([
+      refreshPromise,
+      refreshTimeoutPromise.then(() => {
+        console.warn('Session refresh timed out');
+        return { data: { session: null }, error: new Error('Session refresh timed out') };
+      }),
+    ]);
     
     if (error) {
       console.error('Session recovery failed:', error.message);
       // Clean up any potential stale tokens
-      if (error.message.includes('token is expired')) {
-        console.log('Token expired, clearing local storage');
+      if (error.message && (
+        error.message.includes('token is expired') || 
+        error.message.includes('Auth session missing') ||
+        error.message.includes('timeout')
+      )) {
+        console.log('Token expired or missing, clearing local storage');
         localStorage.removeItem('sb-bgnoaxdomwkwvgcwccry-auth-token');
       }
       return { recovered: false, error };
@@ -94,6 +123,8 @@ export async function attemptSessionRecovery() {
     }
   } catch (e) {
     console.error('Exception during session recovery:', e);
+    // Cleanup on any error
+    localStorage.removeItem('sb-bgnoaxdomwkwvgcwccry-auth-token');
     return { recovered: false, error: e };
   }
 }

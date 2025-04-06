@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import { Navigate } from 'react-router-dom';
 import { useLoginRedirection } from '@/hooks/use-login-redirection';
@@ -7,22 +7,55 @@ import { attemptSessionRecovery } from '@/services/auth/session-service';
 
 const Login = () => {
   const { isLoading, isAuthenticated, redirectDestination } = useLoginRedirection();
+  const [isRecovering, setIsRecovering] = useState(false);
+  const [recoveryFailed, setRecoveryFailed] = useState(false);
   
-  // Try session recovery on initial load
+  // Try session recovery on initial load, but handle failures gracefully
   useEffect(() => {
-    attemptSessionRecovery()
-      .then(result => {
+    let isMounted = true;
+    
+    const doSessionRecovery = async () => {
+      if (isRecovering) return;
+      
+      setIsRecovering(true);
+      try {
+        console.log('Login page: Attempting session recovery');
+        const result = await attemptSessionRecovery();
+        
+        if (!isMounted) return;
+        
         if (result.recovered) {
           console.log('Login page: Session recovered successfully');
+        } else {
+          console.log('Login page: No session to recover or recovery failed');
+          setRecoveryFailed(true);
         }
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('Login page: Session recovery failed', err);
-      });
+        if (isMounted) {
+          setRecoveryFailed(true);
+        }
+      } finally {
+        if (isMounted) {
+          setIsRecovering(false);
+        }
+      }
+    };
+    
+    doSessionRecovery();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
   
-  // Show loading state
-  if (isLoading) {
+  // Immediately show login form if recovery failed
+  if (recoveryFailed && !isAuthenticated) {
+    return <LoginForm />;
+  }
+  
+  // Show loading state - but only briefly
+  if (isLoading && !recoveryFailed) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
