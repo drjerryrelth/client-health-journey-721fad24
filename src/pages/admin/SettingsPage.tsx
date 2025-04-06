@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ const SettingsPage = () => {
   const { user } = useAuth();
   
   const [profileForm, setProfileForm] = useState({
-    companyName: 'HealthTracker Admin',
+    companyName: '',
     email: '',
     phone: ''
   });
@@ -37,7 +38,7 @@ const SettingsPage = () => {
       setProfileForm({
         companyName: user.name || 'HealthTracker Admin',
         email: user.email || '',
-        phone: ''  // We don't have phone in the user object, so leaving it blank
+        phone: user.phone || ''  // Added phone from user object if available
       });
     }
   }, [user]);

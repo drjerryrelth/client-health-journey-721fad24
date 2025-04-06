@@ -31,14 +31,13 @@ const AdminUsersPage = () => {
   useEffect(() => {
     console.log('AdminUsersPage mounted, forcing refetch of admin users');
     refetch();
-    
-    const refreshInterval = setInterval(() => {
-      console.log('Refreshing admin users list (interval)');
-      refetch();
-    }, 10000);
-    
-    return () => clearInterval(refreshInterval);
   }, [refetch]);
+
+  useEffect(() => {
+    if (adminUsers) {
+      console.log('Admin users data updated:', adminUsers.length, 'users found');
+    }
+  }, [adminUsers]);
 
   const handleAdd = () => {
     setIsAddDialogOpen(true);
@@ -121,15 +120,6 @@ const AdminUsersPage = () => {
     refetch();
     sonnerToast.info('Refreshing admin users list...');
   };
-
-  useEffect(() => {
-    if (adminUsers) {
-      console.log('Admin users data updated:', adminUsers.length, 'users found');
-      adminUsers.forEach(user => {
-        console.log(`- User: ${user.full_name} (${user.email}) - Role: ${user.role}`);
-      });
-    }
-  }, [adminUsers]);
 
   return (
     <div className="container mx-auto py-6 space-y-6">

@@ -9,9 +9,10 @@ export const useAdminUsersQuery = () => {
   return useQuery({
     queryKey: ['adminUsers'],
     queryFn: () => AdminUserService.getAllAdminUsers(),
-    staleTime: 0, // Set to 0 to always refresh data
+    staleTime: 0, // Always consider data stale
     refetchOnWindowFocus: true,
     refetchOnMount: true,  // Always refetch when component mounts
+    refetchInterval: 10000, // Refetch every 10 seconds to ensure we always have fresh data
   });
 };
 
