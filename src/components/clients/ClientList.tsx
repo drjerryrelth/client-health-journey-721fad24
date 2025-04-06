@@ -4,7 +4,7 @@ import { useClientsQuery } from '@/hooks/queries/use-client-queries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth';
 
@@ -50,7 +50,7 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
       <div className="text-center py-8">
         <p className="text-red-500 mb-4">Failed to load clients</p>
         <Button onClick={() => refetch()} variant="outline">
-          <ReloadIcon className="mr-2 h-4 w-4" />
+          <RefreshCw className="mr-2 h-4 w-4" />
           Try Again
         </Button>
       </div>
@@ -82,14 +82,14 @@ const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
             <TableCell className="font-medium">{client.name}</TableCell>
             <TableCell>{client.email}</TableCell>
             <TableCell>
-              {client.coaches?.name || 'Unassigned'}
+              {client.coachId ? client.coaches?.name || 'Unassigned' : 'Unassigned'}
             </TableCell>
             <TableCell>
-              {client.program?.name || 'None'}
+              {client.programId ? (client as any).program?.name || 'None' : 'None'}
             </TableCell>
             <TableCell>
-              {client.last_check_in ? (
-                new Date(client.last_check_in).toLocaleDateString()
+              {client.lastCheckIn ? (
+                new Date(client.lastCheckIn).toLocaleDateString()
               ) : (
                 <Badge variant="outline" className="bg-amber-100 text-amber-800">
                   No check-ins

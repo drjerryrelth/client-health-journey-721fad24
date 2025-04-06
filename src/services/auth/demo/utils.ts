@@ -97,3 +97,17 @@ export const getDemoRoleByEmail = (email: string): string => {
   // Default role
   return 'client';
 };
+
+/**
+ * Handle demo clinic signup with email and password
+ */
+export const handleDemoClinicSignup = async (
+  email: string, 
+  password: string,
+  clinicName?: string,
+  primaryContact?: string
+): Promise<void> => {
+  console.log('Demo clinic signup handler:', { email, clinicName, primaryContact });
+  // This is a stub function that will be implemented in clinic-handler.ts
+  // For type compatibility in imports
+}

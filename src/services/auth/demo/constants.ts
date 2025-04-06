@@ -4,7 +4,15 @@ export const demoEmails = {
   demoAdmins: ['admin@example.com', 'super.admin@example.com'],
   demoClinicAdmins: ['clinic-admin@example.com'],
   demoCoaches: ['coach@example.com', 'support@practicenaturals.com'],
-  demoClients: ['client@example.com', 'drjerry@livingbetterhealthcare.com']
+  demoClients: ['client@example.com', 'drjerry@livingbetterhealthcare.com'],
+  
+  // Singular access for demo login buttons
+  admin: 'admin@example.com',
+  clinicAdmin: 'clinic-admin@example.com',
+  coach: 'coach@example.com',
+  coachAlt: 'support@practicenaturals.com',
+  client: 'client@example.com',
+  clientAlt: 'drjerry@livingbetterhealthcare.com'
 };
 
 // Constant for demo clinic ID

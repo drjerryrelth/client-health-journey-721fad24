@@ -8,11 +8,12 @@ export {
   isDemoEmail,
   isDemoClinicEmail,
   getDemoUserNameByEmail,
-  getDemoRoleByEmail 
+  getDemoRoleByEmail,
+  handleDemoClinicSignup
 } from './utils';
 export { autoConfirmDemoEmail, addHipaaNotice } from './confirmation-handler';
 export { ensureDemoProfileExists } from './profile-handler';
 export { 
-  handleDemoClinicSignup, 
+  handleDemoClinicSignup as handleDemoClinicSignupImpl,
   isDemoClinicAccountExists 
 } from './clinic-handler';

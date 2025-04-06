@@ -4,7 +4,7 @@ import { useAuth } from '@/context/auth';
 import { useToast } from '@/hooks/use-toast';
 import { SignupFormValues } from '@/components/auth/signup-schema';
 import { supabase } from '@/integrations/supabase/client';
-import { isDemoClinicEmail, handleDemoClinicSignup } from '@/services/auth/demo';
+import { isDemoClinicEmail } from '@/services/auth/demo';
 
 export const useSignup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,13 +24,26 @@ export const useSignup = () => {
         console.log('Processing as demo clinic signup');
         
         try {
-          // Handle demo clinic signup with improved error handling
-          await handleDemoClinicSignup(
-            data.email, 
-            data.password,
-            data.clinicName,
-            data.primaryContact
-          );
+          // Create the user account for demo clinic
+          await signUp(data.email, data.password, {
+            full_name: data.primaryContact,
+            role: 'clinic_admin' // Default role for demo clinic is clinic_admin
+          });
+          
+          // Then create a demo clinic record
+          const { error: clinicError } = await supabase
+            .from('clinics')
+            .insert({
+              name: data.clinicName || 'Demo Clinic',
+              email: data.email,
+              primary_contact: data.primaryContact,
+              status: 'active'
+            });
+            
+          if (clinicError) {
+            console.error('Error creating demo clinic:', clinicError);
+            throw new Error(`Failed to create demo clinic: ${clinicError.message}`);
+          }
           
           toast({
             title: 'Demo clinic created successfully',
