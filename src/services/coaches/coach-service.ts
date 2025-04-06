@@ -1,45 +1,23 @@
 
+// This file serves as a compatibility layer for components that use the legacy CoachService API
+// It re-exports functions from the more specialized service files
+
 import { Coach } from './types';
 import { supabase } from '@/lib/supabase';
+import { getClinicCoaches, getAllCoaches } from './coach-fetchers';
+import { addCoach, updateCoach, deleteCoach, resetCoachPassword } from './coach-crud';
 
-// Get coaches for a specific clinic
-export const getClinicCoaches = async (clinicId: string): Promise<Coach[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('coaches')
-      .select('*')
-      .eq('clinicId', clinicId);
-      
-    if (error) {
-      console.error('Error fetching coaches for clinic:', error);
-      throw error;
-    }
-    
-    return data || [];
-  } catch (err) {
-    console.error('Error in getClinicCoaches:', err);
-    return [];
-  }
+// Re-export functions to maintain API compatibility
+export { 
+  getClinicCoaches, 
+  getAllCoaches,
+  addCoach,
+  updateCoach,
+  deleteCoach,
+  resetCoachPassword
 };
 
-// Get all coaches (for admin use)
-export const getAllCoaches = async (): Promise<Coach[]> => {
-  try {
-    const { data, error } = await supabase.functions.invoke('get-all-coaches');
-    
-    if (error) {
-      console.error('Error fetching all coaches:', error);
-      throw error;
-    }
-    
-    return data || [];
-  } catch (err) {
-    console.error('Error in getAllCoaches:', err);
-    return [];
-  }
-};
-
-// Update coach status (active/inactive)
+// Legacy implementation preserved for backward compatibility
 export const updateCoachStatus = async (coachId: string, status: 'active' | 'inactive'): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -58,12 +36,7 @@ export const updateCoachStatus = async (coachId: string, status: 'active' | 'ina
   }
 };
 
-// Add a new coach - using "addCoach" name for compatibility
-export const addCoach = async (coachData: Omit<Coach, 'id'>): Promise<Coach | null> => {
-  return createCoach(coachData);
-};
-
-// Add a new coach - primary implementation (both functions point to this implementation)
+// Legacy implementation preserved for backward compatibility
 export const createCoach = async (coachData: Omit<Coach, 'id'>): Promise<Coach | null> => {
   try {
     const { data, error } = await supabase
@@ -81,62 +54,5 @@ export const createCoach = async (coachData: Omit<Coach, 'id'>): Promise<Coach |
   } catch (err) {
     console.error('Error in createCoach:', err);
     return null;
-  }
-};
-
-// Update coach information
-export const updateCoach = async (coachId: string, coachData: Partial<Coach>): Promise<Coach | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('coaches')
-      .update(coachData)
-      .eq('id', coachId)
-      .select()
-      .single();
-      
-    if (error) {
-      console.error('Error updating coach:', error);
-      throw error;
-    }
-    
-    return data;
-  } catch (err) {
-    console.error('Error in updateCoach:', err);
-    return null;
-  }
-};
-
-// Delete a coach
-export const deleteCoach = async (coachId: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('coaches')
-      .delete()
-      .eq('id', coachId);
-      
-    if (error) {
-      throw error;
-    }
-    
-    return true;
-  } catch (err) {
-    console.error('Error deleting coach:', err);
-    return false;
-  }
-};
-
-// Reset coach password
-export const resetCoachPassword = async (coachEmail: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(coachEmail);
-    
-    if (error) {
-      throw error;
-    }
-    
-    return true;
-  } catch (err) {
-    console.error('Error resetting coach password:', err);
-    return false;
   }
 };

@@ -68,8 +68,7 @@ export const EditCoachDialog = ({
           email: formValues.email,
           phone: formValues.phone,
           clinicId: coach.clinicId,
-          status: coach.status,
-          clients: coach.clients
+          status: coach.status
         });
         
         if (isMounted) {

@@ -215,3 +215,40 @@ export async function deleteCoach(id: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Resets password for a coach
+ */
+export async function resetCoachPassword(coachEmail: string): Promise<boolean> {
+  try {
+    console.log('[Coach Service] Resetting password for coach email:', coachEmail);
+    
+    // Check if user is authenticated using the helper
+    const session = await checkAuthentication();
+    if (!session) {
+      console.error('[Coach Service] User is not authenticated');
+      toast.error('You must be logged in to reset coach password');
+      return false;
+    }
+    
+    // Use Supabase auth to send a password reset email
+    const { error } = await supabase.auth.resetPasswordForEmail(coachEmail);
+    
+    if (error) {
+      console.error('[Coach Service] Error resetting coach password:', error);
+      throw new Error(`Failed to reset coach password: ${error.message}`);
+    }
+    
+    console.log('[Coach Service] Password reset email sent successfully');
+    toast.success('Password reset email sent successfully!');
+    return true;
+  } catch (error) {
+    console.error('[Coach Service] Error resetting coach password:', error);
+    if (error instanceof Error) {
+      toast.error(`Failed to reset coach password: ${error.message}`);
+    } else {
+      toast.error('Failed to reset coach password due to an unknown error');
+    }
+    return false;
+  }
+}
