@@ -1,273 +1,105 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { useAuth } from '@/context/auth';
-import { supabase } from '@/lib/supabase';
-import { Client } from '@/types';
-import { mapDbClientToClient } from '@/types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
+import React, { useEffect } from 'react';
+import { useClientsQuery } from '@/hooks/queries/use-client-queries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ReloadIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
-import { 
-  Edit, Trash2, MoreHorizontal, User, CalendarClock, Building,
-  AlertCircle, Info, RefreshCw 
-} from 'lucide-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuth } from '@/context/auth';
 
 interface ClientListProps {
   clinicId?: string;
 }
 
-const ClientList = ({ clinicId }: ClientListProps) => {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const ClientList: React.FC<ClientListProps> = ({ clinicId }) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const activeClinicId = clinicId || user?.clinicId;
   
-  const isClinicAdmin = user?.role === 'clinic_admin';
-  const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const {
+    data: clients,
+    isLoading,
+    isError,
+    refetch
+  } = useClientsQuery(activeClinicId);
   
-  // Ensure clinicId is set for clinic admins
-  const effectiveClinicId = isClinicAdmin ? user?.clinicId : clinicId;
-  
-  const fetchClients = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      console.log('Fetching clients with params:', { 
-        effectiveClinicId, 
-        isClinicAdmin, 
-        userClinicId: user?.clinicId,
-        userRole: user?.role
-      });
-      
-      let query = supabase.from('clients').select(`
-        *,
-        programs:program_id (name),
-        coaches:coach_id (name, email)
-      `);
-      
-      // Filter by clinic ID if provided or if user is clinic admin
-      if (effectiveClinicId) {
-        console.log(`Filtering clients by clinic ID: ${effectiveClinicId}`);
-        query = query.eq('clinic_id', effectiveClinicId);
-      }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (data) {
-        const mappedClients = data.map(client => mapDbClientToClient(client));
-        console.log(`Found ${mappedClients.length} clients for ${isClinicAdmin ? 'clinic admin' : 'system admin'}`);
-        setClients(mappedClients);
-        
-        // Verify we have the expected number of clients (4 for clinic admin)
-        if (isClinicAdmin) {
-          console.log(`Clinic Admin expects 4 clients - actual count: ${mappedClients.length}`);
-        }
-      }
-    } catch (err: any) {
-      console.error('Error fetching clients:', err);
-      setError(err.message);
-      toast.error('Failed to load clients');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchClients();
-  }, [effectiveClinicId, isClinicAdmin, user?.clinicId]);
-
-  const handleView = (id: string) => {
-    navigate(`/admin/clients/${id}`);
-  };
-
-  const handleEdit = (id: string) => {
-    navigate(`/admin/clients/${id}/edit`);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this client?')) {
-      try {
-        const { error } = await supabase.from('clients').delete().eq('id', id);
-        
-        if (error) {
-          throw error;
-        }
-        
-        setClients(clients.filter(client => client.id !== id));
-        toast.success('Client deleted successfully');
-      } catch (err: any) {
-        console.error('Error deleting client:', err);
-        toast.error('Failed to delete client');
-      }
-    }
-  };
-
-  const handleRefresh = () => {
-    fetchClients();
-    toast.info('Refreshing client list...');
-  };
-
-  if (loading) {
+    console.log('ClientList - activeClinicId:', activeClinicId);
+    console.log('ClientList - user role:', user?.role);
+    console.log('ClientList - user clinicId:', user?.clinicId);
+  }, [activeClinicId, user]);
+  
+  if (isLoading) {
     return (
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
+      <div className="space-y-2">
+        {Array(5).fill(0).map((_, i) => (
+          <div key={i} className="flex items-center space-x-4">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[250px]" />
+              <Skeleton className="h-4 w-[200px]" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
-
-  if (error) {
+  
+  if (isError) {
     return (
-      <div className="p-4 text-red-500 border border-red-300 rounded-md">
-        Error: {error}
-        <Button variant="outline" className="mt-2" onClick={fetchClients}>
-          Retry
+      <div className="text-center py-8">
+        <p className="text-red-500 mb-4">Failed to load clients</p>
+        <Button onClick={() => refetch()} variant="outline">
+          <ReloadIcon className="mr-2 h-4 w-4" />
+          Try Again
         </Button>
       </div>
     );
   }
-
+  
+  if (!clients || clients.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No clients found
+      </div>
+    );
+  }
+  
   return (
-    <div className="space-y-4">
-      {isClinicAdmin && (
-        <Alert className="bg-primary-50 border-primary-200">
-          <Info className="h-4 w-4 text-primary" />
-          <AlertTitle>Clinic Admin View</AlertTitle>
-          <AlertDescription>
-            You are viewing all clients for {user?.name || 'your clinic'}. 
-            This includes clients assigned to all coaches in your clinic.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <span className="text-sm text-gray-500">
-            {clients.length} client{clients.length !== 1 ? 's' : ''} found
-            {isClinicAdmin ? ` in ${user?.name || 'your clinic'}` : ''}
-          </span>
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleRefresh}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw size={14} />
-          <span>Refresh</span>
-        </Button>
-      </div>
-      
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Program</TableHead>
-              <TableHead>Coach</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>Last Check-in</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clients.length > 0 ? (
-              clients.map((client) => (
-                <TableRow key={client.id} className="hover:bg-gray-50">
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="bg-primary-100 h-8 w-8 rounded-full flex items-center justify-center">
-                        <User className="h-4 w-4 text-primary-700" />
-                      </div>
-                      <span className="font-medium">{client.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{client.email}</TableCell>
-                  <TableCell>
-                    {client.programId ? (
-                      <Badge variant="outline" className="bg-blue-50">
-                        {(client as any).programs?.name || 'Unknown Program'}
-                      </Badge>
-                    ) : (
-                      <span className="text-gray-500">Not assigned</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {client.coachId ? (
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-gray-500" />
-                        <span>{(client as any).coaches?.name || 'Unknown Coach'}</span>
-                      </div>
-                    ) : (
-                      <span className="text-gray-500">Not assigned</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <CalendarClock className="h-4 w-4" />
-                      {client.startDate || 'Not set'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {client.lastCheckIn || 'Never'}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleView(client.id)}>
-                          View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEdit(client.id)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleDelete(client.id)} 
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                  {isClinicAdmin 
-                    ? "No clients found in your clinic. Add clients or ask your coaches to add clients."
-                    : "No clients found. Add clients to get started."}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Coach</TableHead>
+          <TableHead>Program</TableHead>
+          <TableHead>Last Check-in</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {clients.map((client) => (
+          <TableRow key={client.id} className="hover:bg-gray-50">
+            <TableCell className="font-medium">{client.name}</TableCell>
+            <TableCell>{client.email}</TableCell>
+            <TableCell>
+              {client.coaches?.name || 'Unassigned'}
+            </TableCell>
+            <TableCell>
+              {client.program?.name || 'None'}
+            </TableCell>
+            <TableCell>
+              {client.last_check_in ? (
+                new Date(client.last_check_in).toLocaleDateString()
+              ) : (
+                <Badge variant="outline" className="bg-amber-100 text-amber-800">
+                  No check-ins
+                </Badge>
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 };
 

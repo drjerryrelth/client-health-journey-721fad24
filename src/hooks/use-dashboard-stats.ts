@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { DashboardStats, ActivityItem } from '@/types/dashboard';
 import { useAuth } from '@/context/auth';
@@ -11,7 +10,19 @@ const fetchDashboardStatsForUser = async (user: any): Promise<DashboardStats> =>
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  if (isSystemAdmin(user)) {
+  console.log('Dashboard stats for user:', user?.role, user?.clinicId);
+  
+  // IMPORTANT FIX: Force strict role detection - use the raw user.role value
+  const isClinicAdminUser = user?.role === 'clinic_admin';
+  const isSystemAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
+  
+  console.log('Role detection results:', {
+    isClinicAdmin: isClinicAdminUser,
+    isSystemAdmin: isSystemAdminUser,
+    role: user?.role
+  });
+  
+  if (isSystemAdminUser) {
     // System admin sees all clinics
     return {
       activeClinicCount: 3,
@@ -23,7 +34,7 @@ const fetchDashboardStatsForUser = async (user: any): Promise<DashboardStats> =>
         { id: '3', name: 'Health Partners', coaches: 3, clients: 9, status: 'active' }
       ]
     };
-  } else if (isClinicAdmin(user)) {
+  } else if (isClinicAdminUser) {
     // Clinic admin only sees their clinic
     const clinicName = user?.name?.replace(' User', '') || 'Your Clinic';
     return {
@@ -47,10 +58,12 @@ const fetchDashboardStatsForUser = async (user: any): Promise<DashboardStats> =>
 
 // Mock data function for activities based on user role
 const fetchActivitiesForUser = async (user: any, limit: number = 5): Promise<ActivityItem[]> => {
-  // In a real app, this would call the backend API with proper auth
-  
-  // Simulate API delay
+  // Mock API delay
   await new Promise(resolve => setTimeout(resolve, 700));
+  
+  // IMPORTANT FIX: Force strict role detection - use the raw user.role value
+  const isClinicAdminUser = user?.role === 'clinic_admin';
+  const isSystemAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
   
   const systemAdminActivities: ActivityItem[] = [
     {
@@ -114,9 +127,9 @@ const fetchActivitiesForUser = async (user: any, limit: number = 5): Promise<Act
     }
   ];
   
-  if (isSystemAdmin(user)) {
+  if (isSystemAdminUser) {
     return systemAdminActivities.slice(0, limit);
-  } else if (isClinicAdmin(user)) {
+  } else if (isClinicAdminUser) {
     return clinicAdminActivities.slice(0, limit);
   }
   

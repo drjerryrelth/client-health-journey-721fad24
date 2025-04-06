@@ -12,8 +12,19 @@ const ReportsPage = () => {
   const [subscriptionData, setSubscriptionData] = useState([]);
   
   useEffect(() => {
+    // Force proper role detection - this ensures we correctly identify clinic admins
+    const isClinicAdminUser = user?.role === 'clinic_admin';
+    const isSystemAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
+    
+    console.log('ReportsPage - User role check:', {
+      role: user?.role,
+      clinicId: user?.clinicId,
+      isClinicAdmin: isClinicAdminUser,
+      isSystemAdmin: isSystemAdminUser
+    });
+    
     // Load different data based on user role
-    if (isSystemAdmin(user)) {
+    if (isSystemAdminUser) {
       // System admin sees all clinics data
       setRevenueData([
         { month: 'Jan', revenue: 12000, clients: 18 },
@@ -29,7 +40,7 @@ const ReportsPage = () => {
         { id: 2, name: 'Practice Naturals', plan: 'Premium', price: '$299/month', startDate: '11/03/2023', clients: 12 },
         { id: 3, name: 'Health Partners', plan: 'Standard', price: '$199/month', startDate: '01/22/2024', clients: 9 }
       ]);
-    } else if (isClinicAdmin(user)) {
+    } else if (isClinicAdminUser) {
       // Clinic admin only sees their clinic's data
       setRevenueData([
         { month: 'Jan', revenue: 4500, clients: 7 },
@@ -42,14 +53,14 @@ const ReportsPage = () => {
       
       // Single clinic's subscription data
       setSubscriptionData([
-        { id: 1, name: user?.name || 'Your Clinic', plan: 'Premium', price: '$299/month', startDate: '11/03/2023', clients: 15 }
+        { id: 1, name: user?.name?.replace(' User', '') || 'Your Clinic', plan: 'Premium', price: '$299/month', startDate: '11/03/2023', clients: 15 }
       ]);
     }
   }, [user]);
 
   // Dashboard header changes based on user role
-  const dashboardTitle = isClinicAdmin(user) ? 'Clinic Financial Reports' : 'System Financial Reports';
-  const dashboardDescription = isClinicAdmin(user) 
+  const dashboardTitle = user?.role === 'clinic_admin' ? 'Clinic Financial Reports' : 'System Financial Reports';
+  const dashboardDescription = user?.role === 'clinic_admin' 
     ? 'Overview of your clinic performance' 
     : 'Overview of all clinics performance';
 

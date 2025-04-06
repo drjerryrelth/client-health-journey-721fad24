@@ -1,18 +1,11 @@
 
+// Demo emails for different user roles
 export const demoEmails = {
-  admin: 'drrelth@contourlight.com',
-  coach: 'coach@example.com',
-  client: 'client@example.com',
-  clinicAdmin: 'clinic-admin@example.com',
-  // Demo emails with more realistic formats
-  coachAlt: 'support@practicenaturals.com', 
-  clientAlt: 'drjerry@livingbetterhealthcare.com',
-  // Adding explicit demo email categories for better type checking
+  demoAdmins: ['admin@example.com', 'super.admin@example.com'],
+  demoClinicAdmins: ['clinic-admin@example.com'],
   demoCoaches: ['coach@example.com', 'support@practicenaturals.com'],
-  demoClients: ['client@example.com', 'drjerry@livingbetterhealthcare.com'],
-  demoAdmins: ['drrelth@contourlight.com'],
-  demoClinicAdmins: ['clinic-admin@example.com']
+  demoClients: ['client@example.com', 'drjerry@livingbetterhealthcare.com']
 };
 
-// Default clinic ID for demo purposes
+// Constant for demo clinic ID
 export const DEMO_CLINIC_ID = '65196bd4-f754-4c4e-9649-2bf478016701';

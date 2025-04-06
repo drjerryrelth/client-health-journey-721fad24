@@ -4,6 +4,7 @@ import { Building, Users, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatsCard from './StatsCard';
 import { DashboardStats as DashboardStatsType } from '@/types/dashboard';
+import { useAuth } from '@/context/auth';
 
 interface DashboardStatsProps {
   stats: DashboardStatsType | undefined;
@@ -12,14 +13,18 @@ interface DashboardStatsProps {
 
 const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, isLoading }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isClinicAdmin = user?.role === 'clinic_admin';
   
+  // Create stats data with appropriate filtering for clinic admins
   const statsData = [
-    { 
+    // Only show Active Clinics card to system admins
+    ...(isClinicAdmin ? [] : [{
       title: 'Active Clinics', 
       value: stats?.activeClinicCount || 0, 
       icon: <Building className="text-primary-500" size={24} />,
       path: '/admin/clinics'
-    },
+    }]),
     { 
       title: 'Total Coaches', 
       value: stats?.totalCoachCount || 0, 
