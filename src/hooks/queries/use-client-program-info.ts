@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
@@ -17,30 +16,45 @@ export function useClientProgramInfo(): ProgramInfo {
 
   useEffect(() => {
     const fetchProgramInfo = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
       
       try {
+        // First get the client data
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
-          .select('program_id, program_category')
+          .select('program_id')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
           
-        if (clientError) throw clientError;
+        if (clientError) {
+          console.error("Error fetching client data:", clientError);
+          return;
+        }
         
-        if (clientData?.program_id) {
-          const { data: programData, error: programError } = await supabase
-            .from('programs')
-            .select('type')
-            .eq('id', clientData.program_id)
-            .single();
+        if (!clientData?.program_id) {
+          setLoading(false);
+          return;
+        }
+        
+        // Then get the program data
+        const { data: programData, error: programError } = await supabase
+          .from('programs')
+          .select('type')
+          .eq('id', clientData.program_id)
+          .maybeSingle();
             
-          if (programError) throw programError;
-          
-          if (programData) {
-            setProgramType(programData.type);
-            setProgramCategory(clientData.program_category);
-          }
+        if (programError) {
+          console.error("Error fetching program data:", programError);
+          return;
+        }
+        
+        if (programData) {
+          setProgramType(programData.type);
+          // Since program_category column doesn't exist, we'll set it to null
+          setProgramCategory(null);
         }
       } catch (error) {
         console.error("Error fetching program info:", error);
@@ -48,9 +62,13 @@ export function useClientProgramInfo(): ProgramInfo {
         setLoading(false);
       }
     };
-    
+
     fetchProgramInfo();
   }, [user?.id]);
 
-  return { programType, programCategory, loading };
+  return {
+    programType,
+    programCategory,
+    loading
+  };
 }

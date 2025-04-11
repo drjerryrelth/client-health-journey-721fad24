@@ -9,4 +9,5 @@ export type Coach = {
   clinicId: string;
   clinic_id?: string; // Make this optional since it's redundant with clinicId
   clients: number; // Changed back to number since most code expects this to be a number
+  clinicName?: string;
 };

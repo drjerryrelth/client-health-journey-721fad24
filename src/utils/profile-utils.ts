@@ -1,7 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserData } from '@/types/auth';
-import { isDemoAdminEmail } from '@/constants/demo-accounts';
+import { isDemoAdminEmail } from '@/services/auth/demo/utils';
 
 // Transform profile data from database into UserData format
 export const transformProfileData = (profile: any): UserData => {

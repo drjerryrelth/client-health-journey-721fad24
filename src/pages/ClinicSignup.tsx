@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +10,8 @@ import { ClinicSignupForm } from '@/components/clinic-signup';
 import { ClinicSignupFormValues, CoachFormData } from '@/components/clinic-signup/types';
 import { isDemoClinicEmail, handleDemoClinicSignup } from '@/services/auth/demo';
 import SignupDemoNotice from '@/components/auth/signup/SignupDemoNotice';
+import emailjs from "@emailjs/browser";
+import { emailUserID } from '@/utils/email';
 
 const ClinicSignup = () => {
   const { toast } = useToast();
@@ -114,7 +115,7 @@ const ClinicSignup = () => {
           options: {
             data: {
               full_name: values.primaryContact,
-              role: 'coach',
+              role: 'clinic_admin',
               clinic_id: clinicId
             }
           }
@@ -136,7 +137,7 @@ const ClinicSignup = () => {
               id: userId,
               full_name: values.primaryContact,
               email: values.email,
-              role: 'coach',
+              role: 'clinic_admin',
               clinic_id: clinicId
             });
             
@@ -167,28 +168,100 @@ const ClinicSignup = () => {
       
       if (additionalCoaches.length > 0) {
         console.log("Adding additional coaches:", additionalCoaches.length);
-        const coachRecords = additionalCoaches.map(coach => ({
-          name: coach.name,
-          email: coach.email,
-          phone: coach.phone,
-          status: 'active',
-          clinic_id: clinicId
-        }));
         
-        const { error: additionalCoachesError } = await supabase
-          .from('coaches')
-          .insert(coachRecords);
-          
-        if (additionalCoachesError) {
-          console.warn(`Some additional coaches may not have been created: ${additionalCoachesError.message}`);
-          toast({
-            title: "Warning",
-            description: "Some additional coaches may not have been created",
-            variant: "destructive"
-          });
-        } else {
-          console.log("Additional coaches created successfully");
+        for (const coach of additionalCoaches) {
+          try {
+            // Create auth account and coach record using the same pattern as createCoachAccountForClinic
+            const randomPassword = Math.random().toString(36).substring(2, 15);
+            
+            // Create auth user for coach
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+              email: coach.email,
+              password: randomPassword,
+              options: {
+                data: {
+                  full_name: coach.name,
+                  role: 'coach',
+                  clinic_id: clinicId
+                },
+                // Skip email confirmation for admin-created accounts
+                emailRedirectTo: `${window.location.origin}/login`
+              }
+            });
+
+            if (authError) {
+              console.error(`Error creating auth account for coach ${coach.email}:`, authError);
+              continue; // Skip this coach and continue with others
+            }
+
+            const authId = authData.user?.id;
+
+            if (authId) {
+              console.log("Updating user profile for ID:", authId);
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({
+                  id: authId,
+                  full_name: coach.name,
+                  email: coach.email,
+                  role: 'coach',
+                  clinic_id: clinicId
+                });
+                
+              if (profileError) {
+                console.error("Error updating profile:", profileError);
+              } else {
+                console.log("Profile updated successfully");
+              }
+            }
+
+            console.log(`Auth account created for coach ${coach.name}`);
+            
+            // Create coach entry in the coaches table
+            const { error: coachError } = await supabase.rpc(
+              'add_coach',
+              {
+                coach_name: coach.name,
+                coach_email: coach.email,
+                coach_phone: coach.phone,
+                coach_status: 'active',
+                coach_clinic_id: clinicId
+              }
+            );
+
+            const templateParams = {
+              name: coach.name,
+              login_url: `${window.location.origin}/login`,
+              user_email: coach.email,
+              email: coach.email,
+              user_pwd: randomPassword,
+              clinic_name: values.clinicName,
+              phone_number: coach.phone,
+            };
+
+            await emailjs.send(
+              import.meta.env.VITE_EMAIL_SERVICE_ID,
+              import.meta.env.VITE_EMAIL_COACH_TEMPLATE_ID,
+              templateParams,
+              emailUserID
+            );
+
+            if (coachError) {
+              console.error(`Error creating coach entry for ${coach.email}:`, coachError);
+              continue;
+            }
+
+            console.log(`Successfully created coach ${coach.name}`);
+          } catch (error) {
+            console.error(`Error processing coach ${coach.email}:`, error);
+            continue;
+          }
         }
+        
+        toast({
+          title: "Coaches Added",
+          description: "Additional coaches have been added to the system.",
+        });
       }
       
       toast({

@@ -1,7 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserData } from '@/types/auth';
-import { isDemoAdminEmail } from '@/constants/demo-accounts';
+import { isDemoAdminEmail } from '@/services/auth/demo/utils';
 import { 
   transformProfileData, 
   createClinicUserProfile, 

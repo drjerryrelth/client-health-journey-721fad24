@@ -73,7 +73,8 @@ const AddCoachDialog = ({
         status: 'active',
         clinicId: clinicId,
         clinic_id: clinicId,
-        clients: 0
+        clients: 0,
+        clinicName: clinicName
       });
 
       if (newCoach) {

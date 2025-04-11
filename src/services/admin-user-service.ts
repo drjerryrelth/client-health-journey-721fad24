@@ -245,6 +245,7 @@ export const AdminUserService = {
       
       // First find the admin user by email
       const adminUser = await this.findAdminUserByEmail(email);
+      console.log('Admin user:', adminUser);
       
       if (!adminUser) {
         console.error(`Admin user with email ${email} not found`);

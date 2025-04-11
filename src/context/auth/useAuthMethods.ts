@@ -1,68 +1,112 @@
-
 import { useCallback } from 'react';
 import { UserRole } from '@/types';
 import { UserData } from '@/types/auth';
 import { loginWithEmail, signUpWithEmail, logoutUser } from '@/services/auth';
 import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoCoachEmail, isDemoClientEmail } from '@/services/auth/demo/utils';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 type UseAuthMethodsProps = {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  toast: any;
+  setUser?: React.Dispatch<React.SetStateAction<UserData | null>>;
+  setSupabaseUser?: React.Dispatch<React.SetStateAction<any | null>>;
 };
 
-export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => {
+export const useAuthMethods = ({ 
+  setIsLoading,
+  setUser,
+  setSupabaseUser 
+}: UseAuthMethodsProps) => {
+  const navigate = useNavigate();
+
   // Login method implementation
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
       const result = await loginWithEmail(email, password);
       
-      if (!result.user) {
-        toast({
-          title: 'Login failed',
-          description: 'No user returned from login',
-          variant: 'destructive',
-        });
+      if (!result.data.user) {
+        toast.error('No user returned from login');
         throw new Error('No user returned from login');
       }
+
+      // Set the user state
+      if (setUser && setSupabaseUser) {
+        setSupabaseUser(result.data.user);
+        setUser({
+          id: result.data.user.id,
+          name: result.data.user.user_metadata?.full_name || email.split('@')[0],
+          email: email,
+          role: result.role,
+          clinicId: result.data.user.user_metadata?.clinic_id || undefined
+        });
+      }
+
+      // Determine redirect path based on role
+      let redirectPath = '/';
+      switch (result.role) {
+        case 'admin':
+        case 'super_admin':
+          redirectPath = '/admin/dashboard';
+          break;
+        case 'clinic_admin':
+          redirectPath = '/admin/dashboard';
+          break;
+        case 'coach':
+          redirectPath = '/coach/dashboard';
+          break;
+        case 'client':
+          redirectPath = '/client';
+          break;
+        default:
+          redirectPath = '/';
+      }
+
+      // Navigate to the appropriate dashboard
+      navigate(redirectPath);
       
       return result;
     } catch (error: any) {
       console.error('Login error details:', error);
-      toast({
-        title: 'Login failed',
-        description: error.message || 'An error occurred during login.',
-        variant: 'destructive',
-      });
+      toast.error(error.message || 'An error occurred during login');
       throw error;
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, toast]);
+  }, [setIsLoading, navigate, setUser, setSupabaseUser]);
 
   // Logout method implementation
   const logout = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Clear any local storage items
+      localStorage.removeItem('sb-bgnoaxdomwkwvgcwccry-auth-token');
+      
+      // Attempt logout
       const { error } = await logoutUser();
       
       if (error) {
-        toast({
-          title: 'Logout failed',
-          description: error.message,
-          variant: 'destructive',
-        });
+        toast.error('Failed to logout');
+        throw error;
       }
+
+      // Clear user state
+      if (setUser && setSupabaseUser) {
+        setUser(null);
+        setSupabaseUser(null);
+      }
+
+      // Force a hard navigation to login page
+      window.location.href = '/login';
     } catch (error: any) {
-      toast({
-        title: 'Logout failed',
-        description: error.message || 'An error occurred during logout.',
-        variant: 'destructive',
-      });
+      console.error('Logout error:', error);
+      toast.error('Failed to logout');
+      // Even if there's an error, we should still try to redirect
+      window.location.href = '/login';
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, toast]);
+  }, [setIsLoading, setUser, setSupabaseUser]);
 
   // Sign up method implementation
   const signUp = useCallback(async (email: string, password: string, userData: { full_name: string; role: string }) => {
@@ -70,23 +114,20 @@ export const useAuthMethods = ({ setIsLoading, toast }: UseAuthMethodsProps) => 
     try {
       const result = await signUpWithEmail(email, password, userData);
       
-      toast({
-        title: 'Sign up successful',
-        description: 'Your account has been created.',
-      });
+      if (!result.user) {
+        toast.error('No user returned from sign up');
+        throw new Error('No user returned from sign up');
+      }
       
       return result;
     } catch (error: any) {
-      toast({
-        title: 'Sign up failed',
-        description: error.message || 'An error occurred during sign up.',
-        variant: 'destructive',
-      });
+      console.error('Sign up error:', error);
+      toast.error(error.message || 'An error occurred during sign up');
       throw error;
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, toast]);
+  }, [setIsLoading]);
 
   /**
    * Strictly check if a user has the required role(s)

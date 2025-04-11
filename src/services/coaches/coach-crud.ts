@@ -1,9 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { checkAuthentication } from '../clinics/auth-helper';
 import { Coach } from './types';
-
+import emailjs from '@emailjs/browser';
+import { emailUserID } from '@/utils/email';
 /**
  * Adds a new coach to the database
  */
@@ -11,7 +11,7 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
   try {
     console.log('[Coach Service] Starting coach addition process');
     console.log('[Coach Service] Coach data:', coach);
-    
+
     // Verify authentication
     const session = await checkAuthentication();
     if (!session) {
@@ -19,9 +19,9 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
       toast.error('You must be logged in to add a coach');
       return null;
     }
-    
+
     console.log('[Coach Service] Authentication successful, user ID:', session.user.id);
-    
+
     // Convert clinicId to clinic_id for the database
     const dbCoachData = {
       coach_name: coach.name,
@@ -30,19 +30,80 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
       coach_status: coach.status,
       coach_clinic_id: coach.clinicId // Will be mapped to clinic_id in the RPC function
     };
-    
+
+    const tempPassword = Math.random().toString(36).substring(2, 15);
+
+    // Create auth user for coach
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: coach.email,
+      password: tempPassword,
+      options: {
+        data: {
+          full_name: coach.name,
+          role: 'coach',
+          clinic_id: coach.clinicId
+        },
+        // Skip email confirmation for admin-created accounts
+        emailRedirectTo: `${window.location.origin}/login`
+      }
+    });
+
+    if (authError) {
+      console.error('[Coach Service] Error creating auth user:', authError);
+      toast.error(`Failed to add coach: ${authError.message}`);
+      return null;
+    }
+
+    const authId = authData.user?.id;
+
+    if (authId) {
+      console.log("Updating user profile for ID:", authId);
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: authId,
+          full_name: coach.name,
+          email: coach.email,
+          role: 'coach',
+          clinic_id: coach.clinicId
+        });
+
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+      } else {
+        console.log("Profile updated successfully");
+      }
+    }
+
     console.log('[Coach Service] Prepared data for RPC call:', dbCoachData);
-    
+
     // Add timeout to prevent hanging
     const coachPromise = supabase.rpc(
-      'add_coach', 
+      'add_coach',
       dbCoachData
     );
-    
+
+    const templateParams = {
+      name: coach.name,
+      login_url: `${window.location.origin}/login`,
+      user_email: coach.email,
+      email: coach.email,
+      user_pwd: tempPassword,
+      clinic_name: coach.clinicName,
+      phone_number: coach.phone,
+    };
+
+    await emailjs.send(
+      import.meta.env.VITE_EMAIL_SERVICE_ID,
+      import.meta.env.VITE_EMAIL_COACH_TEMPLATE_ID,
+      templateParams,
+      emailUserID
+    );
+
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Coach addition timed out')), 10000);
     });
-    
+
     // Race between actual operation and timeout
     const { data, error } = await Promise.race([
       coachPromise,
@@ -59,13 +120,13 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
       toast.error(`Failed to add coach: ${error.message}`);
       return null;
     }
-    
+
     if (!data) {
       console.error('[Coach Service] Invalid RPC response:', data);
       toast.error('Failed to add coach: Invalid server response');
       return null;
     }
-    
+
     // Parse the response data properly
     // The data should be a JSON object, so we'll type cast it
     const responseData = data as {
@@ -76,7 +137,7 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
       status: string;
       clinic_id: string;
     };
-    
+
     // Construct the return object from the RPC response
     const newCoach: Coach = {
       id: responseData.id,
@@ -88,11 +149,11 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
       clinic_id: responseData.clinic_id, // Include clinic_id too
       clients: 0
     };
-    
+
     console.log('[Coach Service] Coach added successfully:', newCoach);
     toast.success('Coach added successfully!');
     return newCoach;
-    
+
   } catch (error) {
     console.error('[Coach Service] Error adding coach:', error);
     if (error instanceof Error) {
@@ -119,7 +180,7 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       toast.error('You must be logged in to update a coach');
       return null;
     }
-    
+
     // Use RPC function to update coach (similar to add_coach)
     // This should bypass any RLS policy issues
     const { data, error } = await supabase.rpc(
@@ -133,19 +194,19 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
         coach_clinic_id: coach.clinicId // Will be mapped to clinic_id in the RPC function
       }
     );
-    
+
     if (error) {
       console.error('[Coach Service] Error updating coach via RPC:', error);
       throw new Error(`Failed to update coach: ${error.message}`);
     }
-    
+
     if (!data) {
       console.error('[Coach Service] No data returned from coach update');
       throw new Error('Failed to update coach: No data returned from server');
     }
-    
+
     console.log('[Coach Service] Updated coach successfully:', data);
-    
+
     // Parse the response data
     const responseData = data as {
       id: string;
@@ -156,7 +217,7 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       clinic_id: string;
       client_count: number;
     };
-    
+
     // Return the updated coach with proper structure
     const updatedCoach: Coach = {
       id: responseData.id,
@@ -168,7 +229,7 @@ export async function updateCoach(id: string, coach: Partial<Omit<Coach, 'id' | 
       clinic_id: responseData.clinic_id, // Include clinic_id too
       clients: responseData.client_count || 0
     };
-    
+
     toast.success('Coach updated successfully!');
     return updatedCoach;
   } catch (error) {

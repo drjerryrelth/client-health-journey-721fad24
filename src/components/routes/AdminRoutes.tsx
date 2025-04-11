@@ -23,6 +23,7 @@ const AdminRoutes = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  console.log('AdminRoutes - User:', user);
   
   // Strict type checking
   const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';

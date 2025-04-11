@@ -14,6 +14,7 @@ const DashboardLoader = () => {
   const { user, isLoading, hasRole } = useAuth();
 
   React.useEffect(() => {
+    console.log('DashboardLoader - User:', user);
     // Initialize default programs if user is clinic_admin or system admin with a clinicId
     if (user && ((user.role === 'clinic_admin' || user.role === 'admin' || user.role === 'super_admin') && user.clinicId)) {
       ProgramInitializer.initializeDefaultPrograms(user.clinicId)

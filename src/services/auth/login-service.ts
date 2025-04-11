@@ -1,11 +1,11 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   isDemoEmail, 
   ensureDemoProfileExists, 
   isDemoAdminEmail, 
   isDemoCoachEmail, 
-  isDemoClientEmail 
+  isDemoClientEmail,
+  getDemoRoleByEmail
 } from './demo';
 import { handleDemoAccountCreation } from './login/demo-handler';
 
@@ -49,35 +49,60 @@ export async function loginWithEmail(email: string, password: string) {
       console.error('No user returned from login');
       throw new Error('No user returned from login');
     }
-    
-    // For demo accounts, ensure profile exists with correct role
-    if (isDemoAccount && result.data.user) {
-      console.log('Demo account login successful, ensuring profile exists with correct role');
-      const userId = result.data.user.id;
-      
-      // Special check for admin demo
-      if (isDemoAdminEmail(email)) {
-        console.log('CRITICAL: This is an admin demo login success, ensuring admin profile exists with NO clinic ID');
-      }
-      
-      // Special check for coach demo
-      if (isDemoCoachEmail(email)) {
-        console.log('CRITICAL: This is a coach demo login success, ensuring coach profile exists with proper clinic ID');
-      }
-      
-      // Special check for client demo
-      if (isDemoClientEmail(email)) {
-        console.log('CRITICAL: This is a client demo login success, ensuring client profile exists with proper clinic ID');
-      }
-      
-      // Ensure profile exists with correct role based on email
-      await ensureDemoProfileExists(userId, email);
+
+    // Get the user's profile to determine their role
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', result.data.user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+      throw profileError;
     }
-    
-    console.log('Login successful');
-    return result.data;
-  } catch (error: any) {
-    console.error('Login error details:', error);
+
+    // If no profile exists, create one for demo accounts
+    if (!profile && isDemoAccount) {
+      try {
+        const role = getDemoRoleByEmail(email);
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: result.data.user.id,
+            full_name: result.data.user.user_metadata?.full_name || email.split('@')[0],
+            email: email,
+            role: role,
+            clinic_id: null
+          });
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          // If profile creation fails, still return the login result with the demo role
+          return {
+            ...result,
+            role: role
+          };
+        }
+      } catch (createErr) {
+        console.error('Error creating profile:', createErr);
+        // If profile creation fails, still return the login result with the demo role
+        return {
+          ...result,
+          role: getDemoRoleByEmail(email)
+        };
+      }
+    }
+
+    // For demo accounts, always use the demo role from the email
+    const role = isDemoAccount ? getDemoRoleByEmail(email) : (profile?.role || 'client');
+
+    return {
+      ...result,
+      role: role
+    };
+  } catch (error) {
+    console.error('Login error:', error);
     throw error;
   }
 }

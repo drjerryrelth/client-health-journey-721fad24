@@ -30,7 +30,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     // PRIORITY 1.5: Check if this is a demo clinic admin
     if (userEmail && isDemoClinicAdminEmail(userEmail)) {
       console.log('[DashboardStats] Demo clinic admin email detected, fetching clinic-specific statistics');
-      const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+      const clinicId = import.meta.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
       return await fetchClinicAdminStats(clinicId);
     }
     
@@ -66,7 +66,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       
       if (userEmail && isDemoClinicAdminEmail(userEmail)) {
         console.log('[DashboardStats] Fallback to demo clinic admin detection, fetching clinic-specific statistics');
-        const clinicId = process.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
+        const clinicId = import.meta.env.DEMO_CLINIC_ID || '65196bd4-f754-4c4e-9649-2bf478016701';
         return await fetchClinicAdminStats(clinicId);
       }
       

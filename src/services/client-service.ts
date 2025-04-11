@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Client } from '@/types';
+import { emailUserID } from '@/utils/email';
+import emailjs from '@emailjs/browser';
 
 export class ClientService {
   static async getClinicClients(clinicId: string): Promise<Client[]> {
@@ -173,7 +175,6 @@ export class ClientService {
             email: newClient.email,
             phone: newClient.phone || null,
             program_id: newClient.programId || null,
-            program_category: newClient.programCategory || null,
             start_date: newClient.startDate,
             notes: newClient.notes || null,
             clinic_id: newClient.clinicId,
@@ -205,7 +206,23 @@ export class ClientService {
       }
       
       console.log('Client created successfully:', data);
-      
+      const templateParams = {
+        name: newClient.name,
+        login_url: `${window.location.origin}/login`,
+        user_email: newClient.email,
+        user_pwd: tempPassword,
+        support_email: 'support@clienthealthtracker.com',
+        website_url: 'www.clienthealthtracker.com',
+        email: newClient.email,
+      }
+
+      await emailjs.send(
+        import.meta.env.VITE_EMAIL_SERVICE_ID,
+        import.meta.env.VITE_EMAIL_CLIENT_TEMPLATE_ID,
+        templateParams,
+        emailUserID
+      );
+
       return { data, tempPassword }; // Return the temporary password
     } catch (error) {
       console.error('Error in createClient:', error);

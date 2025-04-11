@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   getDemoUserNameByEmail, 
@@ -39,6 +38,27 @@ export const handleDemoAccountCreation = async (email: string): Promise<boolean>
       }
     } else {
       console.log('Demo user created successfully');
+      
+      // Create the user's profile
+      if (signUpData.data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: signUpData.data.user.id,
+            full_name: getDemoUserNameByEmail(email),
+            email: email,
+            role: getDemoRoleByEmail(email),
+            clinic_id: null // Demo admin doesn't need a clinic ID
+          });
+          
+        if (profileError) {
+          console.error('Error creating demo profile:', profileError);
+          // Continue anyway - the profile might already exist
+        } else {
+          console.log('Demo profile created successfully');
+        }
+      }
+      
       return true;
     }
   } catch (createErr) {

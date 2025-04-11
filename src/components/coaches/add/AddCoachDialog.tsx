@@ -111,7 +111,8 @@ export const AddCoachDialog = ({
         status: 'active',
         clinicId: effectiveClinicId,
         clinic_id: effectiveClinicId,
-        clients: 0
+        clients: 0,
+        clinicName: selectedClinicName
       });
       
       const newCoach = await Promise.race([

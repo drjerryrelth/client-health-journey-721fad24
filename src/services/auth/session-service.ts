@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export async function logoutUser() {
@@ -8,7 +7,7 @@ export async function logoutUser() {
   const logoutPromise = supabase.auth.signOut();
   
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Logout timeout')), 30000); // Increased from 20000 to 30000ms
+    setTimeout(() => reject(new Error('Logout timeout')), 30000);
   });
   
   try {
@@ -37,27 +36,32 @@ export async function getCurrentSession() {
   const sessionPromise = supabase.auth.getSession();
   
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Session check timeout')), 30000); // Increased from 20000 to 30000ms
+    setTimeout(() => reject(new Error('Session check timeout')), 100000);
   });
   
   try {
     // Race between actual session check and timeout
-    return await Promise.race([
+    const result = await Promise.race([
       sessionPromise,
       timeoutPromise.then(() => {
         console.warn('Session check timed out');
         return { data: { session: null }, error: null };
       }),
     ]);
+    
+    return result;
   } catch (error) {
-    console.error('Error getting current session:', error);
+    console.error('Error getting session:', error);
     return { data: { session: null }, error };
   }
 }
 
 export function setupAuthListener(callback: (event: string, session: any) => void) {
-  console.log('Setting up auth listener');
-  return supabase.auth.onAuthStateChange(callback);
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    callback(event, session);
+  });
+  
+  return { subscription };
 }
 
 // Enhanced session recovery with better error handling and logging

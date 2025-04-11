@@ -1,4 +1,3 @@
-
 // Add the sleep_hours field to CheckInRow
 export interface CheckInRow {
   id: string;
@@ -81,6 +80,54 @@ export interface ClinicRow {
   primary_color?: string;
   secondary_color?: string;
   created_at?: string;
+}
+
+export interface Coach {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  clinicId: string;
+  status: 'active' | 'inactive';
+  clients: Client[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  coachId: string;
+  clinicId: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Clinic {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  status: 'active' | 'inactive';
+  subscriptionTier?: string;
+  subscriptionStatus?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Program {
+  id: string;
+  name: string;
+  description?: string;
+  clinicId?: string; // null for global templates
+  isTemplate: boolean;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Export Database type for use with supabase client

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { useAuth } from '@/context/auth';
 import { useToast } from '@/hooks/use-toast';
 import { User, Settings, Shield, BellRing, LogOut } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/integrations/supabase/client';
 
 const MyProfile = () => {
   const { user, logout } = useAuth();
@@ -18,7 +18,8 @@ const MyProfile = () => {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: '555-123-4567',
+    phone: '',
+    currentPassword: '',
     password: '',
     confirmPassword: ''
   });
@@ -30,40 +31,176 @@ const MyProfile = () => {
     messages: true,
     updates: false
   });
+
+  const [loading, setLoading] = useState(false);
+  
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) throw error;
+        
+        if (profile) {
+          setFormData(prev => ({
+            ...prev,
+            name: profile.full_name || user.name || '',
+            email: profile.email || user.email || '',
+            phone: profile.phone || ''
+          }));
+          
+          if (profile.notification_preferences) {
+            setNotifications(profile.notification_preferences);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load profile data',
+          variant: 'destructive'
+        });
+      }
+    };
+    
+    fetchProfile();
+  }, [user, toast]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleSaveProfile = () => {
-    toast({
-      title: 'Profile updated',
-      description: 'Your profile information has been updated successfully.'
-    });
-  };
-  
-  const handlePasswordChange = () => {
-    if (formData.password !== formData.confirmPassword) {
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.name,
+          email: formData.email,
+          phone: formData.phone
+        })
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile information has been updated successfully.'
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
       toast({
         title: 'Error',
-        description: 'Passwords do not match. Please try again.',
+        description: 'Failed to update profile',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handlePasswordChange = async () => {
+    if (!user?.id) return;
+    
+    if (!formData.currentPassword) {
+      toast({
+        title: 'Error',
+        description: 'Please enter your current password',
         variant: 'destructive'
       });
       return;
     }
     
-    toast({
-      title: 'Password updated',
-      description: 'Your password has been changed successfully.'
-    });
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: 'Error',
+        description: 'New passwords do not match. Please try again.',
+        variant: 'destructive'
+      });
+      return;
+    }
     
-    // Reset password fields
-    setFormData(prev => ({
-      ...prev,
-      password: '',
-      confirmPassword: ''
-    }));
+    setLoading(true);
+    try {
+      // First verify the current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email || '',
+        password: formData.currentPassword
+      });
+      
+      if (signInError) {
+        throw new Error('Current password is incorrect');
+      }
+      
+      // If current password is correct, update to new password
+      const { error } = await supabase.auth.updateUser({
+        password: formData.password
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Password updated',
+        description: 'Your password has been changed successfully.'
+      });
+      
+      // Reset password fields
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: '',
+        password: '',
+        confirmPassword: ''
+      }));
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update password',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNotificationChange = async (key: string, value: boolean) => {
+    if (!user?.id) return;
+    
+    const newNotifications = { ...notifications, [key]: value };
+    setNotifications(newNotifications);
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ notification_preferences: newNotifications })
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: 'Preferences updated',
+        description: 'Your notification preferences have been saved.'
+      });
+    } catch (error) {
+      console.error('Error updating notification preferences:', error);
+      // Revert the change if it fails
+      setNotifications(prev => ({ ...prev, [key]: !value }));
+      toast({
+        title: 'Error',
+        description: 'Failed to update notification preferences',
+        variant: 'destructive'
+      });
+    }
   };
   
   return (
@@ -116,6 +253,7 @@ const MyProfile = () => {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
+                        disabled={loading}
                       />
                     </div>
                     
@@ -127,6 +265,7 @@ const MyProfile = () => {
                         type="email"
                         value={formData.email}
                         onChange={handleChange}
+                        disabled={loading}
                       />
                     </div>
                     
@@ -137,6 +276,7 @@ const MyProfile = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
+                        disabled={loading}
                       />
                     </div>
                   </div>
@@ -144,8 +284,8 @@ const MyProfile = () => {
               </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button onClick={handleSaveProfile}>
-                Save Changes
+              <Button onClick={handleSaveProfile} disabled={loading}>
+                {loading ? 'Saving...' : 'Save Changes'}
               </Button>
             </CardFooter>
           </Card>
@@ -166,8 +306,12 @@ const MyProfile = () => {
                       <Label htmlFor="current-password">Current Password</Label>
                       <Input 
                         id="current-password"
+                        name="currentPassword"
                         type="password"
+                        value={formData.currentPassword}
+                        onChange={handleChange}
                         placeholder="Enter your current password"
+                        disabled={loading}
                       />
                     </div>
                     
@@ -180,6 +324,7 @@ const MyProfile = () => {
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="Enter your new password"
+                        disabled={loading}
                       />
                     </div>
                     
@@ -192,12 +337,13 @@ const MyProfile = () => {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         placeholder="Confirm your new password"
+                        disabled={loading}
                       />
                     </div>
                   </div>
                   
-                  <Button onClick={handlePasswordChange} className="mt-2">
-                    Update Password
+                  <Button onClick={handlePasswordChange} disabled={loading}>
+                    {loading ? 'Updating...' : 'Update Password'}
                   </Button>
                 </div>
                 
@@ -236,7 +382,7 @@ const MyProfile = () => {
                       </div>
                       <Switch 
                         checked={notifications.email} 
-                        onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, email: checked }))}
+                        onCheckedChange={(checked) => handleNotificationChange('email', checked)}
                       />
                     </div>
                     
@@ -247,7 +393,7 @@ const MyProfile = () => {
                       </div>
                       <Switch 
                         checked={notifications.inApp} 
-                        onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, inApp: checked }))}
+                        onCheckedChange={(checked) => handleNotificationChange('inApp', checked)}
                       />
                     </div>
                   </div>
@@ -264,7 +410,7 @@ const MyProfile = () => {
                       </div>
                       <Switch 
                         checked={notifications.checkIns} 
-                        onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, checkIns: checked }))}
+                        onCheckedChange={(checked) => handleNotificationChange('checkIns', checked)}
                       />
                     </div>
                     
@@ -275,7 +421,7 @@ const MyProfile = () => {
                       </div>
                       <Switch 
                         checked={notifications.messages} 
-                        onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, messages: checked }))}
+                        onCheckedChange={(checked) => handleNotificationChange('messages', checked)}
                       />
                     </div>
                     
@@ -286,23 +432,13 @@ const MyProfile = () => {
                       </div>
                       <Switch 
                         checked={notifications.updates} 
-                        onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, updates: checked }))}
+                        onCheckedChange={(checked) => handleNotificationChange('updates', checked)}
                       />
                     </div>
                   </div>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button onClick={() => {
-                toast({
-                  title: 'Notification settings saved',
-                  description: 'Your notification preferences have been updated.'
-                });
-              }}>
-                Save Preferences
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>
