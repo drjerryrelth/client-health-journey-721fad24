@@ -1,61 +1,162 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { DashboardStats, ActivityItem } from '@/types/dashboard';
 import { useAuth } from '@/context/auth';
 import { useClinicFilter } from '@/components/coaches/list/useClinicFilter';
+import { fetchRecentActivities } from '@/services/dashboard/activity-service';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 // Mock data function for dashboard stats based on user role
 const fetchDashboardStatsForUser = async (user: any): Promise<DashboardStats> => {
-  // In a real app, this would call the backend API with proper auth
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  console.log('Dashboard stats for user:', user?.role, user?.clinicId);
-  
-  // IMPORTANT: Force strict role detection - use the raw user.role value
-  const isClinicAdminUser = user?.role === 'clinic_admin';
-  const isSystemAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
-  
-  console.log('Role detection results:', {
-    isClinicAdmin: isClinicAdminUser,
-    isSystemAdmin: isSystemAdminUser,
-    role: user?.role,
-    clinicId: user?.clinicId
-  });
-  
-  if (isSystemAdminUser) {
-    // System admin sees all clinics
+  try {
+    console.log('Dashboard stats for user:', user?.role, user?.clinicId);
+    
+    // IMPORTANT: Force strict role detectio  n - use the raw user.role value
+    const isClinicAdminUser = user?.role === 'clinic_admin';
+    const isSystemAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
+    
+    console.log('Role detection results:', {
+      isClinicAdmin: isClinicAdminUser,
+      isSystemAdmin: isSystemAdminUser,
+      role: user?.role,
+      clinicId: user?.clinicId
+    });
+
+    if (isSystemAdminUser) {
+      // System admin sees all clinics
+      const { data: clinicsData, error: clinicsError } = await supabase
+        .from('clinics')
+        .select(`
+          id,
+          name,
+          status,
+          coaches:coaches(count),
+          clients:clients(count)
+        `)
+        .eq('status', 'active');
+
+      if (clinicsError) throw clinicsError;
+
+      // Get all activities from the last 7 days
+      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      
+      // Get check-ins
+      const { data: checkInsData, error: checkInsError } = await supabase
+        .from('check_ins')
+        .select('id')
+        .gte('created_at', oneWeekAgo);
+
+      if (checkInsError) throw checkInsError;
+
+      // Get coach assignments
+      const { data: coachAssignmentsData, error: coachAssignmentsError } = await supabase
+        .from('coach_assignments')
+        .select('id')
+        .gte('created_at', oneWeekAgo);
+
+      if (coachAssignmentsError) throw coachAssignmentsError;
+
+      // Get new coaches
+      const { data: newCoachesData, error: newCoachesError } = await supabase
+        .from('coaches')
+        .select('id')
+        .gte('created_at', oneWeekAgo);
+
+      if (newCoachesError) throw newCoachesError;
+
+      // Calculate total activities
+      const weeklyActivitiesCount = 
+        (checkInsData?.length || 0) + 
+        (coachAssignmentsData?.length || 0) + 
+        (newCoachesData?.length || 0);
+
+      return {
+        activeClinicCount: clinicsData?.length || 0,
+        totalCoachCount: clinicsData?.reduce((sum, clinic) => sum + (clinic.coaches?.[0]?.count || 0), 0) || 0,
+        weeklyActivitiesCount,
+        clinicsSummary: clinicsData?.map(clinic => ({
+          id: clinic.id,
+          name: clinic.name,
+          coaches: clinic.coaches?.[0]?.count || 0,
+          clients: clinic.clients?.[0]?.count || 0,
+          status: clinic.status
+        })) || []
+      };
+    } else if (isClinicAdminUser) {
+      // Clinic admin only sees their clinic
+      const { data: clinicData, error: clinicError } = await supabase
+        .from('clinics')
+        .select(`
+          id,
+          name,
+          status,
+          coaches:coaches(count),
+          clients:clients(count)
+        `)
+        .eq('id', user?.clinicId)
+        .single();
+      
+      console.log('Clinic data:', clinicData);
+
+      if (clinicError) throw clinicError;
+
+      // Get all activities from the last 7 days for this clinic
+      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      
+      // Get check-ins
+      const { data: checkInsData, error: checkInsError } = await supabase
+        .from('check_ins')
+        .select('id')
+        .eq('clinic_id', user?.clinicId)
+        .gte('created_at', oneWeekAgo);
+
+      if (checkInsError) throw checkInsError;
+
+      // Get new coaches
+      const { data: newCoachesData, error: newCoachesError } = await supabase
+        .from('coaches')
+        .select('id')
+        .eq('clinic_id', user?.clinicId)
+        .gte('created_at', oneWeekAgo);
+
+      if (newCoachesError) throw newCoachesError;
+
+      // Calculate total activities
+      const weeklyActivitiesCount = 
+        (checkInsData?.length || 0) + 
+        (newCoachesData?.length || 0);
+
+      return {
+        activeClinicCount: 1,
+        totalCoachCount: clinicData?.coaches?.[0]?.count || 0,
+        weeklyActivitiesCount,
+        clinicsSummary: [{
+          id: clinicData?.id || user?.clinicId,
+          name: clinicData?.name || 'Your Clinic',
+          coaches: clinicData?.coaches?.[0]?.count || 0,
+          clients: clinicData?.clients?.[0]?.count || 0,
+          status: clinicData?.status || 'active'
+        }]
+      };
+    }
+    
+    // Default empty state
     return {
-      activeClinicCount: 3,
-      totalCoachCount: 12,
-      weeklyActivitiesCount: 156,
-      clinicsSummary: [
-        { id: '1', name: 'Wellness Center', coaches: 5, clients: 18, status: 'active' },
-        { id: '2', name: 'Practice Naturals', coaches: 4, clients: 12, status: 'active' },
-        { id: '3', name: 'Health Partners', coaches: 3, clients: 9, status: 'active' }
-      ]
+      activeClinicCount: 0,
+      totalCoachCount: 0,
+      weeklyActivitiesCount: 0,
+      clinicsSummary: []
     };
-  } else if (isClinicAdminUser) {
-    // Clinic admin only sees their clinic
-    const clinicName = user?.name?.includes('Clinic Admin') ? 'Demo Clinic' : (user?.name || 'Your Clinic');
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    toast.error('Failed to load dashboard statistics');
     return {
-      activeClinicCount: 1,
-      totalCoachCount: 4,
-      weeklyActivitiesCount: 45,
-      clinicsSummary: [
-        { id: user?.clinicId || '1', name: clinicName, coaches: 4, clients: 12, status: 'active' }
-      ]
+      activeClinicCount: 0,
+      totalCoachCount: 0,
+      weeklyActivitiesCount: 0,
+      clinicsSummary: []
     };
   }
-  
-  // Default empty state
-  return {
-    activeClinicCount: 0,
-    totalCoachCount: 0,
-    weeklyActivitiesCount: 0,
-    clinicsSummary: []
-  };
 };
 
 // Mock data function for activities based on user role
@@ -169,7 +270,7 @@ export const useRecentActivities = (limit: number = 5) => {
   
   return useQuery({
     queryKey: ['recentActivities', user?.id, user?.role, user?.clinicId, limit],
-    queryFn: () => fetchActivitiesForUser(user, limit),
+    queryFn: () => fetchRecentActivities(limit),
     enabled: !!user,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });

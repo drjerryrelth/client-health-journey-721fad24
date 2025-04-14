@@ -5,6 +5,7 @@ import { loginWithEmail, signUpWithEmail, logoutUser } from '@/services/auth';
 import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoCoachEmail, isDemoClientEmail } from '@/services/auth/demo/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 
 type UseAuthMethodsProps = {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -33,12 +34,25 @@ export const useAuthMethods = ({
       // Set the user state
       if (setUser && setSupabaseUser) {
         setSupabaseUser(result.data.user);
+        
+        // If user is a coach, fetch their coach_id
+        let coach_id: string | undefined;
+        if (result.role === 'coach') {
+          const { data: coachData } = await supabase
+            .from('coaches')
+            .select('id')
+            .eq('email', email)
+            .single();
+          coach_id = coachData?.id;
+        }
+
         setUser({
           id: result.data.user.id,
           name: result.data.user.user_metadata?.full_name || email.split('@')[0],
           email: email,
           role: result.role,
-          clinicId: result.data.user.user_metadata?.clinic_id || undefined
+          clinicId: result.data.user.user_metadata?.clinic_id || undefined,
+          coach_id
         });
       }
 

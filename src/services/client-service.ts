@@ -5,44 +5,57 @@ import { emailUserID } from '@/utils/email';
 import emailjs from '@emailjs/browser';
 
 export class ClientService {
-  static async getClinicClients(clinicId: string): Promise<Client[]> {
+  static async getClientsByRole(userRole: string, clinicId?: string, coachId?: string): Promise<Client[]> {
     try {
-      console.log('Fetching clients for clinic ID:', clinicId);
+      console.log('getClientsByRole - Input:', { userRole, clinicId, coachId });
       
-      // First try with clinic_id (database column name)
-      let { data, error } = await supabase
+      let query = supabase
         .from('clients')
         .select('*')
-        .eq('clinic_id', clinicId)
         .order('name', { ascending: true });
+
+      // Apply filters based on user role
+      switch (userRole) {
+        case 'admin':
+        case 'super_admin':
+          console.log('Admin role - fetching all clients');
+          // No filter needed for admins
+          break;
+        case 'clinic_admin':
+          if (clinicId) {
+            console.log('Clinic admin - filtering by clinic_id:', clinicId);
+            query = query.eq('clinic_id', clinicId);
+          } else {
+            console.log('Clinic admin - no clinic ID provided, returning empty array');
+            return [];
+          }
+          break;
+        case 'coach':
+          if (!coachId) {
+            console.error('Missing coach ID for coach role');
+            return [];
+          }
+          console.log('Coach - filtering by coach_id:', coachId);
+          query = query.eq('coach_id', coachId);
+          break;
+        default:
+          console.error('Invalid user role:', userRole);
+          return [];
+      }
+
+      const { data, error } = await query;
       
       if (error) {
-        console.error('Error fetching clients with clinic_id:', error);
-        
-        // If failed, try with clinicId (camelCase, might be used in some places)
-        const alternativeResult = await supabase
-          .from('clients')
-          .select('*')
-          .eq('clinicId', clinicId)
-          .order('name', { ascending: true });
-          
-        if (!alternativeResult.error) {
-          data = alternativeResult.data;
-          console.log('Successfully fetched clients using clinicId instead of clinic_id');
-        } else {
-          console.error('Error fetching clients with clinicId as well:', alternativeResult.error);
-          toast.error('Failed to load clients');
-          return [];
-        }
+        console.error('Error fetching clients:', error);
+        toast.error('Failed to load clients');
+        return [];
       }
       
-      // Log the raw client data for debugging
-      console.log('Raw client data from database:', data);
-      
+      console.log('Fetched clients:', data?.length || 0, 'clients');
+
       // For each client, fetch coach info separately if needed
       const clientsWithCoachInfo = await Promise.all(
         (data || []).map(async (client) => {
-          // Handle different naming conventions (coach_id vs coachId)
           const coachId = client.coach_id || client.coachId;
           
           if (coachId) {
@@ -52,40 +65,36 @@ export class ClientService {
                 .select('id, name, email')
                 .eq('id', coachId)
                 .single();
-                
+
               if (!coachError && coachData) {
-                return { 
-                  ...client, 
-                  coach: coachData,
-                  // Ensure consistent property naming
-                  coachId: coachId
+                return {
+                  ...client,
+                  coach: {
+                    id: coachId,
+                    name: coachData.name,
+                    email: coachData.email
+                  }
                 };
               }
-            } catch (coachFetchError) {
-              console.error('Error fetching coach for client:', coachFetchError);
-              // Continue without coach data
+            } catch (e) {
+              console.error('Error fetching coach info:', e);
             }
           }
-          
-          // Ensure consistent property naming
-          return { 
-            ...client,
-            coachId: coachId,
-            // Convert database snake_case to camelCase if needed
-            clinicId: client.clinic_id || client.clinicId,
-            programId: client.program_id || client.programId,
-            lastCheckIn: client.last_check_in || client.lastCheckIn
-          };
+          return client;
         })
       );
-      
-      console.log(`Fetched ${clientsWithCoachInfo.length || 0} clients for clinic ${clinicId}`);
+
+      console.log('Final clients with coach info:', clientsWithCoachInfo.length);
       return clientsWithCoachInfo;
     } catch (error) {
-      console.error('Error in getClinicClients:', error);
-      toast.error('An unexpected error occurred while loading clients');
+      console.error('Error in getClientsByRole:', error);
+      toast.error('Failed to load clients');
       return [];
     }
+  }
+
+  static async getClinicClients(clinicId: string): Promise<Client[]> {
+    return this.getClientsByRole('clinic_admin', clinicId);
   }
   
   static async getClientById(clientId: string): Promise<Client | null> {
@@ -206,19 +215,26 @@ export class ClientService {
       }
       
       console.log('Client created successfully:', data);
+
+      const clinicName = await supabase
+        .from('clinics')
+        .select('name')
+        .eq('id', newClient.clinicId)
+        .single();
+
       const templateParams = {
         name: newClient.name,
         login_url: `${window.location.origin}/login`,
         user_email: newClient.email,
-        user_pwd: tempPassword,
-        support_email: 'support@clienthealthtracker.com',
-        website_url: 'www.clienthealthtracker.com',
         email: newClient.email,
-      }
+        user_pwd: tempPassword,
+        clinic_name: clinicName.data?.name,
+        phone_number: newClient.phone,
+      };
 
       await emailjs.send(
         import.meta.env.VITE_EMAIL_SERVICE_ID,
-        import.meta.env.VITE_EMAIL_CLIENT_TEMPLATE_ID,
+        import.meta.env.VITE_EMAIL_COACH_TEMPLATE_ID,
         templateParams,
         emailUserID
       );

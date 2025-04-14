@@ -11,6 +11,7 @@ import { handleDemoAccountCreation } from './login/demo-handler';
 
 export async function loginWithEmail(email: string, password: string) {
   console.log('Attempting login with email:', email);
+  let coach_id: string | undefined;
   
   // Check if this is a demo login
   const isDemoAccount = isDemoEmail(email);
@@ -62,6 +63,22 @@ export async function loginWithEmail(email: string, password: string) {
       throw profileError;
     }
 
+    if (profile.role === "coach") {
+      const { data: coachData, error: coachError } = await supabase
+        .from('coaches')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (coachError) {
+        console.error('Error fetching coach data:', coachError);
+        throw coachError;
+        }
+
+      if (coachData) {
+        coach_id = coachData.id;
+      }
+    }
     // If no profile exists, create one for demo accounts
     if (!profile && isDemoAccount) {
       try {
@@ -99,7 +116,8 @@ export async function loginWithEmail(email: string, password: string) {
 
     return {
       ...result,
-      role: role
+      role: role,
+      coach_id: coach_id
     };
   } catch (error) {
     console.error('Login error:', error);

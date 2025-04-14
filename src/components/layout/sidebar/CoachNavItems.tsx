@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Settings,
   Utensils,
+  MessageCircle,
 } from "lucide-react";
 import { NavItem } from "./AdminNavItems";
 
@@ -42,6 +43,11 @@ export const coachNavItems: NavItem[] = [
     title: "Meal Plan Generator",
     href: "/coach/meal-plan-generator",
     icon: Utensils,
+  },
+  {
+    title: "Messages",
+    href: "/coach/messages",
+    icon: MessageCircle,
   },
   {
     title: "Settings",

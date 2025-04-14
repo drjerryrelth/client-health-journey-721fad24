@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/auth';
@@ -6,22 +5,15 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
-// Import the hook with the report data
-import { useCoachDashboardStats } from '@/hooks/use-coach-dashboard-stats';
+// Import the hooks with the report data
+import { useCoachDashboardStats, useCoachHistoricalData } from '@/hooks/use-coach-dashboard-stats';
 
 const CoachReportsPage = () => {
   const { user } = useAuth();
-  const { data: stats, isLoading } = useCoachDashboardStats();
+  const { data: stats, isLoading: statsLoading } = useCoachDashboardStats();
+  const { data: historicalData, isLoading: historicalLoading } = useCoachHistoricalData();
   
-  // Mock data for the chart
-  const mockData = [
-    { month: 'Jan', checkIns: 5, avgWeight: 185 },
-    { month: 'Feb', checkIns: 8, avgWeight: 183 },
-    { month: 'Mar', checkIns: 12, avgWeight: 180 },
-    { month: 'Apr', checkIns: 10, avgWeight: 178 },
-    { month: 'May', checkIns: 15, avgWeight: 175 },
-    { month: 'Jun', checkIns: 18, avgWeight: 173 }
-  ];
+  const isLoading = statsLoading || historicalLoading;
 
   if (isLoading) {
     return (
@@ -96,7 +88,7 @@ const CoachReportsPage = () => {
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={mockData}
+                data={historicalData || []}
                 margin={{
                   top: 5,
                   right: 30,

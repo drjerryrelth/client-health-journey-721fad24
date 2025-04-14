@@ -85,7 +85,7 @@ const AddClientForm: React.FC<AddClientFormProps> = ({ onSuccess, onCancel, clin
       coachId: coachId,
       initialWeight: values.initialWeight,
       weightDate: values.weightDate,
-      goals: values.goals
+      goals: values.goals,
     }, {
       onSuccess: (result) => {
         if (result.data && result.tempPassword) {

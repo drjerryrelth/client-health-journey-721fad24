@@ -1,61 +1,66 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Banknote, Activity, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from '@/context/auth';
 import { isClinicAdmin } from '@/utils/role-based-access';
+import { fetchRevenueData, fetchSubscriptionData, fetchTotalRevenue, fetchTotalClients } from '@/services/reports/report-service';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 const ReportsPage = () => {
   const { user } = useAuth();
   const [revenueData, setRevenueData] = useState([]);
   const [subscriptionData, setSubscriptionData] = useState([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalClients, setTotalClients] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Ensure proper role detection - this ensures we correctly identify clinic admins
-    const isClinicAdminUser = user?.role === 'clinic_admin';
-    const isSystemAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
-    
-    console.log('ReportsPage - User role check:', {
-      role: user?.role,
-      clinicId: user?.clinicId,
-      isClinicAdmin: isClinicAdminUser,
-      isSystemAdmin: isSystemAdminUser
-    });
-    
-    // Load different data based on user role
-    if (isSystemAdminUser) {
-      // System admin sees all clinics data
-      setRevenueData([
-        { month: 'Jan', revenue: 12000, clients: 18 },
-        { month: 'Feb', revenue: 15000, clients: 22 },
-        { month: 'Mar', revenue: 18000, clients: 28 },
-        { month: 'Apr', revenue: 20000, clients: 32 },
-        { month: 'May', revenue: 22000, clients: 35 },
-        { month: 'Jun', revenue: 25000, clients: 40 }
-      ]);
-      
-      setSubscriptionData([
-        { id: 1, name: 'Wellness Center', plan: 'Enterprise', price: '$499/month', startDate: '10/15/2023', clients: 18 },
-        { id: 2, name: 'Practice Naturals', plan: 'Premium', price: '$299/month', startDate: '11/03/2023', clients: 12 },
-        { id: 3, name: 'Health Partners', plan: 'Standard', price: '$199/month', startDate: '01/22/2024', clients: 9 }
-      ]);
-    } else if (isClinicAdminUser) {
-      // Clinic admin only sees their clinic's data
-      setRevenueData([
-        { month: 'Jan', revenue: 4500, clients: 7 },
-        { month: 'Feb', revenue: 5200, clients: 8 },
-        { month: 'Mar', revenue: 6000, clients: 10 },
-        { month: 'Apr', revenue: 6800, clients: 12 },
-        { month: 'May', revenue: 7200, clients: 14 },
-        { month: 'Jun', revenue: 8000, clients: 15 }
-      ]);
-      
-      // Single clinic's subscription data
-      setSubscriptionData([
-        { id: 1, name: user?.name?.replace(' User', '') || 'Your Clinic', plan: 'Premium', price: '$299/month', startDate: '11/03/2023', clients: 15 }
-      ]);
-    }
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Ensure proper role detection
+        const isClinicAdminUser = user?.role === 'clinic_admin';
+        const isSystemAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
+        
+        if (isSystemAdminUser) {
+          // System admin sees all clinics data
+          const [revenue, subscriptions, totalRev, totalCl] = await Promise.all([
+            fetchRevenueData(),
+            fetchSubscriptionData(),
+            fetchTotalRevenue(),
+            fetchTotalClients()
+          ]);
+          
+          setRevenueData(revenue);
+          setSubscriptionData(subscriptions);
+          setTotalRevenue(totalRev);
+          setTotalClients(totalCl);
+        } else if (isClinicAdminUser) {
+          // Clinic admin only sees their clinic's data
+          const [revenue, subscriptions, totalRev, totalCl] = await Promise.all([
+            fetchRevenueData(user?.clinicId),
+            fetchSubscriptionData(user?.clinicId),
+            fetchTotalRevenue(user?.clinicId),
+            fetchTotalClients(user?.clinicId)
+          ]);
+          
+          setRevenueData(revenue);
+          setSubscriptionData(subscriptions);
+          setTotalRevenue(totalRev);
+          setTotalClients(totalCl);
+        }
+      } catch (error) {
+        console.error('Error loading report data:', error);
+        toast.error('Failed to load report data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, [user]);
 
   // Dashboard header changes based on user role
@@ -63,6 +68,22 @@ const ReportsPage = () => {
   const dashboardDescription = isClinicAdmin(user) 
     ? 'Overview of your clinic performance' 
     : 'Overview of all clinics performance';
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64 mb-4" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+        <Skeleton className="h-80 w-full" />
+        <Skeleton className="h-80 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -80,7 +101,7 @@ const ReportsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isClinicAdmin(user) ? '$37,700' : '$112,000'}
+              ${totalRevenue.toLocaleString()}
             </div>
             <p className="text-xs text-green-500">+8% from last month</p>
           </CardContent>
@@ -94,7 +115,11 @@ const ReportsPage = () => {
             <Activity className="h-4 w-4 text-primary-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isClinicAdmin(user) ? 'Premium' : '3'}</div>
+            <div className="text-2xl font-bold">
+              {isClinicAdmin(user) 
+                ? subscriptionData[0]?.plan || 'Basic' 
+                : subscriptionData.length}
+            </div>
             <p className="text-xs text-green-500">
               {isClinicAdmin(user) ? 'Active' : '+1 from last month'}
             </p>
@@ -110,7 +135,9 @@ const ReportsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isClinicAdmin(user) ? '$8,000/mo' : '$331/mo'}
+              {isClinicAdmin(user) 
+                ? `$${Math.round(totalRevenue / 6).toLocaleString()}/mo` 
+                : `$${Math.round(totalRevenue / (subscriptionData.length || 1)).toLocaleString()}/mo`}
             </div>
             <p className="text-xs text-green-500">+5% from last month</p>
           </CardContent>
@@ -122,7 +149,7 @@ const ReportsPage = () => {
             <Users className="h-4 w-4 text-primary-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isClinicAdmin(user) ? '15' : '40'}</div>
+            <div className="text-2xl font-bold">{totalClients}</div>
             <p className="text-xs text-green-500">
               {isClinicAdmin(user) ? '+1 from last month' : '+5 from last month'}
             </p>

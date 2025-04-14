@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/auth';
 import { ClientService } from '@/services/client-service';
@@ -14,17 +13,34 @@ export const useClientsQuery = (clinicId?: string) => {
   // Use a hierarchical approach to determine the active clinic ID
   const activeClinicId = clinicId || user?.clinicId || userClinicId;
 
+  console.log('useClientsQuery - User:', { 
+    role: user?.role, 
+    clinicId: user?.clinicId, 
+    coach_id: user?.coach_id,
+    activeClinicId 
+  });
+
+  const queryEnabled = !!user?.role;
+  console.log('Query enabled:', queryEnabled);
+
   return useQuery({
-    queryKey: ['clients', activeClinicId],
+    queryKey: ['clients', user?.role, activeClinicId, user?.coach_id],
     queryFn: () => {
-      if (!activeClinicId) {
-        console.error('Missing clinic ID in useClientsQuery');
+      if (!user?.role) {
+        console.error('Missing user role in useClientsQuery');
         return Promise.resolve([]);
       }
-      console.log('Fetching clients for clinic:', activeClinicId);
-      return ClientService.getClinicClients(activeClinicId);
+
+      // For coaches, we need their coach_id
+      if (user.role === 'coach' && !user.coach_id) {
+        console.error('Missing coach_id for coach role');
+        return Promise.resolve([]);
+      }
+
+      console.log('Fetching clients for role:', user.role, 'clinic:', activeClinicId, 'coach:', user.coach_id);
+      return ClientService.getClientsByRole(user.role, activeClinicId, user.coach_id);
     },
-    enabled: !!activeClinicId,
+    enabled: queryEnabled,
   });
 };
 

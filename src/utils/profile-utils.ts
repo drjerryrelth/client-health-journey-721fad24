@@ -10,6 +10,7 @@ export const transformProfileData = (profile: any): UserData => {
     email: profile.email,
     role: profile.role,
     clinicId: profile.clinic_id,
+    coach_id: profile.coach_id,
   };
 };
 

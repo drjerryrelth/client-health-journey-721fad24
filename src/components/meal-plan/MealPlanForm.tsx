@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -110,11 +109,17 @@ export function MealPlanForm({ clientId, onComplete }: { clientId?: string, onCo
         throw new Error(response.error.message);
       }
       
-      console.log("API Response:", response.data);
+      console.log("Raw API Response:", response.data);
+      
+      // Split the response into meal plan and shopping list
+      const fullText = response.data.mealPlan;
+      const [mealPlanSection, shoppingListSection] = fullText.split(/Shopping List:?/i);
+      
+      console.log("Split sections:", { mealPlanSection, shoppingListSection });
       
       setGeneratedPlan({
-        mealPlan: response.data.mealPlan,
-        shoppingList: response.data.shoppingList
+        mealPlan: mealPlanSection || response.data.mealPlan,
+        shoppingList: shoppingListSection || response.data.shoppingList
       });
       
       if (onComplete) {
@@ -401,16 +406,40 @@ function MealPlanDisplay({
 
   const convertToHtml = (text: string) => {
     return text
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br />')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/# (.*?)\n/g, '<h2>$1</h2>')
-      .replace(/## (.*?)\n/g, '<h3>$1</h3>')
-      .replace(/### (.*?)\n/g, '<h4>$1</h4>')
-      .replace(/- (.*?)\n/g, '<li>$1</li>')
-      .replace(/<li>(.*?)<\/li>/g, '<ul><li>$1</li></ul>')
-      .replace(/<\/ul><ul>/g, '')
+      .split('\n\n')
+      .map(paragraph => {
+        // Handle lists
+        if (paragraph.startsWith('- ')) {
+          const items = paragraph
+            .split('\n')
+            .filter(line => line.startsWith('- '))
+            .map(line => `<li>${line.substring(2)}</li>`)
+            .join('');
+          return `<ul>${items}</ul>`;
+        }
+        
+        // Handle headings
+        if (paragraph.startsWith('# ')) {
+          return `<h2>${paragraph.substring(2)}</h2>`;
+        }
+        if (paragraph.startsWith('## ')) {
+          return `<h3>${paragraph.substring(3)}</h3>`;
+        }
+        if (paragraph.startsWith('### ')) {
+          return `<h4>${paragraph.substring(4)}</h4>`;
+        }
+        
+        // Handle bold and italic text
+        let processed = paragraph
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Convert remaining newlines to <br />
+        processed = processed.replace(/\n/g, '<br />');
+        
+        return `<p>${processed}</p>`;
+      })
+      .join('');
   };
 
   const handleEmailMealPlan = async () => {

@@ -127,11 +127,11 @@ export const clinicAdminNavItems: NavItem[] = [
     href: "/admin/resources",
     icon: Folders,
   },
-  {
-    title: "Clinic Customization",
-    href: "/admin/clinic-customization",
-    icon: Palette,
-  },
+  // {
+  //   title: "Clinic Customization",
+  //   href: "/admin/clinic-customization",
+  //   icon: Palette,
+  // },
   {
     title: "Settings",
     href: "/admin/settings",

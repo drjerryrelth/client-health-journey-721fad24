@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { useSearchParams } from 'react-router-dom';
 import { AddClientDialog } from '@/components/clients/add-client';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useQueryClient } from '@tanstack/react-query';
 
 const ClientsPage = () => {
   const navigate = useNavigate();
@@ -23,6 +23,7 @@ const ClientsPage = () => {
   const isSystemAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const { isLoading } = useCoachActions();
   const [refreshKey, setRefreshKey] = useState(0);
+  const queryClient = useQueryClient();
   
   // State to control dialog visibility
   const [dialogOpen, setDialogOpen] = useState(action === 'add');
@@ -58,6 +59,8 @@ const ClientsPage = () => {
   // Add refresh functionality
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
+    // Force a refetch of the data
+    queryClient.invalidateQueries({ queryKey: ['clients'] });
     toast.success("Refreshing client data...");
   };
 

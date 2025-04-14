@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -9,6 +8,7 @@ import ClientProgramDetails from '@/pages/ClientProgramDetails';
 import MyProfile from '@/pages/MyProfile';
 import ClientDashboard from '@/pages/ClientDashboard';
 import MealPlanGenerator from '@/pages/MealPlanGenerator';
+import Messages from '@/pages/Messages';
 import Unauthorized from '@/pages/Unauthorized';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
@@ -42,7 +42,7 @@ const ClientRoutes = () => {
       <Route element={<MainLayout requiredRoles={['client']} />}>
         <Route index element={<ClientDashboard />} />
         <Route path="dashboard" element={<ClientDashboard />} />
-        <Route path="messages" element={<ClientPortal />} />
+        <Route path="messages" element={<Messages />} />
         <Route path="journal" element={<ClientPortal />} />
         <Route path="resources" element={<ClientPortal />} />
         <Route path="program" element={<ClientPortal />} />

@@ -1,4 +1,3 @@
-
 import { Coach } from './types';
 import { supabase } from '@/lib/supabase';
 
@@ -66,18 +65,35 @@ export const addCoach = async (coachData: Omit<Coach, 'id'>): Promise<Coach | nu
 // Add a new coach - primary implementation (both functions point to this implementation)
 export const createCoach = async (coachData: Omit<Coach, 'id'>): Promise<Coach | null> => {
   try {
-    const { data, error } = await supabase
+    // First create the coach record
+    const { data: coach, error: coachError } = await supabase
       .from('coaches')
       .insert(coachData)
       .select()
       .single();
       
-    if (error) {
-      console.error('Error adding coach:', error);
-      throw error;
+    if (coachError) {
+      console.error('Error creating coach:', coachError);
+      return null;
     }
     
-    return data;
+    if (!coach) {
+      console.error('No coach data returned after creation');
+      return null;
+    }
+    
+    // Update the user's profile with their coach_id
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ coach_id: coach.id })
+      .eq('id', coachData.user_id);
+      
+    if (profileError) {
+      console.error('Error updating profile with coach_id:', profileError);
+      // Don't return null here - the coach was created successfully
+    }
+    
+    return coach;
   } catch (err) {
     console.error('Error in createCoach:', err);
     return null;

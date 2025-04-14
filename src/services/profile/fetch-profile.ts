@@ -49,39 +49,43 @@ export async function fetchUserProfile(userId: string): Promise<UserData | null>
         .select('id, name, email')
         .eq('email', email)
         .single();
-      
-      if (clinicError) {
-        console.log('Not a clinic user, checking demo accounts:', clinicError.message);
-      } else if (clinicData) {
-        console.log('User is associated with clinic:', clinicData);
         
-        // Check if this is the clinic owner (clinic email matches user email)
-        const isClinicOwner = clinicData.email === email;
-        console.log(`Is clinic owner? ${isClinicOwner} (${clinicData.email} vs ${email})`);
-        
-        // Create appropriate profile
-        return await createClinicUserProfile(userId, email, clinicData);
+      if (!clinicError && clinicData) {
+        return createClinicUserProfile(userId, email, clinicData);
       }
       
-      // Create a fallback profile
-      return await createFallbackProfile(userId, email);
+      // If no clinic found, create a fallback profile
+      return createFallbackProfile(userId, email);
     }
     
-    if (!profile) {
-      console.log('No profile found for user ID:', userId);
-      return null;
+    // Transform the profile data
+    const transformedProfile = transformProfileData(profile);
+    
+    // If this is a coach, fetch their coach ID
+    let coach_id: string | undefined;
+    if (transformedProfile.role === 'coach') {
+      const { data: coachData, error: coachError } = await supabase
+        .from('coaches')
+        .select('id')
+        .eq('email', email)
+        .single();
+        
+      if (!coachError && coachData) {
+        coach_id = coachData.id;
+      }
     }
     
-    // Special case - handle admin demo email explicitly, overriding any stored role
+    // Handle admin demo account if needed
     if (isAdminDemoEmail) {
-      return await handleAdminDemoAccount(profile);
+      return handleAdminDemoAccount(transformedProfile);
     }
     
-    // For regular users, transform the profile data
-    return transformProfileData(profile);
-    
+    return {
+      ...transformedProfile,
+      coach_id
+    };
   } catch (error) {
-    console.error('Unexpected error in fetchUserProfile:', error);
+    console.error('Error in fetchUserProfile:', error);
     return null;
   }
 }

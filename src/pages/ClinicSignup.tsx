@@ -229,27 +229,27 @@ const ClinicSignup = () => {
               }
             );
 
-            const templateParams = {
-              name: coach.name,
-              login_url: `${window.location.origin}/login`,
-              user_email: coach.email,
-              email: coach.email,
-              user_pwd: randomPassword,
-              clinic_name: values.clinicName,
-              phone_number: coach.phone,
-            };
-
-            await emailjs.send(
-              import.meta.env.VITE_EMAIL_SERVICE_ID,
-              import.meta.env.VITE_EMAIL_COACH_TEMPLATE_ID,
-              templateParams,
-              emailUserID
-            );
-
             if (coachError) {
               console.error(`Error creating coach entry for ${coach.email}:`, coachError);
               continue;
             }
+
+            const templateParams = {
+              name: coach.name,
+              login_url: `${window.location.origin}/login`,
+              user_email: coach.email,
+              user_pwd: randomPassword,
+              support_email: 'support@clienthealthtracker.com',
+              website_url: 'www.clienthealthtracker.com',
+              email: coach.email,
+            }
+      
+            await emailjs.send(
+              import.meta.env.VITE_EMAIL_SERVICE_ID,
+              import.meta.env.VITE_EMAIL_CLIENT_TEMPLATE_ID,
+              templateParams,
+              emailUserID
+            );
 
             console.log(`Successfully created coach ${coach.name}`);
           } catch (error) {

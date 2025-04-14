@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/context/auth';
 import { useEffect } from 'react';
 
@@ -34,9 +33,10 @@ export function useClinicFilter() {
    * Will return:
    * - All data for system admins
    * - Only clinic-specific data for clinic admins
+   * - Data for coaches based on their coach_id
    * - Empty array for unauthorized users
    */
-  const filterByClinic = <T extends { clinicId?: string, clinic_id?: string }>(data: T[]): T[] => {
+  const filterByClinic = <T extends { clinicId?: string, clinic_id?: string, coach_id?: string }>(data: T[]): T[] => {
     if (!data || !Array.isArray(data)) {
       console.warn('Invalid data passed to filterByClinic: ', data);
       return [];
@@ -59,9 +59,20 @@ export function useClinicFilter() {
       console.log(`Filtered from ${data.length} items to ${filteredData.length} items`);
       return filteredData;
     }
+
+    // Coaches can see their assigned clients
+    if (user?.role === 'coach' && user?.coach_id) {
+      console.log(`Coach detected, filtering data to coach_id ${user.coach_id}`);
+      const filteredData = data.filter(item => {
+        const itemCoachId = item.coach_id;
+        return itemCoachId === user.coach_id;
+      });
+      console.log(`Filtered from ${data.length} items to ${filteredData.length} items`);
+      return filteredData;
+    }
     
     // For other roles or missing clinic ID, return empty array
-    console.log('Neither system admin nor clinic admin with valid clinic ID, returning empty array');
+    console.log('No valid role or missing required ID, returning empty array');
     return [];
   };
   

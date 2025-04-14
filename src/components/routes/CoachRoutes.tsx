@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -9,6 +8,7 @@ import ResourcesPage from '@/pages/admin/ResourcesPage';
 import CoachSettingsPage from '@/pages/coach/CoachSettingsPage';
 import ReportsPage from '@/pages/coach/CoachReportsPage';
 import MealPlanGenerator from '@/pages/MealPlanGenerator';
+import Messages from '@/pages/Messages';
 import Unauthorized from '@/pages/Unauthorized';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
@@ -34,6 +34,7 @@ const CoachRoutes = () => {
         <Route path="check-ins" element={<CheckInsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="resources" element={<ResourcesPage />} />
+        <Route path="messages" element={<Messages />} />
         <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
         <Route path="settings" element={<CoachSettingsPage />} />
       </Route>

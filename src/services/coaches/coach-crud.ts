@@ -87,15 +87,15 @@ export async function addCoach(coach: Omit<Coach, 'id'>): Promise<Coach | null> 
       name: coach.name,
       login_url: `${window.location.origin}/login`,
       user_email: coach.email,
-      email: coach.email,
       user_pwd: tempPassword,
-      clinic_name: coach.clinicName,
-      phone_number: coach.phone,
-    };
+      support_email: 'support@clienthealthtracker.com',
+      website_url: 'www.clienthealthtracker.com',
+      email: coach.email,
+    }
 
     await emailjs.send(
       import.meta.env.VITE_EMAIL_SERVICE_ID,
-      import.meta.env.VITE_EMAIL_COACH_TEMPLATE_ID,
+      import.meta.env.VITE_EMAIL_CLIENT_TEMPLATE_ID,
       templateParams,
       emailUserID
     );
