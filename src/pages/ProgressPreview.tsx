@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from '@/components/ui/progress';
@@ -8,10 +8,15 @@ import MealHistoryTable from '@/components/progress/MealHistoryTable';
 import SleepTrackingChart from '@/components/progress/SleepTrackingChart';
 import ExerciseTrackingChart from '@/components/progress/ExerciseTrackingChart';
 import MoodTrackingChart from '@/components/progress/MoodTrackingChart';
+import DateRangeSelector from '@/components/progress/DateRangeSelector';
 import { CheckIn } from '@/types';
+import { subDays } from 'date-fns';
 
 const ProgressPreview = () => {
   const [activeTab, setActiveTab] = useState("nutrition");
+  const [startDate, setStartDate] = useState(subDays(new Date(), 30)); // Default to last 30 days
+  const [endDate, setEndDate] = useState(new Date());
+  const [rangePreset, setRangePreset] = useState("last30days");
   
   // Updated dummy data to conform to the CheckIn type
   const dummyCheckIns: CheckIn[] = [
@@ -89,6 +94,18 @@ const ProgressPreview = () => {
     },
   ];
 
+  // Filter data based on date range
+  const [filteredData, setFilteredData] = useState<CheckIn[]>(dummyCheckIns);
+
+  useEffect(() => {
+    const filtered = dummyCheckIns.filter(checkIn => {
+      const checkInDate = new Date(checkIn.date);
+      return checkInDate >= startDate && checkInDate <= endDate;
+    });
+
+    setFilteredData(filtered);
+  }, [startDate, endDate]);
+
   return (
     <div className="container mx-auto p-6">
       <div className="space-y-6">
@@ -97,6 +114,16 @@ const ProgressPreview = () => {
             <h1 className="text-2xl font-bold">Progress Tracking</h1>
             <p className="text-gray-500">Track health and fitness metrics over time</p>
           </div>
+        </div>
+
+        <div className="mb-6">
+          <DateRangeSelector 
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onRangePresetChange={setRangePreset}
+          />
         </div>
 
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -113,7 +140,7 @@ const ProgressPreview = () => {
                 <CardTitle>Weight Trends</CardTitle>
               </CardHeader>
               <CardContent>
-                <WeightTrendsChart data={dummyCheckIns} />
+                <WeightTrendsChart data={filteredData} />
               </CardContent>
             </Card>
             
@@ -122,7 +149,7 @@ const ProgressPreview = () => {
                 <CardTitle>Meal History</CardTitle>
               </CardHeader>
               <CardContent>
-                <MealHistoryTable data={dummyCheckIns} />
+                <MealHistoryTable data={filteredData} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -133,7 +160,7 @@ const ProgressPreview = () => {
                 <CardTitle>Sleep Tracking</CardTitle>
               </CardHeader>
               <CardContent>
-                <SleepTrackingChart checkInsData={dummyCheckIns} />
+                <SleepTrackingChart checkInsData={filteredData} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -144,7 +171,7 @@ const ProgressPreview = () => {
                 <CardTitle>Exercise Tracking</CardTitle>
               </CardHeader>
               <CardContent>
-                <ExerciseTrackingChart checkInsData={dummyCheckIns} />
+                <ExerciseTrackingChart checkInsData={filteredData} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -155,11 +182,17 @@ const ProgressPreview = () => {
                 <CardTitle>Mood Tracking</CardTitle>
               </CardHeader>
               <CardContent>
-                <MoodTrackingChart checkInsData={dummyCheckIns} />
+                <MoodTrackingChart checkInsData={filteredData} />
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        {filteredData.length === 0 && (
+          <div className="p-8 text-center border rounded-md bg-gray-50">
+            <p className="text-gray-500">No data available for the selected date range.</p>
+          </div>
+        )}
       </div>
     </div>
   );

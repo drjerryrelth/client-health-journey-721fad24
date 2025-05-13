@@ -8,6 +8,7 @@ import WeeklyProgressCharts from '@/components/progress/WeeklyProgressCharts';
 import MealHistoryTable from '@/components/progress/MealHistoryTable';
 import CheckInHistoryTable from '@/components/progress/CheckInHistoryTable';
 import DailyMetricsCards from '@/components/progress/DailyMetricsCards';
+import DateRangeSelector from '@/components/progress/DateRangeSelector';
 import { useAuth } from '@/context/auth';
 import { Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -15,11 +16,15 @@ import { checkClientAccess } from '@/services/clinics/auth-helper';
 import { isDemoClientEmail } from '@/services/auth/demo/utils';
 import { useQuery } from '@tanstack/react-query';
 import { CheckInFetchers } from '@/services/check-ins/check-in-fetchers';
+import { subDays } from 'date-fns';
 
 const ClientProgress = () => {
   const [activeTab, setActiveTab] = useState<string>("charts");
   const [isLoading, setIsLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+  const [startDate, setStartDate] = useState(subDays(new Date(), 30)); // Default to last 30 days
+  const [endDate, setEndDate] = useState(new Date());
+  const [rangePreset, setRangePreset] = useState("last30days");
   const { user } = useAuth();
   
   // Fetch client check-ins
@@ -28,6 +33,20 @@ const ClientProgress = () => {
     queryFn: () => user?.id ? CheckInFetchers.getClientCheckIns(user.id) : Promise.resolve([]),
     enabled: !!user?.id && hasAccess
   });
+
+  // Filter data based on date range
+  const [filteredData, setFilteredData] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (checkInsData.length === 0) return;
+
+    const filtered = checkInsData.filter(checkIn => {
+      const checkInDate = new Date(checkIn.date);
+      return checkInDate >= startDate && checkInDate <= endDate;
+    });
+
+    setFilteredData(filtered);
+  }, [checkInsData, startDate, endDate]);
   
   useEffect(() => {
     const checkAccess = async () => {
@@ -92,6 +111,16 @@ const ClientProgress = () => {
           </div>
         </div>
 
+        <div className="mb-6">
+          <DateRangeSelector 
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onRangePresetChange={setRangePreset}
+          />
+        </div>
+
         <TabsContent value="charts" className="space-y-6 mt-2">
           <WeeklyProgressCharts />
           <DailyMetricsCards />
@@ -103,7 +132,7 @@ const ClientProgress = () => {
               <CardTitle className="text-xl">Meal History</CardTitle>
             </CardHeader>
             <CardContent>
-              <MealHistoryTable data={checkInsData} />
+              <MealHistoryTable data={filteredData} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -114,10 +143,16 @@ const ClientProgress = () => {
               <CardTitle className="text-xl">Measurement History</CardTitle>
             </CardHeader>
             <CardContent>
-              <CheckInHistoryTable />
+              <CheckInHistoryTable checkInsData={filteredData} />
             </CardContent>
           </Card>
         </TabsContent>
+
+        {filteredData.length === 0 && activeTab !== "charts" && (
+          <div className="p-8 text-center border rounded-md bg-gray-50">
+            <p className="text-gray-500">No data available for the selected date range.</p>
+          </div>
+        )}
       </div>
     </ClientDataProvider>
   );
