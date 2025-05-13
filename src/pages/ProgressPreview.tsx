@@ -8,14 +8,16 @@ import MealHistoryTable from '@/components/progress/MealHistoryTable';
 import SleepTrackingChart from '@/components/progress/SleepTrackingChart';
 import ExerciseTrackingChart from '@/components/progress/ExerciseTrackingChart';
 import MoodTrackingChart from '@/components/progress/MoodTrackingChart';
+import { CheckIn } from '@/types';
 
 const ProgressPreview = () => {
   const [activeTab, setActiveTab] = useState("nutrition");
   
-  // Dummy data for preview
-  const dummyCheckIns = [
+  // Updated dummy data to conform to the CheckIn type
+  const dummyCheckIns: CheckIn[] = [
     { 
       id: '1',
+      clientId: 'client-123',
       date: '2025-05-06', 
       weight: 185, 
       waterIntake: 6,
@@ -25,64 +27,65 @@ const ProgressPreview = () => {
         dinner: 'Grilled chicken',
         snacks: 'Apple and nuts'
       },
-      supplements: ['Vitamin D', 'Omega-3'],
       sleepHours: 7.5, 
       moodScore: 4, 
-      exerciseMinutes: 45, 
-      exerciseType: 'Cardio',
+      energyScore: 4,
       measurements: { 
         waist: 36, 
         chest: 42, 
         hips: 38, 
         thighs: 24, 
         arms: 14
-      }
+      },
+      notes: 'Felt good today, had a good workout.'
     },
     { 
       id: '2',
+      clientId: 'client-123',
       date: '2025-05-07', 
       weight: 184, 
       waterIntake: 7,
       meals: { 
         breakfast: 'Oatmeal', 
         lunch: 'Sandwich', 
-        dinner: 'Fish and vegetables' 
+        dinner: 'Fish and vegetables',
+        snacks: 'Yogurt'
       },
-      supplements: ['Vitamin C', 'Zinc'],
       sleepHours: 8, 
       moodScore: 5, 
-      exerciseMinutes: 30, 
-      exerciseType: 'Strength',
+      energyScore: 5,
       measurements: { 
         waist: 35.8, 
         chest: 42, 
         hips: 37.8, 
         thighs: 23.8, 
         arms: 14
-      }
+      },
+      notes: 'Great energy levels all day.'
     },
     { 
       id: '3',
+      clientId: 'client-123',
       date: '2025-05-08', 
       weight: 183.5, 
       waterIntake: 5,
       meals: { 
         breakfast: 'Protein shake', 
         lunch: 'Soup and bread', 
-        dinner: 'Stir fry' 
+        dinner: 'Stir fry',
+        snacks: 'Protein bar'
       },
-      supplements: ['Magnesium'],
       sleepHours: 6, 
       moodScore: 3, 
-      exerciseMinutes: 0, 
-      exerciseType: 'Rest day',
+      energyScore: 3,
       measurements: { 
         waist: 35.6, 
         chest: 41.8, 
         hips: 37.6, 
         thighs: 23.7, 
         arms: 13.9
-      }
+      },
+      notes: 'Feeling a bit tired today.'
     },
   ];
 
