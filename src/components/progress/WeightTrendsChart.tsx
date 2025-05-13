@@ -2,6 +2,7 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
+import { Scale, Target, ArrowRight } from 'lucide-react';
 
 interface WeightTrendsChartProps {
   data: any[];
@@ -18,18 +19,17 @@ const WeightTrendsChart: React.FC<WeightTrendsChartProps> = ({ data }) => {
     }));
   
   // Calculate stats
-  const firstWeight = chartData.length > 0 ? chartData[0].weight : 0;
+  const startingWeight = chartData.length > 0 ? chartData[0].weight : 0;
   const currentWeight = chartData.length > 0 ? chartData[chartData.length - 1].weight : 0;
-  const weightChange = currentWeight - firstWeight;
+  const weightChange = currentWeight - startingWeight;
   
   // Format the tooltip display
   const renderTooltip = (props: any) => {
-    const { active, payload, label } = props;
-    if (active && payload && payload.length) {
+    if (props.active && props.payload && props.payload.length) {
       return (
         <div className="bg-white p-2 border rounded shadow text-xs">
-          <p>{format(new Date(label), 'MMM d, yyyy')}</p>
-          <p className="font-bold">{`Weight: ${payload[0].value} lbs`}</p>
+          <p>{format(new Date(props.label), 'MMM d, yyyy')}</p>
+          <p className="font-bold">{`Weight: ${props.payload[0].value} lbs`}</p>
         </div>
       );
     }
@@ -46,16 +46,33 @@ const WeightTrendsChart: React.FC<WeightTrendsChartProps> = ({ data }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <div>
-          <p className="text-sm text-gray-500">Current Weight</p>
-          <p className="text-2xl font-bold">{currentWeight} lbs</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
+          <Scale className="h-5 w-5 text-slate-600" />
+          <div>
+            <p className="text-sm text-gray-500">Starting Weight</p>
+            <p className="text-xl font-bold">{startingWeight} lbs</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm text-gray-500">Total Change</p>
-          <p className={`text-2xl font-bold ${weightChange < 0 ? 'text-green-600' : weightChange > 0 ? 'text-red-600' : 'text-gray-600'}`}>
-            {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} lbs
-          </p>
+        
+        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
+          <ArrowRight className="h-5 w-5 text-slate-600" />
+          <div>
+            <p className="text-sm text-gray-500">Current Weight</p>
+            <p className="text-xl font-bold">{currentWeight} lbs</p>
+            <p className={`text-sm ${weightChange < 0 ? 'text-green-600' : weightChange > 0 ? 'text-red-600' : 'text-gray-600'}`}>
+              {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} lbs
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
+          <Target className="h-5 w-5 text-slate-600" />
+          <div>
+            <p className="text-sm text-gray-500">Goal Weight</p>
+            <p className="text-xl font-bold">150 lbs</p>
+            <p className="text-sm text-gray-500">30 lbs to go</p>
+          </div>
         </div>
       </div>
       
