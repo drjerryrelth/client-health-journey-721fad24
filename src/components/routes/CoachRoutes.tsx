@@ -10,6 +10,7 @@ import CoachSettingsPage from '@/pages/coach/CoachSettingsPage';
 import ReportsPage from '@/pages/coach/CoachReportsPage';
 import MealPlanGenerator from '@/pages/MealPlanGenerator';
 import Messages from '@/pages/Messages';
+import Progress from '@/pages/Progress';
 import Unauthorized from '@/pages/Unauthorized';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
@@ -31,6 +32,7 @@ const CoachRoutes = () => {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="resources" element={<ResourcesPage />} />
           <Route path="messages" element={<Messages />} />
+          <Route path="progress" element={<Progress />} />
           <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
           <Route path="settings" element={<CoachSettingsPage />} />
         </Route>
@@ -59,6 +61,7 @@ const CoachRoutes = () => {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="resources" element={<ResourcesPage />} />
         <Route path="messages" element={<Messages />} />
+        <Route path="progress" element={<Progress />} />
         <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
         <Route path="settings" element={<CoachSettingsPage />} />
       </Route>

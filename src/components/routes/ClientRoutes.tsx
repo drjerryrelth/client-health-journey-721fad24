@@ -10,6 +10,7 @@ import MyProfile from '@/pages/MyProfile';
 import ClientDashboard from '@/pages/ClientDashboard';
 import MealPlanGenerator from '@/pages/MealPlanGenerator';
 import Messages from '@/pages/Messages';
+import Progress from '@/pages/Progress';
 import Unauthorized from '@/pages/Unauthorized';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
@@ -45,7 +46,7 @@ const ClientRoutes = () => {
           <Route path="program" element={<ClientPortal />} />
           <Route path="profile" element={<MyProfile />} />
           <Route path="check-in" element={<CheckIn />} />
-          <Route path="progress" element={<ClientProgress />} />
+          <Route path="progress" element={<Progress />} />
           <Route path="my-program" element={<ClientProgramDetails />} />
           <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
         </Route>
@@ -58,7 +59,7 @@ const ClientRoutes = () => {
   // If not a demo client account, check role permissions
   if (user?.role !== 'client') {
     console.log('Not a client, redirecting to unauthorized');
-    // Don't show toast immediately to prevent double toasts
+    toast.error('Access denied. You do not have client permissions.');
     return <Navigate to="/unauthorized" replace />;
   }
   
@@ -75,7 +76,7 @@ const ClientRoutes = () => {
         <Route path="program" element={<ClientPortal />} />
         <Route path="profile" element={<MyProfile />} />
         <Route path="check-in" element={<CheckIn />} />
-        <Route path="progress" element={<ClientProgress />} />
+        <Route path="progress" element={<Progress />} />
         <Route path="my-program" element={<ClientProgramDetails />} />
         <Route path="meal-plan-generator" element={<MealPlanGenerator />} />
       </Route>

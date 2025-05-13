@@ -4,7 +4,6 @@ import { useAuth } from '@/context/auth';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole } from '@/types';
 import { demoEmails } from '@/services/auth/demo';
-import { useNavigate } from 'react-router-dom';
 import { isDemoCoachEmail, isDemoClientEmail, isDemoAdminEmail, isDemoClinicAdminEmail } from '@/services/auth/demo/utils';
 import { cleanupAuthState } from '@/utils/auth-utils';
 
@@ -12,7 +11,6 @@ export const useDemoLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const handleDemoLogin = async (type: UserRole, email: string) => {
     console.log(`Demo login clicked for ${type} with email ${email}`);
@@ -61,7 +59,6 @@ export const useDemoLogin = () => {
       });
       
       // Navigation will happen automatically through auth context
-            
     } catch (error: any) {
       console.error('Demo login error:', error);
       toast({

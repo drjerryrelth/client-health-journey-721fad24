@@ -7,6 +7,7 @@ import TopBar from './TopBar';
 import { UserRole } from '@/types';
 import { toast } from 'sonner';
 import { isDemoClientEmail, isDemoCoachEmail } from '@/services/auth/demo/utils';
+import { shouldAllowAccess } from '@/utils/auth-utils';
 
 interface MainLayoutProps {
   requiredRoles?: UserRole[];
@@ -15,9 +16,33 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ 
   requiredRoles = ['admin', 'super_admin', 'clinic_admin', 'coach', 'client'] 
 }) => {
-  const { isAuthenticated, isLoading, hasRole, user } = useAuth();
+  const { isAuthenticated, isLoading, hasRole, user, initialAuthCheckComplete } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Enhanced logging during auth transitions
+  useEffect(() => {
+    if (user) {
+      console.log('MainLayout - Auth state:', { 
+        isAuthenticated, 
+        isLoading, 
+        initialAuthCheckComplete,
+        user: {
+          id: user.id,
+          role: user.role,
+          email: user.email,
+          name: user.name
+        }
+      });
+    } else {
+      console.log('MainLayout - Auth state:', { 
+        isAuthenticated, 
+        isLoading, 
+        initialAuthCheckComplete,
+        user: null
+      });
+    }
+  }, [isAuthenticated, isLoading, initialAuthCheckComplete, user]);
   
   // Direct role-based path checking on every route change
   useEffect(() => {
@@ -36,7 +61,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       path: currentPath,
       role: user.role,
       name: user.name,
-      email: user.email, // Log email for debugging
+      email: user.email,
       clinicId: user.clinicId
     });
     
@@ -92,8 +117,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     }
   }, [location.pathname, user, isLoading, navigate]);
   
-  // Show loading state
-  if (isLoading) {
+  // Allow temporary access during initial auth check to prevent flashing
+  if (isLoading || initialAuthCheckComplete === false) {
+    console.log('MainLayout - Auth state still loading, showing loading indicator');
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
@@ -101,9 +127,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     );
   }
   
-  // Redirect if not authenticated
-  if (!isAuthenticated) {
-    console.log('MainLayout - User not authenticated, redirecting to login');
+  // Redirect if not authenticated - only after initial check is complete
+  if (!isAuthenticated && initialAuthCheckComplete) {
+    console.log('MainLayout - User not authenticated and check complete, redirecting to login');
     return <Navigate to="/login" replace />;
   }
   
@@ -111,7 +137,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   console.log('MainLayout - User role:', user?.role);
   console.log('MainLayout - User clinicId:', user?.clinicId);
   console.log('MainLayout - User name:', user?.name);
-  console.log('MainLayout - User email:', user?.email); // Log email for debugging
+  console.log('MainLayout - User email:', user?.email);
   console.log('MainLayout - Required roles:', requiredRoles);
   console.log('MainLayout - Current path:', location.pathname);
   

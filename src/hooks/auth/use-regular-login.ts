@@ -12,6 +12,7 @@ export const useRegularLogin = () => {
 
   const handleLogin = async (data: LoginFormValues) => {
     setIsSubmitting(true);
+    console.log('Regular login attempt initiated', { email: data.email });
 
     try {
       // Clean up any existing auth state to avoid conflict

@@ -2,26 +2,28 @@
 import { useDemoLogin } from './use-demo-login';
 import { useRegularLogin } from './use-regular-login';
 import { useSignup } from './use-signup';
-import { LoginFormValues } from '@/components/auth/login-schema';
-import { SignupFormValues } from '@/components/auth/signup-schema';
-import { UserRole } from '@/types';
 import { cleanupAuthState } from '@/utils/auth-utils';
 
+// Re-export cleanupAuthState for backward compatibility
 export { cleanupAuthState };
 
 export const useLoginHandler = () => {
-  const { isSubmitting: demoIsSubmitting, handleDemoLogin } = useDemoLogin();
-  const { isSubmitting: regularIsSubmitting, handleLogin } = useRegularLogin();
-  const { isSubmitting: signupIsSubmitting, handleSignup } = useSignup();
+  // Import hooks directly without creating circular dependencies
+  const demoLoginHook = useDemoLogin();
+  const regularLoginHook = useRegularLogin();
+  const signupHook = useSignup();
 
   // Use the most restrictive isSubmitting state
-  const isSubmitting = demoIsSubmitting || regularIsSubmitting || signupIsSubmitting;
+  const isSubmitting = 
+    demoLoginHook.isSubmitting || 
+    regularLoginHook.isSubmitting || 
+    signupHook.isSubmitting;
 
   return {
     isSubmitting,
-    handleLogin,
-    handleDemoLogin,
-    handleSignup,
+    handleLogin: regularLoginHook.handleLogin,
+    handleDemoLogin: demoLoginHook.handleDemoLogin,
+    handleSignup: signupHook.handleSignup,
     cleanupAuthState
   };
 };
