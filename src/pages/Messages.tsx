@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -64,12 +65,25 @@ const Messages = () => {
   // Send message mutation
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
+      // Determine the receiver_id based on user role
+      let receiverId: string | null = null;
+      
+      if (user?.role === 'client') {
+        receiverId = user?.coach_id || null;
+      } else {
+        receiverId = user?.client_id || null;
+      }
+      
+      if (!receiverId) {
+        throw new Error('No recipient found. Please ensure you have a coach/client assigned.');
+      }
+
       const { data, error } = await supabase
         .from('messages')
         .insert([
           {
             sender_id: user?.id,
-            receiver_id: user?.role === 'client' ? user?.coach_id : user?.client_id,
+            receiver_id: receiverId,
             content,
             is_read: false,
           },
@@ -177,4 +191,4 @@ const Messages = () => {
   );
 };
 
-export default Messages; 
+export default Messages;

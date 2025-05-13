@@ -1,3 +1,4 @@
+
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { UserRole } from '@/types';
 
@@ -9,6 +10,7 @@ export interface UserData {
   clinicId?: string;
   phone?: string; // Added phone as an optional property
   coach_id?: string; // Added coach_id for coach users
+  client_id?: string; // Added client_id for client users
 }
 
 export interface AuthContextType {

@@ -1,3 +1,4 @@
+
 import { Coach } from './types';
 import { supabase } from '@/lib/supabase';
 
@@ -82,15 +83,17 @@ export const createCoach = async (coachData: Omit<Coach, 'id'>): Promise<Coach |
       return null;
     }
     
-    // Update the user's profile with their coach_id
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ coach_id: coach.id })
-      .eq('id', coachData.user_id);
-      
-    if (profileError) {
-      console.error('Error updating profile with coach_id:', profileError);
-      // Don't return null here - the coach was created successfully
+    // Update the user's profile with their coach_id if user_id is provided
+    if (coachData.user_id) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ coach_id: coach.id })
+        .eq('id', coachData.user_id);
+        
+      if (profileError) {
+        console.error('Error updating profile with coach_id:', profileError);
+        // Don't return null here - the coach was created successfully
+      }
     }
     
     return coach;
