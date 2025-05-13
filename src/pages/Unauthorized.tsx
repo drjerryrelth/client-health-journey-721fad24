@@ -14,15 +14,17 @@ const Unauthorized = () => {
     if (user) {
       if (user.role === 'admin' || user.role === 'super_admin') {
         navigate('/admin/dashboard');
+      } else if (user.role === 'clinic_admin') {
+        navigate('/admin/dashboard');
       } else if (user.role === 'coach') {
-        navigate('/coach-dashboard');
+        navigate('/coach/dashboard');
       } else if (user.role === 'client') {
         navigate('/client');
       } else {
         navigate(-1); // Fall back to previous page if role unknown
       }
     } else {
-      navigate(-1); // Fall back to previous page if no user
+      navigate('/login'); // Fall back to login if no user
     }
   };
   
