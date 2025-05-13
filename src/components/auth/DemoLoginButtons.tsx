@@ -38,7 +38,6 @@ const DemoLoginButtons = ({ handleDemoLogin: propHandleDemoLogin, isSubmitting: 
         <AlertTitle className="text-yellow-800">Demo Accounts</AlertTitle>
         <AlertDescription className="text-xs text-yellow-800">
           Use these buttons to instantly access demo accounts. All demo accounts use the password "password123".
-          Coach can also use "support@practicenaturals.com" and Client can use "drjerry@livingbetterhealthcare.com" as alternative demo emails.
         </AlertDescription>
       </Alert>
       

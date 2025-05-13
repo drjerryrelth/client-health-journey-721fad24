@@ -38,6 +38,10 @@ const LoginForm = () => {
                 onSubmit={handleLogin} 
                 isSubmitting={isSubmitting} 
               />
+              <div className="text-center text-sm text-gray-500 mt-2">
+                <p>Demo accounts: test@example.com / coach@example.com</p>
+                <p>Password for all demo accounts: password123</p>
+              </div>
             </TabsContent>
           </Tabs>
           
