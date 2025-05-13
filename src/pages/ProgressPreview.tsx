@@ -10,7 +10,7 @@ import ExerciseTrackingChart from '@/components/progress/ExerciseTrackingChart';
 import MoodTrackingChart from '@/components/progress/MoodTrackingChart';
 
 const ProgressPreview = () => {
-  const [activeTab, setActiveTab] = useState("weight");
+  const [activeTab, setActiveTab] = useState("nutrition");
   
   // Dummy data for preview
   const dummyCheckIns = [
@@ -48,21 +48,29 @@ const ProgressPreview = () => {
         </div>
 
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 mb-6">
-            <TabsTrigger value="weight">Weight</TabsTrigger>
+          <TabsList className="grid grid-cols-4 mb-6">
+            <TabsTrigger value="nutrition">Nutrition & Weight</TabsTrigger>
             <TabsTrigger value="sleep">Sleep</TabsTrigger>
             <TabsTrigger value="exercise">Exercise</TabsTrigger>
             <TabsTrigger value="mood">Mood</TabsTrigger>
-            <TabsTrigger value="meals">Meals</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="weight" className="space-y-4">
+          <TabsContent value="nutrition" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Weight Trends</CardTitle>
               </CardHeader>
               <CardContent>
                 <WeightTrendsChart data={dummyCheckIns} />
+              </CardContent>
+            </Card>
+            
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Meal History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MealHistoryTable />
               </CardContent>
             </Card>
           </TabsContent>
@@ -96,17 +104,6 @@ const ProgressPreview = () => {
               </CardHeader>
               <CardContent>
                 <MoodTrackingChart data={dummyCheckIns} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="meals" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Meal History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <MealHistoryTable />
               </CardContent>
             </Card>
           </TabsContent>

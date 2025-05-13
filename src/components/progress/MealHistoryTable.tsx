@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { subDays, format } from 'date-fns';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Droplets, Pill } from 'lucide-react';
 
 // Generate mock data for meals
 const generateMockMeals = () => {
@@ -14,7 +15,17 @@ const generateMockMeals = () => {
       breakfast: ['Oatmeal with berries', 'Greek yogurt with honey', 'Avocado toast with eggs', 'Protein smoothie', 'Egg white omelet', 'Whole grain cereal', 'Breakfast burrito'],
       lunch: ['Grilled chicken salad', 'Turkey and avocado wrap', 'Quinoa bowl with vegetables', 'Tuna salad with crackers', 'Lentil soup with bread', 'Mediterranean salad', 'Veggie burger'],
       dinner: ['Baked salmon with sweet potato', 'Stir-fry with brown rice', 'Lean steak with roasted vegetables', 'Chicken curry with cauliflower rice', 'Pasta with turkey meatballs', 'Tofu and vegetable curry', 'Grilled fish tacos'],
-      snacks: ['Apple with almond butter', 'Greek yogurt with berries', 'Protein bar', 'Handful of mixed nuts', 'Carrot sticks with hummus', 'String cheese', 'Hard boiled egg']
+      snacks: ['Apple with almond butter', 'Greek yogurt with berries', 'Protein bar', 'Handful of mixed nuts', 'Carrot sticks with hummus', 'String cheese', 'Hard boiled egg'],
+      waterIntake: [6, 8, 7, 8, 6, 9, 7],
+      supplements: [
+        'Multivitamin, Omega-3, Vitamin D',
+        'Multivitamin, Vitamin C, Magnesium',
+        'Multivitamin, Probiotic, Calcium',
+        'Multivitamin, Zinc, B-complex',
+        'Multivitamin, Iron, Vitamin D',
+        'Multivitamin, Probiotic, Magnesium',
+        'Multivitamin, Omega-3, Vitamin C'
+      ]
     }
   ];
   
@@ -30,6 +41,8 @@ const generateMockMeals = () => {
       lunch: meals[0].lunch[(randomIndex + 1) % meals[0].lunch.length],
       dinner: meals[0].dinner[(randomIndex + 2) % meals[0].dinner.length],
       snacks: meals[0].snacks[(randomIndex + 3) % meals[0].snacks.length],
+      waterIntake: meals[0].waterIntake[index % meals[0].waterIntake.length],
+      supplements: meals[0].supplements[index % meals[0].supplements.length],
     };
   });
 };
@@ -71,6 +84,24 @@ const MealHistoryTable = () => {
                   <div>
                     <h4 className="text-sm font-medium text-gray-500">Snacks</h4>
                     <p>{day.snacks}</p>
+                  </div>
+                  
+                  {/* Water Intake Section */}
+                  <div className="flex items-center gap-2">
+                    <Droplets size={16} className="text-blue-500" />
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Water Intake</h4>
+                      <p>{day.waterIntake} cups</p>
+                    </div>
+                  </div>
+                  
+                  {/* Supplements Section */}
+                  <div className="flex items-center gap-2">
+                    <Pill size={16} className="text-purple-500" />
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Supplements</h4>
+                      <p>{day.supplements}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
