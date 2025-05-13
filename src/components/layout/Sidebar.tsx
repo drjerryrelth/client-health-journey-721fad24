@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth";
-import { BookMarked, Menu, Shield, User, Users, Building, X, HomeIcon, FileCheck, LineChart } from "lucide-react";
+import { BookMarked, Menu, Shield, User, Users, Building, X, Home, FileCheck, BarChart3 } from "lucide-react";
 import SidebarNav from "./sidebar/SidebarNav";
 import SidebarProfile from "./sidebar/SidebarProfile";
 import { adminNavItems, clinicAdminNavItems } from "./sidebar/AdminNavItems";
@@ -11,6 +12,7 @@ import { coachNavItems } from "./sidebar/CoachNavItems";
 import { clientNavItems } from "./sidebar/ClientNavItems";
 import { UserRole } from "@/types";
 import { toast } from 'sonner';
+import { NavItem } from "./sidebar/AdminNavItems";
 
 interface SidebarProps {
   className?: string;
@@ -86,28 +88,6 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
     // Show feedback toast
     toast.success("Logged out successfully");
   };
-
-  // Define navigation items for each role
-  const clientNavItems = [
-    { name: 'Dashboard', href: '/client/dashboard', icon: HomeIcon },
-    { name: 'Check-In', href: '/client/check-in', icon: FileCheck },
-    { name: 'Progress', href: '/client/progress', icon: LineChart },
-    { name: 'Journal', href: '/client/journal', icon: BookMarked },
-    { name: 'Resources', href: '/client/resources', icon: BookMarked },
-    { name: 'My Program', href: '/client/my-program', icon: BookMarked },
-    { name: 'Profile', href: '/client/profile', icon: User },
-  ];
-
-  const coachNavItems = [
-    { name: 'Dashboard', href: '/coach/dashboard', icon: HomeIcon },
-    { name: 'Clients', href: '/coach/clients', icon: Users2 },
-    { name: 'Check-Ins', href: '/coach/check-ins', icon: FileCheck },
-    { name: 'Progress', href: '/coach/progress', icon: LineChart },
-    { name: 'Resources', href: '/coach/resources', icon: BookMarked },
-    { name: 'Reports', href: '/coach/reports', icon: BookMarked },
-    { name: 'Settings', href: '/coach/settings', icon: BookMarked },
-    { name: 'Messages', href: '/coach/messages', icon: BookMarked },
-  ];
 
   return (
     <div

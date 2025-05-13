@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { format, parseISO, subDays } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 interface NutrientComplianceChartProps {
   data: any[];
@@ -31,8 +31,10 @@ const NutrientComplianceChart: React.FC<NutrientComplianceChartProps> = ({ data 
       // Calculate water compliance if water intake is tracked
       let waterCompliance = 0;
       if (item.water_intake) {
+        // Make sure water_intake is a number
+        const waterIntake = Number(item.water_intake);
         // Assuming target is 8 glasses (64oz)
-        waterCompliance = Math.min(100, Math.round((item.water_intake / 64) * 100));
+        waterCompliance = Math.min(100, Math.round((waterIntake / 64) * 100));
       }
       
       return {
@@ -65,7 +67,7 @@ const NutrientComplianceChart: React.FC<NutrientComplianceChartProps> = ({ data 
           <YAxis tickFormatter={(value) => `${value}%`} domain={[0, 100]} />
           <Tooltip 
             formatter={(value, name) => {
-              if (name === 'compliance') return [`${value}% (${Math.round(value * 3 / 100)} meals)`, 'Meal Tracking'];
+              if (name === 'compliance') return [`${value}% (${Math.round(Number(value) * 3 / 100)} meals)`, 'Meal Tracking'];
               return [`${value}%`, 'Water Intake']; 
             }} 
           />

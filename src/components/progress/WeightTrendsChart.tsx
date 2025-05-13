@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 
 interface WeightTrendsChartProps {
   data: any[];
@@ -26,6 +26,9 @@ const WeightTrendsChart: React.FC<WeightTrendsChartProps> = ({ data }) => {
     );
   }
 
+  // Default unit for measurement
+  const weightUnit = 'lbs';
+
   return (
     <div className="w-full h-80">
       <ResponsiveContainer width="100%" height="100%">
@@ -46,11 +49,11 @@ const WeightTrendsChart: React.FC<WeightTrendsChartProps> = ({ data }) => {
             }}
           />
           <YAxis 
-            tickFormatter={(value) => `${value} ${chartData[0]?.unit || 'lbs'}`}
+            tickFormatter={(value) => `${value} ${weightUnit}`}
             domain={['dataMin - 5', 'dataMax + 5']}
           />
           <Tooltip
-            formatter={(value) => [`${value} lbs`, 'Weight']}
+            formatter={(value) => [`${value} ${weightUnit}`, 'Weight']}
             labelFormatter={(label) => `Date: ${label}`}
           />
           <Line
