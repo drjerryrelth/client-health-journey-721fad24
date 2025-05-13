@@ -1,3 +1,4 @@
+
 import { ProfileRow, ClientRow, ProgramRow, SupplementRow, CheckInRow, ClinicRow } from './database';
 
 // Update the UserRole type to include a specific 'clinic_admin' role
@@ -77,6 +78,32 @@ export type CheckIn = {
   };
   notes?: string;
   photos?: string[];
+  
+  // Add the additional meal-related properties
+  breakfastProtein?: string;
+  breakfastProteinPortion?: string;
+  breakfastFruit?: string;
+  breakfastFruitPortion?: string;
+  breakfastVegetable?: string;
+  breakfastVegetablePortion?: string;
+  
+  lunchProtein?: string;
+  lunchProteinPortion?: string;
+  lunchFruit?: string;
+  lunchFruitPortion?: string;
+  lunchVegetable?: string;
+  lunchVegetablePortion?: string;
+  
+  dinnerProtein?: string;
+  dinnerProteinPortion?: string;
+  dinnerFruit?: string;
+  dinnerFruitPortion?: string;
+  dinnerVegetable?: string;
+  dinnerVegetablePortion?: string;
+  
+  snacks?: string;
+  snackPortion?: string;
+  supplements?: string[];
 };
 
 export type Clinic = {

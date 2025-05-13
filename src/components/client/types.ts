@@ -3,7 +3,8 @@ import { CheckIn } from '@/types';
 
 // Define the context type
 export interface ClientDataContextType {
-  checkIns: any[];
+  clientId?: string | null;
+  checkIns: CheckIn[];
   loading: boolean;
   programName: string;
   clientStartDate: string;
