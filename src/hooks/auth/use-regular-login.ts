@@ -3,16 +3,21 @@ import { useState } from 'react';
 import { useAuth } from '@/context/auth';
 import { useToast } from '@/hooks/use-toast';
 import { LoginFormValues } from '@/components/auth/login-schema';
+import { useLoginHandler } from './use-login-handler';
 
 export const useRegularLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
+  const { cleanupAuthState } = useLoginHandler();
 
   const handleLogin = async (data: LoginFormValues) => {
     setIsSubmitting(true);
 
     try {
+      // Clean up any existing auth state to avoid conflict
+      cleanupAuthState();
+      
       console.log('Attempting login with:', data.email);
       await login(data.email, data.password);
       toast({

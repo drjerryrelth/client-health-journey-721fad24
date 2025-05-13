@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
 import { attemptSessionRecovery } from '@/services/auth/session-service';
-import { isDemoClientEmail } from '@/services/auth/demo/utils';
+import { isDemoClientEmail, isDemoCoachEmail } from '@/services/auth/demo/utils';
 
 export const useLoginRedirection = () => {
-  const { isAuthenticated, hasRole, isLoading, user } = useAuth();
+  const { isAuthenticated, hasRole, isLoading, user, initialAuthCheckComplete } = useAuth();
   const [redirectDestination, setRedirectDestination] = useState<string | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
   const [recoveryAttempted, setRecoveryAttempted] = useState(false);
+  const [redirectAttempted, setRedirectAttempted] = useState(false);
   const navigate = useNavigate();
   
   // Improved redirect logic as a callback to ensure consistency
@@ -20,12 +21,16 @@ export const useLoginRedirection = () => {
     // Special handling for demo client emails - highest priority
     if (user.email && isDemoClientEmail(user.email)) {
       console.log('Demo client email detected, redirecting to client portal');
-      toast.success(`Logged in as Client: ${user.name || 'Demo Client'}`);
       return '/client';
     }
     
+    // Special handling for demo coach emails
+    if (user.email && isDemoCoachEmail(user.email)) {
+      console.log('Demo coach email detected, redirecting to coach dashboard');
+      return '/coach/dashboard';
+    }
+    
     // Add toast notification for clarity
-    let roleDisplay = '';
     let destination: string;
     
     // Handle each role type specifically with enhanced consistency
@@ -33,25 +38,21 @@ export const useLoginRedirection = () => {
       case 'admin':
       case 'super_admin':
         destination = '/admin/dashboard';
-        roleDisplay = user.role === 'super_admin' ? 'Super Admin' : 'System Admin';
         console.log('Redirecting to admin dashboard (system admin)');
         break;
         
       case 'clinic_admin':
         destination = '/admin/dashboard';
-        roleDisplay = 'Clinic Admin';
         console.log('Redirecting to admin dashboard (clinic admin)', user.clinicId);
         break;
         
       case 'coach':
         destination = '/coach/dashboard';
-        roleDisplay = 'Coach';
         console.log('Redirecting to coach dashboard');
         break;
         
       case 'client':
         destination = '/client';
-        roleDisplay = 'Client';
         console.log('Client user detected, redirecting to /client');
         break;
         
@@ -61,25 +62,31 @@ export const useLoginRedirection = () => {
         return null;
     }
     
-    // Show welcome toast with role information
-    toast.success(`Logged in as ${roleDisplay}${user.name ? ': ' + user.name : ''}`);
-    
     return destination;
   }, [user]);
   
   // Effect for navigation when auth status changes - improved for consistency
   useEffect(() => {
-    if (isAuthenticated && !isLoading && !isRecovering && user) {
+    // Only redirect if auth check is complete and we haven't attempted redirection yet
+    if (isAuthenticated && !isLoading && !isRecovering && user && initialAuthCheckComplete && !redirectAttempted) {
       console.log('User authenticated, redirecting...', user.role, 'clinicId:', user.clinicId, 'email:', user.email);
       
       const destination = determineRedirectDestination();
       if (!destination) return;
       
       setRedirectDestination(destination);
+      setRedirectAttempted(true);
       console.log('Redirecting to:', destination);
       navigate(destination, { replace: true });
     }
-  }, [isAuthenticated, isLoading, isRecovering, user, navigate, determineRedirectDestination]);
+  }, [isAuthenticated, isLoading, isRecovering, user, navigate, determineRedirectDestination, initialAuthCheckComplete, redirectAttempted]);
+  
+  // Reset redirect attempted flag when user changes
+  useEffect(() => {
+    if (user) {
+      setRedirectAttempted(false);
+    }
+  }, [user?.id]);
   
   // Add session recovery to handle edge cases - with improved state tracking
   useEffect(() => {

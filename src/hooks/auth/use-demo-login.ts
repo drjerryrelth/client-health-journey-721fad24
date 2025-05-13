@@ -6,12 +6,14 @@ import { UserRole } from '@/types';
 import { demoEmails } from '@/services/auth/demo';
 import { useNavigate } from 'react-router-dom';
 import { isDemoCoachEmail, isDemoClientEmail, isDemoAdminEmail, isDemoClinicAdminEmail } from '@/services/auth/demo/utils';
+import { useLoginHandler } from './use-login-handler';
 
 export const useDemoLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { cleanupAuthState } = useLoginHandler();
 
   const handleDemoLogin = async (type: UserRole, email: string) => {
     console.log(`Demo login clicked for ${type} with email ${email}`);
@@ -46,6 +48,9 @@ export const useDemoLogin = () => {
     
     try {
       const password = 'password123'; // Demo password
+
+      // Clean up any existing auth state to avoid conflict
+      cleanupAuthState();
       
       console.log(`Attempting demo login as ${type} with email: ${validatedEmail}`);
       

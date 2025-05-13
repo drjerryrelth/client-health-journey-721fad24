@@ -22,4 +22,5 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   hasRole: (role: UserRole | UserRole[]) => boolean;
   signUp: (email: string, password: string, userData: { full_name: string; role: string }) => Promise<void>;
+  initialAuthCheckComplete?: boolean; // New property to track initial auth check
 }

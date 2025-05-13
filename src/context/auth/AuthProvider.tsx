@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useCallback } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '@/types';
@@ -11,6 +12,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserData | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [initialAuthCheckComplete, setInitialAuthCheckComplete] = useState(false);
   const navigate = useNavigate();
   
   // Hook for auth session management
@@ -18,6 +20,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser,
     setSupabaseUser,
     setIsLoading,
+    setInitialAuthCheckComplete,
     navigate
   });
 
@@ -30,7 +33,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initialize auth once on component mount
   React.useEffect(() => {
-    setupAuth();
+    let isMounted = true;
+    
+    const initAuth = async () => {
+      if (isMounted) {
+        await setupAuth();
+      }
+    };
+    
+    initAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [setupAuth]);
 
   // Wrap the signUp method to match the expected return type
@@ -54,7 +69,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     logout,
     signUp: wrappedSignUp,
-    hasRole: hasRoleWrapper
+    hasRole: hasRoleWrapper,
+    initialAuthCheckComplete
   };
 
   return (
