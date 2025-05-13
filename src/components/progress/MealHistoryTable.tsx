@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Droplets, Coffee, Apple, UtensilsCrossed, Pizza } from 'lucide-react';
+import { Droplets } from 'lucide-react';
 
 interface MealHistoryTableProps {
   data: any[];
@@ -34,7 +34,7 @@ const MealHistoryTable: React.FC<MealHistoryTableProps> = ({ data = [] }) => {
                 {checkIn.waterIntake > 0 && (
                   <div className="flex items-center gap-1 text-blue-600">
                     <Droplets className="h-4 w-4" />
-                    <span className="text-sm font-medium">{checkIn.waterIntake} glasses</span>
+                    <span className="text-sm font-medium">{checkIn.waterIntake} oz</span>
                   </div>
                 )}
               </div>
@@ -42,50 +42,89 @@ const MealHistoryTable: React.FC<MealHistoryTableProps> = ({ data = [] }) => {
             <CardContent className="py-4">
               <div className="space-y-3">
                 {checkIn.meals?.breakfast && (
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5">
-                      <Coffee className="h-5 w-5 text-orange-500" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Breakfast</h4>
-                      <p className="text-sm text-gray-600">{checkIn.meals.breakfast}</p>
+                  <div className="border-b pb-2">
+                    <h4 className="text-sm font-medium mb-1">Breakfast</h4>
+                    <div className="flex flex-col gap-1">
+                      {checkIn.breakfastProtein && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Protein:</span> {checkIn.breakfastProtein} 
+                          {checkIn.breakfastProteinPortion && <span className="text-gray-500"> ({checkIn.breakfastProteinPortion} oz)</span>}
+                        </p>
+                      )}
+                      {checkIn.breakfastFruit && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Fruit:</span> {checkIn.breakfastFruit}
+                          {checkIn.breakfastFruitPortion && <span className="text-gray-500"> ({checkIn.breakfastFruitPortion} oz)</span>}
+                        </p>
+                      )}
+                      {checkIn.breakfastVegetable && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Vegetable:</span> {checkIn.breakfastVegetable}
+                          {checkIn.breakfastVegetablePortion && <span className="text-gray-500"> ({checkIn.breakfastVegetablePortion} oz)</span>}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
                 
                 {checkIn.meals?.lunch && (
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5">
-                      <Apple className="h-5 w-5 text-green-500" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Lunch</h4>
-                      <p className="text-sm text-gray-600">{checkIn.meals.lunch}</p>
+                  <div className="border-b pb-2">
+                    <h4 className="text-sm font-medium mb-1">Lunch</h4>
+                    <div className="flex flex-col gap-1">
+                      {checkIn.lunchProtein && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Protein:</span> {checkIn.lunchProtein}
+                          {checkIn.lunchProteinPortion && <span className="text-gray-500"> ({checkIn.lunchProteinPortion} oz)</span>}
+                        </p>
+                      )}
+                      {checkIn.lunchFruit && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Fruit:</span> {checkIn.lunchFruit}
+                          {checkIn.lunchFruitPortion && <span className="text-gray-500"> ({checkIn.lunchFruitPortion} oz)</span>}
+                        </p>
+                      )}
+                      {checkIn.lunchVegetable && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Vegetable:</span> {checkIn.lunchVegetable}
+                          {checkIn.lunchVegetablePortion && <span className="text-gray-500"> ({checkIn.lunchVegetablePortion} oz)</span>}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
                 
                 {checkIn.meals?.dinner && (
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5">
-                      <UtensilsCrossed className="h-5 w-5 text-purple-500" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Dinner</h4>
-                      <p className="text-sm text-gray-600">{checkIn.meals.dinner}</p>
+                  <div className="border-b pb-2">
+                    <h4 className="text-sm font-medium mb-1">Dinner</h4>
+                    <div className="flex flex-col gap-1">
+                      {checkIn.dinnerProtein && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Protein:</span> {checkIn.dinnerProtein}
+                          {checkIn.dinnerProteinPortion && <span className="text-gray-500"> ({checkIn.dinnerProteinPortion} oz)</span>}
+                        </p>
+                      )}
+                      {checkIn.dinnerFruit && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Fruit:</span> {checkIn.dinnerFruit}
+                          {checkIn.dinnerFruitPortion && <span className="text-gray-500"> ({checkIn.dinnerFruitPortion} oz)</span>}
+                        </p>
+                      )}
+                      {checkIn.dinnerVegetable && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Vegetable:</span> {checkIn.dinnerVegetable}
+                          {checkIn.dinnerVegetablePortion && <span className="text-gray-500"> ({checkIn.dinnerVegetablePortion} oz)</span>}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
                 
                 {checkIn.meals?.snacks && (
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5">
-                      <Pizza className="h-5 w-5 text-red-500" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Snacks</h4>
-                      <p className="text-sm text-gray-600">{checkIn.meals.snacks}</p>
-                    </div>
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Snacks</h4>
+                    <p className="text-sm text-gray-600">{checkIn.meals.snacks}
+                      {checkIn.snackPortion && <span className="text-gray-500"> ({checkIn.snackPortion} oz)</span>}
+                    </p>
                   </div>
                 )}
 

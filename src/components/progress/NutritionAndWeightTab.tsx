@@ -43,7 +43,7 @@ const NutritionAndWeightTab: React.FC<NutritionAndWeightTabProps> = ({ checkInsD
             <div className="flex items-center justify-between py-4">
               <div>
                 <p className="text-sm text-gray-500">Average Daily</p>
-                <h3 className="text-2xl font-bold">{avgWater.toFixed(1)} glasses</h3>
+                <h3 className="text-2xl font-bold">{avgWater.toFixed(1)} oz</h3>
               </div>
               <Droplets className="h-10 w-10 text-blue-500" />
             </div>
