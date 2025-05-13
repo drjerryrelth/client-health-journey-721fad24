@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +22,7 @@ import MainLayout from "./components/layout/MainLayout";
 import { AdminRoutes, CoachRoutes, ClientRoutes } from "./components/routes";
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import ProgressPreview from './pages/ProgressPreview';
 
 // Create a component for the app content that uses hooks
 const AppContent = () => {
@@ -40,6 +42,7 @@ const AppContent = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/signup/clinic" element={<ClinicSignup />} />
+          <Route path="/progress-preview" element={<ProgressPreview />} />
           
           {/* Redirect any other signup routes to the clinic signup page */}
           <Route path="/signup/*" element={<Navigate to="/signup/clinic" replace />} />
