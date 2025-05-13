@@ -11,6 +11,7 @@ import MoodTrackingChart from '@/components/progress/MoodTrackingChart';
 import DateRangeSelector from '@/components/progress/DateRangeSelector';
 import { CheckIn } from '@/types';
 import { subDays } from 'date-fns';
+import { mockCheckIns } from '@/services/check-ins/mock-data';
 
 const ProgressPreview = () => {
   const [activeTab, setActiveTab] = useState("nutrition");
@@ -18,87 +19,11 @@ const ProgressPreview = () => {
   const [endDate, setEndDate] = useState(new Date());
   const [rangePreset, setRangePreset] = useState("last30days");
   
-  // Updated dummy data to conform to the CheckIn type
-  const dummyCheckIns: CheckIn[] = [
-    { 
-      id: '1',
-      clientId: 'client-123',
-      date: '2025-05-06', 
-      weight: 185, 
-      waterIntake: 6,
-      meals: { 
-        breakfast: 'Eggs and toast', 
-        lunch: 'Salad', 
-        dinner: 'Grilled chicken',
-        snacks: 'Apple and nuts'
-      },
-      sleepHours: 7.5, 
-      moodScore: 4, 
-      energyScore: 4,
-      measurements: { 
-        waist: 36, 
-        chest: 42, 
-        hips: 38, 
-        thighs: 24, 
-        arms: 14
-      },
-      notes: 'Felt good today, had a good workout.'
-    },
-    { 
-      id: '2',
-      clientId: 'client-123',
-      date: '2025-05-07', 
-      weight: 184, 
-      waterIntake: 7,
-      meals: { 
-        breakfast: 'Oatmeal', 
-        lunch: 'Sandwich', 
-        dinner: 'Fish and vegetables',
-        snacks: 'Yogurt'
-      },
-      sleepHours: 8, 
-      moodScore: 5, 
-      energyScore: 5,
-      measurements: { 
-        waist: 35.8, 
-        chest: 42, 
-        hips: 37.8, 
-        thighs: 23.8, 
-        arms: 14
-      },
-      notes: 'Great energy levels all day.'
-    },
-    { 
-      id: '3',
-      clientId: 'client-123',
-      date: '2025-05-08', 
-      weight: 183.5, 
-      waterIntake: 5,
-      meals: { 
-        breakfast: 'Protein shake', 
-        lunch: 'Soup and bread', 
-        dinner: 'Stir fry',
-        snacks: 'Protein bar'
-      },
-      sleepHours: 6, 
-      moodScore: 3, 
-      energyScore: 3,
-      measurements: { 
-        waist: 35.6, 
-        chest: 41.8, 
-        hips: 37.6, 
-        thighs: 23.7, 
-        arms: 13.9
-      },
-      notes: 'Feeling a bit tired today.'
-    },
-  ];
-
   // Filter data based on date range
-  const [filteredData, setFilteredData] = useState<CheckIn[]>(dummyCheckIns);
+  const [filteredData, setFilteredData] = useState<CheckIn[]>([]);
 
   useEffect(() => {
-    const filtered = dummyCheckIns.filter(checkIn => {
+    const filtered = mockCheckIns.filter(checkIn => {
       const checkInDate = new Date(checkIn.date);
       return checkInDate >= startDate && checkInDate <= endDate;
     });

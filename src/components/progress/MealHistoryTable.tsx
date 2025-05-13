@@ -48,19 +48,19 @@ const MealHistoryTable: React.FC<MealHistoryTableProps> = ({ data = [] }) => {
                       {checkIn.breakfastProtein && (
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Protein:</span> {checkIn.breakfastProtein} 
-                          {checkIn.breakfastProteinPortion && <span className="text-gray-500"> ({checkIn.breakfastProteinPortion} oz)</span>}
+                          {checkIn.breakfastProteinPortion && <span className="text-gray-500"> ({checkIn.breakfastProteinPortion})</span>}
                         </p>
                       )}
                       {checkIn.breakfastFruit && (
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Fruit:</span> {checkIn.breakfastFruit}
-                          {checkIn.breakfastFruitPortion && <span className="text-gray-500"> ({checkIn.breakfastFruitPortion} oz)</span>}
+                          {checkIn.breakfastFruitPortion && <span className="text-gray-500"> ({checkIn.breakfastFruitPortion})</span>}
                         </p>
                       )}
                       {checkIn.breakfastVegetable && (
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Vegetable:</span> {checkIn.breakfastVegetable}
-                          {checkIn.breakfastVegetablePortion && <span className="text-gray-500"> ({checkIn.breakfastVegetablePortion} oz)</span>}
+                          {checkIn.breakfastVegetablePortion && <span className="text-gray-500"> ({checkIn.breakfastVegetablePortion})</span>}
                         </p>
                       )}
                     </div>
@@ -74,19 +74,19 @@ const MealHistoryTable: React.FC<MealHistoryTableProps> = ({ data = [] }) => {
                       {checkIn.lunchProtein && (
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Protein:</span> {checkIn.lunchProtein}
-                          {checkIn.lunchProteinPortion && <span className="text-gray-500"> ({checkIn.lunchProteinPortion} oz)</span>}
+                          {checkIn.lunchProteinPortion && <span className="text-gray-500"> ({checkIn.lunchProteinPortion})</span>}
                         </p>
                       )}
                       {checkIn.lunchFruit && (
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Fruit:</span> {checkIn.lunchFruit}
-                          {checkIn.lunchFruitPortion && <span className="text-gray-500"> ({checkIn.lunchFruitPortion} oz)</span>}
+                          {checkIn.lunchFruitPortion && <span className="text-gray-500"> ({checkIn.lunchFruitPortion})</span>}
                         </p>
                       )}
                       {checkIn.lunchVegetable && (
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Vegetable:</span> {checkIn.lunchVegetable}
-                          {checkIn.lunchVegetablePortion && <span className="text-gray-500"> ({checkIn.lunchVegetablePortion} oz)</span>}
+                          {checkIn.lunchVegetablePortion && <span className="text-gray-500"> ({checkIn.lunchVegetablePortion})</span>}
                         </p>
                       )}
                     </div>
@@ -100,19 +100,19 @@ const MealHistoryTable: React.FC<MealHistoryTableProps> = ({ data = [] }) => {
                       {checkIn.dinnerProtein && (
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Protein:</span> {checkIn.dinnerProtein}
-                          {checkIn.dinnerProteinPortion && <span className="text-gray-500"> ({checkIn.dinnerProteinPortion} oz)</span>}
+                          {checkIn.dinnerProteinPortion && <span className="text-gray-500"> ({checkIn.dinnerProteinPortion})</span>}
                         </p>
                       )}
                       {checkIn.dinnerFruit && (
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Fruit:</span> {checkIn.dinnerFruit}
-                          {checkIn.dinnerFruitPortion && <span className="text-gray-500"> ({checkIn.dinnerFruitPortion} oz)</span>}
+                          {checkIn.dinnerFruitPortion && <span className="text-gray-500"> ({checkIn.dinnerFruitPortion})</span>}
                         </p>
                       )}
                       {checkIn.dinnerVegetable && (
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Vegetable:</span> {checkIn.dinnerVegetable}
-                          {checkIn.dinnerVegetablePortion && <span className="text-gray-500"> ({checkIn.dinnerVegetablePortion} oz)</span>}
+                          {checkIn.dinnerVegetablePortion && <span className="text-gray-500"> ({checkIn.dinnerVegetablePortion})</span>}
                         </p>
                       )}
                     </div>
@@ -123,7 +123,7 @@ const MealHistoryTable: React.FC<MealHistoryTableProps> = ({ data = [] }) => {
                   <div>
                     <h4 className="text-sm font-medium mb-1">Snacks</h4>
                     <p className="text-sm text-gray-600">{checkIn.meals.snacks}
-                      {checkIn.snackPortion && <span className="text-gray-500"> ({checkIn.snackPortion} oz)</span>}
+                      {checkIn.snackPortion && <span className="text-gray-500"> ({checkIn.snackPortion})</span>}
                     </p>
                   </div>
                 )}
