@@ -1,57 +1,75 @@
 
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import WeeklyProgressCharts from './WeeklyProgressCharts';
+import MeasurementsTrendsChart from './MeasurementsTrendsChart';
+import MoodTrackingChart from './MoodTrackingChart';
+import SleepTrackingChart from './SleepTrackingChart';
+import ExerciseTrackingChart from './ExerciseTrackingChart';
+import NutritionAndWeightTab from './NutritionAndWeightTab';
+import CheckInHistoryTable from './CheckInHistoryTable';
+import { Activity, BarChart3, Ruler, HeartPulse, Bed } from 'lucide-react';
 
-const ProgressChart = () => {
-  // Mock weight data
-  const data = [
-    { day: 'Day 1', weight: 185 },
-    { day: 'Day 5', weight: 183 },
-    { day: 'Day 10', weight: 180 },
-    { day: 'Day 15', weight: 178 },
-    { day: 'Day 20', weight: 176 },
-    { day: 'Day 25', weight: 174 },
-    { day: 'Day 30', weight: 172 },
-  ];
-  
+interface ProgressChartProps {
+  clientId?: string;
+  checkInsData: any[];
+}
+
+const ProgressChart: React.FC<ProgressChartProps> = ({ clientId, checkInsData = [] }) => {
+  const [activeTab, setActiveTab] = useState("overview");
+
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart
-        data={data}
-        margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-        <XAxis 
-          dataKey="day" 
-          tick={{ fontSize: 12 }}
-          tickLine={false}
-          axisLine={false}
-        />
-        <YAxis 
-          domain={['dataMin - 5', 'dataMax + 5']}
-          tick={{ fontSize: 12 }}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(value) => `${value} lbs`}
-        />
-        <Tooltip 
-          formatter={(value) => [`${value} lbs`, 'Weight']}
-          contentStyle={{ 
-            borderRadius: '8px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-            border: 'none'
-          }}
-        />
-        <Line 
-          type="monotone" 
-          dataKey="weight" 
-          stroke="#1eaedb" 
-          strokeWidth={2}
-          activeDot={{ r: 6, fill: '#1eaedb', stroke: '#fff', strokeWidth: 2 }}
-          dot={{ r: 4, fill: '#1eaedb', stroke: '#fff', strokeWidth: 2 }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="space-y-4">
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-4">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            <span className="hidden md:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="nutrition" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden md:inline">Nutrition & Weight</span>
+          </TabsTrigger>
+          <TabsTrigger value="measurements" className="flex items-center gap-2">
+            <Ruler className="h-4 w-4" />
+            <span className="hidden md:inline">Measurements</span>
+          </TabsTrigger>
+          <TabsTrigger value="wellbeing" className="flex items-center gap-2">
+            <HeartPulse className="h-4 w-4" />
+            <span className="hidden md:inline">Wellbeing</span>
+          </TabsTrigger>
+          <TabsTrigger value="sleep" className="flex items-center gap-2">
+            <Bed className="h-4 w-4" />
+            <span className="hidden md:inline">Sleep</span>
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-4">
+          <WeeklyProgressCharts data={checkInsData} />
+          <CheckInHistoryTable data={checkInsData.slice(0, 5)} />
+        </TabsContent>
+        
+        <TabsContent value="nutrition">
+          <NutritionAndWeightTab checkInsData={checkInsData} />
+        </TabsContent>
+        
+        <TabsContent value="measurements">
+          <MeasurementsTrendsChart data={checkInsData} />
+        </TabsContent>
+        
+        <TabsContent value="wellbeing">
+          <div className="space-y-6">
+            <MoodTrackingChart data={checkInsData} />
+            <ExerciseTrackingChart data={checkInsData} />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="sleep">
+          <SleepTrackingChart data={checkInsData} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

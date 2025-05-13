@@ -8,64 +8,82 @@ interface WeightTrendsChartProps {
 }
 
 const WeightTrendsChart: React.FC<WeightTrendsChartProps> = ({ data }) => {
-  // Format data for the chart
+  // Filter only check-ins with weight data and sort by date
   const chartData = data
-    .filter((item) => item.weight !== null) // Filter out entries without weight
-    .map((item) => ({
-      date: item.date,
-      weight: parseFloat(item.weight) || 0,
-      formattedDate: format(new Date(item.date), 'MMM dd, yyyy')
-    }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
+    .filter(checkIn => checkIn.weight)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map(checkIn => ({
+      date: checkIn.date,
+      weight: checkIn.weight
+    }));
+  
+  // Calculate stats
+  const firstWeight = chartData.length > 0 ? chartData[0].weight : 0;
+  const currentWeight = chartData.length > 0 ? chartData[chartData.length - 1].weight : 0;
+  const weightChange = currentWeight - firstWeight;
+  
+  // Format the tooltip display
+  const renderTooltip = (props: any) => {
+    const { active, payload, label } = props;
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-2 border rounded shadow text-xs">
+          <p>{format(new Date(label), 'MMM d, yyyy')}</p>
+          <p className="font-bold">{`Weight: ${payload[0].value} lbs`}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+  
   if (chartData.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-gray-500">
-        <p>No weight data available</p>
+      <div className="flex items-center justify-center h-[200px] text-gray-500">
+        No weight data recorded yet
       </div>
     );
   }
 
-  // Default unit for measurement
-  const weightUnit = 'lbs';
-
   return (
-    <div className="w-full h-80">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={chartData}
-          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis 
-            dataKey="formattedDate" 
-            tick={{ fontSize: 12 }}
-            tickFormatter={(value) => {
-              // Show shorter format on small screens
-              if (window.innerWidth < 768) {
-                return format(new Date(value), 'MM/dd');
-              }
-              return value;
-            }}
-          />
-          <YAxis 
-            tickFormatter={(value) => `${value} ${weightUnit}`}
-            domain={['dataMin - 5', 'dataMax + 5']}
-          />
-          <Tooltip
-            formatter={(value) => [`${value} ${weightUnit}`, 'Weight']}
-            labelFormatter={(label) => `Date: ${label}`}
-          />
-          <Line
-            type="monotone"
-            dataKey="weight"
-            stroke="#10b981"
-            strokeWidth={2}
-            dot={{ stroke: '#10b981', strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6, stroke: '#059669', strokeWidth: 2, fill: '#10b981' }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="space-y-4">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div>
+          <p className="text-sm text-gray-500">Current Weight</p>
+          <p className="text-2xl font-bold">{currentWeight} lbs</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Total Change</p>
+          <p className={`text-2xl font-bold ${weightChange < 0 ? 'text-green-600' : weightChange > 0 ? 'text-red-600' : 'text-gray-600'}`}>
+            {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} lbs
+          </p>
+        </div>
+      </div>
+      
+      <div className="h-[200px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={chartData}
+            margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+            <XAxis 
+              dataKey="date" 
+              tickFormatter={(date) => format(new Date(date), 'MMM d')} 
+              tick={{ fontSize: 12 }}
+            />
+            <YAxis domain={['dataMin - 5', 'dataMax + 5']} tick={{ fontSize: 12 }} />
+            <Tooltip content={renderTooltip} />
+            <Line 
+              type="monotone" 
+              dataKey="weight" 
+              stroke="#3b82f6" 
+              strokeWidth={2}
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

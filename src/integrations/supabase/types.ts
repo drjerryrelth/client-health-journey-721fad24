@@ -90,6 +90,7 @@ export type Database = {
           lunch: string | null
           mood_score: number | null
           notes: string | null
+          sleep_hours: number | null
           snacks: string | null
           thighs: number | null
           waist: number | null
@@ -111,6 +112,7 @@ export type Database = {
           lunch?: string | null
           mood_score?: number | null
           notes?: string | null
+          sleep_hours?: number | null
           snacks?: string | null
           thighs?: number | null
           waist?: number | null
@@ -132,6 +134,7 @@ export type Database = {
           lunch?: string | null
           mood_score?: number | null
           notes?: string | null
+          sleep_hours?: number | null
           snacks?: string | null
           thighs?: number | null
           waist?: number | null
