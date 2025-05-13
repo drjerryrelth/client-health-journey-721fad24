@@ -2,15 +2,18 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Droplets, Coffee, Apple, UtensilsCrossed, Sandwich, Pizza } from 'lucide-react';
+import { Droplets, Coffee, Apple, UtensilsCrossed, Pizza } from 'lucide-react';
 
 interface MealHistoryTableProps {
   data: any[];
 }
 
-const MealHistoryTable: React.FC<MealHistoryTableProps> = ({ data }) => {
+const MealHistoryTable: React.FC<MealHistoryTableProps> = ({ data = [] }) => {
+  // Set a default empty array if data is undefined
+  const safeData = data || [];
+  
   // Only use recent check-ins with meal data
-  const filteredData = data
+  const filteredData = safeData
     .filter(item => item.meals?.breakfast || item.meals?.lunch || item.meals?.dinner || item.meals?.snacks || item.waterIntake)
     .slice(0, 7);
 

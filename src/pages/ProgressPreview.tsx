@@ -14,27 +14,76 @@ const ProgressPreview = () => {
   
   // Dummy data for preview
   const dummyCheckIns = [
-    { date: '2025-05-06', weight: 185, waist: 36, chest: 42, hips: 38, thighs: 24, arms: 14, 
-      water_intake: 6, breakfast: 'Eggs and toast', lunch: 'Salad', dinner: 'Grilled chicken',
-      sleep_hours: 7.5, mood_score: 4, exercise_minutes: 45, exercise_type: 'Cardio' },
-    { date: '2025-05-07', weight: 184, waist: 35.8, chest: 42, hips: 37.8, thighs: 23.8, arms: 14, 
-      water_intake: 7, breakfast: 'Oatmeal', lunch: 'Sandwich', dinner: 'Fish and vegetables',
-      sleep_hours: 8, mood_score: 5, exercise_minutes: 30, exercise_type: 'Strength' },
-    { date: '2025-05-08', weight: 183.5, waist: 35.6, chest: 41.8, hips: 37.6, thighs: 23.7, arms: 13.9, 
-      water_intake: 5, breakfast: 'Protein shake', lunch: 'Soup and bread', dinner: 'Stir fry',
-      sleep_hours: 6, mood_score: 3, exercise_minutes: 0, exercise_type: 'Rest day' },
-    { date: '2025-05-09', weight: 183, waist: 35.5, chest: 41.7, hips: 37.4, thighs: 23.6, arms: 13.9, 
-      water_intake: 8, breakfast: 'Yogurt and fruit', lunch: 'Leftovers', dinner: 'Pasta with vegetables',
-      sleep_hours: 7, mood_score: 4, exercise_minutes: 60, exercise_type: 'Yoga' },
-    { date: '2025-05-10', weight: 182.5, waist: 35.3, chest: 41.6, hips: 37.2, thighs: 23.5, arms: 13.8, 
-      water_intake: 7, breakfast: 'Cereal', lunch: 'Salad with chicken', dinner: 'Grilled salmon',
-      sleep_hours: 8.5, mood_score: 5, exercise_minutes: 25, exercise_type: 'Walking' },
-    { date: '2025-05-11', weight: 182, waist: 35.2, chest: 41.5, hips: 37, thighs: 23.4, arms: 13.8, 
-      water_intake: 6, breakfast: 'Toast with avocado', lunch: 'Wrap', dinner: 'Veggie burger',
-      sleep_hours: 7, mood_score: 4, exercise_minutes: 45, exercise_type: 'Strength' },
-    { date: '2025-05-12', weight: 181, waist: 35, chest: 41.4, hips: 36.8, thighs: 23.2, arms: 13.7, 
-      water_intake: 8, breakfast: 'Smoothie', lunch: 'Rice bowl', dinner: 'Roasted vegetables and quinoa',
-      sleep_hours: 7.5, mood_score: 5, exercise_minutes: 50, exercise_type: 'Cardio' }
+    { 
+      id: '1',
+      date: '2025-05-06', 
+      weight: 185, 
+      waterIntake: 6,
+      meals: { 
+        breakfast: 'Eggs and toast', 
+        lunch: 'Salad', 
+        dinner: 'Grilled chicken',
+        snacks: 'Apple and nuts'
+      },
+      supplements: ['Vitamin D', 'Omega-3'],
+      sleepHours: 7.5, 
+      moodScore: 4, 
+      exerciseMinutes: 45, 
+      exerciseType: 'Cardio',
+      measurements: { 
+        waist: 36, 
+        chest: 42, 
+        hips: 38, 
+        thighs: 24, 
+        arms: 14
+      }
+    },
+    { 
+      id: '2',
+      date: '2025-05-07', 
+      weight: 184, 
+      waterIntake: 7,
+      meals: { 
+        breakfast: 'Oatmeal', 
+        lunch: 'Sandwich', 
+        dinner: 'Fish and vegetables' 
+      },
+      supplements: ['Vitamin C', 'Zinc'],
+      sleepHours: 8, 
+      moodScore: 5, 
+      exerciseMinutes: 30, 
+      exerciseType: 'Strength',
+      measurements: { 
+        waist: 35.8, 
+        chest: 42, 
+        hips: 37.8, 
+        thighs: 23.8, 
+        arms: 14
+      }
+    },
+    { 
+      id: '3',
+      date: '2025-05-08', 
+      weight: 183.5, 
+      waterIntake: 5,
+      meals: { 
+        breakfast: 'Protein shake', 
+        lunch: 'Soup and bread', 
+        dinner: 'Stir fry' 
+      },
+      supplements: ['Magnesium'],
+      sleepHours: 6, 
+      moodScore: 3, 
+      exerciseMinutes: 0, 
+      exerciseType: 'Rest day',
+      measurements: { 
+        waist: 35.6, 
+        chest: 41.8, 
+        hips: 37.6, 
+        thighs: 23.7, 
+        arms: 13.9
+      }
+    },
   ];
 
   return (
@@ -70,7 +119,7 @@ const ProgressPreview = () => {
                 <CardTitle>Meal History</CardTitle>
               </CardHeader>
               <CardContent>
-                <MealHistoryTable />
+                <MealHistoryTable data={dummyCheckIns} />
               </CardContent>
             </Card>
           </TabsContent>

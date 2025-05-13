@@ -10,7 +10,7 @@ interface NutritionAndWeightTabProps {
   checkInsData: any[];
 }
 
-const NutritionAndWeightTab: React.FC<NutritionAndWeightTabProps> = ({ checkInsData }) => {
+const NutritionAndWeightTab: React.FC<NutritionAndWeightTabProps> = ({ checkInsData = [] }) => {
   // Calculate average water intake
   const waterData = checkInsData.filter(item => item.waterIntake);
   const avgWater = waterData.length > 0 

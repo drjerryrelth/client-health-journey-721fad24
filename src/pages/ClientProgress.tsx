@@ -13,12 +13,21 @@ import { Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { checkClientAccess } from '@/services/clinics/auth-helper';
 import { isDemoClientEmail } from '@/services/auth/demo/utils';
+import { useQuery } from '@tanstack/react-query';
+import { CheckInFetchers } from '@/services/check-ins/check-in-fetchers';
 
 const ClientProgress = () => {
   const [activeTab, setActiveTab] = useState<string>("charts");
   const [isLoading, setIsLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
   const { user } = useAuth();
+  
+  // Fetch client check-ins
+  const { data: checkInsData = [] } = useQuery({
+    queryKey: ['client-checkins', user?.id],
+    queryFn: () => user?.id ? CheckInFetchers.getClientCheckIns(user.id) : Promise.resolve([]),
+    enabled: !!user?.id && hasAccess
+  });
   
   useEffect(() => {
     const checkAccess = async () => {
@@ -94,7 +103,7 @@ const ClientProgress = () => {
               <CardTitle className="text-xl">Meal History</CardTitle>
             </CardHeader>
             <CardContent>
-              <MealHistoryTable />
+              <MealHistoryTable data={checkInsData} />
             </CardContent>
           </Card>
         </TabsContent>
