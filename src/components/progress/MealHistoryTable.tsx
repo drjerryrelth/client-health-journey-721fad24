@@ -18,8 +18,9 @@ const generateMockMeals = () => {
     }
   ];
   
+  // Generate meal data for the last 7 days
   return Array(7).fill(null).map((_, index) => {
-    const day = subDays(today, 6 - index);
+    const day = subDays(today, index); // Changed from (today, 6 - index) to show most recent first
     const randomIndex = Math.floor(Math.random() * meals[0].breakfast.length);
     
     return {
@@ -50,8 +51,8 @@ const MealHistoryTable = () => {
         <TabsContent value="all" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {mealData.map((day, index) => (
-              <Card key={index} className={index === mealData.length - 1 ? 'border-primary border-2' : ''}>
-                <div className={`py-2 px-4 ${index === mealData.length - 1 ? 'bg-primary text-white' : 'bg-muted'}`}>
+              <Card key={index} className={index === 0 ? 'border-primary border-2' : ''}>
+                <div className={`py-2 px-4 ${index === 0 ? 'bg-primary text-white' : 'bg-muted'}`}>
                   <h3 className="font-medium">{day.date}</h3>
                 </div>
                 <CardContent className="p-4 space-y-3">
