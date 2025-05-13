@@ -9,7 +9,7 @@ import { useClientData } from './ClientDataProvider';
 
 const ProgramProgress: React.FC = () => {
   const { programName, clientStartDate, calculateProgress } = useClientData();
-  const progressPercent = calculateProgress();
+  const progressPercent = calculateProgress ? calculateProgress() : 0;
 
   return (
     <Card>
@@ -31,7 +31,7 @@ const ProgramProgress: React.FC = () => {
         
         <div className="mt-6">
           <Button asChild size="sm" className="gap-2">
-            <Link to="/check-in">
+            <Link to="/client/check-in">
               Record Today's Check-In <ArrowRight size={16} />
             </Link>
           </Button>

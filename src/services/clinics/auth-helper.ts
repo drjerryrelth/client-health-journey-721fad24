@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { isDemoClientEmail } from '@/services/auth/demo/utils';
 
 export const checkAuthentication = async () => {
   try {
@@ -23,6 +24,13 @@ export const checkAuthentication = async () => {
 // Helper to check if the user is a client
 export const checkClientAccess = async () => {
   try {
+    // First check if this is a demo client email from the session
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData?.session?.user?.email && isDemoClientEmail(sessionData.session.user.email)) {
+      console.log('Demo client email detected, granting access');
+      return sessionData.session;
+    }
+    
     const session = await checkAuthentication();
     if (!session) return null;
     

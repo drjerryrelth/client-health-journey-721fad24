@@ -6,6 +6,7 @@ import { calculateProgramProgress } from './utils/clientDataCalculations';
 
 export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
+    clientId,
     checkIns,
     loading,
     programName,
@@ -22,6 +23,7 @@ export const ClientDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   
   // Provide the data and functions to child components
   const value = {
+    clientId,
     checkIns,
     loading,
     programName,

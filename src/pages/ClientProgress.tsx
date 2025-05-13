@@ -12,6 +12,7 @@ import { useAuth } from '@/context/auth';
 import { Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { checkClientAccess } from '@/services/clinics/auth-helper';
+import { isDemoClientEmail } from '@/services/auth/demo/utils';
 
 const ClientProgress = () => {
   const [activeTab, setActiveTab] = useState<string>("charts");
@@ -24,7 +25,8 @@ const ClientProgress = () => {
       setIsLoading(true);
       try {
         // For demo accounts, always allow access
-        if (user?.email?.includes('example.com')) {
+        if (user?.email && isDemoClientEmail(user.email)) {
+          console.log('Demo client detected, granting access to progress page');
           setHasAccess(true);
           setIsLoading(false);
           return;
