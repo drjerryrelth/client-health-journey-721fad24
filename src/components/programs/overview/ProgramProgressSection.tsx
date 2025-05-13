@@ -7,7 +7,9 @@ import { useClientData } from '@/components/client/ClientDataProvider';
 
 const ProgramProgressSection: React.FC = () => {
   const { calculateProgress } = useClientData();
-  const progressPercent = calculateProgress();
+  
+  // Make sure we have a valid progress percentage
+  const progressPercent = calculateProgress ? calculateProgress() : 0;
   
   return (
     <div>
@@ -27,7 +29,7 @@ const ProgramProgressSection: React.FC = () => {
       
       <div className="mt-4">
         <Button asChild size="sm" variant="outline" className="gap-2">
-          <Link to="/check-in">
+          <Link to="/client/check-in">
             <Calendar size={16} /> Record Today's Check-in
           </Link>
         </Button>

@@ -19,3 +19,33 @@ export const checkAuthentication = async () => {
     return null;
   }
 };
+
+// Helper to check if the user is a client
+export const checkClientAccess = async () => {
+  try {
+    const session = await checkAuthentication();
+    if (!session) return null;
+    
+    // Get user role from profiles
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+      
+    if (error) {
+      console.error('Error fetching user role:', error);
+      return null;
+    }
+    
+    if (profile?.role !== 'client') {
+      console.error('User is not a client');
+      return null;
+    }
+    
+    return session;
+  } catch (error) {
+    console.error('Client access check error:', error);
+    return null;
+  }
+};
