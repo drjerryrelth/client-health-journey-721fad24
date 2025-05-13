@@ -171,7 +171,7 @@ const Progress = () => {
               <CardTitle>Body Measurements</CardTitle>
             </CardHeader>
             <CardContent>
-              <MeasurementsTrendsChart data={checkInsData} />
+              <MeasurementsTrendsChart checkInsData={checkInsData} />
             </CardContent>
           </Card>
         </TabsContent>

@@ -130,7 +130,7 @@ const ProgressPreview = () => {
                 <CardTitle>Sleep Tracking</CardTitle>
               </CardHeader>
               <CardContent>
-                <SleepTrackingChart data={dummyCheckIns} />
+                <SleepTrackingChart checkInsData={dummyCheckIns} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -141,7 +141,7 @@ const ProgressPreview = () => {
                 <CardTitle>Exercise Tracking</CardTitle>
               </CardHeader>
               <CardContent>
-                <ExerciseTrackingChart data={dummyCheckIns} />
+                <ExerciseTrackingChart checkInsData={dummyCheckIns} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -152,7 +152,7 @@ const ProgressPreview = () => {
                 <CardTitle>Mood Tracking</CardTitle>
               </CardHeader>
               <CardContent>
-                <MoodTrackingChart data={dummyCheckIns} />
+                <MoodTrackingChart checkInsData={dummyCheckIns} />
               </CardContent>
             </Card>
           </TabsContent>
