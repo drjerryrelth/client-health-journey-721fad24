@@ -10,6 +10,7 @@ import ExerciseTrackingChart from './ExerciseTrackingChart';
 import NutritionAndWeightTab from './NutritionAndWeightTab';
 import CheckInHistoryTable from './CheckInHistoryTable';
 import { Activity, BarChart3, Ruler, HeartPulse, Bed } from 'lucide-react';
+import { CheckIn } from '@/types';
 
 interface ProgressChartProps {
   clientId?: string;
@@ -46,8 +47,8 @@ const ProgressChart: React.FC<ProgressChartProps> = ({ clientId, checkInsData = 
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
-          <WeeklyProgressCharts data={checkInsData} />
-          <CheckInHistoryTable data={checkInsData.slice(0, 5)} />
+          <WeeklyProgressCharts />
+          <CheckInHistoryTable checkInsData={checkInsData.slice(0, 5)} />
         </TabsContent>
         
         <TabsContent value="nutrition">
@@ -55,18 +56,18 @@ const ProgressChart: React.FC<ProgressChartProps> = ({ clientId, checkInsData = 
         </TabsContent>
         
         <TabsContent value="measurements">
-          <MeasurementsTrendsChart data={checkInsData} />
+          <MeasurementsTrendsChart checkInsData={checkInsData} />
         </TabsContent>
         
         <TabsContent value="wellbeing">
           <div className="space-y-6">
-            <MoodTrackingChart data={checkInsData} />
-            <ExerciseTrackingChart data={checkInsData} />
+            <MoodTrackingChart checkInsData={checkInsData} />
+            <ExerciseTrackingChart checkInsData={checkInsData} />
           </div>
         </TabsContent>
         
         <TabsContent value="sleep">
-          <SleepTrackingChart data={checkInsData} />
+          <SleepTrackingChart checkInsData={checkInsData} />
         </TabsContent>
       </Tabs>
     </div>

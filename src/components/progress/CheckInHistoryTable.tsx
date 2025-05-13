@@ -45,17 +45,24 @@ const generateMockCheckIns = (): CheckIn[] => {
   });
 };
 
-const CheckInHistoryTable = () => {
+interface CheckInHistoryTableProps {
+  checkInsData?: CheckIn[];
+}
+
+const CheckInHistoryTable: React.FC<CheckInHistoryTableProps> = ({ checkInsData = [] }) => {
   const { checkIns } = React.useContext(ClientDataContext);
   const [searchTerm, setSearchTerm] = React.useState('');
   
   // Use real data if available, otherwise use mock data
   const data = React.useMemo(() => {
+    if (checkInsData && checkInsData.length > 0) {
+      return checkInsData;
+    }
     if (checkIns && checkIns.length > 0) {
       return checkIns;
     }
     return generateMockCheckIns();
-  }, [checkIns]);
+  }, [checkIns, checkInsData]);
   
   const filteredData = React.useMemo(() => {
     if (!searchTerm) return data;
