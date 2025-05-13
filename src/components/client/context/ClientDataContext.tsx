@@ -9,7 +9,7 @@ type ClientDataContextType = {
   clientStartDate: string;
   waterProgress: number;
   weightTrend: 'up' | 'down' | 'neutral';
-  calculateProgress: () => number;
+  calculateProgress?: () => number;
 };
 
 export const ClientDataContext = createContext<ClientDataContextType>({

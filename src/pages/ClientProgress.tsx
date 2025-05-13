@@ -24,7 +24,7 @@ const ClientProgress = () => {
     const checkAccess = async () => {
       setIsLoading(true);
       try {
-        // For demo accounts, always allow access
+        // For demo accounts, always allow access - specifically check for demo client emails
         if (user?.email && isDemoClientEmail(user.email)) {
           console.log('Demo client detected, granting access to progress page');
           setHasAccess(true);

@@ -13,7 +13,7 @@ import Messages from '@/pages/Messages';
 import Unauthorized from '@/pages/Unauthorized';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
-import { isDemoEmail } from '@/services/auth/demo';
+import { isDemoClientEmail } from '@/services/auth/demo/utils';
 
 const ClientRoutes = () => {
   const { user } = useAuth();
@@ -31,9 +31,9 @@ const ClientRoutes = () => {
     }
   }, [location.pathname, user]);
   
-  // First check: Is this a demo account?
-  if (user?.email && isDemoEmail(user.email)) {
-    console.log('Demo account detected, allowing access');
+  // First check: Is this specifically a demo CLIENT account?
+  if (user?.email && isDemoClientEmail(user.email)) {
+    console.log('Demo client account detected, allowing access');
     return (
       <Routes>
         <Route element={<MainLayout requiredRoles={['client']} />}>
@@ -55,7 +55,7 @@ const ClientRoutes = () => {
     );
   }
   
-  // If not a demo account, check role permissions
+  // If not a demo client account, check role permissions
   if (user?.role !== 'client') {
     console.log('Not a client, redirecting to unauthorized');
     toast.error('Access denied. You do not have client permissions.');

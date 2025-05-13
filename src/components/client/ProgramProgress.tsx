@@ -9,6 +9,8 @@ import { useClientData } from './ClientDataProvider';
 
 const ProgramProgress: React.FC = () => {
   const { programName, clientStartDate, calculateProgress } = useClientData();
+  
+  // Ensure we have a valid progress percentage and handle potential undefined
   const progressPercent = calculateProgress ? calculateProgress() : 0;
 
   return (
