@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useAuth } from '@/context/auth';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -6,6 +5,7 @@ import { Sidebar } from './Sidebar';
 import TopBar from './TopBar';
 import { UserRole } from '@/types';
 import { toast } from 'sonner';
+import { isDemoClientEmail } from '@/services/auth/demo/utils';
 
 interface MainLayoutProps {
   requiredRoles?: UserRole[];
@@ -35,8 +35,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       path: currentPath,
       role: user.role,
       name: user.name,
+      email: user.email, // Log email for debugging
       clinicId: user.clinicId
     });
+    
+    // Special case for demo client emails
+    if (user.email && isDemoClientEmail(user.email) && currentPath.startsWith('/client')) {
+      console.log('Demo client email detected, allowing client path access');
+      return; // Allow access to client paths for demo clients
+    }
     
     // CRITICAL SECURITY ENFORCEMENT - Strict path based checks
     
@@ -95,10 +102,28 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   console.log('MainLayout - User role:', user?.role);
   console.log('MainLayout - User clinicId:', user?.clinicId);
   console.log('MainLayout - User name:', user?.name);
+  console.log('MainLayout - User email:', user?.email); // Log email for debugging
   console.log('MainLayout - Required roles:', requiredRoles);
   console.log('MainLayout - Current path:', location.pathname);
   
   // CRITICAL SECURITY ENFORCEMENT
+  // Check for demo client email specifically
+  if (user?.email && isDemoClientEmail(user.email) && requiredRoles.includes('client')) {
+    console.log('Demo client account detected, granting access to client routes');
+    // Allow access to client pages for demo client email
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <TopBar />
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    );
+  }
+  
   // Emergency check to prevent unauthorized access to admin routes
   let hasPermission = false;
   

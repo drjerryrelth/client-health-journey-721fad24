@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { 
   isDemoEmail, 
@@ -51,6 +52,15 @@ export async function loginWithEmail(email: string, password: string) {
       throw new Error('No user returned from login');
     }
 
+    // For demo client accounts, always enforce client role
+    if (isDemoClientEmail(email)) {
+      console.log('Demo client login successful, enforcing client role');
+      return {
+        ...result,
+        role: 'client',
+      };
+    }
+
     // Get the user's profile to determine their role
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -63,7 +73,7 @@ export async function loginWithEmail(email: string, password: string) {
       throw profileError;
     }
 
-    if (profile.role === "coach") {
+    if (profile && profile.role === "coach") {
       const { data: coachData, error: coachError } = await supabase
         .from('coaches')
         .select('id')
@@ -73,16 +83,19 @@ export async function loginWithEmail(email: string, password: string) {
       if (coachError) {
         console.error('Error fetching coach data:', coachError);
         throw coachError;
-        }
+      }
 
       if (coachData) {
         coach_id = coachData.id;
       }
     }
+    
     // If no profile exists, create one for demo accounts
     if (!profile && isDemoAccount) {
       try {
         const role = getDemoRoleByEmail(email);
+        console.log('Creating demo profile with role:', role);
+        
         const { error: createError } = await supabase
           .from('profiles')
           .insert({

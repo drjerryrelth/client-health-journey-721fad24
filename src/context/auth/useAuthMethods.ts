@@ -155,6 +155,24 @@ export const useAuthMethods = ({
       return false;
     }
     
+    // PRIORITY 0: Special check for demo client emails
+    if (user.email && isDemoClientEmail(user.email)) {
+      console.log('SECURITY: Demo client email detected, checking client-level access');
+      
+      // Convert required role to array for easier checking
+      const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+      
+      // Client demo accounts should only access client routes
+      if (requiredRoles.includes('client')) {
+        console.log('SECURITY: Demo client email accessing client route, allowing access');
+        return true;
+      }
+      
+      // Block access to non-client routes
+      console.log('SECURITY: Demo client attempting to access non-client route, denying access');
+      return false;
+    }
+    
     // PRIORITY 1: Special check for demo admin email - highest priority check
     if (user.email && isDemoAdminEmail(user.email)) {
       console.log('SECURITY: Demo admin email detected, granting admin access');

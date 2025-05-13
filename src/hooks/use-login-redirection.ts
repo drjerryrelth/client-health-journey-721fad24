@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
 import { attemptSessionRecovery } from '@/services/auth/session-service';
+import { isDemoClientEmail } from '@/services/auth/demo/utils';
 
 export const useLoginRedirection = () => {
   const { isAuthenticated, hasRole, isLoading, user } = useAuth();
@@ -15,6 +16,13 @@ export const useLoginRedirection = () => {
   // Improved redirect logic as a callback to ensure consistency
   const determineRedirectDestination = useCallback(() => {
     if (!user) return null;
+    
+    // Special handling for demo client emails - highest priority
+    if (user.email && isDemoClientEmail(user.email)) {
+      console.log('Demo client email detected, redirecting to client portal');
+      toast.success(`Logged in as Client: ${user.name || 'Demo Client'}`);
+      return '/client';
+    }
     
     // Add toast notification for clarity
     let roleDisplay = '';
@@ -62,7 +70,7 @@ export const useLoginRedirection = () => {
   // Effect for navigation when auth status changes - improved for consistency
   useEffect(() => {
     if (isAuthenticated && !isLoading && !isRecovering && user) {
-      console.log('User authenticated, redirecting...', user.role, 'clinicId:', user.clinicId);
+      console.log('User authenticated, redirecting...', user.role, 'clinicId:', user.clinicId, 'email:', user.email);
       
       const destination = determineRedirectDestination();
       if (!destination) return;

@@ -58,7 +58,7 @@ const ClientRoutes = () => {
   // If not a demo client account, check role permissions
   if (user?.role !== 'client') {
     console.log('Not a client, redirecting to unauthorized');
-    toast.error('Access denied. You do not have client permissions.');
+    // Don't show toast immediately to prevent double toasts
     return <Navigate to="/unauthorized" replace />;
   }
   
