@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useAuth } from '@/context/auth';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -5,7 +6,7 @@ import { Sidebar } from './Sidebar';
 import TopBar from './TopBar';
 import { UserRole } from '@/types';
 import { toast } from 'sonner';
-import { isDemoClientEmail } from '@/services/auth/demo/utils';
+import { isDemoClientEmail, isDemoCoachEmail } from '@/services/auth/demo/utils';
 
 interface MainLayoutProps {
   requiredRoles?: UserRole[];
@@ -39,10 +40,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       clinicId: user.clinicId
     });
     
-    // Special case for demo client emails
+    // DEMO ACCOUNT SPECIAL HANDLING - highest priority
+    
+    // Demo client access
     if (user.email && isDemoClientEmail(user.email) && currentPath.startsWith('/client')) {
       console.log('Demo client email detected, allowing client path access');
       return; // Allow access to client paths for demo clients
+    }
+    
+    // Demo coach access
+    if (user.email && isDemoCoachEmail(user.email) && currentPath.startsWith('/coach')) {
+      console.log('Demo coach email detected, allowing coach path access');
+      return; // Allow access to coach paths for demo coaches
     }
     
     // CRITICAL SECURITY ENFORCEMENT - Strict path based checks
@@ -106,7 +115,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   console.log('MainLayout - Required roles:', requiredRoles);
   console.log('MainLayout - Current path:', location.pathname);
   
-  // CRITICAL SECURITY ENFORCEMENT
+  // SPECIAL HANDLING FOR DEMO ACCOUNTS
   // Check for demo client email specifically
   if (user?.email && isDemoClientEmail(user.email) && requiredRoles.includes('client')) {
     console.log('Demo client account detected, granting access to client routes');
@@ -124,7 +133,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     );
   }
   
-  // Emergency check to prevent unauthorized access to admin routes
+  // Check for demo coach email specifically
+  if (user?.email && isDemoCoachEmail(user.email) && requiredRoles.includes('coach')) {
+    console.log('Demo coach account detected, granting access to coach routes');
+    // Allow access to coach pages for demo coach email
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <TopBar />
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    );
+  }
+  
+  // Standard permission check as fallback
   let hasPermission = false;
   
   // Custom role-checking logic with proper hierarchy enforcement

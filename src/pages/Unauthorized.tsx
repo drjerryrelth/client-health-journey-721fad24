@@ -1,17 +1,46 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import { ShieldAlert } from 'lucide-react';
+import { isDemoClientEmail, isDemoCoachEmail } from '@/services/auth/demo/utils';
 
 const Unauthorized = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   
+  // Automatically redirect demo accounts to their correct location
+  useEffect(() => {
+    if (user?.email) {
+      if (isDemoClientEmail(user.email)) {
+        console.log('Demo client on unauthorized page - auto redirecting to client portal');
+        navigate('/client', { replace: true });
+        return;
+      }
+      
+      if (isDemoCoachEmail(user.email)) {
+        console.log('Demo coach on unauthorized page - auto redirecting to coach dashboard');
+        navigate('/coach/dashboard', { replace: true });
+        return;
+      }
+    }
+  }, [user, navigate]);
+  
   const handleGoBack = () => {
-    // Redirect based on user role
+    // Redirect based on user role or email
     if (user) {
+      if (user.email && isDemoClientEmail(user.email)) {
+        navigate('/client', { replace: true });
+        return;
+      }
+      
+      if (user.email && isDemoCoachEmail(user.email)) {
+        navigate('/coach/dashboard', { replace: true });
+        return;
+      }
+      
+      // Role-based redirection as fallback
       if (user.role === 'admin' || user.role === 'super_admin') {
         navigate('/admin/dashboard');
       } else if (user.role === 'clinic_admin') {

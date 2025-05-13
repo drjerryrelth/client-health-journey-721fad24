@@ -14,19 +14,17 @@ export async function loginWithEmail(email: string, password: string) {
   console.log('Attempting login with email:', email);
   let coach_id: string | undefined;
   
-  // Check if this is a demo login
+  // Check if this is a demo login - critical for demo account handling
   const isDemoAccount = isDemoEmail(email);
   if (isDemoAccount) {
     console.log('This is a demo login attempt');
-    // Special handling for admin demo
+    // Special handling for demo accounts based on type
     if (isDemoAdminEmail(email)) {
       console.log('CRITICAL: This is an admin demo login attempt');
     }
-    // Special handling for coach demo
     if (isDemoCoachEmail(email)) {
       console.log('CRITICAL: This is a coach demo login attempt');
     }
-    // Special handling for client demo
     if (isDemoClientEmail(email)) {
       console.log('CRITICAL: This is a client demo login attempt');
     }
@@ -52,6 +50,7 @@ export async function loginWithEmail(email: string, password: string) {
       throw new Error('No user returned from login');
     }
 
+    // CRITICAL: Demo account handling - enforce role based on email
     // For demo client accounts, always enforce client role
     if (isDemoClientEmail(email)) {
       console.log('Demo client login successful, enforcing client role');
@@ -60,8 +59,26 @@ export async function loginWithEmail(email: string, password: string) {
         role: 'client',
       };
     }
+    
+    // For demo coach accounts, always enforce coach role
+    if (isDemoCoachEmail(email)) {
+      console.log('Demo coach login successful, enforcing coach role');
+      return {
+        ...result,
+        role: 'coach',
+      };
+    }
+    
+    // For demo admin accounts, always enforce admin role
+    if (isDemoAdminEmail(email)) {
+      console.log('Demo admin login successful, enforcing admin role');
+      return {
+        ...result,
+        role: 'admin',
+      };
+    }
 
-    // Get the user's profile to determine their role
+    // Standard profile lookup for non-demo accounts
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')

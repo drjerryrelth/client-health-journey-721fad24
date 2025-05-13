@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLoader from '@/components/dashboard/DashboardLoader';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
-import { isDemoClientEmail } from '@/services/auth/demo/utils';
+import { isDemoClientEmail, isDemoCoachEmail } from '@/services/auth/demo/utils';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -12,16 +12,24 @@ const Dashboard = () => {
   
   useEffect(() => {
     if (!isLoading && user) {
-      console.log('Dashboard redirecting based on role:', user.role, 'clinicId:', user.clinicId);
+      console.log('Dashboard redirecting based on role:', user.role, 'clinicId:', user.clinicId, 'email:', user.email);
       
-      // Special handling for demo client email addresses
+      // Special handling for demo accounts - ensure this runs before other checks
+      // Check for demo client email with highest priority
       if (user.email && isDemoClientEmail(user.email)) {
         console.log('Demo client email detected, redirecting to client portal');
         navigate('/client', { replace: true });
         return;
       }
       
-      // Strict role-based redirection
+      // Special handling for demo coach email 
+      if (user.email && isDemoCoachEmail(user.email)) {
+        console.log('Demo coach email detected, redirecting to coach dashboard');
+        navigate('/coach/dashboard', { replace: true });
+        return;
+      }
+      
+      // Standard role-based redirection as fallback
       if (user.role === 'admin' || user.role === 'super_admin') {
         console.log('Redirecting to admin dashboard (system admin)');
         navigate('/admin/dashboard', { replace: true });
