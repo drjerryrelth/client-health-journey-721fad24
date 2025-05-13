@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '@/types';
@@ -32,12 +32,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   // Initialize auth once on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
     
     const initAuth = async () => {
       if (isMounted) {
-        await setupAuth();
+        console.log('AuthProvider: Initializing auth...');
+        try {
+          await setupAuth();
+          if (isMounted) {
+            console.log('AuthProvider: Auth initialization complete');
+          }
+        } catch (error) {
+          console.error('AuthProvider: Error initializing auth:', error);
+          if (isMounted) {
+            setIsLoading(false);
+            setInitialAuthCheckComplete(true);
+          }
+        }
       }
     };
     
@@ -66,11 +78,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabaseUser,
     isAuthenticated: !!user,
     isLoading,
+    initialAuthCheckComplete,
     login,
     logout,
     signUp: wrappedSignUp,
     hasRole: hasRoleWrapper,
-    initialAuthCheckComplete
   };
 
   return (

@@ -8,9 +8,9 @@ export interface UserData {
   email: string;
   role: UserRole;
   clinicId?: string;
-  phone?: string; // Added phone as an optional property
-  coach_id?: string; // Added coach_id for coach users
-  client_id?: string; // Added client_id for client users
+  phone?: string;
+  coach_id?: string;
+  client_id?: string;
 }
 
 export interface AuthContextType {
@@ -18,9 +18,9 @@ export interface AuthContextType {
   supabaseUser: SupabaseUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  initialAuthCheckComplete: boolean;
   login: (email: string, password: string) => Promise<any>;
   logout: () => Promise<void>;
   hasRole: (role: UserRole | UserRole[]) => boolean;
   signUp: (email: string, password: string, userData: { full_name: string; role: string }) => Promise<void>;
-  initialAuthCheckComplete?: boolean; // New property to track initial auth check
 }

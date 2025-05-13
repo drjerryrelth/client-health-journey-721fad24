@@ -7,7 +7,7 @@ import { attemptSessionRecovery } from '@/services/auth/session-service';
 import { isDemoClientEmail, isDemoCoachEmail } from '@/services/auth/demo/utils';
 
 export const useLoginRedirection = () => {
-  const { isAuthenticated, hasRole, isLoading, user, initialAuthCheckComplete } = useAuth();
+  const { isAuthenticated, isLoading, user, initialAuthCheckComplete } = useAuth();
   const [redirectDestination, setRedirectDestination] = useState<string | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
   const [recoveryAttempted, setRecoveryAttempted] = useState(false);

@@ -46,7 +46,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   
   // Direct role-based path checking on every route change
   useEffect(() => {
-    if (!user || isLoading) return;
+    if (!user || isLoading || !initialAuthCheckComplete) return;
     
     // Core permissions enforcement - redirects for security violations
     const systemAdminOnlyPaths = ['/admin/clinics', '/admin/admin-users'];
@@ -115,9 +115,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       // Additional verification could be added here to check if accessing clinic-specific data
       console.log('Clinic admin accessing admin route - verifying access for clinic:', user.clinicId);
     }
-  }, [location.pathname, user, isLoading, navigate]);
+  }, [location.pathname, user, isLoading, navigate, initialAuthCheckComplete]);
   
-  // Allow temporary access during initial auth check to prevent flashing
+  // Don't deny access while still loading or before initial check is complete
   if (isLoading || initialAuthCheckComplete === false) {
     console.log('MainLayout - Auth state still loading, showing loading indicator');
     return (
@@ -132,14 +132,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     console.log('MainLayout - User not authenticated and check complete, redirecting to login');
     return <Navigate to="/login" replace />;
   }
-  
-  // Detailed role and permission logging for debugging
-  console.log('MainLayout - User role:', user?.role);
-  console.log('MainLayout - User clinicId:', user?.clinicId);
-  console.log('MainLayout - User name:', user?.name);
-  console.log('MainLayout - User email:', user?.email);
-  console.log('MainLayout - Required roles:', requiredRoles);
-  console.log('MainLayout - Current path:', location.pathname);
   
   // SPECIAL HANDLING FOR DEMO ACCOUNTS
   // Check for demo client email specifically

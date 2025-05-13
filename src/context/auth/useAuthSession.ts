@@ -8,14 +8,13 @@ import {
   setupAuthListener 
 } from '@/services/auth';
 import { isDemoAdminEmail, isDemoClinicAdminEmail, isDemoCoachEmail, isDemoClientEmail } from '@/services/auth/demo/utils';
-import { DEMO_CLINIC_ID } from '@/services/auth/demo/constants';
 import { toast } from 'sonner';
 
 type UseAuthSessionProps = {
   setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
   setSupabaseUser: React.Dispatch<React.SetStateAction<SupabaseUser | null>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  setInitialAuthCheckComplete?: React.Dispatch<React.SetStateAction<boolean>>;
+  setInitialAuthCheckComplete: React.Dispatch<React.SetStateAction<boolean>>;
   navigate: any;
 };
 
@@ -31,6 +30,7 @@ export const useAuthSession = ({
 
   const fetchAndSetUserProfile = useCallback(async (userId: string, userEmail?: string) => {
     try {
+      console.log(`Fetching user profile for ID: ${userId}`);
       const profile = await fetchUserProfile(userId);
       console.log('Profile:', profile);
       
@@ -70,7 +70,7 @@ export const useAuthSession = ({
         console.error('Error getting current session:', error);
         toast.error('Error checking session');
         setIsLoading(false);
-        if (setInitialAuthCheckComplete) setInitialAuthCheckComplete(true);
+        setInitialAuthCheckComplete(true);
         authCheckCompleted.current = true;
         return;
       }
@@ -78,7 +78,7 @@ export const useAuthSession = ({
       if (!session?.user) {
         console.log('No active session found');
         setIsLoading(false);
-        if (setInitialAuthCheckComplete) setInitialAuthCheckComplete(true);
+        setInitialAuthCheckComplete(true);
         authCheckCompleted.current = true;
         return;
       }
@@ -87,16 +87,16 @@ export const useAuthSession = ({
       setSupabaseUser(session.user);
       await fetchAndSetUserProfile(session.user.id, session.user.email);
       setIsLoading(false);
-      if (setInitialAuthCheckComplete) setInitialAuthCheckComplete(true);
+      setInitialAuthCheckComplete(true);
       authCheckCompleted.current = true;
     } catch (error) {
       console.error('Error checking session:', error);
       toast.error('Error checking session');
       setIsLoading(false);
-      if (setInitialAuthCheckComplete) setInitialAuthCheckComplete(true);
+      setInitialAuthCheckComplete(true);
       authCheckCompleted.current = true;
     }
-  }, [setSupabaseUser, setIsLoading, fetchAndSetUserProfile, setInitialAuthCheckComplete]);
+  }, [setSupabaseUser, setIsLoading, setInitialAuthCheckComplete, fetchAndSetUserProfile]);
 
   // Setup listener for auth changes - only once
   useEffect(() => {

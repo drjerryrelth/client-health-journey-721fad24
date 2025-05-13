@@ -8,6 +8,7 @@ const defaultValue: AuthContextType = {
   supabaseUser: null,
   isAuthenticated: false,
   isLoading: true,
+  initialAuthCheckComplete: false, // Add this flag to track initial auth check
   login: async () => {},
   logout: async () => {},
   hasRole: () => false,

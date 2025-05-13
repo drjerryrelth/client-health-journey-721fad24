@@ -8,10 +8,16 @@ import { isDemoClientEmail, isDemoCoachEmail } from '@/services/auth/demo/utils'
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { hasRole, isLoading, user } = useAuth();
+  const { hasRole, isLoading, user, initialAuthCheckComplete } = useAuth();
   
   useEffect(() => {
-    if (!isLoading && user) {
+    // Don't redirect until initial auth check is complete
+    if (isLoading || !initialAuthCheckComplete) {
+      console.log('Dashboard - Waiting for auth initialization to complete...');
+      return;
+    }
+    
+    if (user) {
       console.log('Dashboard redirecting based on role:', user.role, 'clinicId:', user.clinicId, 'email:', user.email);
       
       // Special handling for demo accounts - ensure this runs before other checks
@@ -48,7 +54,7 @@ const Dashboard = () => {
         navigate('/unauthorized', { replace: true });
       }
     }
-  }, [hasRole, isLoading, navigate, user]);
+  }, [hasRole, isLoading, navigate, user, initialAuthCheckComplete]);
 
   // Display loading state while checking auth status
   return <DashboardLoader />;
