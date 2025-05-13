@@ -3,6 +3,7 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { subDays, format } from 'date-fns';
 import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 // Generate mock data for meals
 const generateMockMeals = () => {
@@ -78,85 +79,85 @@ const MealHistoryTable = () => {
         
         <TabsContent value="breakfast" className="mt-4">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-muted">
-                  <th className="text-left py-3 px-4 font-medium">Day</th>
-                  <th className="text-left py-3 px-4 font-medium">Breakfast</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Day</TableHead>
+                  <TableHead>Breakfast</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {mealData.map((day, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{day.dateShort}</td>
-                    <td className="py-3 px-4">{day.breakfast}</td>
-                  </tr>
+                  <TableRow key={index}>
+                    <TableCell>{day.dateShort}</TableCell>
+                    <TableCell>{day.breakfast}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </TabsContent>
         
         <TabsContent value="lunch" className="mt-4">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-muted">
-                  <th className="text-left py-3 px-4 font-medium">Day</th>
-                  <th className="text-left py-3 px-4 font-medium">Lunch</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Day</TableHead>
+                  <TableHead>Lunch</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {mealData.map((day, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{day.dateShort}</td>
-                    <td className="py-3 px-4">{day.lunch}</td>
-                  </tr>
+                  <TableRow key={index}>
+                    <TableCell>{day.dateShort}</TableCell>
+                    <TableCell>{day.lunch}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </TabsContent>
         
         <TabsContent value="dinner" className="mt-4">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-muted">
-                  <th className="text-left py-3 px-4 font-medium">Day</th>
-                  <th className="text-left py-3 px-4 font-medium">Dinner</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Day</TableHead>
+                  <TableHead>Dinner</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {mealData.map((day, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{day.dateShort}</td>
-                    <td className="py-3 px-4">{day.dinner}</td>
-                  </tr>
+                  <TableRow key={index}>
+                    <TableCell>{day.dateShort}</TableCell>
+                    <TableCell>{day.dinner}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </TabsContent>
         
         <TabsContent value="snacks" className="mt-4">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-muted">
-                  <th className="text-left py-3 px-4 font-medium">Day</th>
-                  <th className="text-left py-3 px-4 font-medium">Snacks</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Day</TableHead>
+                  <TableHead>Snacks</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {mealData.map((day, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{day.dateShort}</td>
-                    <td className="py-3 px-4">{day.snacks}</td>
-                  </tr>
+                  <TableRow key={index}>
+                    <TableCell>{day.dateShort}</TableCell>
+                    <TableCell>{day.snacks}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </TabsContent>
       </Tabs>

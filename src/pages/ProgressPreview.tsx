@@ -2,9 +2,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from '@/components/ui/progress';
 import WeightTrendsChart from '@/components/progress/WeightTrendsChart';
 import MeasurementsTrendsChart from '@/components/progress/MeasurementsTrendsChart';
 import NutrientComplianceChart from '@/components/progress/NutrientComplianceChart';
+import MealHistoryTable from '@/components/progress/MealHistoryTable';
 
 const ProgressPreview = () => {
   const [activeTab, setActiveTab] = useState("weight");
@@ -38,10 +40,11 @@ const ProgressPreview = () => {
         </div>
 
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-6">
+          <TabsList className="grid grid-cols-4 mb-6">
             <TabsTrigger value="weight">Weight Trends</TabsTrigger>
             <TabsTrigger value="measurements">Body Measurements</TabsTrigger>
-            <TabsTrigger value="nutrition">Nutrition Tracking</TabsTrigger>
+            <TabsTrigger value="nutrition">Nutrition Overview</TabsTrigger>
+            <TabsTrigger value="meals">Meal History</TabsTrigger>
           </TabsList>
           
           <TabsContent value="weight" className="space-y-4">
@@ -73,6 +76,17 @@ const ProgressPreview = () => {
               </CardHeader>
               <CardContent>
                 <NutrientComplianceChart data={dummyCheckIns} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="meals" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Meal History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MealHistoryTable />
               </CardContent>
             </Card>
           </TabsContent>
