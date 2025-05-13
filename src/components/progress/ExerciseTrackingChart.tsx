@@ -35,14 +35,15 @@ const ExerciseTrackingChart: React.FC<ExerciseTrackingChartProps> = ({ data }) =
   const activeDays = chartData.filter(item => item.minutes > 0).length;
   
   // Get exercise types and count
-  const exerciseTypes = chartData.reduce((acc, item) => {
+  const exerciseTypes = chartData.reduce((acc: Record<string, number>, item) => {
     if (item.type && item.minutes > 0) {
       acc[item.type] = (acc[item.type] || 0) + 1;
     }
     return acc;
   }, {});
   
-  const favoriteType = Object.entries(exerciseTypes).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None';
+  const favoriteTypeEntry = Object.entries(exerciseTypes).sort((a, b) => b[1] - a[1])[0];
+  const favoriteType = favoriteTypeEntry ? favoriteTypeEntry[0] : 'None';
 
   return (
     <div className="space-y-6">

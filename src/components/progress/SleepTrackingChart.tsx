@@ -3,7 +3,7 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sleep } from 'lucide-react';
+import { Bed } from 'lucide-react';
 
 interface SleepTrackingChartProps {
   data: any[];
@@ -41,7 +41,7 @@ const SleepTrackingChart: React.FC<SleepTrackingChartProps> = ({ data }) => {
               <p className="text-sm text-gray-500">Average Sleep</p>
               <h3 className="text-2xl font-bold">{averageSleep.toFixed(1)} hours</h3>
             </div>
-            <Sleep className="h-10 w-10 text-blue-500" />
+            <Bed className="h-10 w-10 text-blue-500" />
           </CardContent>
         </Card>
         <Card>
