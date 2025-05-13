@@ -6,7 +6,7 @@ import { UserRole } from '@/types';
 import { demoEmails } from '@/services/auth/demo';
 import { useNavigate } from 'react-router-dom';
 import { isDemoCoachEmail, isDemoClientEmail, isDemoAdminEmail, isDemoClinicAdminEmail } from '@/services/auth/demo/utils';
-import { cleanupAuthState } from './use-login-handler';
+import { cleanupAuthState } from '@/utils/auth-utils';
 
 export const useDemoLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);

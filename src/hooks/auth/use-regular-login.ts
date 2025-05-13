@@ -3,13 +3,12 @@ import { useState } from 'react';
 import { useAuth } from '@/context/auth';
 import { useToast } from '@/hooks/use-toast';
 import { LoginFormValues } from '@/components/auth/login-schema';
-import { useLoginHandler } from './use-login-handler';
+import { cleanupAuthState } from '@/utils/auth-utils';
 
 export const useRegularLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
-  const { cleanupAuthState } = useLoginHandler();
 
   const handleLogin = async (data: LoginFormValues) => {
     setIsSubmitting(true);
